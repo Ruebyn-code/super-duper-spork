@@ -2515,5 +2515,11 @@
     "locations": [
       "Sidebar"
     ]
+  },
+  {
+    "text": "Main sidebar and submenu icons",
+    "locations": [
+      "App settings"
+    ]
   }
 ]

@@ -364,6 +364,7 @@ label{font-size:12px;line-height:1.5}
 #app-sidebar .main-sidebar-nav{gap:6px;margin-bottom:16px!important}
 #app-sidebar .main-sidebar-nav a,#app-sidebar .sidebar-signout{min-height:46px;padding:12px;gap:12px;border:0;border-radius:11px;background:transparent;color:var(--primary);font-size:14px;font-weight:400;line-height:1.4;text-align:left;text-decoration:none;justify-content:flex-start}
 #app-sidebar .main-sidebar-nav .sidebar-label,#app-sidebar .sidebar-signout .sidebar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.main-sidebar-nav .sidebar-navigation-icon,.main-sidebar-nav .cart-icon,.sidebar-signout .sidebar-navigation-icon,.secondary-sidebar a .sidebar-navigation-icon{color:var(--secondary)}
 #app-sidebar .main-sidebar-nav a:hover,#app-sidebar .main-sidebar-nav a[aria-current=page],#app-sidebar .main-sidebar-nav a[data-submenu-open=true],#app-sidebar .sidebar-signout:hover{background:color-mix(in srgb,var(--primary) 12%,white)}
 #app-sidebar .main-sidebar-nav a[data-submenu-open=true]{box-shadow:inset 3px 0 var(--primary)}
 .subsidebar-open #app-sidebar .main-sidebar-nav a[aria-current=page]:not([data-submenu-open=true]){background:transparent;box-shadow:none}
