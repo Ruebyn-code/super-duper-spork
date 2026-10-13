@@ -1279,5 +1279,89 @@
     "locations": [
       "settings"
     ]
+  },
+  {
+    "text": "Sign-in background",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Choose the background for sign-in and first-time account setup. These choices only affect those pages.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Background colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Choose colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Hex colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Custom colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Background image (PNG or JPG, up to 2 MB)",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "No background image selected.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Saved background image.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Remove background image",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Save sign-in background",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Use primary colour and no image",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Sign-in background saved.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Upload your Souvlaki GR logo to show it in the sidebar and inside the sign-in and setup panels.",
+    "locations": [
+      "settings"
+    ]
   }
 ]

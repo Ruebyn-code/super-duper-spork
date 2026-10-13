@@ -302,3 +302,19 @@ test('cart submits without requester, phone or delivery location and uses the si
  const invalid=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify({items:[{id:'paper',quantity:0}]})});assert.equal(invalid.status,400);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('sign-in backgrounds and palette-linked appearance are admin-only, validated and rendered before sign-in',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-auth-theme-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+ const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=';
+ const patch=(headers,body)=>fetch(url+'/api/settings',{method:'PATCH',headers,body:JSON.stringify(body)});
+ const change={backgrounds:{signin:'secondary',cards:'primary'},backgroundImages:{signin:image},fontColours:{headings:'primary'}};
+ assert.equal((await patch(staff,change)).status,403);assert.equal((await patch(admin,change)).status,200);
+ assert.equal((await patch(admin,{backgrounds:{signin:'var(--bad)'}})).status,400);assert.equal((await patch(admin,{backgroundImages:{signin:'data:image/png;base64,YmFk'}})).status,400);
+ const local={id:'login-7',changes:{fontColour:'secondary',background:'primary'}};assert.equal((await fetch(url+'/api/element-overrides',{method:'PATCH',headers:admin,body:JSON.stringify(local)})).status,200);
+ const logo=await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:image.split(',')[1]})});assert.equal(logo.status,200);
+ const html=await(await fetch(url+'/login')).text();assert.match(html,/:where\(\.authentication-page\)\{background-color:var\(--secondary\)!important/);assert.ok(html.includes(image));assert.ok(!html.slice(html.indexOf('<header>'),html.indexOf('</header>')).includes('app-logo'));assert.ok(html.slice(html.indexOf('<section class="management"')).includes('src="/logo"'));assert.match(html,/\[data-edit-id="login-7"\]\{color:var\(--secondary\)!important;background-color:var\(--primary\)!important/);
+ const saved=await(await fetch(url+'/appearance')).json();assert.equal(saved.backgrounds.signin,'secondary');assert.equal(saved.fontColours.headings,'primary');assert.equal(saved.backgroundImages.signin,image);
+ assert.equal((await patch(admin,{backgroundImages:{signin:null},backgrounds:{signin:null}})).status,200);const reset=await(await fetch(url+'/appearance')).json();assert.equal(reset.backgroundImages.signin,undefined);assert.equal(reset.backgrounds.signin,undefined);assert.equal(reset.backgrounds.cards,'primary');
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
