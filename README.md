@@ -96,7 +96,7 @@ Drafts save automatically in this browser for the signed-in account and assigned
 
 Saved counts persist in `data/stock-counts/` across restarts and updates. Keep your entire **data** folder when updating. Unsaved browser drafts stay on the browser where they were entered.
 
-The app name/logo appears at the top of the left sidebar, with the cart directly underneath. Use the small arrow at the bottom of the sidebar to collapse it into a compact icon rail or expand it again. The button stays pinned at the bottom while sidebar menus scroll. The uploaded logo stays visible at a smaller size, along with the cart icon and quantity, ordering, stock count, sign-out, and an administrator shortcut. The browser remembers your sidebar preference across pages and refreshes.
+The app name/logo appears at the top of the left sidebar, above the location name and cart. Use the small arrow at the bottom to collapse it into a compact icon rail or expand it again. The controls stay pinned while sidebar menus scroll. The smaller logo, cart, ordering, stock count, sales and sign-out icons remain accessible. The **Sidebar options** button beside the arrow offers **Stay collapsed** (default) or **Expand on hover**. Hover mode smoothly opens the collapsed sidebar over the page without shifting content, then closes when the pointer leaves. Keyboard focus also reveals the navigation; touch users can use the arrow. Clicking the arrow during a hover preview keeps the sidebar expanded. Both choices are remembered in this browser across pages and refreshes; reduced-motion preferences disable the animation.
 
 
 ## Automatic weekly usage and par levels

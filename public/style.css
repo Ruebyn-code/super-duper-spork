@@ -345,6 +345,27 @@ label{font-size:12px;line-height:1.5}
 .sidebar-logo-form{margin-top:28px;padding-top:22px;border-top:1px solid var(--line)}
 .sidebar-logo-preview{width:100%;max-width:360px;height:100px;padding:12px;background-color:white}
 #sidebar-logo-preview-caption{font-size:13px;color:var(--muted)}
+.app-shell{--sidebar-expanded-width:260px;transition:grid-template-columns .28s cubic-bezier(.2,.8,.2,1)}
+.app-shell>.admin-sidebar{width:var(--sidebar-expanded-width);z-index:20;transition:width .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease}
+.sidebar-collapsed .app-shell>.admin-sidebar{width:76px}
+.sidebar-hover-expanded .app-shell{grid-template-columns:76px minmax(0,1fr)}
+.sidebar-hover-expanded .app-shell>.admin-sidebar{box-shadow:12px 0 30px #17324620}
+.sidebar-hover-expanded .sidebar-scroll,.sidebar-hover-expanded .sidebar-footer{width:var(--sidebar-expanded-width)}
+.sidebar-hover-expanded .sidebar-label,.sidebar-hover-expanded .sidebar-location{animation:sidebar-reveal .2s ease both}
+@keyframes sidebar-reveal{from{opacity:0}to{opacity:1}}
+.sidebar-footer #sidebar-options-toggle{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;padding:7px}
+.sidebar-options{position:fixed;z-index:1100;width:240px;max-width:calc(100vw - 16px);padding:16px;border:1px solid var(--line);border-radius:14px;background:white;color:var(--ink);box-shadow:0 12px 36px #17324626}
+.sidebar-options[hidden]{display:none}
+.sidebar-options-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;font-size:14px}
+.sidebar-options-close{width:28px;height:28px;padding:0;font-family:Arial,sans-serif;font-size:20px}
+.sidebar-options fieldset{border:0;margin:0;padding:0;min-width:0}
+.sidebar-options legend{font-size:12px;color:var(--muted);margin-bottom:10px}
+.sidebar-options label{display:flex;align-items:center;gap:10px;padding:10px 6px;margin:0;border-radius:8px;cursor:pointer}
+.sidebar-options label:hover{background:color-mix(in srgb,var(--primary) 8%,white)}
+.sidebar-options input{width:16px;height:16px;margin:0;accent-color:var(--primary)}
+@media(max-width:950px){.app-shell{--sidebar-expanded-width:220px}}
+@media(max-width:720px){.app-shell{--sidebar-expanded-width:180px}.sidebar-footer{gap:4px}}
+@media(max-width:480px){.app-shell{--sidebar-expanded-width:140px}}
 .account-location-group{margin-top:22px;padding:16px;border:1px solid var(--line);border-radius:14px;background-color:color-mix(in srgb,var(--primary) 3%,white)}
 .account-location-group>h3{margin:0 0 12px;overflow-wrap:anywhere}.account-location-group .managed-stock{gap:14px;flex-wrap:wrap}.account-location-group .managed-stock>span{min-width:0;overflow-wrap:anywhere}
 .account-location-field select,#account-location-filter,#email-account{width:100%;min-width:0;min-height:44px;padding:10px 12px;margin-top:7px;border:1px solid var(--line);border-radius:10px;background-color:white;font:inherit;color:inherit}

@@ -2455,5 +2455,41 @@
     "locations": [
       "App settings"
     ]
+  },
+  {
+    "text": "Sidebar options",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "When the sidebar is collapsed",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Stay collapsed",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Expand on hover",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Close sidebar options",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Keep sidebar expanded",
+    "locations": [
+      "Sidebar"
+    ]
   }
 ]
