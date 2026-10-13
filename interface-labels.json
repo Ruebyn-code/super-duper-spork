@@ -2509,5 +2509,11 @@
     "locations": [
       "Sidebar"
     ]
+  },
+  {
+    "text": "Close submenu",
+    "locations": [
+      "Sidebar"
+    ]
   }
 ]

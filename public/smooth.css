@@ -1,6 +1,6 @@
 :root{--motion-fast:160ms;--motion-medium:220ms;--motion-ease:cubic-bezier(.2,.7,.2,1)}
 html{scroll-behavior:smooth;scroll-padding-top:24px}
-button,input,select,textarea,summary,.header-link,.admin-sidebar a{transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast),box-shadow var(--motion-fast),opacity var(--motion-fast),transform var(--motion-fast) var(--motion-ease)}
+button,input,select,textarea,summary,.header-link,.admin-sidebar a,.secondary-sidebar a{transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast),box-shadow var(--motion-fast),opacity var(--motion-fast),transform var(--motion-fast) var(--motion-ease)}
 button:not(:disabled):active{transform:scale(.97)}button:disabled{transform:none}
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 12%,transparent)}
 .product{transition:box-shadow var(--motion-medium),border-color var(--motion-medium),transform var(--motion-medium) var(--motion-ease)}
