@@ -73,3 +73,5 @@ Administrators can rename built-in menus, headings, buttons, instructions, place
 Administrators can also use **App edit** in the sidebar. Switch it on, click highlighted text where it appears, enter new wording, and save. **Finish editing** restores normal page interactions. This mode edits interface wording, not stock, supplier, or account data.
 
 In App edit, select **Leave blank** and save to hide a label. **Restore original** brings its default wording back. Blank labels have a small `(blank)` marker only while editing, so you can click and restore them. The Interface text settings page also includes a Leave blank checkbox for each label.
+
+App edit now offers Text wording, Background colours, and Font types. Pick the edit type, then click the part of the page to change. Font changes apply to the matching text group. Background changes apply to page, sidebar, panels, stock cards, stock image areas, buttons, fields, or greeting sections. You can upload/replace/remove PNG or JPG background images up to 2 MB, with a preview before saving. Changes are stored in `data/appearance.json`.

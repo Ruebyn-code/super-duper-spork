@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const {createAuth}=require('./auth');
 const {mergeSpreadsheet}=require('./catalogue-import');
-const {defaults,validateSettings}=require('./appearance');
+const {defaults,validateSettings,saveAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
 const deliverySettings=require('./delivery-settings');
 const {splitBySupplier}=require('./supplier-orders');
@@ -95,10 +95,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.url==='/api/delivery-settings'&&req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.id));}catch(error){fail(error.message);}}
       const supplierEdit=req.url.match(/^\/api\/suppliers\/([a-zA-Z0-9-]+)$/);
       if(req.method==='PUT'&&supplierEdit){const input=await body(req);let delivery;try{delivery=validateDelivery(input.delivery);}catch(error){fail(error.message);}return json(200,await mutate(c=>{const supplier=c.suppliers.find(s=>s.id===supplierEdit[1]);if(!supplier)fail('Supplier not found.',404);supplier.delivery=delivery;return supplier;}));}
-      if(req.url==='/api/settings'&&req.method==='PUT'){
-        let settings;try{settings=validateSettings(await body(req));}catch(error){fail(error.message);}
-        await fs.mkdir(dataDir,{recursive:true});const target=path.join(dataDir,'appearance.json');const temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.writeFile(temp,JSON.stringify(settings),{mode:0o600});await fs.rename(temp,target);return json(200,settings);
-      }
+      if(req.url==='/api/settings'&&['PUT','PATCH'].includes(req.method)){try{return json(200,await saveAppearance(dataDir,await body(req,2900000),req.method==='PATCH'));}catch(error){fail(error.message);}}
       if(req.url==='/api/logo'&&req.method==='POST'){
         const input=await body(req,2900000);if(typeof input?.data!=='string'||!input.data.length||!/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))fail('Choose a PNG or JPG image.');
         const bytes=Buffer.from(input.data,'base64');if(bytes.length>2000000)fail('Logo must be smaller than 2 MB.');

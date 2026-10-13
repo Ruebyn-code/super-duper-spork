@@ -213,3 +213,14 @@ test('interface text is editable only by administrators and handles plain text s
  assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({Cart:''})})).status,200);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),{});
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('direct appearance edits keep existing settings and support background images and removal',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-style-edit-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');const patch=(headers,body)=>fetch(url+'/api/settings',{method:'PATCH',headers,body:JSON.stringify(body)});
+ assert.equal((await patch(staff,{fonts:{buttons:'georgia'}})).status,403);
+ assert.equal((await patch(admin,{fonts:{buttons:'georgia'},backgrounds:{sidebar:'#123456'}})).status,200);
+ const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=';
+ assert.equal((await patch(admin,{backgroundImages:{sidebar:image}})).status,200);let saved=await(await fetch(url+'/appearance')).json();assert.equal(saved.fonts.buttons,'georgia');assert.equal(saved.backgrounds.sidebar,'#123456');assert.equal(saved.backgroundImages.sidebar,image);
+ assert.equal((await patch(admin,{backgroundImages:{sidebar:'data:image/png;base64,YmFk'}})).status,400);assert.equal((await patch(admin,{backgrounds:{unknown:'#123456'}})).status,400);
+ assert.equal((await patch(admin,{backgrounds:{sidebar:null},backgroundImages:{sidebar:null}})).status,200);saved=await(await fetch(url+'/appearance')).json();assert.equal(saved.backgrounds.sidebar,undefined);assert.equal(saved.backgroundImages.sidebar,undefined);assert.equal(saved.fonts.buttons,'georgia');
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
