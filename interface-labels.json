@@ -1273,5 +1273,11 @@
     "locations": [
       "index"
     ]
+  },
+  {
+    "text": "The fixed bottom area of the sidebar",
+    "locations": [
+      "settings"
+    ]
   }
 ]
