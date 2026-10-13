@@ -224,3 +224,13 @@ test('direct appearance edits keep existing settings and support background imag
  assert.equal((await patch(admin,{backgrounds:{sidebar:null},backgroundImages:{sidebar:null}})).status,200);saved=await(await fetch(url+'/appearance')).json();assert.equal(saved.backgrounds.sidebar,undefined);assert.equal(saved.backgroundImages.sidebar,undefined);assert.equal(saved.fonts.buttons,'georgia');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('per-element overrides are admin-only and preserve shared styles and labels',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-elements-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');const patch=(headers,body)=>fetch(url+'/api/element-overrides',{method:'PATCH',headers,body:JSON.stringify(body)});const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=';
+ const body={id:'index-test',changes:{text:{original:'Cart',value:'Basket'},font:'georgia',fontColour:'#123456',background:'#fedcba',backgroundImage:image}};
+ assert.equal((await patch(staff,body)).status,403);assert.equal((await patch(admin,body)).status,200);const saved=await(await fetch(url+'/element-overrides')).json();assert.deepEqual(saved['index-test'],body.changes);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),{});assert.equal((await(await fetch(url+'/appearance')).json()).fonts.navigation,'arial');
+ assert.equal((await patch(admin,{id:'other',changes:{background:'javascript:bad'}})).status,400);assert.equal((await patch(admin,{id:'other',changes:{font:'invalid'}})).status,400);
+ assert.equal((await patch(admin,{id:'index-test',changes:{text:{original:'Cart',value:null},backgroundImage:''}})).status,200);let current=await(await fetch(url+'/element-overrides')).json();assert.equal(current['index-test'].text.value,null);assert.equal(current['index-test'].backgroundImage,'');assert.equal(current['index-test'].font,'georgia');
+ assert.equal((await patch(admin,{id:'index-test',changes:{restoreText:true,font:null,backgroundImage:null}})).status,200);current=await(await fetch(url+'/element-overrides')).json();assert.equal(current['index-test'].text,undefined);assert.equal(current['index-test'].font,undefined);assert.equal(current['index-test'].background,'#fedcba');
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

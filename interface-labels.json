@@ -965,5 +965,95 @@
     "locations": [
       "Catalogue & cart messages"
     ]
+  },
+  {
+    "text": "App edit",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Primary colour affects",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "App name and username greeting",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Main Save and checkout buttons",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Selected supplier filters and the cart count",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Navigation links and the 50% sidebar highlight",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Field focus outlines and App edit highlights",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "The sign-in page background",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Secondary colour affects",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Add-to-cart buttons",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Stock Edit button accents",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "The active App edit button",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Brand arrow accents",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Custom text colours and background overrides take priority for the parts you change.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Rename menus, headings, buttons, labels, instructions, and placeholders. Matching labels are updated across the app. Leave a field blank to restore its original text. Keep any {placeholder} words in formatted messages.",
+    "locations": [
+      "settings"
+    ]
   }
 ]
