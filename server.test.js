@@ -126,3 +126,17 @@ test('only administrators can upload a logo and sign-in uses blue background',as
  const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('stock photos save, survive edits, and can be removed without on-hand input',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-photos-'));await saveAdmin(dir,'admin','test-password-for-admin');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+ const headers=await login(url);const photo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=';
+ const body={name:'Photo item',supplierId:'office',price:3,photo};
+ const create=await fetch(url+'/api/products',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(create.status,201);const product=await create.json();assert.equal(product.photo,photo);
+ const catalogue=JSON.parse(await fs.readFile(path.join(dir,'catalogue.json'),'utf8'));assert.equal(catalogue.products.find(p=>p.id===product.id).photo,photo);
+ const update={name:'Renamed item',supplierId:'office',price:4};
+ let response=await fetch(url+'/api/products/'+product.id,{method:'PUT',headers,body:JSON.stringify(update)});assert.equal(response.status,200);assert.equal((await response.json()).photo,photo);
+ response=await fetch(url+'/api/products/'+product.id,{method:'PUT',headers,body:JSON.stringify({...update,photo:'data:image/png;base64,YmFk'})});assert.equal(response.status,400);
+ response=await fetch(url+'/api/products/'+product.id,{method:'PUT',headers,body:JSON.stringify({...update,photo:null})});assert.equal(response.status,200);assert.equal((await response.json()).photo,null);
+ const html=await(await fetch(url+'/admin',{headers})).text();assert.ok(html.includes('id="stock-photo"'));assert.ok(!html.includes('name="stock"'));
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

@@ -20,9 +20,9 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Suppliers and stock
 
-Sign in as an administrator, then open **Administration** in the header. Enter a supplier name and select **Save supplier**. Choose that supplier in the stock form, enter the item name, price in AUD, and quantity on hand, then select **Save stock**. SKU, category, and description help organise your items. Use the supplier buttons above the catalogue to view their stock.
+Sign in as an administrator, then open **Administration** in the header. Enter a supplier name and select **Save supplier**. Choose that supplier in the stock form, enter the item name, price in AUD, then select **Save stock**. SKU, category, and description help organise your items. Use the supplier buttons above the catalogue to view their stock.
 
-Select **Edit** beside a stock item to update its name, supplier, SKU, category, price, quantity on hand, or description, then select **Save changes**. **Cancel edit** leaves the item unchanged. Select **Remove stock** to delete an item from the catalogue. Remove all a supplier’s stock before removing the supplier. Previously saved requests retain their original item names, supplier names, and prices. Supplier and catalogue changes persist in `data/catalogue.json` across restarts. Keep the entire `data/` folder when replacing the application with a downloaded update.
+Select **Edit** beside a stock item to update its name, supplier, SKU, category, price, photo, or description, then select **Save changes**. **Cancel edit** leaves the item unchanged. Select **Remove stock** to delete an item from the catalogue. Remove all a supplier’s stock before removing the supplier. Previously saved requests retain their original item names, supplier names, and prices. Supplier and catalogue changes persist in `data/catalogue.json` across restarts. Keep the entire `data/` folder when replacing the application with a downloaded update.
 
 Everyone must sign in. Ordering accounts can browse stock and submit requests; administrator accounts can also manage suppliers and stock on the separate Administration page. Stock quantities are informational; submitting a purchase request does not adjust them automatically.
 
@@ -41,3 +41,5 @@ Use locally on your Mac; an Internet deployment requires HTTPS and appropriate h
 ## Logo
 
 As an administrator, open **Administration → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.
+
+Add or edit stock photos in **Administration → Suppliers & stock**. Choose a PNG or JPG up to 2 MB, then save the item. Photos persist in the catalogue and appear on ordering cards. Use **Remove photo** and save to clear a photo. On-hand quantities are no longer shown or entered.
