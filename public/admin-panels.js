@@ -1,5 +1,5 @@
 function applyAdminPanels(){
- const defaults={'/admin':'stock','/admin/accounts':'accounts','/admin/settings':'colours','/email-settings':'email'};
+ const defaults={'/admin':'stock','/admin/accounts':'accounts','/admin/settings':'colours'};
  const allowed=[...document.querySelectorAll('.admin-subnav a')].filter(a=>new URL(a.href).pathname===location.pathname).map(a=>new URL(a.href).hash.slice(1));
  let selected=location.hash.slice(1)||defaults[location.pathname];if(!allowed.includes(selected))selected=defaults[location.pathname];
  document.querySelectorAll('[data-admin-views]').forEach(element=>{const wasHidden=element.hidden;const shouldShow=element.dataset.adminViews.split(' ').includes(selected);element.hidden=!shouldShow;if(wasHidden&&shouldShow){element.classList.remove('panel-enter');requestAnimationFrame(()=>element.classList.add('panel-enter'));}});
@@ -19,7 +19,6 @@ function makeAdminSection(element,title,key){
  content.append(element);menu.append(summary,content);return menu;
 }
 document.querySelectorAll('#font-settings>label').forEach(label=>makeAdminSection(label,label.firstChild.textContent,label.querySelector('select').id));
-const emailForm=document.getElementById('email-form');if(emailForm){const labels=[...emailForm.children].filter(e=>e.tagName==='LABEL');for(const [index,title] of ['Automatic order emails','Sender email','Sending credentials'].entries())makeAdminSection(labels[index],title,'email-'+index);}
 // Native validation must be able to reveal and focus fields in closed sections.
 document.addEventListener('invalid',event=>{let parent=event.target.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}},true);
 applyAdminPanels();
