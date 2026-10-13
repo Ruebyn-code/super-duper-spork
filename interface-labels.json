@@ -2521,5 +2521,17 @@
     "locations": [
       "App settings"
     ]
+  },
+  {
+    "text": "Internal lines and details in sidebar icons",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Sidebar icon outlines",
+    "locations": [
+      "App settings"
+    ]
   }
 ]
