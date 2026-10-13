@@ -207,6 +207,7 @@ test('interface text is editable only by administrators and handles plain text s
  assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify(changes)})).status,200);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),changes);
  assert.equal((await fetch(url+'/api/interface-text',{method:'PATCH',headers:staff,body:JSON.stringify({original:'Cart',value:'Bag'})})).status,403);
  assert.equal((await fetch(url+'/api/interface-text',{method:'PATCH',headers:admin,body:JSON.stringify({original:'Cart',value:'Bag'})})).status,200);const patched=await(await fetch(url+'/interface-text')).json();assert.equal(patched.Cart,'Bag');assert.equal(patched['Yassou,'],'Hello,');
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PATCH',headers:admin,body:JSON.stringify({original:'Cart',value:null})})).status,200);assert.equal((await(await fetch(url+'/interface-text')).json()).Cart,null);
  assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({'Page {page} of {pages} · {count} items':'Missing values'})})).status,400);
  assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({unknown:'value'})})).status,400);
  assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({Cart:''})})).status,200);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),{});
