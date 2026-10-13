@@ -1243,5 +1243,17 @@
     "locations": [
       "Stock count"
     ]
+  },
+  {
+    "text": "Collapse sidebar",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Expand sidebar",
+    "locations": [
+      "Sidebar"
+    ]
   }
 ]

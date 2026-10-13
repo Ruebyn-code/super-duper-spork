@@ -91,3 +91,5 @@ Every signed-in account can open **Stock count** in the left sidebar. Choose **N
 Drafts save automatically in this browser for the signed-in account and return after navigation or a refresh. **Clear draft** clears unsaved entries. **Save stock count** stores the entered items and opens **Count history**. Ordering users can review their own saved counts; administrators can review every account's counts. Records preserve the counted item and supplier names when catalogue entries change or are removed. Counts do not change the ordering cart, catalogue quantities, or send supplier emails.
 
 Saved counts persist in `data/stock-counts/` across restarts and updates. Keep your entire **data** folder when updating. Unsaved browser drafts stay on the browser where they were entered.
+
+The cart appears at the very top of the left sidebar, above the app name/logo. Use **Collapse sidebar** below the cart to switch to a compact icon rail, or the arrow to expand it again. The cart icon and quantity remain visible, with ordering, stock count, sign-out, and an administrator shortcut. The browser remembers your sidebar preference across pages and refreshes.
