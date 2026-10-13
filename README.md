@@ -26,18 +26,14 @@ Select **Edit** beside a stock item to update its name, supplier, SKU, category,
 
 Everyone must sign in. Ordering accounts can browse stock and submit requests; administrator accounts can also manage suppliers and stock on the separate Administration page. Stock quantities are informational; submitting a purchase request does not adjust them automatically.
 
-## Set up sign-in accounts
+## Accounts and permissions
 
-Before using the updated app, stop the server with Control+C, then run these commands from the app folder:
+On a fresh installation, start the app with `npm start` and open it on the same computer at http://localhost:3000. The app shows first-time setup: choose an administrator username and a password of at least 12 characters. Once an account exists, first-time setup is locked. Existing administrator and user accounts from earlier versions are preserved automatically.
 
-```sh
-npm run admin:set
-npm run user:add
-npm start
-```
+Sign in as an administrator and open **Administration → Accounts & permissions**. Create accounts as **Ordering user** (browse and order) or **Administrator** (also manage suppliers, stock, and accounts). Select **Edit permissions** to change a username or permission level, or enter a new password to reset it. Leave the password blank to keep it. You can remove accounts, but at least one administrator must remain. Changes to credentials or permissions invalidate that account’s active sessions immediately. Sessions also expire after eight hours or a server restart.
 
-The first command creates or resets the administrator account. The second creates a regular ordering account; run it again for additional users. Choose your own usernames and passwords (12–256 characters). Password entry is hidden in Terminal. There are no default credentials or public account registration. Do not use the same username for an administrator and ordering user.
+Account data is stored privately in ignored `data/accounts.json`, with salted scrypt password hashes. Keep the entire `data/` folder when updating. Legacy `admin.json` and `users.json` are read only until the unified account file has been saved; thereafter `accounts.json` is authoritative.
 
-Open the app and sign in. Administrators see an **Administration** link for supplier and stock management. Regular users cannot access management pages or management APIs. Both account types can order. Sessions expire after eight hours; signing out, resetting the account, or restarting the server invalidates sessions. Passwords are stored as salted scrypt hashes in ignored `data/admin.json` and `data/users.json` files. Preserve the whole `data/` folder when upgrading. Keep it private.
+For forgotten administrator passwords, stop the server, run `npm run admin:set` in the app folder, then restart with `npm start`. This local recovery command resets the named account to administrator access. `npm run user:add` remains available for creating or resetting ordering accounts. Normal account management happens within the app.
 
-For forgotten passwords, rerun `npm run admin:set` or `npm run user:add` with the existing username. Use the app locally on your Mac; an Internet deployment requires HTTPS and appropriate hosting configuration.
+Use locally on your Mac; an Internet deployment requires HTTPS and appropriate hosting configuration.

@@ -47,6 +47,13 @@ function createServer(dataDir = path.join(__dirname,'data')) {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
       res.setHeader('Cache-Control','no-store');
+      if(req.url==='/api/setup'&&req.method==='POST'){
+        if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))fail('First-time setup must be opened on the computer running the app.',403);
+        if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`))fail('Invalid setup request.',403);
+        return json(201,await auth.setup(await body(req)));
+      }
+      if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
+      if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       const session=await auth.session(req);
       if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,csrf:session.csrf}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
@@ -55,10 +62,16 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers');
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts');
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list());
+      if(req.url==='/api/accounts'&&req.method==='POST')return json(201,await auth.create(session,await body(req)));
+      const accountRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)$/);
+      if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req)));
+      if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
+
       if(req.method==='GET'&&['/','/admin'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&req.url==='/admin'&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
@@ -91,7 +104,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});
         return json(201,order);
       }
-      const files = {'/':'index.html','/admin':'admin.html','/admin/login':'login.html','/login':'login.html','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/admin':'admin.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});

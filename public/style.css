@@ -9,3 +9,5 @@
 .brand{letter-spacing:0.04em;overflow-wrap:anywhere}header{gap:16px}.brand{min-width:0}.badge{flex-shrink:0}@media(max-width:480px){.brand{font-size:22px}.badge{display:none}}
 
 .header-link,.admin-nav a{color:var(--primary);font-family:Arial,sans-serif;font-size:14px}.admin-nav{display:flex;align-items:center;gap:16px;flex-shrink:0}.admin-page{padding-top:30px}.login-page{max-width:560px;padding-top:40px}.login-page h1,.admin-page h1{font-size:32px}.login-page input[type="password"]{font-family:Arial,sans-serif}.admin-page .management{margin-top:18px}#login-message{overflow-wrap:anywhere;font-family:Arial,sans-serif;font-size:14px}@media(max-width:480px){.admin-nav{flex-direction:column;gap:8px}}
+
+#account-form{max-width:520px}#account-form input[type=password]{font-family:Arial,sans-serif}#account-message{overflow-wrap:anywhere}
