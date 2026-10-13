@@ -1,5 +1,5 @@
 const money = n => n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(n/100);
-let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',page=1,parWindow=null;
+let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',page=1,parWindow=null,latestStockTake=null;
 const itemQuantities=new Map(),itemMessages=new Map();let submissionId='',submissionBody='';
 const $=id=>document.getElementById(id);
 const wording=(template,values={})=>typeof interfaceLabel==='function'?interfaceLabel(template,values):template.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
@@ -28,12 +28,21 @@ function renderProductPar(product){
   const values={level:known?new Intl.NumberFormat('en-AU').format(product.par.level):''};label.dataset.appValues=JSON.stringify(values);label.textContent=wording(template,values);
   const hintTemplate=known?'Weekly target':'{weeks} of 4 weeks recorded';const hintValues={weeks:product.par?.weeksRecorded||0};hint.dataset.appTemplate=hintTemplate;hint.dataset.appValues=JSON.stringify(hintValues);hint.textContent=wording(hintTemplate,hintValues);
   if(known)panel.title=wording('Average used: {average} per week',{average:new Intl.NumberFormat('en-AU',{maximumFractionDigits:5}).format(product.par.average)});
-  panel.append(label,hint);return panel;
+  const countPanel=el('div',undefined,'ordering-stat stock-count-stat'),countLabel=el('span',wording('Stock count'),'ordering-stat-label'),countValue=el('strong',undefined,'stock-count-value'),countHint=el('span',undefined,'ordering-stat-hint');
+  const counted=product.ordering?.stockCount,hasCount=typeof counted==='number';countValue.dataset.appTemplate=hasCount?'{quantity}':'—';countValue.dataset.appValues=JSON.stringify({quantity:hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):''});countValue.textContent=hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):'—';
+  const countTemplate=hasCount?'Latest stock take':latestStockTake?'Not counted':'No stock take yet';countHint.dataset.appTemplate=countTemplate;countHint.textContent=wording(countTemplate);
+  if(hasCount&&latestStockTake?.countDate)countPanel.title=wording('Stock take: {date}',{date:new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(latestStockTake.countDate+'T12:00:00Z'))});
+  countPanel.append(countLabel,countValue,countHint);
+  const recommendedPanel=el('div',undefined,'ordering-stat recommended-order-stat'),recommendedLabel=el('span',wording('Recommended order'),'ordering-stat-label'),recommendedValue=el('strong',undefined,'recommended-order-value'),recommendedHint=el('span',undefined,'ordering-stat-hint');
+  const amount=product.ordering?.recommended,hasRecommendation=typeof amount==='number';recommendedValue.dataset.appTemplate=hasRecommendation?'{quantity}':'—';recommendedValue.dataset.appValues=JSON.stringify({quantity:hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):''});recommendedValue.textContent=hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):'—';
+  const recommendedTemplate=hasRecommendation?(amount===0?'No order needed':'Par − stock count'):'Par and count needed';recommendedHint.dataset.appTemplate=recommendedTemplate;recommendedHint.textContent=wording(recommendedTemplate);recommendedPanel.append(recommendedLabel,recommendedValue,recommendedHint);
+  panel.append(label,hint,countPanel,recommendedPanel);return panel;
 }
 function renderParPeriod(){
   if(!$('par-period')||!parWindow)return;
   const format=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
   const template='Par levels · {start} – {end} · Your usage';const values={start:format(parWindow.startDate),end:format(parWindow.endDate)};$('par-period').dataset.appTemplate=template;$('par-period').dataset.appValues=JSON.stringify(values);$('par-period').textContent=wording(template,values);
+  if($('stock-take-status')){const date=latestStockTake?.countDate;const countTemplate=date?'Latest stock take: {date}':'Save a stock take to see counts and recommended orders.';const countValues={date:date?format(date):''};$('stock-take-status').dataset.appTemplate=countTemplate;$('stock-take-status').dataset.appValues=JSON.stringify(countValues);$('stock-take-status').textContent=wording(countTemplate,countValues);}
 }
 function renderMenu(){
   if(!$('menu'))return;$('menu').replaceChildren();
@@ -54,7 +63,7 @@ if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scro
 if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem(cartKey.replace('souvlaki-cart-','souvlaki-usage-updated-'),String(Date.now()));}catch{}cart={};submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':'submission unconfirmed')).join('; ');e.target.reset();}catch(error){$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};
 async function api(url,method,body){const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;}
 async function reload(){
-  const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;renderParPeriod();
+  const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;latestStockTake=data.stockTake;renderParPeriod();
   for(const id of Object.keys(cart))if(!products.some(p=>p.id===id)||!Number.isInteger(cart[id])||cart[id]<1||cart[id]>999)delete cart[id];
   if(category!=='All'&&!suppliers.some(s=>s.id===category))category='All';
   if($('filters')){$('filters').replaceChildren();
@@ -74,8 +83,8 @@ if($('menu')){
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:parWindow.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=kind=>parts.find(part=>part.type===kind).value;const date=new Date(value('year')+'-'+value('month')+'-'+value('day')+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-date.getUTCDay());
   if(!force&&date.toISOString().slice(0,10)===parWindow.currentWeekStart)return;
   parRefreshPending=true;try{
-   const data=await api('/api/catalogue','GET');parWindow=data.parWindow;const levels=new Map(data.products.map(product=>[product.id,product.par]));
-   for(const product of products)product.par=levels.get(product.id);renderParPeriod();
+   const data=await api('/api/catalogue','GET');parWindow=data.parWindow;latestStockTake=data.stockTake;const refreshed=new Map(data.products.map(product=>[product.id,product]));
+   for(const product of products){product.par=refreshed.get(product.id)?.par;product.ordering=refreshed.get(product.id)?.ordering;}renderParPeriod();
    for(const card of $('menu').querySelectorAll('[data-product-id]')){const product=products.find(product=>product.id===card.dataset.productId);if(product)card.querySelector('.product-par')?.replaceWith(renderProductPar(product));}
    $('load-status').textContent='';
   }catch(error){$('load-status').textContent=error.message;}finally{parRefreshPending=false;}

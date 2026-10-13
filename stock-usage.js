@@ -58,9 +58,21 @@ const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){
  week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart])[0],window:par.windowFor(now)};
 }
+function orderingSuggestions(counts,products,session,levels){
+ // A new stock take is a snapshot. Omitted items remain unknown in that take.
+ const latest=counts.filter(record=>record?.accountId===session.id&&typeof record.createdAt==='string'&&Number.isFinite(Date.parse(record.createdAt))&&Array.isArray(record.items)).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(b.id).localeCompare(String(a.id)))[0];
+ const quantities=new Map((latest?.items||[]).filter(item=>item&&validQuantity(item.quantity)).map(item=>[item.id,item.quantity]));
+ return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
+  const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
+  const recommendation=counted!==null&&level!==null?Math.max(0,Math.ceil((level*1000-Math.round(counted*1000))/1000)):null;
+  return [product.id,{stockCount:counted,recommended:recommendation}];
+ }))};
+}
 async function parLevels(dir,session,products,{reader=readHistory,now=new Date()}={}){
  const window=par.windowFor(now),history=await reader(dir);
  const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)));
- return par.calculate(records,products,session,{now});
+ const result=par.calculate(records,products,session,{now});
+ const suggestions=orderingSuggestions(history.counts,products,session,result.levels);
+ return {...result,stockTake:suggestions.stockTake,suggestions:suggestions.items};
 }
-module.exports={week,shift,derive,createReader,report,parLevels};
+module.exports={week,shift,derive,createReader,report,parLevels,orderingSuggestions};

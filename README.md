@@ -108,3 +108,8 @@ Open **Stock count → Weekly usage** for the automatic breakdown: Sunday stock,
 Ordering cards and list rows show **Par**, the account's average usage over the **four completed Sunday–Saturday weeks before the current week**, rounded up to whole units/packs. Five consecutive Sunday counts provide the four cycles. Missing item counts or a negative result leave that cycle incomplete and show what needs checking; they are not assumed to be zero. The current partial week and other accounts' history are excluded. Hover over the par panel for the exact average. The four-week window rolls forward automatically. Par values do not automatically add items to the cart.
 
 Saved counts and order files remain the source of truth. Previous manually entered weekly usage files and browser drafts are retained but are not used by the automatic calculation. Keep the entire **data** folder when updating.
+
+
+Ordering items show **Par**, **Stock count**, and **Recommended order** together in both Menu and List views. The count is taken from the signed-in account's most recently saved stock take, including stock takes on days other than Sunday. Its date appears above the catalogue. Items omitted from that latest stock take show **Not counted** rather than borrowing a value from an older take.
+
+**Recommended order = max(0, par − stock count)**, rounded up to whole units/packs. A zero count is valid; a missing count or incomplete par history leaves the recommendation unavailable. Recommendations use the counted stock directly. You choose the quantity to add to the cart. Saving a newer count updates the displayed counts and recommendations automatically without overwriting entered quantities.

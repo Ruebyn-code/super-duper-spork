@@ -148,8 +148,8 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
         const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory});
-        const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id]}));
-        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window});
+        const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
+        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
       }
       if(req.method==='POST' && req.url==='/api/suppliers'){
         const input=await body(req);const supplierName=name(input?.name,'supplier name');

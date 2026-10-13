@@ -1723,5 +1723,65 @@
     "locations": [
       "Ordering · par levels"
     ]
+  },
+  {
+    "text": "Latest stock take",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "No stock take yet",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Stock take: {date}",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Recommended order",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "No order needed",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Par − stock count",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Par and count needed",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Latest stock take: {date}",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Save a stock take to see counts and recommended orders.",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
+  },
+  {
+    "text": "Par is your average usage over the previous four completed Sunday–Saturday weeks, rounded up to whole units or packs. Usage is calculated from Sunday stock + that week’s orders − the next Sunday stock count. Save Sunday counts and place orders as usual; usage updates automatically. Five consecutive Sunday counts are needed for four complete weeks. Missing counts or negative usage need checking. Recommended order = par − the latest stock count, rounded up to whole units, with a minimum of zero.",
+    "locations": [
+      "Ordering · stock and recommendation"
+    ]
   }
 ]

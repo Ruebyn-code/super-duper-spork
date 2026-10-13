@@ -287,3 +287,15 @@ label{font-size:12px;line-height:1.5}
 .usage-totals{grid-column:2 / -1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.usage-totals .usage-used{font-size:12px;line-height:1.5}.automatic-usage-item .usage-warning{font-weight:600}
 @media(max-width:1000px){.usage-totals{grid-column:1 / -1}}
 @media(max-width:520px){.usage-quantity{flex-direction:row;justify-content:space-between;align-items:center;gap:12px}.usage-totals{grid-column:1;border-top:1px solid var(--line);padding-top:12px}}
+
+/* Ordering decisions sit together: weekly target, counted stock and the suggested top-up. */
+.product-par{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;align-items:start}
+.product-par>.par-value{grid-column:1;grid-row:1;margin-top:3px;font-size:13px}
+.product-par>.par-hint{grid-column:1;grid-row:2;line-height:1.5;overflow-wrap:anywhere}
+.ordering-stat{display:flex;flex-direction:column;gap:5px;min-width:0;grid-row:1 / 3}
+.stock-count-stat{grid-column:2}.recommended-order-stat{grid-column:3}
+.ordering-stat-label{font-size:10px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
+.product-par>.par-value{overflow-wrap:anywhere}.ordering-stat strong{overflow-wrap:anywhere;font-size:17px;line-height:1.4;font-variant-numeric:tabular-nums}
+.ordering-stat-hint{font-size:10px;color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.recommended-order-value{color:var(--primary)}
+@media(max-width:480px){.product-par{gap:8px}.ordering-stat-label,.ordering-stat-hint{font-size:9px}.ordering-stat strong{font-size:16px}}

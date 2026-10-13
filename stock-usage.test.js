@@ -27,3 +27,11 @@ test('history reader refreshes new/corrected records, ignores credentials and ma
  await assert.rejects(usage.report(dir,session,products,'2026-10-05',{reader}),error=>error.status===400);assert.equal(await fs.readFile(path.join(dir,'stock-usage','old-week.json'),'utf8'),'NOT AUTOMATIC USAGE');
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('ordering shows the latest account stock take and par-minus-count recommendations, with zero, fractional and omitted counts distinct',()=>{
+ const {orderingSuggestions}=usage;const own={id:'own',role:'admin'};const items=['a','zero','missing','fraction','over','no-par'].map(id=>({id}));
+ const history=[{id:'old',accountId:'own',createdAt:'2026-10-11T10:00:00Z',countDate:'2026-10-11',items:[{id:'a',quantity:99},{id:'missing',quantity:8}]},{id:'new',accountId:'own',createdAt:'2026-10-14T10:00:00Z',countDate:'2026-10-14',items:[{id:'a',quantity:2},{id:'zero',quantity:0},{id:'fraction',quantity:2.625},{id:'over',quantity:9},{id:'no-par',quantity:1}]},{id:'other',accountId:'other',createdAt:'2026-10-14T11:00:00Z',countDate:'2026-10-14',items:[{id:'a',quantity:999}]}];
+ const levels=Object.fromEntries(items.map(item=>[item.id,{level:item.id==='no-par'?null:7}]));const result=orderingSuggestions(history,items,own,levels);
+ assert.equal(result.stockTake.id,'new');assert.equal(result.stockTake.countDate,'2026-10-14');assert.deepEqual(result.items.a,{stockCount:2,recommended:5});assert.deepEqual(result.items.zero,{stockCount:0,recommended:7});assert.deepEqual(result.items.fraction,{stockCount:2.625,recommended:5});assert.deepEqual(result.items.over,{stockCount:9,recommended:0});assert.deepEqual(result.items.missing,{stockCount:null,recommended:null});assert.deepEqual(result.items['no-par'],{stockCount:1,recommended:null});
+ const empty=orderingSuggestions(history,items,{id:'unknown'},levels);assert.equal(empty.stockTake,null);assert.equal(empty.items.a.stockCount,null);assert.equal(empty.items.a.recommended,null);
+});
