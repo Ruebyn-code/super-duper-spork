@@ -13,3 +13,5 @@
 #account-form{max-width:520px}#account-form input[type=password]{font-family:Arial,sans-serif}#account-message{overflow-wrap:anywhere}
 
 .hero h1{font-family:'Opsilon',sans-serif}h1:not(.hero h1){font-weight:600;letter-spacing:normal;word-spacing:normal}
+
+button{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:0.04em}.product-bottom button,.submit{font-weight:400}
