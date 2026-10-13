@@ -299,3 +299,13 @@ label{font-size:12px;line-height:1.5}
 .ordering-stat-hint{font-size:10px;color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
 .recommended-order-value{color:var(--primary)}
 @media(max-width:480px){.product-par{gap:8px}.ordering-stat-label,.ordering-stat-hint{font-size:9px}.ordering-stat strong{font-size:16px}}
+
+/* Hold the controls in place while the confirmation covers the compact quantity field. */
+.product .add-controls{position:relative;flex-wrap:nowrap;max-width:100%}
+.product .add-controls label{min-width:0;transition:opacity var(--motion-fast)}
+.product .add-controls input[type=number]{width:48px;height:32px;min-height:32px;margin-top:0;padding:5px 4px;font-size:12px;border-radius:8px;text-align:center;appearance:textfield}
+.add-controls input::-webkit-inner-spin-button,.add-controls input::-webkit-outer-spin-button{appearance:none;margin:0}
+.product .add-controls.add-confirming{width:var(--add-control-width);height:var(--add-control-height);min-height:40px}
+.add-controls.add-confirming label{opacity:0;pointer-events:none}
+.product .add-controls.add-confirming button{position:absolute;right:0;bottom:0;width:var(--add-button-width);max-width:100%;white-space:nowrap;overflow:hidden;opacity:1;cursor:default;transform:none;transition:width 240ms var(--motion-ease)}
+.product .add-controls.add-expanded button{width:100%}

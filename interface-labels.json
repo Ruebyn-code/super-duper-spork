@@ -1783,5 +1783,11 @@
     "locations": [
       "Ordering · stock and recommendation"
     ]
+  },
+  {
+    "text": "Added to cart",
+    "locations": [
+      "Ordering · add button confirmation"
+    ]
   }
 ]
