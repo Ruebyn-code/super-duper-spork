@@ -110,3 +110,146 @@ h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-s
 
 .sidebar-footer{align-items:center;gap:8px;background:var(--primary);border-top-color:var(--primary);color:#fff}.sidebar-footer button{background:transparent;border-color:#ffffff66;color:inherit}.sidebar-footer button:hover{background:#ffffff1f;border-color:#fff}.sidebar-footer button:focus-visible{outline-color:#fff}.sidebar-footer #app-edit-toggle[aria-pressed=true]{background:var(--secondary);border-color:var(--secondary)}.sidebar-edit-controls{flex:1;min-width:0}.sidebar-edit-controls[hidden]{display:none!important}.sidebar-footer #app-edit-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:36px;margin:0;padding:7px 8px;font-size:12px}.sidebar-edit-label{min-width:0;overflow-wrap:anywhere}.sidebar-collapsed .sidebar-footer{flex-direction:column}.sidebar-collapsed .sidebar-edit-controls{flex:none}.sidebar-collapsed .sidebar-footer #app-edit-toggle{width:36px;height:36px;padding:7px}.sidebar-collapsed .sidebar-edit-label{display:none}
 @media(max-width:480px){.sidebar-footer .sidebar-edit-label{display:none}.sidebar-footer #app-edit-toggle{width:36px;height:36px;padding:7px}}
+
+/* Shared visual polish. Saved appearance choices continue to take precedence. */
+:root{
+  --surface:#fff;
+  --line:#e1e8f0;
+  --muted:#617184;
+  --panel-shadow:0 4px 24px #183b5606,0 1px 3px #183b5604;
+}
+body{background-color:color-mix(in srgb,var(--primary) 2%,#f5f7fa)}
+button{border-radius:11px;line-height:1.35}
+input,textarea{border-color:var(--line);border-radius:11px;background-color:#fff;padding:12px 14px;min-width:0}
+input:not([type=checkbox]):not([type=color]):not([type=file]),select{min-height:42px}
+input[type=checkbox]{accent-color:var(--primary)}
+.management select,.count-tools select,.supplier-delivery select{border-color:var(--line);border-radius:11px;background-color:#fff;min-height:44px}
+label{font-size:12px;line-height:1.5}
+.submit{border-radius:12px;min-height:46px;box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 16%,transparent)}
+.small,.description,.info{line-height:1.6}
+.app-page main{padding-left:36px;padding-right:36px}
+.app-page .admin-page,.app-page .stock-count-page{padding-top:36px;padding-bottom:40px}
+.app-page .admin-page>h1,.app-page .cart-page>h1{margin:0 0 24px;font-size:34px}
+.management,.cart-page>aside{border-color:var(--line);border-radius:20px;padding:26px;box-shadow:var(--panel-shadow)}
+.management h2:first-child,.management h1:first-child{margin-top:0}
+.management h2{font-size:22px;margin-bottom:18px}
+.management p{color:var(--muted);font-size:13px}
+.app-page footer{border-color:var(--line);color:var(--muted);font-size:12px;padding-top:22px;padding-bottom:22px}
+
+/* A quiet navigation rail with a clear active position. */
+.app-shell>.admin-sidebar{border-right-color:var(--line)}
+.sidebar-scroll{scrollbar-width:thin;scrollbar-color:#d1dce7 transparent}
+.app-shell .admin-sidebar .brand{margin-bottom:26px}
+.app-shell .admin-sidebar h2{font-size:13px;letter-spacing:.08em;color:var(--muted);margin:26px 10px 12px}
+.admin-sidebar a{border-radius:11px}
+.main-sidebar-nav a{min-height:46px;gap:12px;font-size:14px}
+.main-sidebar-nav a[aria-current=page],.sidebar-admin-shortcut[aria-current=page]{box-shadow:inset 3px 0 var(--primary)}
+.admin-nav-group summary{border-radius:10px;line-height:1.4}
+.admin-nav-group summary:hover{background-color:color-mix(in srgb,var(--primary) 6%,white)}
+.admin-subnav{border-left:1px solid var(--line);margin-left:16px!important}
+.admin-subnav a{font-size:12px;padding-top:10px;padding-bottom:10px}
+.sidebar-signout{border-color:var(--line);background-color:#f8fafc;font-size:12px;min-height:40px}
+.sidebar-footer button{border-radius:10px}
+
+/* Ordering: compact introduction, segmented view switch and consistent cards. */
+.catalogue-layout{grid-template-columns:minmax(0,1fr)}
+.catalogue-layout>section{min-width:0}
+.app-page .hero{padding:32px 0 28px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.hero .eyebrow{display:inline-block;margin:0;padding:6px 10px;border-radius:7px;background-color:color-mix(in srgb,var(--primary) 8%,white);font-size:10px;letter-spacing:1.5px}
+.hero h1{font-size:48px;margin:14px 0;line-height:1.15}
+.hero .greeting-intro{font-size:.48em}
+.hero p:not(.eyebrow){font-size:14px;max-width:580px;margin:12px 0}
+.hero .info{font-size:11px;margin-top:16px}
+.menu-heading h2{margin:0 0 16px;font-size:24px}
+.catalogue-view{gap:3px;padding:4px;border:1px solid var(--line);border-radius:12px;background-color:#fff;width:fit-content;margin-bottom:16px}
+.catalogue-view button{border-color:transparent;border-radius:8px;padding:8px 14px;font-size:12px}
+.catalogue-view button[aria-pressed=true]{border-color:transparent}
+#search{margin-top:0;min-height:48px;box-shadow:0 2px 8px #183b5603}
+#filters{min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#d1dce7 transparent;gap:8px;margin:16px 0 22px;padding:2px 2px 8px;max-width:100%}
+#filters button{flex-shrink:0;border-radius:20px;font-size:12px;padding:9px 15px;border-color:var(--line);white-space:nowrap}
+#filters button.active{border-color:var(--primary)}
+.product{border-color:var(--line);border-radius:20px;padding:18px;box-shadow:var(--panel-shadow);min-width:0}
+.menu:not(.menu-list) .product{display:flex;flex-direction:column}
+.product-art{height:144px;border-radius:13px;background-color:color-mix(in srgb,var(--primary) 5%,#f7f9fc);flex-shrink:0}
+.product h3{font-size:19px;line-height:1.35}
+.sku{font-size:10px;letter-spacing:.5px;margin:16px 0 7px}
+.description{font-size:12px;margin:8px 0 0}
+.menu:not(.menu-list) .product .product-bottom{margin-top:auto;padding-top:20px}
+.product-bottom strong{font-size:16px;font-variant-numeric:tabular-nums}
+.product-bottom button{border-radius:10px;padding:10px 16px;min-height:40px}
+.add-controls{gap:8px}.add-controls input{width:58px;min-height:40px;text-align:center;background-color:#f8fafc;border-radius:10px}
+.add-feedback{font-size:11px;line-height:1.5}
+.menu-list .product{padding:16px;column-gap:18px}
+.menu-list .product .product-art{border-radius:12px}
+.pagination{margin-top:28px}.pagination button{font-size:12px;min-height:40px}.pagination span{font-size:12px}
+
+/* Checkout and administration use the same panel and field language. */
+.app-page .cart-page{max-width:880px;padding-top:36px}
+.cart-heading{padding-bottom:16px;border-bottom:1px solid var(--line)}
+.cart-heading h2{margin:0;font-size:22px}
+.cart-heading #count{background-color:color-mix(in srgb,var(--primary) 8%,white);color:var(--primary);padding:6px 10px;border-radius:20px;font-size:11px;white-space:nowrap}
+.cart-row{padding:20px 0;border-color:var(--line)}
+.cart-row>strong{font-size:18px}
+.quantity{gap:8px;flex-wrap:wrap}.quantity button{width:34px;height:34px;padding:0;border-radius:9px}.quantity input{min-height:34px;text-align:center}
+.quantity span{font-size:13px}
+.cart-page .total{background-color:color-mix(in srgb,var(--primary) 5%,white);border:1px solid var(--line);border-radius:14px;margin-top:22px;padding:18px;align-items:center;gap:12px;flex-wrap:wrap}
+.total strong{font-size:24px;font-variant-numeric:tabular-nums}
+.cart-page #checkout{margin-top:20px;padding-top:2px}
+.stock-actions{flex-wrap:wrap;max-width:100%;gap:8px}.stock-actions button{font-size:12px;min-height:36px}
+.managed-stock{padding:16px 0;border-color:var(--line)}
+.managed-stock>div:first-child{min-width:0;overflow-wrap:anywhere}
+.supplier-stock-menu,.admin-collapse{border-color:var(--line);border-radius:14px}
+.supplier-stock-menu>summary,.admin-collapse>summary{background-color:color-mix(in srgb,var(--primary) 4%,#fff);padding:18px}
+.supplier-stock-content,.admin-collapse-content{padding-left:18px;padding-right:18px}
+.stock-items-count{display:inline-block;margin-top:4px;padding:3px 8px;background-color:#fff;border-radius:20px}
+.stock-edit-panel{border-color:var(--line);border-radius:14px;background-color:#f6f9fc}
+.colour-guide{background-color:color-mix(in srgb,var(--primary) 4%,#fff);border:1px solid var(--line);border-radius:14px}
+.count-progress{display:inline-block;font-size:12px;padding:8px 12px;border-radius:20px;background-color:color-mix(in srgb,var(--primary) 8%,#fff)}
+.count-item{padding:18px 0;border-color:var(--line)}
+.count-history-row{border-color:var(--line)}
+.text-setting-row{border-color:var(--line);border-radius:12px;background-color:#fafcfe}
+
+/* Keep sign-in blue and give its form a more composed presentation. */
+.authentication-page{background-color:var(--primary)}
+.authentication-page header{max-width:1120px;padding-top:24px;padding-bottom:24px}
+.authentication-page .login-page{max-width:540px;padding-top:48px}
+.authentication-page .management{padding:32px;border:1px solid #ffffff80;border-radius:24px;box-shadow:0 24px 64px #06396330}
+.authentication-page .login-page h1{font-size:36px;margin-top:12px;margin-bottom:12px}
+.authentication-page .login-page p{font-size:13px}
+.authentication-page .submit{margin-top:26px}
+
+@media(max-width:950px){
+  .app-page main{padding-left:24px;padding-right:24px}
+  .product-art{height:128px}
+}
+@media(max-width:720px){
+  .app-page main{padding-left:16px;padding-right:16px}
+  .app-page .hero{padding-top:26px;padding-bottom:24px;margin-bottom:22px}
+  .hero h1{font-size:38px}
+  .management,.cart-page>aside{padding:20px;border-radius:17px}
+  .product{padding:15px;border-radius:17px}
+  .menu-heading h2{font-size:22px}
+  .menu-list .product{column-gap:12px}
+  .admin-subnav{margin-left:6px!important}
+  .authentication-page .login-page{padding-top:32px}
+}
+@media(max-width:480px){
+  .app-page main{padding-left:12px;padding-right:12px}
+  .app-page .admin-page,.app-page .stock-count-page,.app-page .cart-page{padding-top:24px}
+  .app-page .hero{padding-top:24px}
+  .hero h1{font-size:32px}.hero p:not(.eyebrow){font-size:12px}.hero .eyebrow{font-size:9px;letter-spacing:.8px}
+  .app-page .admin-page>h1,.app-page .cart-page>h1{font-size:28px}
+  .app-page .management,.app-page .cart-page>aside{padding:14px}
+  .app-shell .admin-sidebar h2{font-size:11px;margin-left:6px;margin-right:6px}
+  .catalogue-view button{padding:8px 10px}
+  .menu-list .product{padding:13px;column-gap:10px}
+  .menu-list .product .product-bottom{gap:10px}
+  .product h3{font-size:17px}.product-bottom button{padding:9px 12px}
+  .add-controls input{width:52px}
+  .cart-page .total{padding:12px}.total strong{font-size:20px}
+  .supplier-stock-menu>summary,.admin-collapse>summary{padding:14px}
+  .supplier-stock-content,.admin-collapse-content{padding-left:12px;padding-right:12px}
+  .stock-items-count{margin-left:0;white-space:normal}
+  .authentication-page header{padding:20px}
+  .authentication-page .management{padding:24px}
+}
