@@ -29,7 +29,11 @@
   try{
    const response=await fetch('/api/session');const session=await response.json();if(!session.csrf){location.href='/login';return;}
    document.querySelectorAll('.main-sidebar-nav a').forEach(link=>{if(new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
-   if(session.locationName){let label=document.getElementById('sidebar-location');if(!label){label=document.createElement('p');label.id='sidebar-location';label.className='sidebar-location';label.dataset.userText='';label.dataset.editId='sidebar-location-'+location.pathname.replace(/[^a-z0-9]/gi,'_');sidebar?.querySelector('.sidebar-cart-nav')?.after(label);}label.textContent=session.locationName;label.title=session.locationName;}
+   const brand=sidebar?.querySelector('.brand');
+   if(session.locationName&&brand){
+    let row=brand.closest('.sidebar-brand-row');if(!row){row=document.createElement('div');row.className='sidebar-brand-row';brand.before(row);row.append(brand);}
+    let label=document.getElementById('sidebar-location');if(!label){label=document.createElement('p');label.id='sidebar-location';label.className='sidebar-location';label.dataset.userText='';label.dataset.editId='sidebar-location-'+location.pathname.replace(/[^a-z0-9]/gi,'_');}row.append(label);label.textContent=session.locationName;label.title=session.locationName;
+   }
    const admin=document.getElementById('admin-link');if(admin)admin.hidden=session.role!=='admin';
    const editControls=document.getElementById('admin-edit-controls');if(editControls)editControls.hidden=session.role!=='admin';
    const shortcut=sidebar?.querySelector('.sidebar-admin-shortcut');if(shortcut){if(location.pathname.startsWith('/admin'))shortcut.setAttribute('aria-current','page');else shortcut.removeAttribute('aria-current');}
