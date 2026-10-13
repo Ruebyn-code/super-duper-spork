@@ -17,3 +17,25 @@ test('catalogue, saved stock request, server pricing, and invalid quantity',asyn
  assert.equal((await fetch(url+'/data/'+order.id+'.json')).status,404);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('supplier stock management persists across restarts and preserves historical requests',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'sk-suppliers-'));let server;
+ async function start(){server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));return 'http://127.0.0.1:'+server.address().port;}
+ let url=await start();
+ const request=async(route,method='GET',body)=>{const response=await fetch(url+route,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});return {status:response.status,data:await response.json()};};
+ try{
+ const supplier=await request('/api/suppliers','POST',{name:'New Supplier'});assert.equal(supplier.status,201);
+ assert.equal((await request('/api/suppliers','POST',{name:'new supplier'})).status,400);
+ assert.equal((await request('/api/products','POST',{supplierId:'missing',name:'Invalid',price:1,stock:1})).status,400);
+ const added=await request('/api/products','POST',{supplierId:supplier.data.id,name:'Custom stock',price:12.34,stock:7,sku:'TEST',category:'Custom'});assert.equal(added.status,201);
+ assert.equal((await request('/api/suppliers/'+supplier.data.id,'DELETE')).status,400);
+ await new Promise(r=>server.close(r));url=await start();
+ const catalogue=await request('/api/catalogue');const product=catalogue.data.products.find(p=>p.id===added.data.id);assert.equal(product.price,1234);assert.equal(product.supplier,'New Supplier');assert.equal(product.stock,7);
+ const order=await request('/api/orders','POST',{name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id:product.id,quantity:2,price:1}]});assert.equal(order.status,201);assert.equal(order.data.total,2468);assert.equal(order.data.items[0].supplier,'New Supplier');
+ assert.equal((await request('/api/products/'+product.id,'DELETE')).status,200);
+ assert.equal((await request('/api/orders','POST',{name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id:product.id,quantity:2}]})).status,400);
+ const historical=JSON.parse(await fs.readFile(path.join(dir,order.data.id+'.json'),'utf8'));assert.equal(historical.items[0].name,'Custom stock');assert.equal(historical.items[0].supplier,'New Supplier');
+ assert.equal((await request('/api/suppliers/'+supplier.data.id,'DELETE')).status,200);
+ await new Promise(r=>server.close(r));url=await start();assert.ok(!(await request('/api/catalogue')).data.suppliers.some(s=>s.id===supplier.data.id));
+ const results=await Promise.all(['Concurrent A','Concurrent B'].map(name=>request('/api/suppliers','POST',{name})));assert.ok(results.every(r=>r.status===201));const final=await request('/api/catalogue');assert.ok(final.data.suppliers.some(s=>s.name==='Concurrent A'));assert.ok(final.data.suppliers.some(s=>s.name==='Concurrent B'));
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
