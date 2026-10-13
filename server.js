@@ -14,6 +14,8 @@ const appearanceStyles=require('./public/appearance-style');
 const stockCounts=require('./stock-counts');
 const stockUsage=require('./stock-usage');
 const sales=require('./sales');
+const locations=require('./locations');
+const {belongs}=require('./location-scope');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -38,8 +40,9 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createServer(dataDir = path.join(__dirname,'data')) {
+function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
   const auth=createAuth(dataDir);
+  const locationStore=locations.createStore(dataDir,auth);
   const usageHistory=stockUsage.createReader();
   const salesStore=sales.createStore();
   const catalogueFile = path.join(dataDir,'catalogue.json');
@@ -81,7 +84,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.url==='/api/setup'&&req.method==='POST'){
         if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))fail('First-time setup must be opened on the computer running the app.',403);
         if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`))fail('Invalid setup request.',403);
-        return json(201,await auth.setup(await body(req)));
+        const account=await auth.setup(await body(req));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));
       }
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
@@ -93,18 +96,29 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       }
       if(req.method==='GET'&&req.url==='/interface-text')return json(200,await interfaceText.read(dataDir));
       if(req.method==='GET'&&req.url==='/element-overrides')return json(200,await elementOverrides.read(dataDir));
-      const session=await auth.session(req);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf}:{role:'user'});
+      await locationStore.ensure();
+      const session=await locationStore.sessionContext(await auth.session(req));
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
         const loggedIn=await auth.login(req,await body(req));
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url==='/api/logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url==='/api/logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/locations'&&req.method==='GET')return json(200,await locationStore.list());
+      if(req.url==='/api/locations'&&req.method==='POST')return json(201,await locationStore.create(await body(req)));
+      const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
+      if(locationRoute&&req.method==='PUT')return json(200,await locationStore.update(locationRoute[1],await body(req)));
+      const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
+      if(locationEmailRoute){
+        const location=await locationStore.get(locationEmailRoute[1]);
+        if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,location.id)));
+        if(req.method==='PUT'){if(location.archived)fail('Restore the location before changing its email settings.');try{return json(200,await deliverySettings.save(dataDir,await body(req),location.id));}catch(error){fail(error.message);}}
+      }
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders}));
@@ -130,12 +144,12 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.url==='/api/interface-text'&&req.method==='GET')return json(200,{labels:interfaceText.labels,overrides:await interfaceText.read(dataDir)});
       if(req.url==='/api/interface-text'&&req.method==='PATCH'){try{return json(200,await interfaceText.patch(dataDir,await body(req)));}catch(error){fail(error.message);}}
       if(req.url==='/api/interface-text'&&req.method==='PUT'){try{return json(200,await interfaceText.save(dataDir,await body(req,300000)));}catch(error){fail(error.message);}}
-      if(req.url==='/api/delivery-status'&&req.method==='GET')return json(200,providerStatus(await deliverySettings.deliveryEnvironment(dataDir,session.id)));
+      if(req.url==='/api/delivery-status'&&req.method==='GET')return json(200,providerStatus(await deliverySettings.deliveryEnvironment(dataDir,session.locationId)));
       const accountEmailRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)\/email$/);
-      if(accountEmailRoute){const id=accountEmailRoute[1];if(!(await auth.list()).some(account=>account.id===id))fail('Account not found.',404);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,id)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),id));}catch(error){fail(error.message);}}}
-      if(req.url==='/api/my-email-settings'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.id)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.id));}catch(error){fail(error.message);}}}
-      if(req.url==='/api/delivery-settings'&&req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.id)));
-      if(req.url==='/api/delivery-settings'&&req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.id));}catch(error){fail(error.message);}}
+      if(accountEmailRoute){const id=accountEmailRoute[1];const account=(await auth.list()).find(account=>account.id===id);if(!account)fail('Account not found.',404);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,account.locationId)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),account.locationId));}catch(error){fail(error.message);}}}
+      if(req.url==='/api/my-email-settings'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.locationId)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.locationId));}catch(error){fail(error.message);}}}
+      if(req.url==='/api/delivery-settings'&&req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.locationId)));
+      if(req.url==='/api/delivery-settings'&&req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.locationId));}catch(error){fail(error.message);}}
       const supplierEdit=req.url.match(/^\/api\/suppliers\/([a-zA-Z0-9-]+)$/);
       if(req.method==='PUT'&&supplierEdit){const input=await body(req);let delivery;try{delivery=validateDelivery(input.delivery);}catch(error){fail(error.message);}return json(200,await mutate(c=>{const supplier=c.suppliers.find(s=>s.id===supplierEdit[1]);if(!supplier)fail('Supplier not found.',404);supplier.delivery=delivery;return supplier;}));}
       if(req.url==='/api/settings'&&['PUT','PATCH'].includes(req.method)){try{return json(200,await saveAppearance(dataDir,await body(req,2900000),req.method==='PATCH'));}catch(error){fail(error.message);}}
@@ -147,9 +161,9 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const target=path.join(dataDir,'logo.json');await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(target,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});return json(200,{saved:true});
       }
       if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list());
-      if(req.url==='/api/accounts'&&req.method==='POST')return json(201,await auth.create(session,await body(req)));
+      if(req.url==='/api/accounts'&&req.method==='POST'){const account=await auth.create(session,await body(req),id=>locationStore.get(id,{active:true}));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));}
       const accountRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)$/);
-      if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req)));
+      if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
       if(req.method==='GET'&&['/','/cart','/stock-count','/sales','/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
@@ -185,19 +199,19 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const requestId=input?.requestId;
         if(requestId!==undefined&&!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId))fail('Invalid request identifier.');
         const fingerprint=crypto.createHash('sha256').update(JSON.stringify(input)).digest('hex');
-        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
+        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
-        if(requestId)order.id=requestId;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        if(requestId)order.id=requestId;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
-        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
-        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env:await deliverySettings.deliveryEnvironment(dataDir,session.id)});
+        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
+        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env:await deliverySettings.deliveryEnvironment(dataDir,session.locationId),fetchImpl});
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/locations.js':'locations.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';

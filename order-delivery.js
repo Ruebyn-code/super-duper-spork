@@ -7,7 +7,7 @@ function validateDelivery(input){
  return {method,contact:method==='none'?'':contact};
 }
 function providerStatus(env={}){return {email:Boolean(env.DELIVERY_EMAIL_ENABLED==='true'&&env.RESEND_API_KEY&&env.ORDER_FROM_EMAIL)};}
-function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(i=>`${i.quantity} × ${i.name} (${i.price===null?'price pending':'AUD '+(i.price/100).toFixed(2)+' per unit'})`).join('\n')}\n\nKnown-price subtotal: AUD ${(order.total/100).toFixed(2)}${order.pricePending?' (additional prices pending)':''}\nNotes: ${order.notes||'None'}`;}
+function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(i=>`${i.quantity} × ${i.name} (${i.price===null?'price pending':'AUD '+(i.price/100).toFixed(2)+' per unit'})`).join('\n')}\n\nKnown-price subtotal: AUD ${(order.total/100).toFixed(2)}${order.pricePending?' (additional prices pending)':''}\nNotes: ${order.notes||'None'}`;}
 async function deliverSupplier(order,delivery,{env={},fetchImpl=fetch}={}){
  const ready=providerStatus(env);if(delivery.method==='none'||!delivery.contact||!ready[delivery.method])return {status:'not_configured',message:'Supplier contact or sending service is not configured.'};
  let url,headers,body;

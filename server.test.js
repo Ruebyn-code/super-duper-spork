@@ -104,7 +104,7 @@ test('in-app accounts, permissions, revocation, and last administrator protectio
  const promoted=await login(url,'staff','staff-account-password');assert.equal((await request('/api/accounts','GET',promoted)).status,200);
  assert.equal((await request('/api/accounts/'+staffAccount.data.id,'PUT',admin,{username:'staff',role:'user',password:'new-staff-password'})).status,200);assert.equal((await request('/api/accounts','GET',promoted)).status,401);
  const reset=await login(url,'staff','new-staff-password');assert.equal((await request('/api/accounts/'+staffAccount.data.id,'DELETE',admin)).status,200);assert.equal((await fetch(url+'/api/catalogue',{headers:reset})).status,401);
- const all=await request('/api/accounts','GET',admin);assert.equal(all.data.length,1);assert.deepEqual(Object.keys(all.data[0]).sort(),['id','role','username']);
+ const all=await request('/api/accounts','GET',admin);assert.equal(all.data.length,1);assert.deepEqual(Object.keys(all.data[0]).sort(),['id','locationId','role','username']);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 test('legacy sign-in accounts are preserved when account management saves changes',async()=>{
@@ -179,7 +179,7 @@ test('delivery configuration is admin-only, secrets stay private, and repeat ord
  body.items[0].quantity=3;assert.equal((await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)})).status,409);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
-test('each account has private email-only sending settings and administrator sidebar pages',async()=>{
+test('initial locations retain separate email settings, account-URL compatibility and administrator sidebar pages',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-personal-email-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'first','first-account-password');await saveUser(dir,'second','second-account-password');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{const first=await login(url,'first','first-account-password'),second=await login(url,'second','second-account-password'),admin=await login(url);
  const firstSession=await(await fetch(url+'/api/session',{headers:first})).json();const secondSession=await(await fetch(url+'/api/session',{headers:second})).json();

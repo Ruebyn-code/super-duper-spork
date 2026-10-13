@@ -46,6 +46,6 @@
  $('usage-week').onchange=()=>{const value=$('usage-week').value;if(value)loadWeek(sunday(value));};$('usage-refresh').onclick=()=>loadWeek(currentWeek);$('usage-search').oninput=filter;$('usage-supplier').onchange=filter;
  async function refresh(){if(location.hash!=='#usage'||!session||loading||document.hidden)return;const nextDefault=shift(thisWeek(),-7);if(currentWeek===defaultWeek&&defaultWeek!==nextDefault)currentWeek=nextDefault;defaultWeek=nextDefault;await loadWeek(currentWeek);}
  window.addEventListener('hashchange',open);window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
- window.addEventListener('storage',event=>{if(event.key==='souvlaki-usage-updated-'+session?.id)refresh();});setInterval(()=>{if(defaultWeek&&defaultWeek!==shift(thisWeek(),-7))refresh();},60000);
+ window.addEventListener('storage',event=>{if(event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id))refresh();});setInterval(refresh,60000);
  window.addEventListener('interface-text-updated',render);setBusy();open();
 })();

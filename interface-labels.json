@@ -2137,5 +2137,287 @@
     "locations": [
       "Sales and ordering budget"
     ]
+  },
+  {
+    "text": "Locations",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Assign users to locations and choose their permissions. Users at the same location share sales, stock counts, par levels and the ordering budget. Only administrators can manage locations, users and sender emails.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Show users at",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "All locations",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Create a location, assign its users in Accounts & permissions, and set its sender email in Email settings. Existing records stay with their location when a user moves.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Add location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location name",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Create location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location email settings",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Select a location to set its sender email and sending credentials. All users assigned to that location send orders through this setup. Only administrators can change it.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Automatically email this location’s orders",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Save location email settings",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Count area (optional)",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "No stock matches your search.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Usage is calculated automatically: Sunday stock count + all orders placed Sunday to Saturday − the next Sunday stock count. All counts and orders from your assigned location are used.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Enter daily sales for each Monday–Sunday week. Your location’s projected sales and 28% ordering budget update automatically.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Amounts are in AUD. Leave unrecorded days blank; enter 0 for a day with no sales. Enter your location’s total sales once per day. Everyone at the location sees the same saved values, and you can return to edit any week.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Projected sales = the average of your location’s previous four completed Monday–Sunday weeks. Each projected day uses the same weekday’s sales from those four weeks. Budget = projected weekly sales × 28%.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "0 units",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Orders are sent from your location’s configured sender to each supplier’s email. Administrators set supplier contacts and location email settings; the result below shows any orders not sent.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Par is your location’s average usage over the previous four completed Sunday–Saturday weeks, rounded up to whole units or packs. Usage is calculated from Sunday stock + that week’s orders − the next Sunday stock count. Save Sunday counts and place orders as usual; usage updates automatically. Five consecutive Sunday counts are needed for four complete weeks. Missing counts or negative usage need checking. Recommended order = par − the latest stock count, rounded up to whole units, with a minimum of zero.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Save location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location email",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Archive location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Restore location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Manage users",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Archived",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "user",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "users",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "No users at this location.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Move users to another location before archiving.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Archive this location? Its saved records and email settings will be kept.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Saving location…",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location saved.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Creating location…",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location created. Assign its users and set its email sender.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Account saved. Location, permission or password changes require that user to sign in again.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Create a location to configure email sending.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location email settings are saved. Credentials have not been verified with the sending service.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Orders use the signed-in user’s location email settings.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Supplier email saved. Administrators configure each location’s sender in Email settings.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Administrators can review counts from every location.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Your location’s saved stock counts.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Par levels · {start} – {end} · Location usage",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Based on your location’s previous four complete weeks.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Kitchen, fridge, or stockroom",
+    "locations": [
+      "Locations and shared ordering"
+    ]
   }
 ]

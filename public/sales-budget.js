@@ -21,7 +21,7 @@
  }
  window.addEventListener('ordering-cart-updated',event=>{cart=event.detail;render();});
  window.addEventListener('sales-budget-updated',refresh);window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('interface-text-updated',render);
- window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+session?.id||event.key==='souvlaki-usage-updated-'+session?.id)refresh();});
+ window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id))refresh();});
  setInterval(refresh,60000);
  (async()=>{try{session=await(await fetch('/api/session')).json();await refresh();}catch{}})();
 })();

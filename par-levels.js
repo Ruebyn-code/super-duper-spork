@@ -1,3 +1,4 @@
+const {belongs}=require('./location-scope');
 const dayMs=86400000;
 const defaultTimeZone='Australia/Melbourne';
 function calendar(timeZone){
@@ -18,7 +19,7 @@ function calculate(records,products,session,{now=new Date(),timeZone=defaultTime
  const window=windowFor(now,timeZone),end=Date.parse(window.currentWeekStart+'T00:00:00Z')/dayMs,start=end-28;
  const totals=new Map(products.map(product=>[product.id,{thousandths:0,weeks:new Set()}]));
  for(const record of records){
-  if(!record||record.accountId!==session.id||record.source!=='sunday_counts_and_orders'||!Array.isArray(record.items))continue;
+  if(!record||!belongs(record,session)||record.source!=='sunday_counts_and_orders'||!Array.isArray(record.items))continue;
   const day=Date.parse(record.weekStart+'T00:00:00Z')/dayMs;
   if(!Number.isFinite(day)||day<start||day>=end||new Date(day*dayMs).getUTCDay()!==0)continue;
   for(const item of record.items){
@@ -27,6 +28,6 @@ function calculate(records,products,session,{now=new Date(),timeZone=defaultTime
    total.thousandths+=value;total.weeks.add(record.weekStart);
   }
  }
- return {window:{...window,scope:'account',source:'sunday_counts_and_orders'},levels:Object.fromEntries([...totals].map(([id,total])=>[id,{level:total.weeks.size===4?Math.ceil(total.thousandths/4000):null,average:total.weeks.size===4?total.thousandths/4000:null,usedQuantity:total.thousandths/1000,weeksRecorded:total.weeks.size}]))};
+ return {window:{...window,scope:session.locationId?'location':'account',source:'sunday_counts_and_orders'},levels:Object.fromEntries([...totals].map(([id,total])=>[id,{level:total.weeks.size===4?Math.ceil(total.thousandths/4000):null,average:total.weeks.size===4?total.thousandths/4000:null,usedQuantity:total.thousandths/1000,weeksRecorded:total.weeks.size}]))};
 }
 module.exports={windowFor,calculate,defaultTimeZone,calendar,dayNumber,dateLabel};

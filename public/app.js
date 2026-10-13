@@ -1,5 +1,5 @@
 const money = n => n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(n/100);
-let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',page=1,parWindow=null,latestStockTake=null;
+let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',scopeKey='',page=1,parWindow=null,latestStockTake=null;
 const itemQuantities=new Map(),itemMessages=new Map();let submissionId='',submissionBody='';
 const $=id=>document.getElementById(id);
 const wording=(template,values={})=>typeof interfaceLabel==='function'?interfaceLabel(template,values):template.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
@@ -71,7 +71,7 @@ function renderProductPar(product){
 function renderParPeriod(){
   if(!$('par-period')||!parWindow)return;
   const format=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
-  const template='Par levels · {start} – {end} · Your usage';const values={start:format(parWindow.startDate),end:format(parWindow.endDate)};$('par-period').dataset.appTemplate=template;$('par-period').dataset.appValues=JSON.stringify(values);$('par-period').textContent=wording(template,values);
+  const template='Par levels · {start} – {end} · Location usage';const values={start:format(parWindow.startDate),end:format(parWindow.endDate)};$('par-period').dataset.appTemplate=template;$('par-period').dataset.appValues=JSON.stringify(values);$('par-period').textContent=wording(template,values);
   if($('stock-take-status')){const date=latestStockTake?.countDate;const countTemplate=date?'Latest stock take: {date}':'Save a stock take to see counts and recommended orders.';const countValues={date:date?format(date):''};$('stock-take-status').dataset.appTemplate=countTemplate;$('stock-take-status').dataset.appValues=JSON.stringify(countValues);$('stock-take-status').textContent=wording(countTemplate,countValues);}
 }
 function renderMenu(){
@@ -90,7 +90,7 @@ function render(refreshMenu=true){if(refreshMenu)renderMenu();const focused=docu
 if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};
-if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem(cartKey.replace('souvlaki-cart-','souvlaki-usage-updated-'),String(Date.now()));}catch{}cart={};window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':'submission unconfirmed')).join('; ');e.target.reset();}catch(error){$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};
+if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}cart={};window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':'submission unconfirmed')).join('; ');e.target.reset();}catch(error){$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};
 async function api(url,method,body){const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;}
 async function reload(){
   const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;latestStockTake=data.stockTake;renderParPeriod();
@@ -101,7 +101,7 @@ async function reload(){
   render();
 }
 $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href='/login';}catch(error){$('message').textContent=error.message;}};
-(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;cartKey='souvlaki-cart-'+(session.id||session.username);try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}if($('user-greeting'))$('user-greeting').replaceChildren(el('span','Yassou,','greeting-intro'),document.createElement('br'),el('span',session.username+'!','greeting-name'));$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
+(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}if($('user-greeting'))$('user-greeting').replaceChildren(el('span','Yassou,','greeting-intro'),document.createElement('br'),el('span',session.username+'!','greeting-name'));$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
 
 window.addEventListener('interface-text-updated',()=>{if(products.length){renderParPeriod();renderMenu();if($('cart'))render(false);}});
 
@@ -119,9 +119,9 @@ if($('menu')){
    $('load-status').textContent='';
   }catch(error){$('load-status').textContent=error.message;}finally{parRefreshPending=false;}
  }
- setInterval(()=>refreshParIfNeeded(),60000);
+ setInterval(()=>refreshParIfNeeded(true),60000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshParIfNeeded(true);});
  window.addEventListener('focus',()=>refreshParIfNeeded(true));
- window.addEventListener('storage',event=>{if(event.key===cartKey.replace('souvlaki-cart-','souvlaki-usage-updated-'))refreshParIfNeeded(true);});
+ window.addEventListener('storage',event=>{if(event.key==='souvlaki-usage-updated-'+scopeKey)refreshParIfNeeded(true);});
  window.addEventListener('pageshow',event=>{if(event.persisted)refreshParIfNeeded(true);});
 }

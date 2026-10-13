@@ -1,3 +1,4 @@
+const {belongs}=require('./location-scope');
 const fs=require('node:fs/promises'),path=require('node:path');
 const par=require('./par-levels');
 const dayMs=86400000,uuidFile=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/i;
@@ -14,11 +15,11 @@ const validQuantity=value=>typeof value==='number'&&Number.isFinite(value)&&valu
 // Counts are snapshots, not transactions. The latest Sunday count for each item wins.
 function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTimeZone){
  const wanted=new Set(weekStarts.flatMap(start=>[start,shift(start,7)])),snapshots=new Map();
- const sorted=counts.filter(record=>record?.accountId===session.id&&wanted.has(record.countDate)&&Array.isArray(record.items)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||String(a.id).localeCompare(String(b.id)));
+ const sorted=counts.filter(record=>belongs(record,session)&&wanted.has(record.countDate)&&Array.isArray(record.items)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||String(a.id).localeCompare(String(b.id)));
  for(const record of sorted){if(!snapshots.has(record.countDate))snapshots.set(record.countDate,new Map());const snapshot=snapshots.get(record.countDate);for(const item of record.items)if(item&&validQuantity(item.quantity))snapshot.set(item.id,{quantity:Math.round(item.quantity*1000),countId:record.id});}
  const totals=new Map(weekStarts.map(start=>[start,new Map()])),seen=new Set(),formatter=par.calendar(timeZone);
  for(const order of orders){
-  if(!order||order.requestOwnerId!==session.id||order.status!=='requested'||typeof order.id!=='string'||seen.has(order.id)||!Array.isArray(order.items)||typeof order.createdAt!=='string')continue;
+  if(!order||!belongs(order,session,'requestOwnerId')||order.status!=='requested'||typeof order.id!=='string'||seen.has(order.id)||!Array.isArray(order.items)||typeof order.createdAt!=='string')continue;
   const created=new Date(order.createdAt);if(!Number.isFinite(created.valueOf()))continue;
   const day=par.dayNumber(created,formatter),start=par.dateLabel(day-new Date(day*dayMs).getUTCDay()),weekTotals=totals.get(start);if(!weekTotals)continue;seen.add(order.id);
   for(const item of order.items){if(!item||!Number.isInteger(item.quantity)||item.quantity<1||item.quantity>999)continue;const total=weekTotals.get(item.id)||{quantity:0,orders:0};total.quantity+=item.quantity*1000;total.orders++;if(!Number.isSafeInteger(total.quantity))throw Error('Ordered stock exceeds the supported range.');weekTotals.set(item.id,total);}
@@ -31,7 +32,7 @@ function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTi
    const status=!first&&!last?'missing_both_counts':!first?'missing_opening_count':!last?'missing_closing_count':used<0?'negative_usage':'complete';
    return {id:product.id,name:product.name,sku:product.sku||'',supplierId:product.supplierId,supplier:product.supplier||'',opening:first?first.quantity/1000:null,ordered:ordered.quantity/1000,available:available===null?null:available/1000,closing:last?last.quantity/1000:null,quantity:status==='complete'?used/1000:null,calculatedUsage:used===null?null:used/1000,status,orderCount:ordered.orders,openingCountId:first?.countId||null,closingCountId:last?.countId||null};
   });
-  return {weekStart,weekEnd:shift(weekStart,6),nextSunday,accountId:session.id,source:'sunday_counts_and_orders',items};
+  return {weekStart,weekEnd:shift(weekStart,6),nextSunday,accountId:session.id,...(session.locationId?{locationId:session.locationId}:{}),source:'sunday_counts_and_orders',items};
  });
 }
 
@@ -60,7 +61,7 @@ async function report(dir,session,products,weekStart,{reader=readHistory,now=new
 }
 function orderingSuggestions(counts,products,session,levels){
  // A new stock take is a snapshot. Omitted items remain unknown in that take.
- const latest=counts.filter(record=>record?.accountId===session.id&&typeof record.createdAt==='string'&&Number.isFinite(Date.parse(record.createdAt))&&Array.isArray(record.items)).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(b.id).localeCompare(String(a.id)))[0];
+ const latest=counts.filter(record=>belongs(record,session)&&typeof record.createdAt==='string'&&Number.isFinite(Date.parse(record.createdAt))&&Array.isArray(record.items)).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(b.id).localeCompare(String(a.id)))[0];
  const quantities=new Map((latest?.items||[]).filter(item=>item&&validQuantity(item.quantity)).map(item=>[item.id,item.quantity]));
  return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
   const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
