@@ -41,7 +41,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
     });pending=operation.catch(()=>{});return operation;
   }
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
-  async function body(req){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
+  async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
   return http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
@@ -54,6 +54,9 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       }
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&req.url==='/logo'){
+        try{const logo=JSON.parse(await fs.readFile(path.join(dataDir,'logo.json'),'utf8'));res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff'});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
+      }
       const session=await auth.session(req);
       if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,csrf:session.csrf}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
@@ -62,10 +65,17 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts');
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url==='/api/logo';
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/logo'&&req.method==='POST'){
+        const input=await body(req,2900000);if(typeof input?.data!=='string'||!input.data.length||!/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))fail('Choose a PNG or JPG image.');
+        const bytes=Buffer.from(input.data,'base64');if(bytes.length>2000000)fail('Logo must be smaller than 2 MB.');
+        const png=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+        if(!png&&!jpeg)fail('Choose a PNG or JPG image.');
+        const target=path.join(dataDir,'logo.json');await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(target,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});return json(200,{saved:true});
+      }
       if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list());
       if(req.url==='/api/accounts'&&req.method==='POST')return json(201,await auth.create(session,await body(req)));
       const accountRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)$/);
@@ -104,7 +114,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});
         return json(201,order);
       }
-      const files = {'/':'index.html','/admin':'admin.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/admin':'admin.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});

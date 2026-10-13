@@ -37,3 +37,7 @@ Account data is stored privately in ignored `data/accounts.json`, with salted sc
 For forgotten administrator passwords, stop the server, run `npm run admin:set` in the app folder, then restart with `npm start`. This local recovery command resets the named account to administrator access. `npm run user:add` remains available for creating or resetting ordering accounts. Normal account management happens within the app.
 
 Use locally on your Mac; an Internet deployment requires HTTPS and appropriate hosting configuration.
+
+## Logo
+
+As an administrator, open **Administration → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.

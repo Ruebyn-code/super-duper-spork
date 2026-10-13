@@ -1,0 +1,2 @@
+async function refreshLogo(){try{const response=await fetch('/logo');if(!response.ok)return;const blob=await response.blob();const source=URL.createObjectURL(blob);for(const brand of document.querySelectorAll('.brand')){const image=document.createElement('img');image.src=source;image.alt='Souvlaki GR';image.className='app-logo';brand.setAttribute('aria-label','Souvlaki Gr ordering — home');brand.replaceChildren(image);}}catch{}}
+refreshLogo();

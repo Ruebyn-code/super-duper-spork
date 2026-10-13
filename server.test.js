@@ -109,3 +109,17 @@ test('legacy sign-in accounts are preserved when account management saves change
  const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{const admin=await login(url,'legacy','legacy-password');await login(url,'worker','legacy-password');const response=await fetch(url+'/api/accounts',{method:'POST',headers:admin,body:JSON.stringify({username:'new',password:'new-account-password',role:'user'})});assert.equal(response.status,201);await login(url,'legacy','legacy-password');await login(url,'worker','legacy-password');const accounts=JSON.parse(await fs.readFile(path.join(dir,'accounts.json'),'utf8'));assert.equal(accounts.length,3);}finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('only administrators can upload a logo and sign-in uses blue background',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-logo-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=','base64');
+ try{
+ assert.equal((await fetch(url+'/logo')).status,404);
+ const upload=headers=>fetch(url+'/api/logo',{method:'POST',headers,body:JSON.stringify({data:png.toString('base64')})});
+ assert.equal((await upload({})).status,401);const staff=await login(url,'staff','test-password-for-staff');assert.equal((await upload(staff)).status,403);
+ const admin=await login(url);assert.equal((await upload(admin)).status,200);
+ const logo=await fetch(url+'/logo');assert.equal(logo.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await logo.arrayBuffer()),png);
+ assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:Buffer.from('<svg/>').toString('base64')})})).status,400);
+ const saved=JSON.parse(await fs.readFile(path.join(dir,'logo.json'),'utf8'));assert.equal(saved.data,png.toString('base64'));
+ const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

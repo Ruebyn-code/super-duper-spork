@@ -15,3 +15,7 @@
 .hero h1{font-family:'Opsilon',sans-serif}h1:not(.hero h1){font-weight:600;letter-spacing:normal;word-spacing:normal}
 
 button{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:0.04em}.product-bottom button,.submit{font-weight:400}
+
+.app-logo{display:block;width:100px;height:100px;object-fit:contain;border-radius:8px}.brand:has(.app-logo){letter-spacing:normal}@media(max-width:480px){.app-logo{width:72px;height:72px}}
+
+.authentication-page{background:var(--primary);min-height:100vh}.authentication-page header{border-bottom-color:#ffffff40}.authentication-page header .brand,.authentication-page header .header-link{color:white}.authentication-page .login-page{padding-bottom:40px}.authentication-page .management{box-shadow:0 16px 48px #06477c40}
