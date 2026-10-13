@@ -1,0 +1,969 @@
+[
+  {
+    "text": "(optional)",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "+ Add",
+    "locations": [
+      "Common controls",
+      "app · controls"
+    ]
+  },
+  {
+    "text": "0400 123 456",
+    "locations": [
+      "cart · placeholder"
+    ]
+  },
+  {
+    "text": "A Resend account and verified sending domain are required. Leave the API key blank to keep your saved key. Disable sending to stop automatic emails.",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "ADMINISTRATOR ACCESS",
+    "locations": [
+      "accounts",
+      "admin"
+    ]
+  },
+  {
+    "text": "Account",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Account email settings",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Accounts & permissions",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Accounts & permissions — Souvlaki Gr ordering",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Add stock",
+    "locations": [
+      "Common controls",
+      "admin"
+    ]
+  },
+  {
+    "text": "Add supplier",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Add suppliers, then add their stock. Changes are saved on this computer.",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Administration",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Administrator",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Administrator — full access, including accounts",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Alex Smith",
+    "locations": [
+      "cart · placeholder"
+    ]
+  },
+  {
+    "text": "App logo",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "App settings",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "App settings — Souvlaki Gr ordering",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "At least 12 characters.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Automatically email this account’s orders",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Back to ordering",
+    "locations": [
+      "login",
+      "setup"
+    ]
+  },
+  {
+    "text": "Browse supplies, top up the essentials, and submit",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Cancel edit",
+    "locations": [
+      "accounts",
+      "admin"
+    ]
+  },
+  {
+    "text": "Cart",
+    "locations": [
+      "Common controls",
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Category",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Choose a font for each part of the app. Opsilon is your uploaded font.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Colours",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Contact number",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Create / edit account",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Create account",
+    "locations": [
+      "Common controls",
+      "accounts"
+    ]
+  },
+  {
+    "text": "Create administrator",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Create the first administrator on this computer. After signing in, you can create more accounts and set permissions in Administration.",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Create your administrator",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Delivery location",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Department, preferred date, or instructions",
+    "locations": [
+      "cart · placeholder"
+    ]
+  },
+  {
+    "text": "Description (optional)",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Edit",
+    "locations": [
+      "Common controls",
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Edit account",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Edit permissions",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Edit stock",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Email",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Email settings",
+    "locations": [
+      "Common controls",
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Estimated total",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "FIRST-TIME SETUP",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Find a label",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "First-time setup — Souvlaki Gr ordering",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Fonts",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Hide",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Interface text",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "KEEP YOUR TEAM MOVING",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Leave blank if price is pending",
+    "locations": [
+      "admin · placeholder"
+    ]
+  },
+  {
+    "text": "Less admin. More momentum.",
+    "locations": [
+      "cart",
+      "index"
+    ]
+  },
+  {
+    "text": "Loading stock…",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Loading your cart…",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Logo",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Logo image (PNG or JPG, up to 2 MB)",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Main office, storeroom 2",
+    "locations": [
+      "cart · placeholder"
+    ]
+  },
+  {
+    "text": "Manage accounts",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Next",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Next →",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "No logo saved yet.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Not configured",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Notes",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Order by pack or individual unit.",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Order delivery",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Ordering",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Ordering user",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Ordering user — browse stock and place orders",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Ordering users can browse stock and submit orders. Administrators can also manage suppliers, stock, and accounts.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Orders are saved and sent using each supplier’s configured delivery method. Contacts and sending services must be set up first; the result below shows any orders not sent.",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Page",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Password",
+    "locations": [
+      "accounts",
+      "login",
+      "setup"
+    ]
+  },
+  {
+    "text": "Permissions",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Previous",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Price per unit / pack (AUD)",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Primary colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Purchase request",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Qty",
+    "locations": [
+      "Common controls",
+      "app · controls"
+    ]
+  },
+  {
+    "text": "Remove",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Remove photo",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Remove stock",
+    "locations": [
+      "Common controls",
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Remove supplier",
+    "locations": [
+      "Common controls",
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Rename menus, headings, buttons, labels, instructions, and placeholders. Matching labels are updated across the app. Leave a field blank to restore its original text.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Requested by",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Resend API key",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Restore default choices",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Restore original wording",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "SKU (optional)",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Save account",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Save account email settings",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Save app settings",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Save changes",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Save delivery details",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Save interface text",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Save logo",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Save stock",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Save supplier",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Search current or original wording",
+    "locations": [
+      "settings · placeholder"
+    ]
+  },
+  {
+    "text": "Search stock name or SKU…",
+    "locations": [
+      "index · placeholder"
+    ]
+  },
+  {
+    "text": "Secondary colour",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Select an account to assign its email sender and sending credentials. Only administrators can change these settings.",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Send orders by",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Show",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Sign in",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Sign in to browse stock and place orders. Administrators can also manage suppliers and stock.",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Sign in — Souvlaki Gr ordering",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Sign out",
+    "locations": [
+      "Common controls",
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Souvlaki Gr ordering",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "login",
+      "settings",
+      "setup"
+    ]
+  },
+  {
+    "text": "Souvlaki Gr ordering — Account email settings",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Souvlaki Gr ordering — Cart",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Souvlaki Gr ordering — Stock ordering",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Souvlaki Gr ordering ↗",
+    "locations": [
+      "cart",
+      "index"
+    ]
+  },
+  {
+    "text": "Stock catalogue",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Stock items",
+    "locations": [
+      "Common controls",
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Stock name",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Stock photo (optional, PNG or JPG up to 2 MB)",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Submit stock request →",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Supplier",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Supplier email address",
+    "locations": [
+      "admin · controls"
+    ]
+  },
+  {
+    "text": "Supplier name",
+    "locations": [
+      "admin",
+      "admin · placeholder"
+    ]
+  },
+  {
+    "text": "Suppliers & delivery",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Suppliers & stock",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "settings"
+    ]
+  },
+  {
+    "text": "Suppliers & stock — Souvlaki Gr ordering",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "TEAM SIGN IN",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Upload your Souvlaki GR logo to show it on the ordering and sign-in pages.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Username",
+    "locations": [
+      "accounts",
+      "login",
+      "setup"
+    ]
+  },
+  {
+    "text": "Verified sender email",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Yassou!",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Yassou,",
+    "locations": [
+      "Common controls"
+    ]
+  },
+  {
+    "text": "Your cart",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Your suppliers & stock · Prices in AUD · No payment required",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "orders@yourdomain.com",
+    "locations": [
+      "email-settings · placeholder"
+    ]
+  },
+  {
+    "text": "your next stock request in a few clicks.",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "×",
+    "locations": [
+      "app · controls"
+    ]
+  },
+  {
+    "text": "← Previous",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "↗",
+    "locations": [
+      "cart",
+      "email-settings",
+      "index"
+    ]
+  },
+  {
+    "text": "−",
+    "locations": [
+      "app · controls"
+    ]
+  },
+  {
+    "text": "All suppliers",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
+  },
+  {
+    "text": "Page {page} of {pages} · {count} items",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
+  },
+  {
+    "text": "Added to cart · {quantity} {unit}",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
+  },
+  {
+    "text": "{count} units",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
+  }
+]

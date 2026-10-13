@@ -200,3 +200,13 @@ test('each account has private email-only sending settings and administrator sid
  for(const [route,own,absent] of [['/admin','id="stock-form"','id="account-form"'],['/admin/accounts','id="account-form"','id="appearance-form"'],['/admin/settings','id="appearance-form"','id="stock-form"']]){const html=await(await fetch(url+route,{headers:admin})).text();assert.ok(html.includes('class="admin-sidebar"'));assert.ok(html.includes('href="'+route+'#'));assert.ok(html.includes('class="admin-nav-group" open'));assert.ok(html.includes(own));assert.ok(!html.includes(absent));}
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('interface text is editable only by administrators and handles plain text safely',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-text-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');const changes={Cart:'Basket','Yassou,':'Hello,','Page {page} of {pages} · {count} items':'{page}/{pages} · {count} products'};
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:staff,body:JSON.stringify(changes)})).status,403);
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify(changes)})).status,200);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),changes);
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({'Page {page} of {pages} · {count} items':'Missing values'})})).status,400);
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({unknown:'value'})})).status,400);
+ assert.equal((await fetch(url+'/api/interface-text',{method:'PUT',headers:admin,body:JSON.stringify({Cart:''})})).status,200);assert.deepEqual(await(await fetch(url+'/interface-text')).json(),{});
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

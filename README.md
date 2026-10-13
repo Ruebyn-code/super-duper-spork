@@ -65,3 +65,7 @@ Set supplier email addresses in **Suppliers & stock**. Each supplier receives on
 Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again. Live email needs real credentials and supplier contacts.
 
 Administrator pages use a left sidebar. Choose Suppliers & stock, Accounts & permissions, or App settings to display only that page’s controls.
+
+## Interface text
+
+Administrators can rename built-in menus, headings, buttons, instructions, placeholders, and cart/pagination messages under **App settings → Interface text**. Search for the original wording, edit it, and save. Matching labels change everywhere; leave a field blank to restore its default. Preserve `{quantity}`, `{page}`, and other placeholders in formatted messages. Settings persist in `data/interface-text.json`. Supplier names, stock names, and account names continue to be managed through their own editing forms.
