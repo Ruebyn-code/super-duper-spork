@@ -74,13 +74,13 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});
         return json(201,order);
       }
-      const files = {'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
+      const files = {'/':'index.html','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
-      res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':'text/javascript','X-Content-Type-Options':'nosniff'});
+      res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});
       res.end(await fs.readFile(path.join(__dirname,'public',file)));
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
 }
-if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Sk Ordering running on port '+(process.env.PORT || 3000)));
+if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Souvlaki Gr ordering running on port '+(process.env.PORT || 3000)));
 module.exports={createServer,validateOrder};

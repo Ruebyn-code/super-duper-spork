@@ -1,4 +1,4 @@
-# Sk Ordering
+# Souvlaki Gr ordering
 
 A stock ordering application with a searchable catalogue, supplier filters, editable quantities, and saved purchase requests. Prices are in AUD. The app starts with sample stock; submitting a request does not change inventory or place an order with a supplier.
 
