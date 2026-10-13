@@ -64,7 +64,7 @@ Set supplier email addresses in **Suppliers & stock**. Each supplier receives on
 
 Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again. Live email needs real credentials and supplier contacts.
 
-Administrator pages use a left sidebar. Choose Suppliers & stock, Accounts & permissions, or App settings to display only that page’s controls. Each supplier, account, colour, font category, interface label, logo editor, and email settings group has its own collapsible section. Add-stock, add-supplier, and create-account forms also collapse. Sections start closed; stock, supplier, and account sections preserve their open state after saving. Editing an account opens its form automatically, validation reveals closed fields, and interface-text searches expand matching labels.
+Administrator pages use a left sidebar. Choose Suppliers & stock, Accounts & permissions, or App settings to display only that page’s controls. Supplier stock and delivery groups, font categories, and email settings groups have independent collapsible sections. These sections start closed; supplier groups preserve their open state after saving, and validation reveals closed fields. Add stock, Add supplier, Accounts & permissions, Colours, Logo, and Interface text controls display directly when selected in the sidebar.
 
 ## Interface text
 

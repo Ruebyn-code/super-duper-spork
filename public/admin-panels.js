@@ -18,11 +18,7 @@ function makeAdminSection(element,title,key){
  if(typeof title==='string'){const heading=document.createElement('h3');heading.textContent=title;heading.dataset.editId='admin-collapse-'+key+'-title';summary.append(heading);}else summary.append(title);
  content.append(element);menu.append(summary,content);return menu;
 }
-for(const id of ['supplier-form','account-form']){const form=document.getElementById(id);if(form)makeAdminSection(form,form.querySelector('h2,h3'),id);}
-for(const [id,title] of [['primary-colour','Primary colour'],['secondary-colour','Secondary colour']]){const input=document.getElementById(id);if(input)makeAdminSection(input.closest('label'),title,id);}
-const guide=document.querySelector('.colour-guide');if(guide)makeAdminSection(guide,'Colour usage guide','colour-guide');
 document.querySelectorAll('#font-settings>label').forEach(label=>makeAdminSection(label,label.firstChild.textContent,label.querySelector('select').id));
-const logoForm=document.getElementById('logo-form');if(logoForm)makeAdminSection(logoForm,'Logo image','logo-form');
 const emailForm=document.getElementById('email-form');if(emailForm){const labels=[...emailForm.children].filter(e=>e.tagName==='LABEL');for(const [index,title] of ['Automatic order emails','Sender email','Sending credentials'].entries())makeAdminSection(labels[index],title,'email-'+index);}
 // Native validation must be able to reveal and focus fields in closed sections.
 document.addEventListener('invalid',event=>{let parent=event.target.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}},true);
