@@ -75,3 +75,5 @@ Administrators can also use **App edit** in the sidebar. Switch it on, click hig
 In App edit, select **Leave blank** and save to hide a label. **Restore original** brings its default wording back. Blank labels have a small `(blank)` marker only while editing, so you can click and restore them. The Interface text settings page also includes a Leave blank checkbox for each label.
 
 App edit uses one panel for wording, fonts, background colours, and background images. Turn it on and click the part of the page to change; all applicable controls appear together. Font changes apply to the matching text group. Background changes apply to page, sidebar, panels, stock cards, stock image areas, buttons, fields, or greeting sections. You can upload/replace/remove PNG or JPG background images up to 2 MB, with a preview before saving. Changes are stored in `data/appearance.json`.
+
+The same App edit panel includes **Text colour** and **Use original text colour**. Colour changes apply to the selected font group and save with the other appearance settings.
