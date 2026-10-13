@@ -21,3 +21,5 @@ button{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:0.04em}.p
 .authentication-page{background:var(--primary);min-height:100vh}.authentication-page header{border-bottom-color:#ffffff40}.authentication-page header .brand,.authentication-page header .header-link{color:white}.authentication-page .login-page{padding-bottom:40px}.authentication-page .management{box-shadow:0 16px 48px #06477c40}
 
 #user-greeting{overflow-wrap:anywhere}
+
+.greeting-name{color:var(--primary)}
