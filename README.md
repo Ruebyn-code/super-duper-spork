@@ -49,3 +49,7 @@ Add or edit stock photos in **Administration → Suppliers & stock**. Choose a P
 This release includes the 128 items and 11 suppliers from Book2.xlsx. The catalogue merges them once on first access after updating. Existing matching items and suppliers are preserved rather than overwritten. Imported edits and deletions are retained on subsequent starts. Keep your existing `data/` folder.
 
 The spreadsheet provides 106 prices; 22 items have blank prices and display **Price pending**. Enter their prices by editing the stock items. Orders containing pending prices show the subtotal of known prices plus a pending-price notice. Pack sizes and item names follow the spreadsheet; prices are rounded to the nearest cent.
+
+## Ordering and cart
+
+The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** in the header to review quantities and submit a request on its own page. Carts are saved per signed-in account in this browser’s local storage and cleared after a successful order.

@@ -63,7 +63,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         try{const logo=JSON.parse(await fs.readFile(path.join(dataDir,'logo.json'),'utf8'));res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff'});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
       }
       const session=await auth.session(req);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,csrf:session.csrf}:{role:'user'});
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
         const loggedIn=await auth.login(req,await body(req));
@@ -87,7 +87,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req)));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
-      if(req.method==='GET'&&['/','/admin','/admin/accounts'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/','/cart','/admin','/admin/accounts'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&['/admin','/admin/accounts'].includes(req.url)&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
@@ -121,7 +121,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});
         return json(201,order);
       }
-      const files = {'/':'index.html','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/password.js':'password.js','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/password.js':'password.js','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});

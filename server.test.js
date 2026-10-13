@@ -11,6 +11,7 @@ test('catalogue, saved stock request, server pricing, and invalid quantity',asyn
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{
  const headers=await login(url);const page=await fetch(url,{headers});assert.equal(page.status,200);assert.match(await page.text(),/Stock catalogue/);
+ const cartPage=await fetch(url+'/cart',{headers});assert.equal(cartPage.status,200);const cartHtml=await cartPage.text();assert.match(cartHtml,/id="checkout"/);assert.ok(!cartHtml.includes('id="menu"'));assert.equal((await fetch(url+'/cart',{redirect:'manual'})).headers.get('location'),'/login');
  const menu=await (await fetch(url+'/api/menu',{headers})).json();assert.equal(menu.length,6+require('./catalogue/book2.json').products.length);
  const body={name:'Test requester',phone:'0400 123 456',location:'Warehouse',items:[{id:'paper',quantity:3,price:1}]};
  const response=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(response.status,201);const order=await response.json();assert.equal(order.total,1950);assert.equal(order.location,'Warehouse');
