@@ -11,7 +11,7 @@ test('catalogue, saved stock request, server pricing, and invalid quantity',asyn
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{
  const headers=await login(url);const page=await fetch(url,{headers});assert.equal(page.status,200);assert.match(await page.text(),/Stock catalogue/);
- const menu=await (await fetch(url+'/api/menu',{headers})).json();assert.equal(menu.length,6);
+ const menu=await (await fetch(url+'/api/menu',{headers})).json();assert.equal(menu.length,6+require('./catalogue/book2.json').products.length);
  const body={name:'Test requester',phone:'0400 123 456',location:'Warehouse',items:[{id:'paper',quantity:3,price:1}]};
  const response=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(response.status,201);const order=await response.json();assert.equal(order.total,1950);assert.equal(order.location,'Warehouse');
  const saved=JSON.parse(await fs.readFile(path.join(dir,order.id+'.json'),'utf8'));assert.equal(saved.total,1950);
@@ -138,5 +138,15 @@ test('stock photos save, survive edits, and can be removed without on-hand input
  response=await fetch(url+'/api/products/'+product.id,{method:'PUT',headers,body:JSON.stringify({...update,photo:'data:image/png;base64,YmFk'})});assert.equal(response.status,400);
  response=await fetch(url+'/api/products/'+product.id,{method:'PUT',headers,body:JSON.stringify({...update,photo:null})});assert.equal(response.status,200);assert.equal((await response.json()).photo,null);
  const html=await(await fetch(url+'/admin',{headers})).text();assert.ok(html.includes('id="stock-photo"'));assert.ok(!html.includes('name="stock"'));
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
+test('spreadsheet imports all suppliers and items once while retaining edits and pending prices',async()=>{
+ const {mergeSpreadsheet}=require('./catalogue-import');const imported=require('./catalogue/book2.json');
+ assert.equal(imported.suppliers.length,11);assert.equal(imported.products.length,128);assert.equal(imported.products.filter(p=>p.price===null).length,22);
+ const original=imported.products[0];const catalogue={suppliers:[{id:'existing',name:imported.suppliers[0].name}],products:[{...original,id:'custom',supplierId:'existing',price:999,photo:'existing-photo'}]};mergeSpreadsheet(catalogue);
+ assert.equal(catalogue.suppliers.length,11);assert.equal(catalogue.products.length,128);assert.equal(catalogue.products[0].price,999);assert.equal(catalogue.products[0].photo,'existing-photo');catalogue.products.pop();mergeSpreadsheet(catalogue);assert.equal(catalogue.products.length,127);
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-import-'));await saveAdmin(dir,'admin','test-password-for-admin');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const headers=await login(url);const menu=await(await fetch(url+'/api/menu',{headers})).json();const missing=menu.find(p=>p.price===null);assert.ok(missing);const response=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify({name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id:missing.id,quantity:1},{id:original.id,quantity:1}]})});assert.equal(response.status,201);const order=await response.json();assert.equal(order.pricePending,true);assert.equal(order.total,4395);assert.equal(order.items[0].price,null);
+ const updated=await fetch(url+'/api/products/'+missing.id,{method:'PUT',headers,body:JSON.stringify({name:missing.name,supplierId:missing.supplierId,price:null,description:'Updated without inventing a price'})});assert.equal(updated.status,200);assert.equal((await updated.json()).price,null);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });

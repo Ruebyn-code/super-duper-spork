@@ -3,6 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const {createAuth}=require('./auth');
+const {mergeSpreadsheet}=require('./catalogue-import');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -21,17 +22,21 @@ function validateOrder(body, menu) {
     seen.add(item.id);
     return {id:product.id,name:product.name,supplier:product.supplier,quantity:item.quantity,price:product.price};
   });
-  return {id:crypto.randomUUID(),name:body.name.trim(),phone:body.phone.trim(),notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
+  return {id:crypto.randomUUID(),name:body.name.trim(),phone:body.phone.trim(),notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
 function createServer(dataDir = path.join(__dirname,'data')) {
   const auth=createAuth(dataDir);
   const catalogueFile = path.join(dataDir,'catalogue.json');
   let pending = Promise.resolve();
+  let initialization;
   async function readCatalogue() {
-    try { return JSON.parse(await fs.readFile(catalogueFile,'utf8')); }
-    catch (error) { if(error.code !== 'ENOENT') throw error;
-      return {suppliers:[{id:'office',name:'Office Supplies'},{id:'packaging',name:'Packaging Supplies'},{id:'safety',name:'Safety Supplies'}],products:menu.map(p=>({...p,supplierId:p.category.toLowerCase()}))};
-    }
+    if(!initialization)initialization=(async()=>{
+      let catalogue;
+      try{catalogue=JSON.parse(await fs.readFile(catalogueFile,'utf8'));}
+      catch(error){if(error.code!=='ENOENT')throw error;catalogue={suppliers:[{id:'office',name:'Office Supplies'},{id:'packaging',name:'Packaging Supplies'},{id:'safety',name:'Safety Supplies'}],products:menu.map(p=>({...p,supplierId:p.category.toLowerCase()}))};}
+      if(!catalogue.imports?.includes('book2-v1')){mergeSpreadsheet(catalogue);await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(catalogueFile+'.tmp',JSON.stringify(catalogue,null,2),{mode:0o600});await fs.rename(catalogueFile+'.tmp',catalogueFile);}
+    })();
+    await initialization;return JSON.parse(await fs.readFile(catalogueFile,'utf8'));
   }
   function mutate(change) {
     const operation=pending.then(async()=>{
@@ -98,8 +103,8 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const input=await body(req,2900000);const productName=name(input?.name,'stock name');
         if(input.stock===undefined)input.stock=0;
         let photo;if(input.photo===null)photo=null;else if(input.photo!==undefined){if(typeof input.photo!=='string')fail('Choose a PNG or JPG photo.');const match=input.photo.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/);if(!match)fail('Choose a PNG or JPG photo.');const bytes=Buffer.from(match[2],'base64');if(bytes.length>2000000)fail('Photo must be smaller than 2 MB.');const png=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;if(!(match[1]==='png'?png:jpg))fail('Invalid image file.');photo=input.photo;}
-        if(typeof input.price!=='number'||!Number.isFinite(input.price)||input.price<0||input.price>1000000||!Number.isInteger(input.stock)||input.stock<0||input.stock>1000000)fail('Enter a valid price and whole-number stock quantity.');
-        const product={id:crypto.randomUUID(),name:productName,supplierId:input.supplierId,price:Math.round(input.price*100),stock:input.stock,category:name(input.category||'General','category',60),sku:typeof input.sku==='string'?input.sku.trim().slice(0,60):'',description:typeof input.description==='string'?input.description.slice(0,300):'',emoji:'📦',photo:photo||null};
+        if((input.price!==null&&(typeof input.price!=='number'||!Number.isFinite(input.price)||input.price<0||input.price>1000000))||!Number.isInteger(input.stock)||input.stock<0||input.stock>1000000)fail('Enter a valid price and whole-number stock quantity.');
+        const product={id:crypto.randomUUID(),name:productName,supplierId:input.supplierId,price:input.price===null?null:Math.round(input.price*100),stock:input.stock,category:name(input.category||'General','category',60),sku:typeof input.sku==='string'?input.sku.trim().slice(0,60):'',description:typeof input.description==='string'?input.description.slice(0,300):'',emoji:'📦',photo:photo||null};
         return json(edit?200:201,await mutate(c=>{if(!c.suppliers.some(s=>s.id===product.supplierId))fail('Choose an existing supplier.');if(edit){const index=c.products.findIndex(p=>p.id===edit[1]);if(index<0)fail('Stock not found.',404);product.id=c.products[index].id;product.emoji=c.products[index].emoji;if(photo===undefined)product.photo=c.products[index].photo||null;c.products[index]=product;}else{c.products.push(product);}return product;}));
       }
       const deletion=req.url.match(/^\/api\/(products|suppliers)\/([a-zA-Z0-9-]+)$/);

@@ -43,3 +43,9 @@ Use locally on your Mac; an Internet deployment requires HTTPS and appropriate h
 As an administrator, open **Administration → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.
 
 Add or edit stock photos in **Administration → Suppliers & stock**. Choose a PNG or JPG up to 2 MB, then save the item. Photos persist in the catalogue and appear on ordering cards. Use **Remove photo** and save to clear a photo. On-hand quantities are no longer shown or entered.
+
+## Spreadsheet catalogue
+
+This release includes the 128 items and 11 suppliers from Book2.xlsx. The catalogue merges them once on first access after updating. Existing matching items and suppliers are preserved rather than overwritten. Imported edits and deletions are retained on subsequent starts. Keep your existing `data/` folder.
+
+The spreadsheet provides 106 prices; 22 items have blank prices and display **Price pending**. Enter their prices by editing the stock items. Orders containing pending prices show the subtotal of known prices plus a pending-price notice. Pack sizes and item names follow the spreadsheet; prices are rounded to the nearest cent.
