@@ -4,6 +4,23 @@ const itemQuantities=new Map(),itemMessages=new Map();let submissionId='',submis
 const $=id=>document.getElementById(id);
 const wording=(template,values={})=>typeof interfaceLabel==='function'?interfaceLabel(template,values):template.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
 function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;}
+// Change only the layout so quantities, feedback and scoped item edits stay intact.
+function setCatalogueView(view){
+  if(!$('menu')||!$('list-view'))return;
+  const list=view==='list';
+  $('menu').classList.toggle('menu-list',list);
+  $('list-view').setAttribute('aria-pressed',String(list));
+  $('menu-view').setAttribute('aria-pressed',String(!list));
+}
+if($('list-view')){
+  let savedView='menu';
+  try{savedView=localStorage.getItem('souvlaki-catalogue-view')||'menu';}catch{}
+  setCatalogueView(savedView);
+  for(const view of ['list','menu'])$(view+'-view').onclick=()=>{
+    setCatalogueView(view);
+    try{localStorage.setItem('souvlaki-catalogue-view',view);}catch{}
+  };
+}
 function renderMenu(){
   if(!$('menu'))return;$('menu').replaceChildren();
   const query=$('search').value.toLowerCase();

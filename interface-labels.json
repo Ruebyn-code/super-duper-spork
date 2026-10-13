@@ -1261,5 +1261,17 @@
     "locations": [
       "settings"
     ]
+  },
+  {
+    "text": "Menu",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "List",
+    "locations": [
+      "index"
+    ]
   }
 ]
