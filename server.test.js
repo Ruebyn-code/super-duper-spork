@@ -179,3 +179,20 @@ test('delivery configuration is admin-only, secrets stay private, and repeat ord
  body.items[0].quantity=3;assert.equal((await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)})).status,409);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('each account has private email-only sending settings and administrator sidebar pages',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-personal-email-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'first','first-account-password');await saveUser(dir,'second','second-account-password');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const first=await login(url,'first','first-account-password'),second=await login(url,'second','second-account-password'),admin=await login(url);
+ const settings={ORDER_FROM_EMAIL:'first@example.com',RESEND_API_KEY:'first-test-key',DELIVERY_EMAIL_ENABLED:true};
+ const saved=await fetch(url+'/api/my-email-settings',{method:'PUT',headers:first,body:JSON.stringify(settings)});assert.equal(saved.status,200);assert.ok(!(await saved.text()).includes('first-test-key'));
+ const other=await(await fetch(url+'/api/my-email-settings',{headers:second})).json();assert.equal(other.values.ORDER_FROM_EMAIL,'');assert.equal(other.secrets.RESEND_API_KEY,false);
+ assert.equal((await fetch(url+'/api/my-email-settings',{method:'GET'})).status,401);
+ assert.equal((await fetch(url+'/api/my-email-settings',{headers:{Cookie:first.Cookie}})).status,403);
+ const firstSession=await(await fetch(url+'/api/session',{headers:first})).json();const secondSession=await(await fetch(url+'/api/session',{headers:second})).json();
+ const deliverySettings=require('./delivery-settings');const firstEnv=await deliverySettings.deliveryEnvironment(dir,firstSession.id);const secondEnv=await deliverySettings.deliveryEnvironment(dir,secondSession.id);assert.equal(firstEnv.RESEND_API_KEY,'first-test-key');assert.equal(secondEnv.RESEND_API_KEY,undefined);
+ await deliverySettings.save(dir,{ORDER_FROM_EMAIL:'second@example.com',RESEND_API_KEY:'second-test-key',DELIVERY_EMAIL_ENABLED:true},secondSession.id);
+ const {deliverSupplier}=require('./order-delivery');const calls=[];const fetchImpl=async(url,options)=>{calls.push(options);return {ok:true};};const order={orderId:'test',supplierId:'office',requester:'Buyer',phone:'0400000000',location:'Office',notes:'',items:[{name:'Paper',price:650,quantity:1}],total:650};
+ await deliverSupplier(order,{method:'email',contact:'supplier@example.com'},{env:firstEnv,fetchImpl});await deliverSupplier(order,{method:'email',contact:'supplier@example.com'},{env:await deliverySettings.deliveryEnvironment(dir,secondSession.id),fetchImpl});assert.equal(JSON.parse(calls[0].body).from,'first@example.com');assert.equal(JSON.parse(calls[1].body).from,'second@example.com');assert.notEqual(calls[0].headers.Authorization,calls[1].headers.Authorization);
+ assert.equal((await fetch(url+'/api/suppliers/office',{method:'PUT',headers:admin,body:JSON.stringify({delivery:{method:'sms',contact:'+61400000000'}})})).status,400);
+ for(const [route,own,absent] of [['/admin','id="stock-form"','id="account-form"'],['/admin/accounts','id="account-form"','id="appearance-form"'],['/admin/settings','id="appearance-form"','id="stock-form"']]){const html=await(await fetch(url+route,{headers:admin})).text();assert.ok(html.includes('class="admin-sidebar"'));assert.ok(html.includes('href="'+route+'" aria-current="page"'));assert.ok(html.includes(own));assert.ok(!html.includes(absent));}
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

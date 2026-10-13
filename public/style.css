@@ -47,3 +47,7 @@ h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-s
 .supplier-delivery{border:1px solid #d3dfea;padding:16px;border-radius:10px;margin:20px 0;max-width:650px}.supplier-delivery select{width:100%;font:inherit;padding:10px;margin-top:8px}
 
 #delivery-settings-form{max-width:650px}#delivery-settings-form input[type=checkbox]{width:auto;margin-right:8px}#delivery-settings-form [data-secret]{display:block;font-size:12px;margin-top:6px}
+
+#email-form input[type=checkbox]{width:auto;margin-right:8px}#email-key-status{display:block;margin-top:6px}
+
+.admin-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}.admin-sidebar{position:sticky;top:20px;padding:18px}.admin-sidebar h2{font-size:20px;margin:0 0 18px}.admin-sidebar nav{display:flex;flex-direction:column;gap:8px;margin:0}.admin-sidebar a{padding:12px;text-decoration:none;color:var(--primary);border-radius:8px}.admin-sidebar a[aria-current=page]{background:var(--primary);color:white}.admin-sidebar a:hover{background:color-mix(in srgb,var(--primary) 12%,white)}.admin-sidebar a[aria-current=page]:hover{background:var(--primary-hover)}.admin-content{min-width:0}@media(max-width:720px){.admin-layout{grid-template-columns:1fr}.admin-sidebar{position:static}.admin-sidebar nav{flex-direction:row;flex-wrap:wrap}.admin-sidebar h2{margin-bottom:12px}}

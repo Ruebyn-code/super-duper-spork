@@ -56,12 +56,12 @@ The ordering catalogue shows 25 items per page. Use Previous/Next to browse; sea
 
 Administrators can change primary/secondary colours and choose fonts for body text, app name, greeting, headings, stock names, buttons, labels, inputs, and navigation in **Administration → App settings**. Choices save in `data/appearance.json` and apply across pages, including sign-in. Refresh other open pages after saving.
 
-## Automatic supplier order delivery
+## Account-specific email sending
 
-Administrators can edit each supplier’s delivery method and contact in **Suppliers & stock**, and enter sending credentials and enable/disable methods in **App settings → Supplier order delivery**. All methods default to off. Email uses Resend (requires a verified sender and API key); texts use Twilio (requires account SID, auth token, and a valid sending number). Supplier phone numbers must include country codes, such as +61400123456. Sending services may charge fees.
+Email is the only supported order delivery method. Each signed-in account has **My email settings** in the header and its own verified sender, Resend API key, and enable switch. Credentials are private to that account in `data/account-email/<account-id>.json`. They are never shared, returned as text after saving, or inherited from shared environment settings. Administrators use the same personal email setup for their own orders.
 
-The ordering-system option posts supplier-specific JSON orders to a configured HTTPS endpoint using a bearer token. This is a generic API connection, not a universal connector for supplier websites; the supplier must provide a compatible API or an adapter must be built for its documented API. Only one shared system token is configured in this release.
+Set supplier email addresses in **Suppliers & stock**. Each supplier receives only its own items. Existing email addresses are retained; former SMS/API configurations will not send and must be changed to email. Previous global credentials are left intact on disk but are no longer used. Set up your personal email configuration after updating. A verified Resend sender is still required.
 
-Orders split by supplier and save before submission. Checkout reports **submitted**, **not configured**, **failed**, or **unconfirmed** for each supplier. Submitted means the service accepted the request, not that the supplier received or fulfilled it. Unconfirmed submissions are never retried automatically; check the sending service before resending. No previous orders are automatically sent when credentials are added. Repeating the same checkout request identifier does not send it again.
+Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again. Live email needs real credentials and supplier contacts.
 
-Credentials are held in ignored `data/delivery-settings.json` with private file permissions. They are not returned to the browser after saving; blank secret fields keep existing credentials. Disable a method to stop sending. Preserve and keep the data folder private. Provider credentials and real supplier contacts are required before actual sending can be validated.
+Administrator pages use a left sidebar. Choose Suppliers & stock, Accounts & permissions, or App settings to display only that page’s controls.
