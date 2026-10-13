@@ -41,5 +41,5 @@ function createServer(dataDir = path.join(__dirname,'data')) {
     } catch {json(500,{error:'Unable to save your order. Please try again.'});}
   });
 }
-if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Ordering app running on port '+(process.env.PORT || 3000)));
+if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Sk Ordering running on port '+(process.env.PORT || 3000)));
 module.exports={createServer,validateOrder};

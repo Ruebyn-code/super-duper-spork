@@ -1,4 +1,4 @@
-# Stockroom
+# Sk Ordering
 
 A stock ordering application with a searchable sample catalogue, category filters, editable quantities, and saved purchase requests. Prices are in AUD. Current stock is sample information; submitting a request does not change inventory or place an order with a supplier.
 
