@@ -79,3 +79,5 @@ App edit uses one panel for wording, fonts, background colours, and background i
 The same App edit panel includes **Text colour** and **Use original text colour**. Colour changes apply to the selected font group and save with the other appearance settings.
 
 App edit has an **Apply changes to** selector. Choose **Only this item on this page** for isolated wording, blank text, fonts, text colours, backgrounds, and background images. Per-element overrides persist in `data/element-overrides.json` and take priority over shared settings. Stock cards use item-based identities so edits remain attached to that item when searching or paging. App settings → Colours lists the controls affected by the primary and secondary colours.
+
+The App edit popup groups wording, text style, and backgrounds; Save and Cancel stay visible while the controls scroll. Colour fields accept hex codes or the picker. Background images expand only when needed. Draft changes are kept when switching between shared and single-item scope.
