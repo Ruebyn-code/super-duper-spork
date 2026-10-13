@@ -810,7 +810,8 @@
   {
     "text": "Supplier",
     "locations": [
-      "admin"
+      "admin",
+      "Stock count"
     ]
   },
   {
@@ -945,7 +946,8 @@
   {
     "text": "All suppliers",
     "locations": [
-      "Catalogue & cart messages"
+      "Catalogue & cart messages",
+      "Stock count"
     ]
   },
   {
@@ -1054,6 +1056,192 @@
     "text": "Rename menus, headings, buttons, labels, instructions, and placeholders. Matching labels are updated across the app. Leave a field blank to restore its original text. Keep any {placeholder} words in formatted messages.",
     "locations": [
       "settings"
+    ]
+  },
+  {
+    "text": "Stock count",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "New count",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Count history",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Count stock by supplier. Leave uncounted items blank; enter 0 for out-of-stock items.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Use the same units or packs as the stock item. Partial quantities can use up to three decimal places.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Count date",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Location (optional)",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Store, kitchen, or stockroom",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Notes (optional)",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Find stock",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Save stock count",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Clear draft",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Refresh history",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Counted quantity",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Not counted",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Draft saved on this browser.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Draft saves automatically on this browser.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Browser storage is unavailable. Save your count before leaving this page.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Loading count…",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Saving stock count…",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Administrators can review counts from every account.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Your saved stock counts.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "No stock counts saved yet.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "View count",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Enter a quantity for at least one stock item.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Stock count saved.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Clear your unsaved stock count?",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Draft cleared.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Your unsaved count was restored.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "{counted} of {total} items counted",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "{count} items counted",
+    "locations": [
+      "Stock count"
     ]
   }
 ]

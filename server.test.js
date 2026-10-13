@@ -254,3 +254,39 @@ test('pages include saved formatting immediately and static assets revalidate wi
   const updated=await(await fetch(url+'/admin/accounts',{headers:admin})).text();assert.match(updated,/<style id="appearance-style">[^<]*Trebuchet MS/);assert.equal((await fetch(url+'/api/session',{headers:admin})).headers.get('cache-control'),'no-store');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('signed-in users can save zero and partial stock counts with private history and safe retries',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-stock-counts-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'first','first-count-password');await saveUser(dir,'second','second-count-password');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+  const admin=await login(url),first=await login(url,'first','first-count-password'),second=await login(url,'second','second-count-password');
+  assert.equal((await fetch(url+'/stock-count',{redirect:'manual'})).headers.get('location'),'/login');
+  const page=await fetch(url+'/stock-count',{headers:first});assert.equal(page.status,200);const html=await page.text();assert.match(html,/id="count-form"/);assert.match(html,/href="\/stock-count"/);assert.match(html,/data-count-view="history"/);
+  assert.equal((await fetch(url+'/api/stock-counts')).status,401);
+  const before=await(await fetch(url+'/api/catalogue',{headers:first})).json();
+  const body={requestId:require('node:crypto').randomUUID(),countDate:'2026-07-01',location:' Kitchen ',notes:'Morning count',accountId:'not-the-owner',counterName:'Someone else',items:[{id:'paper',name:'Wrong name',quantity:0},{id:'pens',quantity:1.25}]};
+  assert.equal((await fetch(url+'/api/stock-counts',{method:'POST',headers:{Cookie:first.Cookie,'Content-Type':'application/json'},body:JSON.stringify(body)})).status,403);
+  let response=await fetch(url+'/api/stock-counts',{method:'POST',headers:first,body:JSON.stringify(body)});assert.equal(response.status,201);const record=await response.json();assert.equal(record.counterName,'first');assert.equal(record.location,'Kitchen');assert.equal(record.items.find(item=>item.id==='paper').name,'A4 copy paper');assert.equal(record.items.find(item=>item.id==='paper').quantity,0);assert.equal(record.items.find(item=>item.id==='pens').quantity,1.25);
+  assert.deepEqual((await(await fetch(url+'/api/catalogue',{headers:first})).json()).products,before.products);
+  const history=await(await fetch(url+'/api/stock-counts',{headers:first})).json();assert.equal(history.length,1);assert.equal(history[0].itemCount,2);assert.ok(!('items' in history[0]));assert.equal((await(await fetch(url+'/api/stock-counts',{headers:second})).json()).length,0);assert.equal((await(await fetch(url+'/api/stock-counts',{headers:admin})).json()).length,1);
+  assert.equal((await fetch(url+'/api/stock-counts/'+record.id,{headers:second})).status,404);assert.equal((await fetch(url+'/api/stock-counts/'+record.id,{headers:first})).status,200);assert.equal((await fetch(url+'/api/stock-counts/'+record.id,{headers:admin})).status,200);assert.equal((await fetch(url+'/api/stock-counts/not-a-count',{headers:first})).status,404);
+  response=await fetch(url+'/api/stock-counts',{method:'POST',headers:first,body:JSON.stringify(body)});assert.equal(response.status,200);assert.equal((await response.json()).id,record.id);
+  assert.equal((await fetch(url+'/api/stock-counts',{method:'POST',headers:second,body:JSON.stringify(body)})).status,409);
+  assert.equal((await fetch(url+'/api/stock-counts',{method:'POST',headers:first,body:JSON.stringify({...body,notes:'Different count'})})).status,409);
+  const invalid=[{items:[]},{items:[{id:'paper',quantity:-1}]},{items:[{id:'paper',quantity:1.2345}]},{items:[{id:'paper',quantity:1000001}]},{items:[{id:'paper',quantity:'2'}]},{items:[{id:'paper',quantity:null}]},{items:[{id:'paper',quantity:1},{id:'paper',quantity:2}]},{items:[{id:'missing',quantity:1}]},{countDate:'2026-02-29'},{notes:'x'.repeat(1001)},{requestId:'../../other'}];
+  for(const changes of invalid)assert.equal((await fetch(url+'/api/stock-counts',{method:'POST',headers:first,body:JSON.stringify({...body,requestId:require('node:crypto').randomUUID(),...changes})})).status,400);
+  const concurrent={...body,requestId:require('node:crypto').randomUUID()};const replies=await Promise.all([1,2].map(()=>fetch(url+'/api/stock-counts',{method:'POST',headers:first,body:JSON.stringify(concurrent)})));assert.deepEqual(replies.map(reply=>reply.status).sort(),[200,201]);assert.equal((await fs.readdir(path.join(dir,'stock-counts'))).length,2);assert.equal((await fetch(url+'/data/stock-counts/'+record.id+'.json',{headers:first})).status,404);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
+
+test('saved stock counts survive restarts and preserve removed stock names and quantities',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-count-restart-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','staff-count-password');let server;
+ const start=async()=>{server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));return 'http://127.0.0.1:'+server.address().port;};let url=await start();
+ try{
+  const staff=await login(url,'staff','staff-count-password'),admin=await login(url);const body={requestId:require('node:crypto').randomUUID(),countDate:'2026-10-14',items:[{id:'paper',quantity:2.125}]};
+  const saved=await(await fetch(url+'/api/stock-counts',{method:'POST',headers:staff,body:JSON.stringify(body)})).json();
+  assert.equal((await fetch(url+'/api/products/paper',{method:'DELETE',headers:admin})).status,200);
+  await new Promise(r=>server.close(r));url=await start();const signedIn=await login(url,'staff','staff-count-password');const history=await(await fetch(url+'/api/stock-counts',{headers:signedIn})).json();assert.equal(history[0].id,saved.id);
+  const snapshot=await(await fetch(url+'/api/stock-counts/'+saved.id,{headers:signedIn})).json();assert.equal(snapshot.items[0].name,'A4 copy paper');assert.equal(snapshot.items[0].supplier,'Office Supplies');assert.equal(snapshot.items[0].quantity,2.125);
+  const retry=await fetch(url+'/api/stock-counts',{method:'POST',headers:signedIn,body:JSON.stringify(body)});assert.equal(retry.status,200);assert.equal((await retry.json()).id,saved.id);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

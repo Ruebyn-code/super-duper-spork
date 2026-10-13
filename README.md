@@ -83,3 +83,11 @@ App edit has an **Apply changes to** selector. Choose **Only this item on this p
 The App edit popup groups wording, text style, and backgrounds; Save and Cancel stay visible while the controls scroll. Colour fields accept hex codes or the picker. Background images expand only when needed. Draft changes are kept when switching between shared and single-item scope.
 
 Saved appearance styles are included in each page before it renders. The bundled font is preloaded and cached using a content version; CSS and scripts revalidate against their content so downloaded updates take effect. Shared wording and per-item edits load with the page, and dynamic formatting processes changed sections instead of scanning the entire page after every update. Sidebar selections switch immediately without a page fade.
+
+## Stock counts
+
+Every signed-in account can open **Stock count** in the left sidebar. Choose **New count**, set the count date and optional location/notes, and expand a supplier to enter quantities. Search by stock name or SKU, or choose a supplier. Leave uncounted items blank; zero records an out-of-stock item. Use the item's usual units/packs, with up to three decimal places. Progress shows counted items across the entire catalogue even when a filter is active.
+
+Drafts save automatically in this browser for the signed-in account and return after navigation or a refresh. **Clear draft** clears unsaved entries. **Save stock count** stores the entered items and opens **Count history**. Ordering users can review their own saved counts; administrators can review every account's counts. Records preserve the counted item and supplier names when catalogue entries change or are removed. Counts do not change the ordering cart, catalogue quantities, or send supplier emails.
+
+Saved counts persist in `data/stock-counts/` across restarts and updates. Keep your entire **data** folder when updating. Unsaved browser drafts stay on the browser where they were entered.
