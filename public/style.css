@@ -51,3 +51,7 @@ h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-s
 #email-form input[type=checkbox]{width:auto;margin-right:8px}#email-key-status{display:block;margin-top:6px}
 
 .admin-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}.admin-sidebar{position:sticky;top:20px;padding:18px}.admin-sidebar h2{font-size:20px;margin:0 0 18px}.admin-sidebar nav{display:flex;flex-direction:column;gap:8px;margin:0}.admin-sidebar a{padding:12px;text-decoration:none;color:var(--primary);border-radius:8px}.admin-sidebar a[aria-current=page]{background:var(--primary);color:white}.admin-sidebar a:hover{background:color-mix(in srgb,var(--primary) 12%,white)}.admin-sidebar a[aria-current=page]:hover{background:var(--primary-hover)}.admin-content{min-width:0}@media(max-width:720px){.admin-layout{grid-template-columns:1fr}.admin-sidebar{position:static}.admin-sidebar nav{flex-direction:row;flex-wrap:wrap}.admin-sidebar h2{margin-bottom:12px}}
+
+.admin-subnav{padding-left:12px!important;margin-top:8px!important}.admin-nav-group summary{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:.04em;cursor:pointer;padding:10px;color:var(--primary)}.admin-subnav a{font-size:13px}.management-forms{grid-template-columns:1fr}[data-admin-views][hidden]{display:none!important}.admin-nav-group{width:100%}
+
+.admin-sidebar a[aria-current=page],.admin-sidebar a[aria-current=page]:hover{background:color-mix(in srgb,var(--primary) 50%,transparent);color:#182b3a}
