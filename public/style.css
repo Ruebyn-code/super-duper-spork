@@ -309,3 +309,23 @@ label{font-size:12px;line-height:1.5}
 .add-controls.add-confirming label{opacity:0;pointer-events:none}
 .product .add-controls.add-confirming button{position:absolute;right:0;bottom:0;width:var(--add-button-width);max-width:100%;white-space:nowrap;overflow:hidden;opacity:1;cursor:default;transform:none;transition:width 240ms var(--motion-ease)}
 .product .add-controls.add-expanded button{width:100%}
+
+/* Sales use the account's Monday–Sunday calendar and the app's existing theme. */
+.sales-page{padding-top:32px;padding-bottom:48px}.sales-page h1{font-size:36px}.sales-page>.management{margin-top:22px}
+.sales-page [hidden]{display:none!important}.sidebar-collapsed .sales-nav{display:none}
+.sales-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:18px 0}
+.sales-metrics>div{min-width:0}.sales-metrics span{font-size:12px;color:var(--muted)}.sales-metrics h2{margin:10px 0 0;font-size:30px;letter-spacing:.02em;color:var(--primary);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.sales-overview .eyebrow{margin:0}.sales-week-controls{display:flex;gap:20px;align-items:end;flex-wrap:wrap}.sales-week-controls>label{margin:0;min-width:0;max-width:100%}.sales-week-controls .stock-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sales-day{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.sales-day label{margin:0}.sales-day label>span{display:block;color:inherit}.sales-day label>.small{margin-top:4px;font-size:11px;color:var(--muted)}.sales-day input{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.sales-entry-total{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 0 8px}.sales-entry-total span{font-size:13px}.sales-entry-total strong{font-size:22px;font-variant-numeric:tabular-nums}
+.sales-history-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid var(--line)}.sales-history-row>div{flex:1;min-width:0}.sales-history-row p{margin:6px 0 0}.sales-history-row>span{font-size:12px}.sales-history-row button{font-size:12px}
+.sales-history-row strong{font-size:13px;overflow-wrap:anywhere}.sales-projection-day{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13px}.sales-projection-day strong{font-variant-numeric:tabular-nums}
+.sales-order-link{display:inline-block;margin-top:24px;color:var(--primary);font-size:13px}.sales-page #sales-message:empty,.sales-page #sales-draft-status:empty{display:none}
+.ordering-budget{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background-color:color-mix(in srgb,var(--primary) 4%,white);margin:0 0 24px}
+.ordering-budget-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.ordering-budget-heading h2{margin:0;font-size:18px}.ordering-budget-heading a{color:var(--primary);font-size:12px}
+.ordering-budget-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}.ordering-budget-metrics>div{min-width:0}.ordering-budget-metrics span{display:block;font-size:10px;line-height:1.5;color:var(--muted)}.ordering-budget-metrics strong{display:block;margin-top:5px;font-size:17px;color:var(--primary);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.ordering-budget p{margin:14px 0 0;font-size:11px}.budget-over{color:#b13c2e!important}
+@media(max-width:900px){.ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.sales-metrics{grid-template-columns:minmax(0,1fr);gap:14px}.sales-metrics h2{font-size:26px}.sales-day{grid-template-columns:minmax(0,1fr);gap:10px}.sales-day input{max-width:100%}.sales-week-controls{gap:10px}.sales-history-row{align-items:flex-start;flex-direction:column;gap:8px}.ordering-budget{padding:14px}.ordering-budget-metrics{gap:14px 10px}}
+@media(max-width:480px){.sales-page h1{font-size:28px}.ordering-budget-metrics{grid-template-columns:minmax(0,1fr)}.sales-page .count-actions button{width:100%;margin:0}.sales-week-controls input{width:100%;min-width:0}.sales-week-controls button{max-width:100%;overflow-wrap:anywhere}}

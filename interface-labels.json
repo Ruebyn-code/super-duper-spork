@@ -1789,5 +1789,353 @@
     "locations": [
       "Ordering · add button confirmation"
     ]
+  },
+  {
+    "text": "0",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Daily sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Projection & budget",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Enter daily sales for each Monday–Sunday week. Your projected sales and 28% ordering budget update automatically.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "This week’s projection",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Projected weekly sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Ordering budget · 28%",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Amounts are in AUD. Leave unrecorded days blank; enter 0 for a day with no sales. You can return to edit any saved week.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "← Previous week",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Next week →",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "This week",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Recorded weekly sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Save daily sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Reload saved week",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Projected sales = the average of your previous four completed Monday–Sunday weeks. Each projected day uses the same weekday’s sales from those four weeks. Budget = projected weekly sales × 28%.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Orders placed this week",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Budget remaining",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Previous four weeks",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Projected daily sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Order stock →",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Monday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Tuesday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Wednesday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Thursday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Friday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Saturday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Sunday",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Weekly ordering budget",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Projected sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Budget · 28%",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Budget after this cart",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "View sales & budget →",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Loading sales budget…",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "{count} of 7 days recorded",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "{weeks} of 4 complete weeks. Record all seven days in each week to calculate your projection.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "{weeks} of 4 complete sales weeks. Enter sales to calculate your budget.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Unsaved sales are kept in this browser.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Browser storage is unavailable. Save sales before leaving this page.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Based on your previous four complete weeks.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "prices pending",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Some ordered items have prices pending. The remaining budget cannot be calculated yet.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Complete four weeks of sales to calculate your budget.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Orders placed are above this week’s budget.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Budget remaining = 28% of projected sales − orders placed this week.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Enter / edit sales",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "incomplete",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Unsaved sales restored from this browser.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Your draft uses older saved sales. Reload the saved week before saving.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Saved sales loaded. You can edit and save this week again.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Loading sales…",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Saving sales…",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Daily sales saved. Projection and budget updated.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Discard unsaved sales for this week and reload saved values?",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Some items have prices pending. The remaining budget cannot be calculated yet.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "This cart would take you over this week’s budget.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Budget after this cart = weekly budget − orders placed − this cart.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
+  },
+  {
+    "text": "Unable to load sales budget. Open Sales to try again.",
+    "locations": [
+      "Sales and ordering budget"
+    ]
   }
 ]

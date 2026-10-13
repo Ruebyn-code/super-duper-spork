@@ -13,6 +13,7 @@ const elementOverrides=require('./element-overrides');
 const appearanceStyles=require('./public/appearance-style');
 const stockCounts=require('./stock-counts');
 const stockUsage=require('./stock-usage');
+const sales=require('./sales');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -40,6 +41,7 @@ function validateOrder(body, menu, requester = '') {
 function createServer(dataDir = path.join(__dirname,'data')) {
   const auth=createAuth(dataDir);
   const usageHistory=stockUsage.createReader();
+  const salesStore=sales.createStore();
   const catalogueFile = path.join(dataDir,'catalogue.json');
   let pending = Promise.resolve();
   let initialization;
@@ -103,6 +105,14 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/sales'&&req.method==='GET'){
+        const history=await usageHistory(dataDir);
+        return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders}));
+      }
+      if(req.url==='/api/sales'&&req.method==='PUT'){
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        return json(200,await salesStore.save(dataDir,session,await body(req)));
+      }
       if(req.url==='/api/stock-usage'&&req.method==='GET'){
         const week=requestUrl.searchParams.get('week');if(!week)fail('Choose a usage week.');const catalogue=await readCatalogue();const products=catalogue.products.map(product=>({...product,supplier:catalogue.suppliers.find(supplier=>supplier.id===product.supplierId)?.name}));return json(200,await stockUsage.report(dataDir,session,products,week,{reader:usageHistory}));
       }
@@ -142,7 +152,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req)));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
-      if(req.method==='GET'&&['/','/cart','/stock-count','/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/','/cart','/stock-count','/sales','/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&['/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const account=requestUrl.searchParams.get('account');res.writeHead(303,{Location:'/admin/accounts'+(account?'?account='+encodeURIComponent(account):'')+'#email'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
@@ -187,7 +197,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/stock-count.js':'stock-count.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';
