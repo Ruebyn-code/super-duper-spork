@@ -127,6 +127,34 @@ test('only administrators can upload a logo and sign-in uses blue background',as
  const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo" alt="Souvlaki GR" class="app-logo">/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('sidebar logo has separate admin-only upload, persists and falls back to the app logo',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-sidebar-logo-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');let server;
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=','base64'),jpg=Buffer.from([255,216,255,224,0,16]);
+ async function start(){server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));return 'http://127.0.0.1:'+server.address().port;}
+ try{
+ let url=await start(),admin=await login(url),staff=await login(url,'staff','test-password-for-staff');
+ const upload=(headers,data=png)=>fetch(url+'/api/sidebar-logo',{method:'POST',headers,body:JSON.stringify({data:data.toString('base64')})});
+ assert.equal((await fetch(url+'/sidebar-logo')).status,404);
+ assert.equal((await upload({})).status,401);assert.equal((await upload(staff)).status,403);
+ assert.equal((await upload({Cookie:admin.Cookie,'Content-Type':'application/json'})).status,403);
+ assert.equal((await upload(admin,Buffer.from('<svg/>'))).status,400);
+ assert.equal((await upload(admin)).status,200);
+ assert.equal((await fetch(url+'/logo')).status,404);
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
+ const html=await(await fetch(url+'/',{headers:admin})).text();assert.match(html,/<img src="\/sidebar-logo" alt="Souvlaki GR" class="app-logo">/);
+ await new Promise(r=>server.close(r));url=await start();admin=await login(url);staff=await login(url,'staff','test-password-for-staff');
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
+ assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:jpg.toString('base64')})})).status,200);
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/logo')).arrayBuffer()),jpg);
+ const loginHtml=await(await fetch(url+'/login')).text();assert.match(loginHtml,/src="\/logo"/);assert.ok(!loginHtml.includes('src="/sidebar-logo"'));
+ assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:staff})).status,403);
+ assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:{Cookie:admin.Cookie}})).status,403);
+ assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:admin})).status,200);
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),jpg);
+ assert.deepEqual(Buffer.from(await (await fetch(url+'/logo')).arrayBuffer()),jpg);
+ }finally{if(server?.listening)await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
 test('stock photos save, survive edits, and can be removed without on-hand input',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-photos-'));await saveAdmin(dir,'admin','test-password-for-admin');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{

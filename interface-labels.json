@@ -2419,5 +2419,41 @@
     "locations": [
       "Locations and shared ordering"
     ]
+  },
+  {
+    "text": "Sign-in / app logo",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Sidebar logo",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Choose a separate logo for the very top of the sidebar, above your location. Wide PNG images with a transparent background work well. Without a separate logo, the sidebar uses the app logo.",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Sidebar image (PNG or JPG, up to 2 MB)",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Save sidebar logo",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Use app logo",
+    "locations": [
+      "App settings"
+    ]
   }
 ]

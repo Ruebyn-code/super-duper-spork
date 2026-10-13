@@ -68,6 +68,10 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
   async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
   const assets=new Map();
+  async function readLogo(sidebar=false){
+    if(sidebar){try{return JSON.parse(await fs.readFile(path.join(dataDir,'sidebar-logo.json'),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}}
+    return JSON.parse(await fs.readFile(path.join(dataDir,'logo.json'),'utf8'));
+  }
   async function asset(file){
     const target=path.join(__dirname,'public',file),stat=await fs.stat(target),stamp=stat.mtimeMs+':'+stat.size;
     let cached=assets.get(file);
@@ -88,8 +92,8 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       }
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
-      if(req.method==='GET'&&req.url==='/logo'){
-        try{const logo=JSON.parse(await fs.readFile(path.join(dataDir,'logo.json'),'utf8'));res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff'});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
+      if(req.method==='GET'&&['/logo','/sidebar-logo'].includes(req.url)){
+        try{const logo=await readLogo(req.url==='/sidebar-logo');res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff'});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
       }
       if(req.method==='GET'&&req.url==='/appearance'){
         try{return json(200,JSON.parse(await fs.readFile(path.join(dataDir,'appearance.json'),'utf8')));}catch(error){if(error.code==='ENOENT')return json(200,defaults);throw error;}
@@ -105,7 +109,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url==='/api/logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url==='/api/logo'||req.url==='/api/sidebar-logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
@@ -153,12 +157,13 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       const supplierEdit=req.url.match(/^\/api\/suppliers\/([a-zA-Z0-9-]+)$/);
       if(req.method==='PUT'&&supplierEdit){const input=await body(req);let delivery;try{delivery=validateDelivery(input.delivery);}catch(error){fail(error.message);}return json(200,await mutate(c=>{const supplier=c.suppliers.find(s=>s.id===supplierEdit[1]);if(!supplier)fail('Supplier not found.',404);supplier.delivery=delivery;return supplier;}));}
       if(req.url==='/api/settings'&&['PUT','PATCH'].includes(req.method)){try{return json(200,await saveAppearance(dataDir,await body(req,2900000),req.method==='PATCH'));}catch(error){fail(error.message);}}
-      if(req.url==='/api/logo'&&req.method==='POST'){
+      if(req.url==='/api/sidebar-logo'&&req.method==='DELETE'){await fs.rm(path.join(dataDir,'sidebar-logo.json'),{force:true});return json(200,{saved:true});}
+      if(['/api/logo','/api/sidebar-logo'].includes(req.url)&&req.method==='POST'){
         const input=await body(req,2900000);if(typeof input?.data!=='string'||!input.data.length||!/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))fail('Choose a PNG or JPG image.');
         const bytes=Buffer.from(input.data,'base64');if(bytes.length>2000000)fail('Logo must be smaller than 2 MB.');
         const png=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
         if(!png&&!jpeg)fail('Choose a PNG or JPG image.');
-        const target=path.join(dataDir,'logo.json');await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(target,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});return json(200,{saved:true});
+        const target=path.join(dataDir,req.url==='/api/sidebar-logo'?'sidebar-logo.json':'logo.json'),temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(temp,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});await fs.rename(temp,target);return json(200,{saved:true});
       }
       if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list());
       if(req.url==='/api/accounts'&&req.method==='POST'){const account=await auth.create(session,await body(req),id=>locationStore.get(id,{active:true}));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));}
@@ -216,11 +221,11 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';
       if(file.endsWith('.html')){
-        const [markup,appearance,text,overrides,font,hasLogo]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(dataDir),interfaceText.read(dataDir),elementOverrides.read(dataDir),asset('fonts/Opsilon-xRj8m.ttf'),fs.access(path.join(dataDir,'logo.json')).then(()=>true,()=>false)]);
-        const bootstrap=JSON.stringify({interfaceText:text,elementOverrides:overrides,hasLogo}).replace(/</g,'\\u003c');
+        const [markup,appearance,text,overrides,font,hasLogo,hasSidebarLogo]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(dataDir),interfaceText.read(dataDir),elementOverrides.read(dataDir),asset('fonts/Opsilon-xRj8m.ttf'),fs.access(path.join(dataDir,'logo.json')).then(()=>true,()=>false),readLogo(true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;})]);
+        const bootstrap=JSON.stringify({interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo}).replace(/</g,'\\u003c');
         const fontUrl='/fonts/Opsilon-xRj8m.ttf?v='+font.etag.slice(1,-1);
         const initial='<link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
-        res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const branded=hasLogo?markup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="/logo" alt="Souvlaki GR" class="app-logo"></a>'):markup;return res.end(branded.replace('</head>',initial+'</head>'));
+        res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const sidebarPage=markup.includes('id="app-sidebar"'),source=sidebarPage?'/sidebar-logo':'/logo',branded=(sidebarPage?hasSidebarLogo:hasLogo)?markup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Souvlaki GR" class="app-logo"></a>'):markup;return res.end(branded.replace('</head>',initial+'</head>'));
       }
       const cached=await asset(file);res.setHeader('ETag',cached.etag);
       res.setHeader('Cache-Control',file.endsWith('.ttf')&&requestUrl.searchParams.get('v')===cached.etag.slice(1,-1)?'public, max-age=31536000, immutable':'public, max-age=0, must-revalidate');

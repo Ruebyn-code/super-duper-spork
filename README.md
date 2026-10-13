@@ -40,7 +40,7 @@ Use locally on your Mac; an Internet deployment requires HTTPS and appropriate h
 
 ## Logo
 
-As an administrator, open **Administration → App settings → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.
+As an administrator, open **App settings → Logo**. Upload a PNG or JPG (up to 2 MB) under **Sign-in / app logo** for sign-in and setup. Under **Sidebar logo**, upload a separate image for the very top of the sidebar, above the location name and cart. Wide transparent PNG images keep their original proportions. Preview your selection before saving. **Use app logo** restores the sidebar to the sign-in/app logo. These settings persist in `data/logo.json` and `data/sidebar-logo.json`; keep the entire data folder when updating. Refresh other open pages to see changes.
 
 Add or edit stock photos in **Administration → Suppliers & stock**. Choose a PNG or JPG up to 2 MB, then save the item. Photos persist in the catalogue and appear on ordering cards. Use **Remove photo** and save to clear a photo. On-hand quantities are no longer shown or entered.
 
