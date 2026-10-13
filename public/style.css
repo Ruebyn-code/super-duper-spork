@@ -25,3 +25,5 @@ button{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:0.04em}.p
 .greeting-name{color:var(--primary)}
 
 h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-serif;font-weight:400;letter-spacing:0.04em;line-height:1.3;overflow-wrap:anywhere}.hero h1{letter-spacing:0.06em;line-height:1.2}.stock-name{display:block;margin-bottom:4px}
+
+.password-control{display:flex;align-items:stretch;gap:8px}.password-control .password-input{font-family:Arial,Helvetica,sans-serif;flex:1;min-width:0}.password-control .password-toggle{margin:7px 0 0;padding:8px 12px;min-width:70px;flex-shrink:0}
