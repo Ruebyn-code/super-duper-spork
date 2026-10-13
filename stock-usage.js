@@ -1,57 +1,66 @@
-const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
-const stockCounts=require('./stock-counts'),par=require('./par-levels');
-const dayMs=86400000;
+const fs=require('node:fs/promises'),path=require('node:path');
+const par=require('./par-levels');
+const dayMs=86400000,uuidFile=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/i;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
- if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))invalid('Choose a valid week starting on Monday.');
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))invalid('Choose a valid week starting on Sunday.');
  const date=new Date(value+'T00:00:00Z');
- if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value||date.getUTCDay()!==1)invalid('Choose a valid week starting on Monday.');
+ if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value||date.getUTCDay()!==0)invalid('Choose a valid week starting on Sunday.');
  return value;
 }
 const shift=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*dayMs).toISOString().slice(0,10);
-function target(dir,session,value){return path.join(dir,'stock-usage',crypto.createHash('sha256').update(session.id).digest('hex')+'-'+week(value)+'.json');}
-async function readWeek(dir,session,value){try{const record=JSON.parse(await fs.readFile(target(dir,session,value),'utf8'));if(record.accountId!==session.id||record.weekStart!==value)invalid('Usage record is unavailable.',500);return record;}catch(error){if(error.code==='ENOENT')return null;throw error;}}
-function eligible(countDate,weekStart,kind){return kind==='opening'?[shift(weekStart,-1),weekStart].includes(countDate):[shift(weekStart,6),shift(weekStart,7)].includes(countDate);}
-async function editor(dir,session,weekStart){
- week(weekStart);const [record,counts]=await Promise.all([readWeek(dir,session,weekStart),stockCounts.list(dir,{...session,role:'user'})]);
- return {record,openingCounts:counts.filter(count=>eligible(count.countDate,weekStart,'opening')),closingCounts:counts.filter(count=>eligible(count.countDate,weekStart,'closing')),window:par.windowFor()};
-}
-function quantity(value){
- if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>1000000||Math.abs(value*1000-Math.round(value*1000))>0.000001)invalid('Use quantities from 0 to 1,000,000, with up to three decimal places.');
- return Math.round(value*1000);
-}
-async function countSource(dir,session,id,weekStart,kind){
- if(id===undefined||id==='')return null;
- if(typeof id!=='string')invalid('Choose a valid saved count.');
- const record=await stockCounts.get(dir,id,{...session,role:'user'});
- if(!eligible(record.countDate,weekStart,kind))invalid('Choose a '+kind+' count from the start or end of this week.');
- return new Map(record.items.map(item=>[item.id,item.quantity]));
-}
-let pending=Promise.resolve();
-function save(dir,session,input,catalogue){
- const operation=pending.then(async()=>{
-  if(!input||typeof input!=='object')invalid('Enter valid weekly usage.');const weekStart=week(input.weekStart);
-  if(weekStart>par.windowFor().currentWeekStart)invalid('Future weeks cannot be recorded yet.');
-  if(input.notes!==undefined&&(typeof input.notes!=='string'||input.notes.length>1000))invalid('Keep usage notes under 1,000 characters.');
-  if(!Array.isArray(input.items)||input.items.length>10000)invalid('Enter valid stock usage items.');
-  const [openingCount,closingCount,previous]=await Promise.all([countSource(dir,session,input.openingCountId,weekStart,'opening'),countSource(dir,session,input.closingCountId,weekStart,'closing'),readWeek(dir,session,weekStart)]);
-  const products=new Map(catalogue.products.map(product=>[product.id,product])),suppliers=new Map(catalogue.suppliers.map(supplier=>[supplier.id,supplier.name]));const seen=new Set();
-  const items=input.items.map(item=>{
-   const product=products.get(item?.id);if(!product||seen.has(item.id))invalid('A usage item was removed or duplicated. Refresh the stock list and try again.');seen.add(item.id);
-   const opening=quantity(openingCount?openingCount.get(item.id):item.opening),received=quantity(item.received??0),closing=quantity(closingCount?closingCount.get(item.id):item.closing);
-   const used=opening+received-closing;if(used<0)invalid('Closing stock exceeds opening stock plus stock received for '+product.name+'. Check the quantities.');
-   return {id:product.id,name:product.name,sku:product.sku||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'',opening:opening/1000,received:received/1000,closing:closing/1000,quantity:used/1000};
+const validQuantity=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1000000&&Math.abs(value*1000-Math.round(value*1000))<0.000001;
+
+// Counts are snapshots, not transactions. The latest Sunday count for each item wins.
+function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTimeZone){
+ const wanted=new Set(weekStarts.flatMap(start=>[start,shift(start,7)])),snapshots=new Map();
+ const sorted=counts.filter(record=>record?.accountId===session.id&&wanted.has(record.countDate)&&Array.isArray(record.items)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||String(a.id).localeCompare(String(b.id)));
+ for(const record of sorted){if(!snapshots.has(record.countDate))snapshots.set(record.countDate,new Map());const snapshot=snapshots.get(record.countDate);for(const item of record.items)if(item&&validQuantity(item.quantity))snapshot.set(item.id,{quantity:Math.round(item.quantity*1000),countId:record.id});}
+ const totals=new Map(weekStarts.map(start=>[start,new Map()])),seen=new Set(),formatter=par.calendar(timeZone);
+ for(const order of orders){
+  if(!order||order.requestOwnerId!==session.id||order.status!=='requested'||typeof order.id!=='string'||seen.has(order.id)||!Array.isArray(order.items)||typeof order.createdAt!=='string')continue;
+  const created=new Date(order.createdAt);if(!Number.isFinite(created.valueOf()))continue;
+  const day=par.dayNumber(created,formatter),start=par.dateLabel(day-new Date(day*dayMs).getUTCDay()),weekTotals=totals.get(start);if(!weekTotals)continue;seen.add(order.id);
+  for(const item of order.items){if(!item||!Number.isInteger(item.quantity)||item.quantity<1||item.quantity>999)continue;const total=weekTotals.get(item.id)||{quantity:0,orders:0};total.quantity+=item.quantity*1000;total.orders++;if(!Number.isSafeInteger(total.quantity))throw Error('Ordered stock exceeds the supported range.');weekTotals.set(item.id,total);}
+ }
+ return weekStarts.map(weekStart=>{
+  const nextSunday=shift(weekStart,7),opening=snapshots.get(weekStart),closing=snapshots.get(nextSunday),weekTotals=totals.get(weekStart);
+  const items=products.map(product=>{
+   const first=opening?.get(product.id),last=closing?.get(product.id),ordered=weekTotals.get(product.id)||{quantity:0,orders:0};
+   const available=first?first.quantity+ordered.quantity:null,used=first&&last?available-last.quantity:null;
+   const status=!first&&!last?'missing_both_counts':!first?'missing_opening_count':!last?'missing_closing_count':used<0?'negative_usage':'complete';
+   return {id:product.id,name:product.name,sku:product.sku||'',supplierId:product.supplierId,supplier:product.supplier||'',opening:first?first.quantity/1000:null,ordered:ordered.quantity/1000,available:available===null?null:available/1000,closing:last?last.quantity/1000:null,quantity:status==='complete'?used/1000:null,calculatedUsage:used===null?null:used/1000,status,orderCount:ordered.orders,openingCountId:first?.countId||null,closingCountId:last?.countId||null};
   });
-  // Retain snapshots of removed stock when editing other items in a saved week.
-  items.push(...(previous?.items||[]).filter(item=>!products.has(item.id)));
-  const record={weekStart,weekEnd:shift(weekStart,6),accountId:session.id,counterName:session.username,openingCountId:input.openingCountId||'',closingCountId:input.closingCountId||'',notes:(input.notes||'').trim(),items,createdAt:previous?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
-  const file=target(dir,session,weekStart);await fs.mkdir(path.dirname(file),{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';
-  try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}
-  return record;
- });pending=operation.catch(()=>{});return operation;
+  return {weekStart,weekEnd:shift(weekStart,6),nextSunday,accountId:session.id,source:'sunday_counts_and_orders',items};
+ });
 }
-async function parLevels(dir,session,products){
- const now=new Date(),window=par.windowFor(now),records=await Promise.all([1,2,3,4].map(index=>readWeek(dir,session,shift(window.currentWeekStart,-7*index))));
+
+// Read only UUID-named count/order records, and reuse unchanged files between refreshes.
+function createReader(){
+ const cache=new Map();
+ async function folder(dir){
+  let entries;try{entries=await fs.readdir(dir,{withFileTypes:true});}catch(error){if(error.code==='ENOENT'){for(const file of cache.keys())if(path.dirname(file)===dir)cache.delete(file);return [];}throw error;}
+  const files=entries.filter(entry=>entry.isFile()&&uuidFile.test(entry.name)),present=new Set(files.map(entry=>path.join(dir,entry.name)));
+  for(const file of cache.keys())if(path.dirname(file)===dir&&!present.has(file))cache.delete(file);
+  const result=[];
+  for(let offset=0;offset<files.length;offset+=32){const batch=await Promise.all(files.slice(offset,offset+32).map(async entry=>{
+   const file=path.join(dir,entry.name);try{
+    const stat=await fs.stat(file,{bigint:true}),stamp=stat.mtimeNs+':'+stat.ctimeNs+':'+stat.size;
+    const previous=cache.get(file);if(previous?.stamp===stamp)return previous.record;
+    const record=JSON.parse(await fs.readFile(file,'utf8'));if(record?.id!==entry.name.slice(0,-5))return null;cache.set(file,{stamp,record});return record;
+   }catch(error){if(error.code==='ENOENT')return null;throw error;}
+  }));result.push(...batch.filter(Boolean));}
+  return result;
+ }
+ return async dir=>{const [counts,orders]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir)]);return {counts,orders};};
+}
+const readHistory=createReader();
+async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){
+ week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart])[0],window:par.windowFor(now)};
+}
+async function parLevels(dir,session,products,{reader=readHistory,now=new Date()}={}){
+ const window=par.windowFor(now),history=await reader(dir);
+ const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)));
  return par.calculate(records,products,session,{now});
 }
-module.exports={week,shift,editor,readWeek,save,parLevels};
+module.exports={week,shift,derive,createReader,report,parLevels};

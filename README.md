@@ -95,10 +95,16 @@ Saved counts persist in `data/stock-counts/` across restarts and updates. Keep y
 The app name/logo appears at the top of the left sidebar, with the cart directly underneath. Use the small arrow at the bottom of the sidebar to collapse it into a compact icon rail or expand it again. The button stays pinned at the bottom while sidebar menus scroll. The uploaded logo stays visible at a smaller size, along with the cart icon and quantity, ordering, stock count, sign-out, and an administrator shortcut. The browser remembers your sidebar preference across pages and refreshes.
 
 
-## Weekly usage and par levels
+## Automatic weekly usage and par levels
 
-Open **Stock count → Weekly usage** to select a Monday-starting week. For each item, enter opening stock, stock actually received, and closing stock. Stock used is calculated as **opening + received − closing**; quantities support three decimal places. A saved opening count from that Monday or the preceding Sunday, and a saved closing count from that Sunday or the following Monday, can fill the fields. Counts must belong to your own account. Orders are not assumed to have been delivered.
+Save a **Stock count** dated Sunday and place orders as usual. The app calculates each account's usage automatically:
 
-Save the week's values to update `data/stock-usage/`. Saving again replaces that account's week rather than adding it twice. Browser drafts are separate for each account and week. Use the week picker to enter the four previous weeks or edit an existing week. Zero records no usage; blank counts are unknown. Negative calculated usage needs corrected counts or receipts before saving.
+**Sunday count + quantities ordered from Sunday through Saturday − next Sunday's count = weekly usage.**
 
-Ordering cards and list rows show **Par**, a weekly target based on your own usage across the **four complete Monday–Sunday weeks before the current week**, using the existing Melbourne business calendar. The average is rounded up to whole units/packs for ordering; hover over the par panel for the exact average. A par is shown only when all four weeks are recorded for that item. Missing weeks show their coverage instead of being assumed to be zero. The current partial week and other accounts' records are excluded. The four-week window rolls forward automatically. Par levels do not change the cart or automatically order stock.
+All orders placed on the opening Sunday count toward that new cycle. Orders on the next Sunday count toward the following cycle. Order dates use Melbourne time, including daylight saving changes. Each saved order is counted once, even when checkout is retried. If several Sunday counts include the same item, its latest saved count is used; partial counts do not erase other items counted that Sunday. Zero counts are valid. Non-Sunday counts are available in count history and do not feed this calculation.
+
+Open **Stock count → Weekly usage** for the automatic breakdown: Sunday stock, orders, total stock, next Sunday stock and stock used. Choose a Sunday-starting week to review historical or current calculations, search, or select a supplier. Calculations update from the saved counts and orders, including corrections; no separate weekly usage entry is needed.
+
+Ordering cards and list rows show **Par**, the account's average usage over the **four completed Sunday–Saturday weeks before the current week**, rounded up to whole units/packs. Five consecutive Sunday counts provide the four cycles. Missing item counts or a negative result leave that cycle incomplete and show what needs checking; they are not assumed to be zero. The current partial week and other accounts' history are excluded. Hover over the par panel for the exact average. The four-week window rolls forward automatically. Par values do not automatically add items to the cart.
+
+Saved counts and order files remain the source of truth. Previous manually entered weekly usage files and browser drafts are retained but are not used by the automatic calculation. Keep the entire **data** folder when updating.

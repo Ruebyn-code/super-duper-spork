@@ -39,6 +39,7 @@ function validateOrder(body, menu, requester = '') {
 }
 function createServer(dataDir = path.join(__dirname,'data')) {
   const auth=createAuth(dataDir);
+  const usageHistory=stockUsage.createReader();
   const catalogueFile = path.join(dataDir,'catalogue.json');
   let pending = Promise.resolve();
   let initialization;
@@ -103,11 +104,10 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/stock-usage'&&req.method==='GET'){
-        const week=requestUrl.searchParams.get('week');if(!week)fail('Choose a usage week.');return json(200,await stockUsage.editor(dataDir,session,week));
+        const week=requestUrl.searchParams.get('week');if(!week)fail('Choose a usage week.');const catalogue=await readCatalogue();const products=catalogue.products.map(product=>({...product,supplier:catalogue.suppliers.find(supplier=>supplier.id===product.supplierId)?.name}));return json(200,await stockUsage.report(dataDir,session,products,week,{reader:usageHistory}));
       }
       if(req.url==='/api/stock-usage'&&req.method==='PUT'){
-        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
-        return json(200,await stockUsage.save(dataDir,session,await body(req,2000000),await readCatalogue()));
+        res.setHeader('Allow','GET');fail('Weekly usage is automatic. Save Sunday stock counts and place orders instead.',405);
       }
       if(req.url==='/api/stock-counts'&&req.method==='GET')return json(200,await stockCounts.list(dataDir,session));
       if(req.url==='/api/stock-counts'&&req.method==='POST'){
@@ -147,7 +147,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.method==='GET'&&req.url==='/email-settings'){const account=requestUrl.searchParams.get('account');res.writeHead(303,{Location:'/admin/accounts'+(account?'?account='+encodeURIComponent(account):'')+'#email'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
-        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products);
+        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory});
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id]}));
         return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window});
       }
@@ -181,7 +181,8 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
         if(requestId)order.id=requestId;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
-        try{await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(path.join(dataDir,order.id+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}
+        const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
+        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
         order.delivery=await dispatchOrder(order,catalogue.suppliers,{env:await deliverySettings.deliveryEnvironment(dataDir,session.id)});
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);

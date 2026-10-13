@@ -1,29 +1,29 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');const usage=require('./stock-usage'),par=require('./par-levels'),counts=require('./stock-counts');
-const catalogue={suppliers:[{id:'supplier',name:'Supplier'}],products:[{id:'a',name:'First',supplierId:'supplier',sku:'A'},{id:'b',name:'Second',supplierId:'supplier'}]};
-test('usage is derived from counts and actual receipts, with safe week replacement, account isolation and missing weeks',async()=>{
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'stock-usage-')),first={id:'first',username:'First',role:'user'},second={id:'second',username:'Second',role:'admin'};try{
- const current=par.windowFor().currentWeekStart;const previous=usage.shift(current,-7);
- const body={weekStart:previous,items:[{id:'a',opening:12.125,received:3.5,closing:2.625},{id:'b',opening:0,received:0,closing:0}]};
- let record=await usage.save(dir,first,body,catalogue);assert.equal(record.items[0].quantity,13);assert.equal(record.items[1].quantity,0);
- const createdAt=record.createdAt;record=await usage.save(dir,first,body,catalogue);assert.equal(record.createdAt,createdAt);assert.equal((await fs.readdir(path.join(dir,'stock-usage'))).length,1);assert.equal(await usage.readWeek(dir,second,previous),null);
- for(let index=2;index<=4;index++)await usage.save(dir,first,{weekStart:usage.shift(current,-7*index),items:[{id:'a',opening:10,received:0,closing:3},{id:'b',opening:0,received:0,closing:0}]},catalogue);
- let levels=await usage.parLevels(dir,first,catalogue.products);assert.deepEqual(levels.levels.a,{level:9,average:8.5,usedQuantity:34,weeksRecorded:4});assert.equal(levels.levels.b.level,0);assert.equal((await usage.parLevels(dir,second,catalogue.products)).levels.a.level,null);
- await usage.save(dir,first,{weekStart:current,items:[{id:'a',opening:999,received:0,closing:0}]},catalogue);assert.equal((await usage.parLevels(dir,first,catalogue.products)).levels.a.usedQuantity,34);
- await usage.save(dir,first,{...body,items:[]},catalogue);levels=await usage.parLevels(dir,first,catalogue.products);assert.equal(levels.levels.a.level,null);assert.equal(levels.levels.a.weeksRecorded,3);
- for(const changes of [{weekStart:'2026-02-30'},{weekStart:usage.shift(current,7)},{items:[{id:'a',opening:1,received:0,closing:2}]},{items:[{id:'a',opening:-1,received:0,closing:0}]},{items:[{id:'a',opening:1.0001,received:0,closing:0}]},{items:[{id:'a',opening:1,received:0,closing:0},{id:'a',opening:1,received:0,closing:0}]},{items:[{id:'unknown',opening:1,received:0,closing:0}]}])await assert.rejects(usage.save(dir,first,{...body,...changes},catalogue));
- }finally{await fs.rm(dir,{recursive:true,force:true});}
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');const usage=require('./stock-usage');
+const products=[{id:'a',name:'First',supplierId:'supplier'},{id:'zero',name:'Zero',supplierId:'supplier'},{id:'missing',name:'Missing',supplierId:'supplier'}],session={id:'own',role:'admin'};
+const count=(date,quantity,extra={})=>({id:crypto.randomUUID(),accountId:'own',countDate:date,createdAt:date+'T00:00:00Z',items:[{id:'a',quantity},{id:'zero',quantity:0}],...extra});
+const order=(createdAt,quantity,extra={})=>({id:crypto.randomUUID(),requestOwnerId:'own',createdAt,status:'requested',items:[{id:'a',quantity}],...extra});
+test('automatic usage includes Sunday and Saturday orders once, uses the next Sunday count, and separates adjacent cycles',()=>{
+ const counts=[count('2026-10-04',10),count('2026-10-11',4),count('2026-10-18',1),count('2026-10-04',999,{accountId:'other'}),count('2026-10-05',999)];
+ const sunday=order('2026-10-03T14:00:00Z',5),saturday=order('2026-10-10T12:59:59Z',2),nextSunday=order('2026-10-10T13:00:00Z',3);
+ const orders=[sunday,saturday,nextSunday,sunday,order('2026-10-03T13:59:59Z',999),order('2026-10-06T00:00:00Z',999,{requestOwnerId:'other'}),order('2026-10-06T00:00:00Z',999,{status:'cancelled'}),order('2026-10-06T00:00:00Z',999,{requestOwnerId:undefined})];
+ const [first,second]=usage.derive(counts,orders,products,session,['2026-10-04','2026-10-11']);assert.equal(first.items[0].opening,10);assert.equal(first.items[0].ordered,7);assert.equal(first.items[0].available,17);assert.equal(first.items[0].closing,4);assert.equal(first.items[0].quantity,13);assert.equal(first.items[0].orderCount,2);assert.equal(second.items[0].ordered,3);assert.equal(second.items[0].quantity,6);assert.equal(first.items[1].quantity,0);assert.equal(first.items[2].status,'missing_both_counts');
 });
-test('saved count sources are account-owned and tied to the week; usage uses stored quantities and preserves removed stock',async()=>{
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'usage-sources-')),first={id:'first',username:'First',role:'admin'},second={id:'second',username:'Second',role:'user'};try{
- const weekStart=usage.shift(par.windowFor().currentWeekStart,-7);
- const opening=await counts.save(dir,{countDate:weekStart,items:[{id:'a',quantity:20},{id:'b',quantity:5}]},catalogue,first);
- const closing=await counts.save(dir,{countDate:usage.shift(weekStart,6),items:[{id:'a',quantity:8},{id:'b',quantity:5}]},catalogue,first);
- const other=await counts.save(dir,{countDate:weekStart,items:[{id:'a',quantity:999}]},catalogue,second);
- const editor=await usage.editor(dir,first,weekStart);assert.deepEqual(editor.openingCounts.map(record=>record.id),[opening.record.id]);assert.deepEqual(editor.closingCounts.map(record=>record.id),[closing.record.id]);
- const body={weekStart,openingCountId:opening.record.id,closingCountId:closing.record.id,items:[{id:'a',opening:999,received:3,closing:0},{id:'b',opening:999,received:0,closing:0}]};
- const result=await usage.save(dir,first,body,catalogue);assert.equal(result.items[0].opening,20);assert.equal(result.items[0].closing,8);assert.equal(result.items[0].quantity,15);assert.equal(result.items[1].quantity,0);
- await assert.rejects(usage.save(dir,first,{...body,openingCountId:other.record.id},catalogue),error=>error.status===404);
- await assert.rejects(usage.save(dir,first,{...body,weekStart:usage.shift(weekStart,-7)},catalogue));
- const reduced={...catalogue,products:catalogue.products.slice(1)};await usage.save(dir,first,{weekStart,items:[{id:'b',opening:5,received:2,closing:3}]},reduced);const saved=await usage.readWeek(dir,first,weekStart);assert.equal(saved.items.find(item=>item.id==='a').name,'First');assert.equal(saved.items.find(item=>item.id==='a').quantity,15);assert.equal(saved.items.find(item=>item.id==='b').quantity,4);
+test('latest per-item Sunday counts correct usage; missing and negative stock do not become zero',()=>{
+ const older=count('2026-10-04',10),newer=count('2026-10-04',12,{createdAt:'2026-10-05T10:00:00Z'}),partial=count('2026-10-04',99,{createdAt:'2026-10-05T11:00:00Z',items:[{id:'zero',quantity:0}]}),closing=count('2026-10-11',15);
+ let result=usage.derive([older,newer,partial,closing],[],products,session,['2026-10-04'])[0];assert.equal(result.items[0].opening,12);assert.equal(result.items[0].calculatedUsage,-3);assert.equal(result.items[0].quantity,null);assert.equal(result.items[0].status,'negative_usage');
+ result=usage.derive([older,newer,partial,closing],[order('2026-10-05T00:00:00Z',5)],products,session,['2026-10-04'])[0];assert.equal(result.items[0].quantity,2);
+ result=usage.derive([older],[],products,session,['2026-10-04'])[0];assert.equal(result.items[0].status,'missing_closing_count');assert.equal(result.items[0].available,10);
+ result=usage.derive([closing],[],products,session,['2026-10-04'])[0];assert.equal(result.items[0].status,'missing_opening_count');assert.equal(result.items[0].available,null);
+ const fraction=usage.derive([count('2026-10-04',1.125),count('2026-10-11',0.5)],[],products,session,['2026-10-04'])[0];assert.equal(fraction.items[0].quantity,0.625);
+});
+test('history reader refreshes new/corrected records, ignores credentials and manual usage, and rebuilds after restart',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'auto-usage-'));try{
+ await fs.mkdir(path.join(dir,'stock-counts'));await fs.mkdir(path.join(dir,'stock-usage'));await fs.writeFile(path.join(dir,'accounts.json'),'NOT AN ORDER');await fs.writeFile(path.join(dir,'stock-usage','old-week.json'),'NOT AUTOMATIC USAGE');
+ const counts=[count('2026-10-04',20),count('2026-10-11',5)],placed=order('2026-10-07T00:00:00Z',3);
+ for(const record of counts)await fs.writeFile(path.join(dir,'stock-counts',record.id+'.json'),JSON.stringify(record));await fs.writeFile(path.join(dir,placed.id+'.json'),JSON.stringify(placed));
+ const reader=usage.createReader();let result=await usage.report(dir,session,products,'2026-10-04',{reader});assert.equal(result.record.items[0].quantity,18);result=await usage.report(dir,session,products,'2026-10-04',{reader});assert.equal(result.record.items[0].quantity,18);
+ const correction=count('2026-10-11',8,{createdAt:'2026-10-12T00:00:00Z'});await fs.writeFile(path.join(dir,'stock-counts',correction.id+'.json'),JSON.stringify(correction));placed.items[0].quantity=5;await fs.writeFile(path.join(dir,placed.id+'.json'),JSON.stringify(placed));result=await usage.report(dir,session,products,'2026-10-04',{reader});assert.equal(result.record.items[0].quantity,17);
+ const restored=await usage.report(dir,session,products,'2026-10-04',{reader:usage.createReader()});assert.equal(restored.record.items[0].quantity,17);const other=await usage.report(dir,{id:'other',role:'admin'},products,'2026-10-04',{reader});assert.equal(other.record.items[0].status,'missing_both_counts');assert.equal(other.record.items[0].ordered,0);
+ await assert.rejects(usage.report(dir,session,products,'2026-10-05',{reader}),error=>error.status===400);assert.equal(await fs.readFile(path.join(dir,'stock-usage','old-week.json'),'utf8'),'NOT AUTOMATIC USAGE');
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });

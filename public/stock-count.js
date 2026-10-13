@@ -74,7 +74,7 @@
   event.preventDefault();if(saving)return;const items=products.filter(product=>hasCount(product.id)).map(product=>({id:product.id,quantity:Number(quantities[product.id])}));if(!items.length){$('count-message').textContent=wording('Enter a quantity for at least one stock item.');return;}
   const body={countDate:form.elements.countDate.value,location:form.elements.location.value,notes:form.elements.notes.value,items},signature=JSON.stringify(body);
   if(signature!==requestSignature||!requestId){requestId=crypto.randomUUID();requestSignature=signature;}body.requestId=requestId;writeDraft();saving=true;for(const control of form.elements)control.disabled=true;$('count-message').textContent=wording('Saving stock count…');
-  try{const record=await api('/api/stock-counts','POST',body);resetDraft();historyLoaded=false;await loadHistory();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
+  try{const record=await api('/api/stock-counts','POST',body);try{localStorage.setItem('souvlaki-usage-updated-'+session.id,String(Date.now()));}catch{}resetDraft();historyLoaded=false;await loadHistory();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
   catch(error){$('count-message').textContent=error.message;}
   finally{saving=false;for(const control of form.elements)control.disabled=false;updateProgress();}
  };

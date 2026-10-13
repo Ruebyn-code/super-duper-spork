@@ -1591,5 +1591,137 @@
     "locations": [
       "Ordering · par levels"
     ]
+  },
+  {
+    "text": "Usage is calculated automatically: Sunday stock count + all orders placed Sunday to Saturday − the next Sunday stock count. Only this account’s counts and orders are used.",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Use the same units or packs when counting and ordering. The latest Sunday count for each item is used, including zero counts.",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Weeks run Sunday to Saturday in Melbourne time.",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Save your Sunday stock count and place orders as usual. This breakdown and your par levels update automatically.",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Add a Sunday stock count",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Order stock",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Refresh usage",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Sunday stock",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Orders Sunday–Saturday",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Next Sunday stock",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Total stock: {quantity}",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Both Sunday counts are missing",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Opening Sunday count is missing",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Next Sunday count is missing",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Check counts or missing orders",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Calculated usage: {quantity}",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Usage is incomplete",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "{count} of {total} items calculated",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "{start} – {end} · Closing count: {closing}",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Calculating weekly usage…",
+    "locations": [
+      "Stock count · automatic usage"
+    ]
+  },
+  {
+    "text": "Par is your average usage over the previous four completed Sunday–Saturday weeks, rounded up to whole units or packs. Usage is calculated from Sunday stock + that week’s orders − the next Sunday stock count. Save Sunday counts and place orders as usual; usage updates automatically. Five consecutive Sunday counts are needed for four complete weeks. Missing counts or negative usage need checking.",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "View automatic usage",
+    "locations": [
+      "Ordering · par levels"
+    ]
   }
 ]

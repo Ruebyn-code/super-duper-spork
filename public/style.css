@@ -279,3 +279,11 @@ label{font-size:12px;line-height:1.5}
 #usage-message:empty,#usage-draft-status:empty{display:none}
 @media(max-width:1000px){.usage-item{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.usage-stock-info{grid-column:1 / -1}.usage-used{grid-column:1 / -1}}
 @media(max-width:520px){.menu-list .product .product-art{grid-row:1 / 4}.menu-list .product .product-par{grid-column:1 / -1}.usage-item{grid-template-columns:minmax(0,1fr)}.usage-stock-info,.usage-used{grid-column:1}.usage-item label{display:grid;grid-template-columns:minmax(0,1fr) minmax(65px,1fr);align-items:center;gap:8px}.usage-item input{margin:0;padding:9px}.usage-count-sources{gap:0}.product-par{padding:8px}.par-hint{font-size:10px}}
+
+.usage-auto-help{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background-color:color-mix(in srgb,var(--primary) 4%,#fff)}
+.usage-auto-help p{margin:0 0 12px}.usage-auto-help .stock-actions{align-items:center}
+.usage-auto-help a{display:inline-flex;align-items:center;min-height:36px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background-color:#fff;color:var(--primary);font-size:12px;text-decoration:none}
+.usage-quantity{display:flex;flex-direction:column;gap:8px;min-width:0}.usage-stat-label{font-size:11px;color:var(--muted);line-height:1.5}.usage-quantity strong{font-size:17px;font-variant-numeric:tabular-nums}
+.usage-totals{grid-column:2 / -1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.usage-totals .usage-used{font-size:12px;line-height:1.5}.automatic-usage-item .usage-warning{font-weight:600}
+@media(max-width:1000px){.usage-totals{grid-column:1 / -1}}
+@media(max-width:520px){.usage-quantity{flex-direction:row;justify-content:space-between;align-items:center;gap:12px}.usage-totals{grid-column:1;border-top:1px solid var(--line);padding-top:12px}}
