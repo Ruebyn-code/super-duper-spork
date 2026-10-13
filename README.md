@@ -69,3 +69,5 @@ Administrator pages use a left sidebar. Choose Suppliers & stock, Accounts & per
 ## Interface text
 
 Administrators can rename built-in menus, headings, buttons, instructions, placeholders, and cart/pagination messages under **App settings → Interface text**. Search for the original wording, edit it, and save. Matching labels change everywhere; leave a field blank to restore its default. Preserve `{quantity}`, `{page}`, and other placeholders in formatted messages. Settings persist in `data/interface-text.json`. Supplier names, stock names, and account names continue to be managed through their own editing forms.
+
+Administrators can also use **App edit** in the sidebar. Switch it on, click highlighted text where it appears, enter new wording, and save. **Finish editing** restores normal page interactions. This mode edits interface wording, not stock, supplier, or account data.

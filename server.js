@@ -85,6 +85,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/interface-text'&&req.method==='GET')return json(200,{labels:interfaceText.labels,overrides:await interfaceText.read(dataDir)});
+      if(req.url==='/api/interface-text'&&req.method==='PATCH'){try{return json(200,await interfaceText.patch(dataDir,await body(req)));}catch(error){fail(error.message);}}
       if(req.url==='/api/interface-text'&&req.method==='PUT'){try{return json(200,await interfaceText.save(dataDir,await body(req,300000)));}catch(error){fail(error.message);}}
       if(req.url==='/api/delivery-status'&&req.method==='GET')return json(200,providerStatus(await deliverySettings.deliveryEnvironment(dataDir,session.id)));
       const accountEmailRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)\/email$/);
@@ -153,7 +154,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/cart':'cart.html','/email-settings':'email-settings.html','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/email-settings':'email-settings.html','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});
