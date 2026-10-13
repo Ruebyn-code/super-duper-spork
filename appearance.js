@@ -1,0 +1,4 @@
+const defaults={primary:'#0d74c0',secondary:'#e27925',fonts:{body:'arial',appName:'opsilon',greeting:'opsilon',headings:'opsilon',stockNames:'opsilon',buttons:'opsilon',labels:'arial',inputs:'arial',navigation:'arial'}};
+const fontOptions={opsilon:"'Opsilon',sans-serif",arial:'Arial,Helvetica,sans-serif',verdana:'Verdana,sans-serif',georgia:'Georgia,serif',trebuchet:"'Trebuchet MS',sans-serif",monospace:'monospace'};
+function validateSettings(input){if(!input||!/^#[0-9a-f]{6}$/i.test(input.primary)||!/^#[0-9a-f]{6}$/i.test(input.secondary))throw Error('Choose valid primary and secondary colours.');const fonts={};for(const part of Object.keys(defaults.fonts)){const font=input.fonts?.[part];if(!Object.hasOwn(fontOptions,font))throw Error('Choose a supported font for '+part+'.');fonts[part]=font;}return {primary:input.primary,secondary:input.secondary,fonts};}
+module.exports={defaults,fontOptions,validateSettings};

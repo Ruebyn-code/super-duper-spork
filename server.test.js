@@ -151,3 +151,16 @@ test('spreadsheet imports all suppliers and items once while retaining edits and
  const updated=await fetch(url+'/api/products/'+missing.id,{method:'PUT',headers,body:JSON.stringify({name:missing.name,supplierId:missing.supplierId,price:null,description:'Updated without inventing a price'})});assert.equal(updated.status,200);assert.equal((await updated.json()).price,null);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('app settings are admin-only, validated, and persistent',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-settings-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const {defaults}=require('./appearance');const settings={...defaults,primary:'#123456',secondary:'#abcdef',fonts:{...defaults.fonts,headings:'georgia',buttons:'verdana'}};
+ assert.equal((await fetch(url+'/admin/settings',{redirect:'manual'})).headers.get('location'),'/login');
+ const staff=await login(url,'staff','test-password-for-staff');assert.equal((await fetch(url+'/admin/settings',{headers:staff,redirect:'manual'})).headers.get('location'),'/');assert.equal((await fetch(url+'/api/settings',{method:'PUT',headers:staff,body:JSON.stringify(settings)})).status,403);
+ const admin=await login(url);const page=await fetch(url+'/admin/settings',{headers:admin});assert.equal(page.status,200);const html=await page.text();assert.match(html,/id="logo-preview"/);assert.match(html,/id="appearance-form"/);
+ assert.equal((await fetch(url+'/api/settings',{method:'PUT',headers:admin,body:JSON.stringify({...settings,primary:'red;'} )})).status,400);
+ assert.equal((await fetch(url+'/api/settings',{method:'PUT',headers:admin,body:JSON.stringify({...settings,fonts:{...settings.fonts,buttons:'injected'}})})).status,400);
+ assert.equal((await fetch(url+'/api/settings',{method:'PUT',headers:admin,body:JSON.stringify(settings)})).status,200);
+ assert.deepEqual(await(await fetch(url+'/appearance')).json(),settings);assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir,'appearance.json'),'utf8')),settings);
+ assert.equal((await fetch(url+'/api/settings',{method:'PUT',body:JSON.stringify(defaults)})).status,401);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

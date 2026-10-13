@@ -40,7 +40,7 @@ Use locally on your Mac; an Internet deployment requires HTTPS and appropriate h
 
 ## Logo
 
-As an administrator, open **Administration → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.
+As an administrator, open **Administration → App settings → App logo**, select your PNG or JPG (up to 2 MB), and save. The logo appears in page headers, including sign-in, and persists in `data/logo.json`. Refresh other open pages to see it.
 
 Add or edit stock photos in **Administration → Suppliers & stock**. Choose a PNG or JPG up to 2 MB, then save the item. Photos persist in the catalogue and appear on ordering cards. Use **Remove photo** and save to clear a photo. On-hand quantities are no longer shown or entered.
 
@@ -53,3 +53,5 @@ The spreadsheet provides 106 prices; 22 items have blank prices and display **Pr
 ## Ordering and cart
 
 The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** in the header to review quantities and submit a request on its own page. Carts are saved per signed-in account in this browser’s local storage and cleared after a successful order.
+
+Administrators can change primary/secondary colours and choose fonts for body text, app name, greeting, headings, stock names, buttons, labels, inputs, and navigation in **Administration → App settings**. Choices save in `data/appearance.json` and apply across pages, including sign-in. Refresh other open pages after saving.
