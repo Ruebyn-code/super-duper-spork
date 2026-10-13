@@ -73,7 +73,10 @@ test('everyone must sign in and only administrators can manage stock',async()=>{
  assert.equal((await fetch(url+'/admin',{headers:staff,redirect:'manual'})).headers.get('location'),'/');
  for(const [route,method] of [['/api/suppliers','POST'],['/api/products','POST'],['/api/products/paper','PUT'],['/api/products/paper','DELETE'],['/api/suppliers/office','DELETE']])assert.equal((await fetch(url+route,{method,headers:staff,body:'{}'})).status,403);
  const order=await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify({name:'Staff',phone:'0400 123 456',location:'Office',items:[{id:'paper',quantity:1}]})});assert.equal(order.status,201);
- const admin=await login(url);const management=await fetch(url+'/admin',{headers:admin});assert.equal(management.status,200);assert.match(await management.text(),/id="stock-form"/);
+ const admin=await login(url);const management=await fetch(url+'/admin',{headers:admin});assert.equal(management.status,200);const stockHtml=await management.text();assert.match(stockHtml,/id="stock-form"/);assert.ok(!stockHtml.includes('id="account-form"'));
+ const accountPage=await fetch(url+'/admin/accounts',{headers:admin});assert.equal(accountPage.status,200);const accountHtml=await accountPage.text();assert.match(accountHtml,/id="account-form"/);assert.ok(!accountHtml.includes('id="stock-form"'));
+ assert.equal((await fetch(url+'/admin/accounts',{headers:staff,redirect:'manual'})).headers.get('location'),'/');
+ assert.equal((await fetch(url+'/admin/accounts',{redirect:'manual'})).headers.get('location'),'/login');
  assert.equal((await fetch(url+'/api/suppliers',{method:'POST',headers:{Cookie:admin.Cookie},body:JSON.stringify({name:'Denied'})})).status,403);
  assert.equal((await fetch(url+'/api/suppliers',{method:'POST',headers:admin,body:JSON.stringify({name:'Allowed'})})).status,201);
  assert.equal((await fetch(url+'/api/logout',{method:'POST',headers:admin})).status,200);assert.equal((await fetch(url+'/api/products/paper',{method:'DELETE',headers:admin})).status,401);
