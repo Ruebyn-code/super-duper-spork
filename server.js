@@ -55,6 +55,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
   return http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
+      req.url=req.url.split('?')[0];
       res.setHeader('Cache-Control','no-store');
       if(req.url==='/api/setup'&&req.method==='POST'){
         if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))fail('First-time setup must be opened on the computer running the app.',403);
@@ -77,11 +78,13 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url==='/api/logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings';
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url==='/api/logo'||req.url==='/api/settings'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings';
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/delivery-status'&&req.method==='GET')return json(200,providerStatus(await deliverySettings.deliveryEnvironment(dataDir,session.id)));
+      const accountEmailRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)\/email$/);
+      if(accountEmailRoute){const id=accountEmailRoute[1];if(!(await auth.list()).some(account=>account.id===id))fail('Account not found.',404);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,id)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),id));}catch(error){fail(error.message);}}}
       if(req.url==='/api/my-email-settings'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.id)));if(req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.id));}catch(error){fail(error.message);}}}
       if(req.url==='/api/delivery-settings'&&req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,session.id)));
       if(req.url==='/api/delivery-settings'&&req.method==='PUT'){try{return json(200,await deliverySettings.save(dataDir,await body(req),session.id));}catch(error){fail(error.message);}}
@@ -105,7 +108,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
       if(req.method==='GET'&&['/','/cart','/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
-      if(req.method==='GET'&&['/admin','/admin/accounts','/admin/settings'].includes(req.url)&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
+      if(req.method==='GET'&&['/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));

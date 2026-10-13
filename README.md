@@ -58,9 +58,9 @@ Administrators can change primary/secondary colours and choose fonts for body te
 
 ## Account-specific email sending
 
-Email is the only supported order delivery method. Each signed-in account has **My email settings** in the header and its own verified sender, Resend API key, and enable switch. Credentials are private to that account in `data/account-email/<account-id>.json`. They are never shared, returned as text after saving, or inherited from shared environment settings. Administrators use the same personal email setup for their own orders.
+Email is the only supported order delivery method. Only administrators can change account email settings. Open **Accounts & permissions → Email settings** beside an account, or select **Account email settings** in the administrator sidebar. Each account has its own verified sender, Resend API key, and enable switch. Credentials are private to that account in `data/account-email/<account-id>.json`. They are never shared, returned as text after saving, or inherited from shared environment settings. Administrators use the same personal email setup for their own orders.
 
-Set supplier email addresses in **Suppliers & stock**. Each supplier receives only its own items. Existing email addresses are retained; former SMS/API configurations will not send and must be changed to email. Previous global credentials are left intact on disk but are no longer used. Set up your personal email configuration after updating. A verified Resend sender is still required.
+Set supplier email addresses in **Suppliers & stock**. Each supplier receives only its own items. Existing email addresses are retained; former SMS/API configurations will not send and must be changed to email. Previous global credentials are left intact on disk but are no longer used. Ask an administrator to configure your account’s email settings. A verified Resend sender is still required.
 
 Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again. Live email needs real credentials and supplier contacts.
 
