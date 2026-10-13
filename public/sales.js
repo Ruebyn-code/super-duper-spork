@@ -14,7 +14,9 @@
   const row=el('div',undefined,'sales-day'),label=el('label'),name=el('span',weekdays[index]),date=el('span',undefined,'small'),input=el('input');
   row.dataset.editId='sales-day-'+index;label.htmlFor='sales-day-'+index;name.dataset.editId='sales-day-'+index+'-label';date.id='sales-date-'+index;date.dataset.userText='';
   input.id='sales-day-'+index;input.dataset.editId='sales-day-'+index+'-input';input.type='number';input.min=0;input.max=10000000;input.step='0.01';input.inputMode='decimal';input.placeholder='Not recorded';input.disabled=true;
-  label.append(name,date);row.append(label,input);$('sales-days').append(row);inputs.push(input);
+  const field=el('div',undefined,'sales-currency-input'),currency=el('span','$','sales-currency-symbol');
+  currency.setAttribute('aria-hidden','true');currency.dataset.userText='';currency.dataset.editId='sales-day-'+index+'-currency';
+  field.append(currency,input);label.append(name,date);row.append(label,field);$('sales-days').append(row);inputs.push(input);
   input.oninput=()=>{dirty=true;saveDraft();renderProgress();};
  }
  async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
