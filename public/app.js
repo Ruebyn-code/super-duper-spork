@@ -26,4 +26,4 @@ async function reload(){
   render();
 }
 $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href='/login';}catch(error){$('message').textContent=error.message;}};
-(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
+(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;$('user-greeting').textContent='Yassou, '+session.username+'!';$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
