@@ -2491,5 +2491,23 @@
     "locations": [
       "Sidebar"
     ]
+  },
+  {
+    "text": "Enable hover expansion",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Sidebar expanded",
+    "locations": [
+      "Sidebar"
+    ]
+  },
+  {
+    "text": "Sidebar mode: {mode}",
+    "locations": [
+      "Sidebar"
+    ]
   }
 ]

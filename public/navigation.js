@@ -9,8 +9,9 @@
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
  function updateToggle(){
-  if(!toggle)return;const preview=root.classList.contains('sidebar-hover-expanded'),original=preview?'Keep sidebar expanded':collapsed?'Expand sidebar':'Collapse sidebar',text=wording(original);
-  toggle.setAttribute('aria-expanded',String(!collapsed||preview));toggle.setAttribute('aria-label',text||original);toggle.title=text||original;toggle.querySelector('.sidebar-toggle-text').textContent=text;
+  if(!toggle)return;const preview=root.classList.contains('sidebar-hover-expanded'),mode=!collapsed?'expanded':hoverEnabled?'hover':'collapsed',original=mode==='expanded'?'Collapse sidebar':mode==='collapsed'?'Enable hover expansion':'Keep sidebar expanded',text=wording(original),modeLabel=wording(mode==='expanded'?'Sidebar expanded':mode==='collapsed'?'Stay collapsed':'Expand on hover');
+  toggle.setAttribute('aria-expanded',String(!collapsed||preview));toggle.setAttribute('aria-label',text||original);toggle.setAttribute('aria-description',wording('Sidebar mode: {mode}',{mode:modeLabel}));toggle.title=[modeLabel,text||original].filter(Boolean).join(' · ');toggle.querySelector('.sidebar-toggle-text').textContent=text;
+  if(toggle.dataset.sidebarMode!==mode){toggle.dataset.sidebarMode=mode;const icon=toggle.querySelector('svg');if(icon)icon.innerHTML=mode==='expanded'?'<path d="m14 6-6 6 6 6"/>':mode==='collapsed'?'<path d="M4 12h16m-4-4 4 4-4 4M8 8l-4 4 4 4"/>':'<path d="M9 3h6M10 3v5l-3 4v2h10v-2l-3-4V3M12 14v7"/>';}
  }
  function accessibleName(element,original){return element.querySelector('.sidebar-label')?.textContent.trim()||wording(original)||original;}
  function updateNavigationLabels(){
@@ -23,32 +24,17 @@
   const logout=document.getElementById('logout');if(logout){const name=accessibleName(logout,'Sign out');logout.setAttribute('aria-label',name);logout.title=name;}
  }
  function renderSidebar(){const preview=collapsed&&hoverEnabled&&(pointerInside||keyboardInside);root.classList.toggle('sidebar-collapsed',collapsed&&!preview);root.classList.toggle('sidebar-hover-expanded',preview);updateToggle();}
- function setCollapsed(value){collapsed=value;pointerInside=false;keyboardInside=false;renderSidebar();}
- if(toggle)toggle.onclick=()=>{setCollapsed(!collapsed);try{localStorage.setItem(preference,String(collapsed));}catch{}};
+ function setMode(mode){collapsed=mode!=='expanded';hoverEnabled=mode==='hover';pointerInside=false;keyboardInside=false;renderSidebar();try{localStorage.setItem(preference,String(collapsed));localStorage.setItem(hoverPreference,String(hoverEnabled));}catch{}}
+ if(toggle)toggle.onclick=()=>setMode(!collapsed?'collapsed':!hoverEnabled?'hover':'expanded');
  if(sidebar){
   sidebar.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&matchMedia('(hover:hover) and (pointer:fine)').matches){pointerInside=true;renderSidebar();}});
   sidebar.addEventListener('pointerleave',()=>{pointerInside=false;renderSidebar();});
   sidebar.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible')){keyboardInside=true;renderSidebar();}});
   sidebar.addEventListener('focusout',()=>{queueMicrotask(()=>{keyboardInside=Boolean(sidebar.querySelector(':focus-visible'));renderSidebar();});});
  }
- const optionsButton=document.createElement('button'),options=document.createElement('div');
- optionsButton.id='sidebar-options-toggle';optionsButton.type='button';optionsButton.dataset.copyEditor='';optionsButton.setAttribute('aria-controls','sidebar-options');optionsButton.setAttribute('aria-expanded','false');
- optionsButton.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/></svg>';
- options.id='sidebar-options';options.className='sidebar-options';options.dataset.copyEditor='';options.hidden=true;
- options.innerHTML='<div class="sidebar-options-heading"><strong id="sidebar-options-heading"></strong><button type="button" class="sidebar-options-close">×</button></div><fieldset><legend></legend><label><input type="radio" name="sidebar-hover-behavior" value="false"><span data-sidebar-option="Stay collapsed"></span></label><label><input type="radio" name="sidebar-hover-behavior" value="true"><span data-sidebar-option="Expand on hover"></span></label></fieldset>';
- function updateOptions(){const text=wording('Sidebar options'),title=text||'Sidebar options';optionsButton.title=title;optionsButton.setAttribute('aria-label',title);options.querySelector('strong').textContent=text;options.querySelector('legend').textContent=wording('When the sidebar is collapsed');options.querySelector('.sidebar-options-close').setAttribute('aria-label',wording('Close sidebar options')||'Close sidebar options');options.querySelectorAll('[data-sidebar-option]').forEach(label=>label.textContent=wording(label.dataset.sidebarOption));options.querySelectorAll('input').forEach(input=>input.checked=(input.value==='true')===hoverEnabled);}
- function closeOptions(restoreFocus=false){options.hidden=true;optionsButton.setAttribute('aria-expanded','false');if(restoreFocus)optionsButton.focus();}
- function positionOptions(){if(options.hidden)return;const anchor=optionsButton.getBoundingClientRect(),width=options.getBoundingClientRect().width;options.style.left=Math.max(8,Math.min(anchor.left,innerWidth-width-8))+'px';options.style.bottom=Math.max(8,innerHeight-anchor.top+8)+'px';}
- if(toggle){toggle.before(optionsButton);document.body.append(options);updateOptions();}
- optionsButton.onclick=event=>{options.hidden=!options.hidden;optionsButton.setAttribute('aria-expanded',String(!options.hidden));positionOptions();if(!options.hidden&&event.detail===0)options.querySelector('input:checked').focus();};
- options.querySelector('.sidebar-options-close').onclick=()=>closeOptions(true);
- options.onchange=event=>{if(event.target.name!=='sidebar-hover-behavior')return;hoverEnabled=event.target.value==='true';try{localStorage.setItem(hoverPreference,String(hoverEnabled));}catch{}renderSidebar();updateOptions();};
- document.addEventListener('pointerdown',event=>{if(!options.contains(event.target)&&!optionsButton.contains(event.target))closeOptions();});
- document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!options.hidden){event.preventDefault();closeOptions(true);}});
- window.addEventListener('resize',positionOptions);
  updateToggle();updateNavigationLabels();
- window.addEventListener('storage',event=>{if(event.key===preference)setCollapsed(event.newValue==='true');if(event.key===hoverPreference){hoverEnabled=event.newValue==='true';updateOptions();renderSidebar();}});
- window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateOptions();});
+ window.addEventListener('storage',event=>{if(event.key!==preference&&event.key!==hoverPreference&&event.key!==null)return;try{collapsed=localStorage.getItem(preference)==='true';hoverEnabled=localStorage.getItem(hoverPreference)==='true';}catch{}pointerInside=false;keyboardInside=false;renderSidebar();});
+ window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();});
  if(sidebar)new MutationObserver(updateNavigationLabels).observe(sidebar,{childList:true,characterData:true,subtree:true});
  (async()=>{
   try{
