@@ -2,6 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {createAuth}=require('./auth');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -23,6 +24,7 @@ function validateOrder(body, menu) {
   return {id:crypto.randomUUID(),name:body.name.trim(),phone:body.phone.trim(),notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
 function createServer(dataDir = path.join(__dirname,'data')) {
+  const auth=createAuth(dataDir);
   const catalogueFile = path.join(dataDir,'catalogue.json');
   let pending = Promise.resolve();
   async function readCatalogue() {
@@ -44,6 +46,21 @@ function createServer(dataDir = path.join(__dirname,'data')) {
   return http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
+      res.setHeader('Cache-Control','no-store');
+      const session=await auth.session(req);
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,csrf:session.csrf}:{role:'user'});
+      if(req.method==='POST'&&req.url==='/api/login'){
+        if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
+        const loggedIn=await auth.login(req,await body(req));
+        res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
+        return json(200,{role:loggedIn.role});
+      }
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers');
+      if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
+      if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
+      if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.method==='GET'&&['/','/admin'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&req.url==='/admin'&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
@@ -74,7 +91,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});
         return json(201,order);
       }
-      const files = {'/':'index.html','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/admin':'admin.html','/admin/login':'login.html','/login':'login.html','/admin.js':'admin.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});
