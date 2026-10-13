@@ -30,6 +30,7 @@
    const response=await fetch('/api/session');const session=await response.json();if(!session.csrf){location.href='/login';return;}
    document.querySelectorAll('.main-sidebar-nav a').forEach(link=>{if(new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
    const admin=document.getElementById('admin-link');if(admin)admin.hidden=session.role!=='admin';
+   const editControls=document.getElementById('admin-edit-controls');if(editControls)editControls.hidden=session.role!=='admin';
    const shortcut=sidebar?.querySelector('.sidebar-admin-shortcut');if(shortcut){if(location.pathname.startsWith('/admin'))shortcut.setAttribute('aria-current','page');else shortcut.removeAttribute('aria-current');}
    const badge=document.getElementById('cart-badge');if(badge){try{const cart=JSON.parse(localStorage.getItem('souvlaki-cart-'+(session.id||session.username))||'{}');badge.textContent=Object.values(cart).filter(q=>Number.isInteger(q)&&q>0&&q<=999).reduce((sum,q)=>sum+q,0);}catch{badge.textContent='0';}}
    updateNavigationLabels();
