@@ -13,3 +13,9 @@ test('email submissions use their configured route and other methods are rejecte
  assert.equal((await deliverSupplier(order,{method:'email',contact:'supplier@example.com'},{env,fetchImpl:async()=>{throw Error('timeout');}})).status,'unconfirmed');
  assert.throws(()=>validateDelivery({method:'sms',contact:'0400000000'}));assert.throws(()=>validateDelivery({method:'system',contact:'http://example.com'}));
 });
+
+test('supplier email omits contact and delivery lines when cart does not collect them',async()=>{
+ const calls=[];const order={orderId:'simple-cart',requester:'staff',phone:'',location:'',notes:'Friday delivery',items:[{name:'Paper',price:650,quantity:2}],total:1300};
+ const result=await deliverSupplier(order,{method:'email',contact:'supplier@example.com'},{env:{DELIVERY_EMAIL_ENABLED:'true',RESEND_API_KEY:'test-key',ORDER_FROM_EMAIL:'orders@example.com'},fetchImpl:async(url,options)=>{calls.push(JSON.parse(options.body));return {ok:true};}});
+ assert.equal(result.status,'submitted');assert.match(calls[0].text,/Requested by: staff/);assert.match(calls[0].text,/2 × Paper/);assert.match(calls[0].text,/Friday delivery/);assert.ok(!calls[0].text.includes('Contact:'));assert.ok(!calls[0].text.includes('Deliver to:'));assert.ok(!calls[0].text.includes('undefined'));
+});

@@ -290,3 +290,15 @@ test('saved stock counts survive restarts and preserve removed stock names and q
   const retry=await fetch(url+'/api/stock-counts',{method:'POST',headers:signedIn,body:JSON.stringify(body)});assert.equal(retry.status,200);assert.equal((await retry.json()).id,saved.id);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('cart submits without requester, phone or delivery location and uses the signed-in account',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-simple-cart-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+ const headers=await login(url,'staff','test-password-for-staff');const html=await(await fetch(url+'/cart',{headers})).text();for(const field of ['name','phone','location'])assert.ok(!html.includes('name="'+field+'"'));assert.ok(html.includes('name="notes"'));
+ const body={requestId:require('node:crypto').randomUUID(),notes:'Please deliver on Friday',items:[{id:'paper',quantity:2}]};
+ const response=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(response.status,201);const order=await response.json();assert.equal(order.name,'staff');assert.equal(order.phone,'');assert.equal(order.location,'');assert.equal(order.notes,body.notes);assert.equal(order.total,1300);assert.equal(order.delivery[0].status,'not_configured');
+ const saved=JSON.parse(await fs.readFile(path.join(dir,order.id+'.json'),'utf8'));assert.equal(saved.name,'staff');const session=await(await fetch(url+'/api/session',{headers})).json();assert.equal(saved.requestOwnerId,session.id);
+ const retry=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(retry.status,200);assert.equal((await retry.json()).id,order.id);
+ const invalid=await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify({items:[{id:'paper',quantity:0}]})});assert.equal(invalid.status,400);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

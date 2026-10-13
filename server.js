@@ -20,8 +20,12 @@ const menu = [
   {id:'gloves',name:'Nitrile gloves',category:'Safety',price:1500,emoji:'🧤',description:'Box of 100 · medium · powder free',sku:'SAF-001',stock:6},
   {id:'vest',name:'High visibility vest',category:'Safety',price:1400,emoji:'🦺',description:'Each · yellow · one size',sku:'SAF-002',stock:20}
 ];
-function validateOrder(body, menu) {
-  if (!body || typeof body.name !== 'string' || !body.name.trim() || body.name.length > 80 || typeof body.location !== 'string' || !body.location.trim() || body.location.length > 200 || typeof body.phone !== 'string' || !/^[+\d ()-]{6,30}$/.test(body.phone) || !Array.isArray(body.items) || body.items.length === 0 || body.items.length > menu.length) throw Error('Enter your name, a valid phone number, and at least one item.');
+function validateOrder(body, menu, requester = '') {
+  if (!body || !Array.isArray(body.items) || body.items.length === 0 || body.items.length > menu.length) throw Error('Add at least one stock item.');
+  const requesterName=body.name===undefined?requester:body.name;
+  if (typeof requesterName !== 'string' || !requesterName.trim() || requesterName.length > 80) throw Error('Invalid requester name.');
+  if (body.phone !== undefined && (typeof body.phone !== 'string' || (body.phone !== '' && !/^[+\d ()-]{6,30}$/.test(body.phone)))) throw Error('Invalid contact number.');
+  if (body.location !== undefined && (typeof body.location !== 'string' || body.location.length > 200)) throw Error('Invalid delivery location.');
   const seen = new Set();
   const items = body.items.map(item => {
     if (!item || typeof item !== 'object') throw Error('Invalid order items.');
@@ -30,7 +34,7 @@ function validateOrder(body, menu) {
     seen.add(item.id);
     return {id:product.id,name:product.name,supplierId:product.supplierId,supplier:product.supplier,quantity:item.quantity,price:product.price};
   });
-  return {id:crypto.randomUUID(),name:body.name.trim(),phone:body.phone.trim(),notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
+  return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
 function createServer(dataDir = path.join(__dirname,'data')) {
   const auth=createAuth(dataDir);
@@ -165,7 +169,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
-        let order;try{order=validateOrder(input,products);}catch(error){fail(error.message);}
+        let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
         if(requestId)order.id=requestId;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
         try{await fs.writeFile(path.join(dataDir,`${order.id}.json`),JSON.stringify(order,null,2),{flag:'wx',mode:0o600});}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(path.join(dataDir,order.id+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}
