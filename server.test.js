@@ -124,7 +124,7 @@ test('only administrators can upload a logo and sign-in uses blue background',as
  const logo=await fetch(url+'/logo');assert.equal(logo.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await logo.arrayBuffer()),png);
  assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:Buffer.from('<svg/>').toString('base64')})})).status,400);
  const saved=JSON.parse(await fs.readFile(path.join(dir,'logo.json'),'utf8'));assert.equal(saved.data,png.toString('base64'));
- const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);
+ const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo" alt="Souvlaki GR" class="app-logo">/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 test('stock photos save, survive edits, and can be removed without on-hand input',async()=>{
@@ -233,5 +233,24 @@ test('per-element overrides are admin-only and preserve shared styles and labels
  assert.equal((await patch(admin,{id:'other',changes:{background:'javascript:bad'}})).status,400);assert.equal((await patch(admin,{id:'other',changes:{font:'invalid'}})).status,400);
  assert.equal((await patch(admin,{id:'index-test',changes:{text:{original:'Cart',value:null},backgroundImage:''}})).status,200);let current=await(await fetch(url+'/element-overrides')).json();assert.equal(current['index-test'].text.value,null);assert.equal(current['index-test'].backgroundImage,'');assert.equal(current['index-test'].font,'georgia');
  assert.equal((await patch(admin,{id:'index-test',changes:{restoreText:true,font:null,backgroundImage:null}})).status,200);current=await(await fetch(url+'/element-overrides')).json();assert.equal(current['index-test'].text,undefined);assert.equal(current['index-test'].font,undefined);assert.equal(current['index-test'].background,'#fedcba');
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
+
+test('pages include saved formatting immediately and static assets revalidate without caching private data',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-navigation-'));await saveAdmin(dir,'admin','test-password-for-admin');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+  const admin=await login(url),appearance=require('./appearance');
+  await appearance.saveAppearance(dir,{...appearance.defaults,fonts:{...appearance.defaults.fonts,headings:'georgia'}});
+  const unsafe='Basket </script><script>window.injected=true</script>';
+  await require('./interface-text').save(dir,{Cart:unsafe});
+  await require('./element-overrides').patch(dir,{id:'accounts-43',changes:{font:'verdana',fontColour:'#123456'}});
+  const response=await fetch(url+'/admin/accounts',{headers:admin});assert.equal(response.headers.get('cache-control'),'no-store');
+  const html=await response.text();assert.match(html,/<style id="appearance-style">[^<]*Georgia,serif/);assert.match(html,/<style id="element-appearance-style">[^<]*Verdana/);
+  const bootstrap=JSON.parse(html.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]);assert.equal(bootstrap.interfaceText.Cart,unsafe);assert.equal(bootstrap.elementOverrides['accounts-43'].font,'verdana');assert.ok(!html.includes('window.injected=true</script>'));
+  const fontPath=html.match(/<link rel="preload" href="([^"]+)" as="font"/)[1];const font=await fetch(url+fontPath);assert.match(font.headers.get('cache-control'),/immutable/);assert.equal(font.status,200);
+  assert.equal((await fetch(url+fontPath,{headers:{'If-None-Match':font.headers.get('etag')}})).status,304);
+  const script=await fetch(url+'/branding.js');assert.match(script.headers.get('cache-control'),/must-revalidate/);assert.equal((await fetch(url+'/branding.js',{headers:{'If-None-Match':script.headers.get('etag')}})).status,304);
+  await appearance.saveAppearance(dir,{...appearance.defaults,fonts:{...appearance.defaults.fonts,headings:'trebuchet'}});
+  const updated=await(await fetch(url+'/admin/accounts',{headers:admin})).text();assert.match(updated,/<style id="appearance-style">[^<]*Trebuchet MS/);assert.equal((await fetch(url+'/api/session',{headers:admin})).headers.get('cache-control'),'no-store');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });

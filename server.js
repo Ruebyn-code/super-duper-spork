@@ -4,12 +4,13 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const {createAuth}=require('./auth');
 const {mergeSpreadsheet}=require('./catalogue-import');
-const {defaults,validateSettings,saveAppearance}=require('./appearance');
+const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
 const deliverySettings=require('./delivery-settings');
 const {splitBySupplier}=require('./supplier-orders');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
+const appearanceStyles=require('./public/appearance-style');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -54,6 +55,15 @@ function createServer(dataDir = path.join(__dirname,'data')) {
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
+  const assets=new Map();
+  async function asset(file){
+    const target=path.join(__dirname,'public',file),stat=await fs.stat(target),stamp=stat.mtimeMs+':'+stat.size;
+    let cached=assets.get(file);
+    if(!cached||cached.stamp!==stamp){
+      const data=await fs.readFile(target);cached={stamp,data,etag:'"'+crypto.createHash('sha256').update(data).digest('hex')+'"'};assets.set(file,cached);
+    }
+    return cached;
+  }
   return http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
@@ -155,11 +165,21 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/cart':'cart.html','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
-      res.writeHead(200,{'Content-Type':file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript','X-Content-Type-Options':'nosniff'});
-      res.end(await fs.readFile(path.join(__dirname,'public',file)));
+      const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';
+      if(file.endsWith('.html')){
+        const [markup,appearance,text,overrides,font,hasLogo]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(dataDir),interfaceText.read(dataDir),elementOverrides.read(dataDir),asset('fonts/Opsilon-xRj8m.ttf'),fs.access(path.join(dataDir,'logo.json')).then(()=>true,()=>false)]);
+        const bootstrap=JSON.stringify({interfaceText:text,elementOverrides:overrides,hasLogo}).replace(/</g,'\\u003c');
+        const fontUrl='/fonts/Opsilon-xRj8m.ttf?v='+font.etag.slice(1,-1);
+        const initial='<link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
+        res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const branded=hasLogo?markup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="/logo" alt="Souvlaki GR" class="app-logo"></a>'):markup;return res.end(branded.replace('</head>',initial+'</head>'));
+      }
+      const cached=await asset(file);res.setHeader('ETag',cached.etag);
+      res.setHeader('Cache-Control',file.endsWith('.ttf')&&requestUrl.searchParams.get('v')===cached.etag.slice(1,-1)?'public, max-age=31536000, immutable':'public, max-age=0, must-revalidate');
+      if(req.headers['if-none-match']===cached.etag){res.writeHead(304);return res.end();}
+      res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});res.end(cached.data);
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
 }

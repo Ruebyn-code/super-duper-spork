@@ -1,12 +1,19 @@
-let elementOverrides={};const localTextRecords=new WeakMap(),localStyleRecords=new WeakMap(),localTracked=new Set();
+let elementOverrides=window.appBootstrap?.elementOverrides||{};const localTextRecords=new WeakMap(),localStyleRecords=new WeakMap(),localTracked=new Set();
 function elementIdentity(element){if(!element||element.closest('[data-copy-editor]'))return '';if(element.dataset.editId)return element.dataset.editId;
  const root=element.closest('[data-product-id],[data-supplier-id],[data-account-id]');if(!root)return '';const path=[];let node=element;while(node&&node!==root){const peers=[...node.parentElement.children].filter(e=>e.tagName===node.tagName);path.unshift(node.tagName.toLowerCase()+':'+peers.indexOf(node));node=node.parentElement;}
  const kind=root.dataset.productId?'product':root.dataset.supplierId?'supplier':'account';const id=root.dataset.productId||root.dataset.supplierId||root.dataset.accountId;return 'dynamic-'+location.pathname.replace(/[^a-z0-9]/gi,'_')+'-'+kind+'-'+id+'-'+(path.join('.')||'root');
 }
-function applyElementOverrides(){
- const elements=new Set(localTracked);document.querySelectorAll('[data-edit-id]').forEach(e=>elements.add(e));document.querySelectorAll('[data-product-id],[data-supplier-id],[data-account-id]').forEach(root=>{elements.add(root);root.querySelectorAll('*').forEach(e=>elements.add(e));});
+function applyElementOverrides(root=document){
+ if(root.nodeType===Node.TEXT_NODE)root=root.parentElement;if(!root)return;
+ for(const element of localTracked)if(!element.isConnected)localTracked.delete(element);
+ if(!Object.keys(elementOverrides).length&&!localTracked.size)return;
+ const elements=new Set(root===document?localTracked:[]);
+ const consider=element=>{if(element?.nodeType===Node.ELEMENT_NODE&&(element.dataset.editId||element.closest('[data-product-id],[data-supplier-id],[data-account-id]')))elements.add(element);};
+ consider(root);root.querySelectorAll?.('*').forEach(consider);
+ if(root!==document){let parent=root.parentElement;while(parent){consider(parent);parent=parent.parentElement;}}
+
  const fontFamilies={opsilon:"'Opsilon',sans-serif",arial:'Arial,Helvetica,sans-serif',verdana:'Verdana,sans-serif',georgia:'Georgia,serif',trebuchet:"'Trebuchet MS',sans-serif",monospace:'monospace'};
- for(const element of elements){if(!element.isConnected){localTracked.delete(element);continue;}if(element.closest('[data-copy-editor]'))continue;const id=elementIdentity(element);if(!id)continue;const settings=elementOverrides[id]||{};if(Object.keys(settings).length)localTracked.add(element);
+ for(const element of elements){if(!element.isConnected){localTracked.delete(element);continue;}if(element.closest('[data-copy-editor]'))continue;const id=elementIdentity(element);if(!id)continue;const settings=elementOverrides[id]||{};if(!Object.keys(settings).length&&!localTracked.has(element))continue;if(Object.keys(settings).length)localTracked.add(element);
   const properties={};if(Object.hasOwn(fontFamilies,settings.font)){properties['font-family']=fontFamilies[settings.font];properties['font-weight']=settings.font==='opsilon'?'400':'600';}if(/^#[0-9a-f]{6}$/i.test(settings.fontColour||''))properties.color=settings.fontColour;if(/^#[0-9a-f]{6}$/i.test(settings.background||''))properties['background-color']=settings.background;if(settings.backgroundImage==='')properties['background-image']='none';if(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(settings.backgroundImage||'')){properties['background-image']='url("'+settings.backgroundImage+'")';properties['background-size']='cover';properties['background-position']='center';properties['background-repeat']='no-repeat';}
   let styles=localStyleRecords.get(element);if(!styles){styles=new Map();localStyleRecords.set(element,styles);}for(const [property,baseline] of styles){if(!Object.hasOwn(properties,property)){if(baseline.value)element.style.setProperty(property,baseline.value,baseline.priority);else element.style.removeProperty(property);styles.delete(property);}}
   for(const [property,value] of Object.entries(properties)){if(!styles.has(property))styles.set(property,{value:element.style.getPropertyValue(property),priority:element.style.getPropertyPriority(property)});if(element.style.getPropertyValue(property)!==value||element.style.getPropertyPriority(property)!=='important')element.style.setProperty(property,value,'important');}
@@ -24,5 +31,16 @@ function applyElementOverrides(){
  }
 }
 async function refreshElementOverrides(){try{const response=await fetch('/element-overrides');if(response.ok){elementOverrides=await response.json();applyElementOverrides();}}catch{}}
-let localScheduled=false;new MutationObserver(()=>{if(localScheduled)return;localScheduled=true;queueMicrotask(()=>{localScheduled=false;applyElementOverrides();});}).observe(document.documentElement,{childList:true,characterData:true,subtree:true});
-window.addEventListener('interface-text-updated',applyElementOverrides);refreshElementOverrides();
+const localRoots=new Set();let localScheduled=false;
+function queueElementRoot(node){const root=node.nodeType===Node.TEXT_NODE?node.parentElement:node;if(!root||root.nodeType!==Node.ELEMENT_NODE||root.closest('script,style,[data-copy-editor]'))return;localRoots.add(root);}
+const elementObserver=new MutationObserver(records=>{
+ if(!Object.keys(elementOverrides).length&&!localTracked.size)return;
+ for(const record of records){if(record.type==='characterData')queueElementRoot(record.target);else for(const node of record.addedNodes)queueElementRoot(node);}
+ if(localScheduled||!localRoots.size)return;localScheduled=true;queueMicrotask(()=>{
+  localScheduled=false;const roots=[...localRoots].filter(root=>root.isConnected);localRoots.clear();elementObserver.disconnect();
+  try{for(const root of roots)if(!roots.some(other=>other!==root&&other.contains(root)))applyElementOverrides(root);}finally{elementObserver.observe(document.documentElement,{childList:true,characterData:true,subtree:true});}
+ });
+});
+elementObserver.observe(document.documentElement,{childList:true,characterData:true,subtree:true});
+window.addEventListener('interface-text-updated',()=>applyElementOverrides());
+if(window.appBootstrap&&Object.hasOwn(window.appBootstrap,'elementOverrides')){applyElementOverrides();document.getElementById('element-appearance-style')?.remove();}else refreshElementOverrides();
