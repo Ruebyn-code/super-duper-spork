@@ -164,3 +164,18 @@ test('app settings are admin-only, validated, and persistent',async()=>{
  assert.equal((await fetch(url+'/api/settings',{method:'PUT',body:JSON.stringify(defaults)})).status,401);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+test('delivery configuration is admin-only, secrets stay private, and repeat orders do not dispatch again',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-delivery-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');
+ assert.equal((await fetch(url+'/api/delivery-settings',{headers:staff})).status,403);
+ const settings={RESEND_API_KEY:'test-not-a-real-key',ORDER_FROM_EMAIL:'orders@example.com',DELIVERY_EMAIL_ENABLED:false,DELIVERY_SMS_ENABLED:false,DELIVERY_SYSTEM_ENABLED:false};
+ let response=await fetch(url+'/api/delivery-settings',{method:'PUT',headers:admin,body:JSON.stringify(settings)});assert.equal(response.status,200);assert.ok(!(await response.text()).includes('test-not-a-real-key'));
+ response=await fetch(url+'/api/delivery-settings',{headers:admin});assert.ok(!(await response.text()).includes('test-not-a-real-key'));
+ const delivery={method:'email',contact:'supplier@example.com'};assert.equal((await fetch(url+'/api/suppliers/office',{method:'PUT',headers:staff,body:JSON.stringify({delivery})})).status,403);assert.equal((await fetch(url+'/api/suppliers/office',{method:'PUT',headers:admin,body:JSON.stringify({delivery})})).status,200);
+ const catalogue=await(await fetch(url+'/api/catalogue',{headers:staff})).json();assert.ok(!('delivery' in catalogue.suppliers.find(s=>s.id==='office')));
+ const body={requestId:require('node:crypto').randomUUID(),name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id:'paper',quantity:2}]};
+ response=await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)});assert.equal(response.status,201);const order=await response.json();assert.equal(order.delivery[0].status,'not_configured');assert.equal(order.id,body.requestId);
+ response=await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)});assert.equal(response.status,200);assert.equal((await response.json()).id,order.id);
+ body.items[0].quantity=3;assert.equal((await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)})).status,409);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});

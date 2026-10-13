@@ -55,3 +55,13 @@ The spreadsheet provides 106 prices; 22 items have blank prices and display **Pr
 The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** in the header to review quantities and submit a request on its own page. Carts are saved per signed-in account in this browser’s local storage and cleared after a successful order.
 
 Administrators can change primary/secondary colours and choose fonts for body text, app name, greeting, headings, stock names, buttons, labels, inputs, and navigation in **Administration → App settings**. Choices save in `data/appearance.json` and apply across pages, including sign-in. Refresh other open pages after saving.
+
+## Automatic supplier order delivery
+
+Administrators can edit each supplier’s delivery method and contact in **Suppliers & stock**, and enter sending credentials and enable/disable methods in **App settings → Supplier order delivery**. All methods default to off. Email uses Resend (requires a verified sender and API key); texts use Twilio (requires account SID, auth token, and a valid sending number). Supplier phone numbers must include country codes, such as +61400123456. Sending services may charge fees.
+
+The ordering-system option posts supplier-specific JSON orders to a configured HTTPS endpoint using a bearer token. This is a generic API connection, not a universal connector for supplier websites; the supplier must provide a compatible API or an adapter must be built for its documented API. Only one shared system token is configured in this release.
+
+Orders split by supplier and save before submission. Checkout reports **submitted**, **not configured**, **failed**, or **unconfirmed** for each supplier. Submitted means the service accepted the request, not that the supplier received or fulfilled it. Unconfirmed submissions are never retried automatically; check the sending service before resending. No previous orders are automatically sent when credentials are added. Repeating the same checkout request identifier does not send it again.
+
+Credentials are held in ignored `data/delivery-settings.json` with private file permissions. They are not returned to the browser after saving; blank secret fields keep existing credentials. Disable a method to stop sending. Preserve and keep the data folder private. Provider credentials and real supplier contacts are required before actual sending can be validated.

@@ -43,3 +43,7 @@ h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-s
 .settings-colours,.settings-fonts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.settings-colours input[type=color]{height:48px}.settings-colours span{display:block;margin-top:6px}.settings-fonts select{margin-top:8px}@media(max-width:600px){.settings-colours,.settings-fonts{grid-template-columns:1fr}}
 
 .settings-logo-preview{display:block;max-width:100%;width:220px;height:220px;object-fit:contain;margin-top:16px;border:1px solid #d3dfea;border-radius:10px}.settings-logo-preview[hidden]{display:none}#logo-preview-caption{font-size:13px;color:#526574}
+
+.supplier-delivery{border:1px solid #d3dfea;padding:16px;border-radius:10px;margin:20px 0;max-width:650px}.supplier-delivery select{width:100%;font:inherit;padding:10px;margin-top:8px}
+
+#delivery-settings-form{max-width:650px}#delivery-settings-form input[type=checkbox]{width:auto;margin-right:8px}#delivery-settings-form [data-secret]{display:block;font-size:12px;margin-top:6px}
