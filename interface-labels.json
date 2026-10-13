@@ -1255,5 +1255,11 @@
     "locations": [
       "Sidebar"
     ]
+  },
+  {
+    "text": "Navigation links and sidebar hover/selection highlights",
+    "locations": [
+      "settings"
+    ]
   }
 ]
