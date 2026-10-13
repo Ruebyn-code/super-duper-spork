@@ -53,11 +53,12 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const input=await body(req);const supplierName=name(input?.name,'supplier name');
         return json(201,await mutate(c=>{if(c.suppliers.some(s=>s.name.toLowerCase()===supplierName.toLowerCase()))fail('That supplier already exists.');const supplier={id:crypto.randomUUID(),name:supplierName};c.suppliers.push(supplier);return supplier;}));
       }
-      if(req.method==='POST' && req.url==='/api/products'){
+      const edit=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)$/);
+      if((req.method==='POST' && req.url==='/api/products') || (req.method==='PUT' && edit)){
         const input=await body(req);const productName=name(input?.name,'stock name');
         if(typeof input.price!=='number'||!Number.isFinite(input.price)||input.price<0||input.price>1000000||!Number.isInteger(input.stock)||input.stock<0||input.stock>1000000)fail('Enter a valid price and whole-number stock quantity.');
         const product={id:crypto.randomUUID(),name:productName,supplierId:input.supplierId,price:Math.round(input.price*100),stock:input.stock,category:name(input.category||'General','category',60),sku:typeof input.sku==='string'?input.sku.trim().slice(0,60):'',description:typeof input.description==='string'?input.description.slice(0,300):'',emoji:'📦'};
-        return json(201,await mutate(c=>{if(!c.suppliers.some(s=>s.id===product.supplierId))fail('Choose an existing supplier.');c.products.push(product);return product;}));
+        return json(edit?200:201,await mutate(c=>{if(!c.suppliers.some(s=>s.id===product.supplierId))fail('Choose an existing supplier.');if(edit){const index=c.products.findIndex(p=>p.id===edit[1]);if(index<0)fail('Stock not found.',404);product.id=c.products[index].id;product.emoji=c.products[index].emoji;c.products[index]=product;}else{c.products.push(product);}return product;}));
       }
       const deletion=req.url.match(/^\/api\/(products|suppliers)\/([a-zA-Z0-9-]+)$/);
       if(req.method==='DELETE' && deletion){return json(200,await mutate(c=>{
