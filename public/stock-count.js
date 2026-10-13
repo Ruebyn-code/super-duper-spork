@@ -49,7 +49,7 @@
   updateProgress();filterRows();
  }
  function showView(){
-  const view=location.hash==='#history'?'history':'new';document.querySelectorAll('[data-count-view]').forEach(element=>element.hidden=element.dataset.countView!==view);
+  const view=location.hash==='#usage'?'usage':location.hash==='#history'?'history':'new';document.querySelectorAll('[data-count-view]').forEach(element=>element.hidden=element.dataset.countView!==view);
   document.querySelectorAll('.stock-count-nav a').forEach(link=>{if(link.hash==='#'+view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
   if(view==='history'&&session&&!historyLoaded)loadHistory();
  }

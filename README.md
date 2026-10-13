@@ -93,3 +93,12 @@ Drafts save automatically in this browser for the signed-in account and return a
 Saved counts persist in `data/stock-counts/` across restarts and updates. Keep your entire **data** folder when updating. Unsaved browser drafts stay on the browser where they were entered.
 
 The app name/logo appears at the top of the left sidebar, with the cart directly underneath. Use the small arrow at the bottom of the sidebar to collapse it into a compact icon rail or expand it again. The button stays pinned at the bottom while sidebar menus scroll. The uploaded logo stays visible at a smaller size, along with the cart icon and quantity, ordering, stock count, sign-out, and an administrator shortcut. The browser remembers your sidebar preference across pages and refreshes.
+
+
+## Weekly usage and par levels
+
+Open **Stock count → Weekly usage** to select a Monday-starting week. For each item, enter opening stock, stock actually received, and closing stock. Stock used is calculated as **opening + received − closing**; quantities support three decimal places. A saved opening count from that Monday or the preceding Sunday, and a saved closing count from that Sunday or the following Monday, can fill the fields. Counts must belong to your own account. Orders are not assumed to have been delivered.
+
+Save the week's values to update `data/stock-usage/`. Saving again replaces that account's week rather than adding it twice. Browser drafts are separate for each account and week. Use the week picker to enter the four previous weeks or edit an existing week. Zero records no usage; blank counts are unknown. Negative calculated usage needs corrected counts or receipts before saving.
+
+Ordering cards and list rows show **Par**, a weekly target based on your own usage across the **four complete Monday–Sunday weeks before the current week**, using the existing Melbourne business calendar. The average is rounded up to whole units/packs for ordering; hover over the par panel for the exact average. A par is shown only when all four weeks are recorded for that item. Missing weeks show their coverage instead of being assumed to be zero. The current partial week and other accounts' records are excluded. The four-week window rolls forward automatically. Par levels do not change the cart or automatically order stock.

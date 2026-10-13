@@ -12,6 +12,7 @@ const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
 const appearanceStyles=require('./public/appearance-style');
 const stockCounts=require('./stock-counts');
+const stockUsage=require('./stock-usage');
 const menu = [
   {id:'paper',name:'A4 copy paper',category:'Office',price:650,emoji:'📄',description:'500 sheets · 80 gsm',sku:'OFF-001',stock:12},
   {id:'pens',name:'Black ballpoint pens',category:'Office',price:1200,emoji:'🖊️',description:'Box of 12 · medium point',sku:'OFF-002',stock:4},
@@ -101,6 +102,13 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/stock-usage'&&req.method==='GET'){
+        const week=requestUrl.searchParams.get('week');if(!week)fail('Choose a usage week.');return json(200,await stockUsage.editor(dataDir,session,week));
+      }
+      if(req.url==='/api/stock-usage'&&req.method==='PUT'){
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        return json(200,await stockUsage.save(dataDir,session,await body(req,2000000),await readCatalogue()));
+      }
       if(req.url==='/api/stock-counts'&&req.method==='GET')return json(200,await stockCounts.list(dataDir,session));
       if(req.url==='/api/stock-counts'&&req.method==='POST'){
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
@@ -139,8 +147,9 @@ function createServer(dataDir = path.join(__dirname,'data')) {
       if(req.method==='GET'&&req.url==='/email-settings'){const account=requestUrl.searchParams.get('account');res.writeHead(303,{Location:'/admin/accounts'+(account?'?account='+encodeURIComponent(account):'')+'#email'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
-        const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
-        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products});
+        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products);
+        const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id]}));
+        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window});
       }
       if(req.method==='POST' && req.url==='/api/suppliers'){
         const input=await body(req);const supplierName=name(input?.name,'supplier name');
@@ -177,7 +186,7 @@ function createServer(dataDir = path.join(__dirname,'data')) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/stock-count.js':'stock-count.js','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/cart':'cart.html','/stock-count':'stock-count.html','/stock-count.js':'stock-count.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';

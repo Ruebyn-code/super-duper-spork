@@ -1363,5 +1363,233 @@
     "locations": [
       "settings"
     ]
+  },
+  {
+    "text": "Weekly usage",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Record opening stock, stock actually received, and closing stock for each week. Stock used is calculated automatically. Your par levels use your own four completed weeks.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Use the usual units or packs. Enter 0 when none were received or used. Leave missing opening or closing counts blank; missing weeks are not treated as zero.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Week commencing",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Weeks run Monday to Sunday in Melbourne time.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Opening count",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Closing count",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Opening stock",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Stock received",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Closing stock",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Enter manually",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Use a saved count from this account at the start or end of the week, or enter counts manually. Enter stock received only after it has arrived.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "{count} items ready to save",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Used: {quantity}",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Usage not recorded",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Not recorded",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Save weekly usage",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Loading weekly usage…",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Loading saved count…",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Saved count selected. Enter stock actually received, then save weekly usage.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Unsaved usage draft restored.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Saved weekly usage loaded.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "No usage recorded for this week yet.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Browser storage is unavailable. Save your usage before leaving this page.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Enter both opening and closing stock, or leave both blank.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Closing stock is greater than opening stock plus stock received. Check the quantities.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Saving weekly usage…",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Weekly usage saved.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Weekly usage saved. Par levels update when all four previous weeks are recorded.",
+    "locations": [
+      "Stock count · weekly usage"
+    ]
+  },
+  {
+    "text": "Par: {level}",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Par: —",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Weekly target",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "{weeks} of 4 weeks recorded",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Average used: {average} per week",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Par levels · {start} – {end} · Your usage",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "How par levels work",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Par is your average weekly stock used over the four completed weeks before this week, rounded up to whole units or packs. Stock used = opening stock + stock received − closing stock. Record each week in Stock count → Weekly usage. All four weeks must be recorded for an item; enter 0 for a week with no usage.",
+    "locations": [
+      "Ordering · par levels"
+    ]
+  },
+  {
+    "text": "Record weekly usage",
+    "locations": [
+      "Ordering · par levels"
+    ]
   }
 ]

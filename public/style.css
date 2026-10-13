@@ -263,3 +263,19 @@ label{font-size:12px;line-height:1.5}
 .signin-background-preview{height:220px;border-radius:16px;margin-top:20px;border:1px solid var(--line);background-size:cover;background-position:center;background-repeat:no-repeat}
 #signin-background-form{max-width:680px}#signin-background-form .stock-actions{align-items:center;margin-top:20px}#signin-background-form .submit{width:auto;margin-top:0;background-color:var(--primary);border-color:var(--primary);color:#fff}#signin-background-form .submit:hover{background-color:var(--primary-hover)}
 @media(max-width:480px){.authentication-page .login-page .app-logo{width:120px;height:120px}.signin-colour-fields{grid-template-columns:80px minmax(0,1fr)}.signin-background-preview{height:160px}}
+
+/* Par targets use recorded consumption, with gaps clearly shown. */
+.par-period{margin:0 0 8px;color:var(--muted);font-size:11px}
+.par-explanation{margin:0 0 20px;font-size:12px;line-height:1.6;color:var(--muted)}
+.par-explanation summary{cursor:pointer;color:var(--primary);width:fit-content}.par-explanation p{max-width:760px;margin:8px 0}.par-explanation a{color:var(--primary)}
+.product-par{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px 12px;margin-top:14px;border:1px solid var(--line);border-radius:10px;background-color:color-mix(in srgb,var(--primary) 4%,#fff)}
+.par-value{font-size:12px;color:var(--primary);font-variant-numeric:tabular-nums}.par-hint{font-size:10px;color:var(--muted)}
+.menu:not(.menu-list) .product-par{order:1}.menu:not(.menu-list) .product-bottom{order:2}.menu:not(.menu-list) .add-feedback{order:3}
+.menu-list .product .product-par{grid-row:4;margin-top:10px;padding:8px 10px}.menu-list .product .product-bottom{grid-row:5}.menu-list .product .add-feedback{grid-row:6}.menu-list .product .product-art{grid-row:1 / 7}
+.usage-count-sources select,#usage-supplier{width:100%;min-height:44px;margin-top:7px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background-color:#fff;font:inherit;color:inherit}
+.usage-period{align-self:end}.usage-period p{margin:8px 0}.usage-item{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(90px,1fr));gap:14px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+.usage-item:last-child{border-bottom:0}.usage-item label{margin:0}.usage-item input{font-variant-numeric:tabular-nums}.usage-item input[readonly]{background-color:#f2f6fa;color:var(--muted)}
+.usage-stock-info h3{font-size:17px;margin:0}.usage-stock-info p{margin:5px 0 0}.usage-used{grid-column:2 / -1;margin:0!important;color:var(--primary)!important;font-variant-numeric:tabular-nums}.usage-warning{color:#b13c2e!important}
+#usage-message:empty,#usage-draft-status:empty{display:none}
+@media(max-width:1000px){.usage-item{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.usage-stock-info{grid-column:1 / -1}.usage-used{grid-column:1 / -1}}
+@media(max-width:520px){.menu-list .product .product-art{grid-row:1 / 4}.menu-list .product .product-par{grid-column:1 / -1}.usage-item{grid-template-columns:minmax(0,1fr)}.usage-stock-info,.usage-used{grid-column:1}.usage-item label{display:grid;grid-template-columns:minmax(0,1fr) minmax(65px,1fr);align-items:center;gap:8px}.usage-item input{margin:0;padding:9px}.usage-count-sources{gap:0}.product-par{padding:8px}.par-hint{font-size:10px}}

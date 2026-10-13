@@ -318,3 +318,18 @@ test('sign-in backgrounds and palette-linked appearance are admin-only, validate
  assert.equal((await patch(admin,{backgroundImages:{signin:null},backgrounds:{signin:null}})).status,200);const reset=await(await fetch(url+'/appearance')).json();assert.equal(reset.backgroundImages.signin,undefined);assert.equal(reset.backgrounds.signin,undefined);assert.equal(reset.backgrounds.cards,'primary');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('weekly usage endpoints are signed-in, account-scoped and drive per-account catalogue par levels',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-par-api-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{
+ const staff=await login(url,'staff','test-password-for-staff'),admin=await login(url);const window=require('./par-levels').windowFor(),shift=require('./stock-usage').shift;
+ assert.equal((await fetch(url+'/api/stock-usage?week='+window.startDate)).status,401);assert.equal((await fetch(url+'/api/stock-usage',{method:'PUT',body:'{}'})).status,401);assert.equal((await fetch(url+'/api/stock-usage?week=invalid',{headers:staff})).status,400);
+ const body={weekStart:shift(window.currentWeekStart,-7),items:[{id:'paper',opening:10,received:5,closing:8}]};
+ assert.equal((await fetch(url+'/api/stock-usage',{method:'PUT',headers:{Cookie:staff.Cookie,'Content-Type':'application/json'},body:JSON.stringify(body)})).status,403);
+ for(let index=1;index<=4;index++){const response=await fetch(url+'/api/stock-usage',{method:'PUT',headers:staff,body:JSON.stringify({...body,weekStart:shift(window.currentWeekStart,-7*index)})});assert.equal(response.status,200);assert.equal((await response.json()).items[0].quantity,7);}
+ const catalogue=await(await fetch(url+'/api/catalogue',{headers:staff})).json();assert.equal(catalogue.products.find(item=>item.id==='paper').par.level,7);assert.equal(catalogue.products.find(item=>item.id==='pens').par.level,null);assert.equal(catalogue.parWindow.currentWeekStart,window.currentWeekStart);assert.equal(catalogue.parWindow.source,'usage');
+ const other=await(await fetch(url+'/api/catalogue',{headers:admin})).json();assert.equal(other.products.find(item=>item.id==='paper').par.level,null);const privateWeek=await(await fetch(url+'/api/stock-usage?week='+body.weekStart,{headers:admin})).json();assert.equal(privateWeek.record,null);
+ const changed=await fetch(url+'/api/stock-usage',{method:'PUT',headers:staff,body:JSON.stringify({...body,items:[{id:'paper',opening:0,received:0,closing:0}]})});assert.equal(changed.status,200);const revised=await(await fetch(url+'/api/catalogue',{headers:staff})).json();assert.equal(revised.products.find(item=>item.id==='paper').par.level,6);assert.equal((await fs.readdir(path.join(dir,'stock-usage'))).length,4);
+ const invalid=await fetch(url+'/api/stock-usage',{method:'PUT',headers:staff,body:JSON.stringify({...body,items:[{id:'paper',opening:1,received:0,closing:2}]})});assert.equal(invalid.status,400);assert.equal((await fetch(url+'/data/stock-usage',{headers:staff})).status,404);
+ }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
+});
