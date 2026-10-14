@@ -10,6 +10,23 @@ function syncBusy(form){const busy=Boolean(form.querySelector('button[type="subm
 const busyObserver=new MutationObserver(records=>{for(const record of records){const form=record.target.closest('form');if(form)syncBusy(form);}});
 busyObserver.observe(document.body,{subtree:true,attributes:true,attributeFilter:['disabled']});
 
+// Ordering, stock counts and weekly usage share the same expanding search.
+document.querySelectorAll('.catalogue-search').forEach(control=>{
+ const button=control.querySelector('.search-toggle'),field=control.querySelector('.search-field'),input=field.querySelector('input[type=search]');
+ const wording=text=>typeof interfaceLabel==='function'?interfaceLabel(text):text;
+ function updateLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':'Search stock');button.setAttribute('aria-label',label);button.title=label;}
+ function setOpen(open,focus=true){
+  if(open&&input.disabled)return;
+  control.classList.toggle('search-open',open);button.setAttribute('aria-expanded',String(open));field.inert=!open;field.setAttribute('aria-hidden',String(!open));input.tabIndex=open?0:-1;updateLabel();
+  if(!open&&input.value){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));}
+  if(focus)(open?input:button).focus({preventScroll:true});
+ }
+ button.addEventListener('click',()=>setOpen(button.getAttribute('aria-expanded')!=='true'));
+ control.addEventListener('keydown',event=>{if(event.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){event.preventDefault();event.stopPropagation();setOpen(false);}});
+ input.form?.addEventListener('reset',()=>setOpen(false,false));
+ window.addEventListener('interface-text-updated',updateLabel);if(input.value)setOpen(true,false);else updateLabel();
+});
+
 // Date controls use the search field's compact expansion without clearing dates.
 document.querySelectorAll('.date-control').forEach(control=>{
  const button=control.querySelector('.date-toggle'),field=control.querySelector('.date-field'),input=field.querySelector('input[type=date]'),label=input.labels?.[0];

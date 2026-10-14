@@ -88,18 +88,6 @@ function render(refreshMenu=true){if(refreshMenu)renderMenu();const focused=docu
   $('count').dataset.appValues=JSON.stringify({count});$('count').textContent=wording('{count} units',{count});$('total').textContent=money(total)+(pricePending?' + prices pending':'');$('submit').disabled=!count||busy;$('submit').textContent=busy?'Saving request…':'Submit stock request →';if(focusedLabel&&!focused.isConnected){const replacement=[...$('cart').querySelectorAll('[aria-label]')].find(element=>element.getAttribute('aria-label')===focusedLabel);replacement?.focus({preventScroll:true});}
 }
 if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
-if($('search-toggle')){
-  const container=$('catalogue-search'),button=$('search-toggle'),field=$('search-field'),input=$('search');
-  function updateSearchLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':'Search stock');button.setAttribute('aria-label',label);button.title=label;}
-  function setSearchOpen(open){
-    container.classList.toggle('search-open',open);button.setAttribute('aria-expanded',String(open));field.inert=!open;field.setAttribute('aria-hidden',String(!open));input.tabIndex=open?0:-1;updateSearchLabel();
-    if(open)input.focus({preventScroll:true});else{const hadQuery=Boolean(input.value);input.value='';if(hadQuery){page=1;renderMenu();}button.focus({preventScroll:true});}
-  }
-  button.onclick=()=>setSearchOpen(button.getAttribute('aria-expanded')!=='true');
-  container.addEventListener('keydown',event=>{if(event.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){event.preventDefault();event.stopPropagation();setSearchOpen(false);}});
-  window.addEventListener('interface-text-updated',updateSearchLabel);
-  if(input.value)setSearchOpen(true);
-}
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}cart={};window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':'submission unconfirmed')).join('; ');e.target.reset();}catch(error){$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};

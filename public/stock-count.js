@@ -1,7 +1,7 @@
 (()=>{
  const $=id=>document.getElementById(id),form=$('count-form');
  let session,products=[],suppliers=[],quantities=Object.create(null),draftKey='',saving=false,historyLoaded=false,historyLoading=false,historyGeneration=0,reportGeneration=0;
- let requestId='',requestSignature='',draftWarning=false;
+ let requestId='',requestSignature='',draftWarning=false,selectedSupplier='all';
  const rows=new Map(),groups=new Map();
  const wording=(original,values={})=>typeof interfaceLabel==='function'?interfaceLabel(original,values):original.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  const el=(tag,text,className)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(className)element.className=className;return element;};
@@ -15,7 +15,7 @@
  function hasCount(id){return Object.hasOwn(quantities,id)&&quantities[id].trim()!=='';}
  function writeDraft(){
   if(!draftKey)return;
-  const draft={countDate:form.elements.countDate.value,location:form.elements.location.value,notes:form.elements.notes.value,quantities,requestId,requestSignature};
+  const draft={countDate:form.elements.countDate.value,notes:form.elements.notes.value,quantities,requestId,requestSignature};
   try{localStorage.setItem(draftKey,JSON.stringify(draft));draftWarning=false;$('count-draft-status').textContent=wording('Draft saved on this browser.');}
   catch{draftWarning=true;$('count-draft-status').textContent=wording('Browser storage is unavailable. Save your count before leaving this page.');}
  }
@@ -26,12 +26,18 @@
   $('count-save').disabled=saving||!counted;
  }
  function filterRows(){
-  const query=$('count-search').value.trim().toLowerCase(),supplier=$('count-supplier').value;let visible=0;
+  const query=$('count-search').value.trim().toLowerCase(),supplier=selectedSupplier;let visible=0;
   for(const product of products){const row=rows.get(product.id);const show=(supplier==='all'||product.supplierId===supplier)&&(product.name+' '+(product.sku||'')+' '+(product.category||'')).toLowerCase().includes(query);row.element.hidden=!show;if(show)visible++;}
   for(const [id,group] of groups){const show=products.some(product=>product.supplierId===id&&!rows.get(product.id).element.hidden);group.element.hidden=!show;if(show&&(query||supplier!=='all'))group.element.open=true;}
   $('count-no-results').hidden=visible>0;
  }
- function reveal(input){$('count-search').value='';$('count-supplier').value='all';filterRows();let parent=input.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}}
+ function selectSupplier(id){selectedSupplier=id;for(const button of $('count-supplier').children){const active=button.dataset.supplierId===id;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}filterRows();}
+ function buildSupplierMenu(){
+  $('count-supplier').replaceChildren();
+  for(const supplier of [{id:'all',name:wording('All suppliers')},...suppliers]){const button=el('button',supplier.name);button.type='button';button.dataset.supplierId=supplier.id;button.dataset.editId='count-filter-'+supplier.id;if(supplier.id!=='all')button.dataset.userText='';button.onclick=()=>selectSupplier(supplier.id);$('count-supplier').append(button);}
+  selectSupplier(selectedSupplier);
+ }
+ function reveal(input){$('count-search').value='';selectSupplier('all');let parent=input.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}}
  function buildRows(){
   $('count-items').replaceChildren();rows.clear();groups.clear();
   for(const supplier of suppliers){
@@ -57,9 +63,9 @@
  function renderReport(record){
   const report=$('count-report');report.replaceChildren();report.hidden=false;report.dataset.editId='stock-count-report-'+record.id;
   const title=el('h2',displayDate(record.countDate));title.dataset.userText='';const meta=el('p',[record.locationName,record.counterName,record.location].filter(Boolean).join(' · '));meta.dataset.userText='';report.append(title,meta);
-  if(record.notes){const notes=el('p',record.notes);notes.dataset.userText='';report.append(notes);}
   const supplierNames=new Map(record.items.map(item=>[item.supplierId,item.supplier]));
   for(const [id,name] of supplierNames){const group=el('details',undefined,'supplier-stock-menu');group.dataset.supplierId=id;group.open=true;const summary=el('summary',undefined,'supplier-title');summary.append(el('h3',name));group.append(summary);const content=el('div',undefined,'supplier-stock-content');for(const item of record.items.filter(item=>item.supplierId===id)){const row=el('div',undefined,'count-item');row.dataset.productId=item.id;const itemName=el('span',item.name,'stock-name');itemName.dataset.userText='';const quantity=el('strong',new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(item.quantity));quantity.dataset.userText='';row.append(itemName,quantity);content.append(row);}group.append(content);report.append(group);}
+  if(record.notes){const notes=el('p',record.notes);notes.dataset.userText='';report.append(notes);}
  }
  async function viewCount(id){const version=++reportGeneration;$('count-message').textContent=wording('Loading count…');try{const record=await api('/api/stock-counts/'+encodeURIComponent(id));if(version!==reportGeneration)return;renderReport(record);$('count-message').textContent='';$('count-report').scrollIntoView({behavior:'smooth',block:'start'});}catch(error){if(version===reportGeneration)$('count-message').textContent=error.message;}}
  async function loadHistory(){
@@ -72,26 +78,25 @@
  }
  form.onsubmit=async event=>{
   event.preventDefault();if(saving)return;const items=products.filter(product=>hasCount(product.id)).map(product=>({id:product.id,quantity:Number(quantities[product.id])}));if(!items.length){$('count-message').textContent=wording('Enter a quantity for at least one stock item.');return;}
-  const body={countDate:form.elements.countDate.value,location:form.elements.location.value,notes:form.elements.notes.value,items},signature=JSON.stringify(body);
+  const body={countDate:form.elements.countDate.value,notes:form.elements.notes.value,items},signature=JSON.stringify(body);
   if(signature!==requestSignature||!requestId){requestId=crypto.randomUUID();requestSignature=signature;}body.requestId=requestId;writeDraft();saving=true;for(const control of form.elements)control.disabled=true;$('count-message').textContent=wording('Saving stock count…');
   try{const record=await api('/api/stock-counts','POST',body);try{localStorage.setItem('souvlaki-usage-updated-'+(session.dataScope||session.id),String(Date.now()));}catch{}resetDraft();historyLoaded=false;await loadHistory();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
   catch(error){$('count-message').textContent=error.message;}
   finally{saving=false;for(const control of form.elements)control.disabled=false;updateProgress();}
  };
- for(const key of ['countDate','location','notes'])form.elements[key].addEventListener('input',writeDraft);
- $('count-search').oninput=filterRows;$('count-supplier').onchange=filterRows;$('count-history-refresh').onclick=loadHistory;
- $('count-clear').onclick=()=>{if(Object.values(quantities).some(value=>value.trim())||form.elements.location.value||form.elements.notes.value){if(!confirm(wording('Clear your unsaved stock count?')))return;}resetDraft();$('count-message').textContent=wording('Draft cleared.');};
+ for(const key of ['countDate','notes'])form.elements[key].addEventListener('input',writeDraft);
+ $('count-search').oninput=filterRows;$('count-history-refresh').onclick=loadHistory;
+ $('count-clear').onclick=()=>{if(Object.values(quantities).some(value=>value.trim())||form.elements.notes.value){if(!confirm(wording('Clear your unsaved stock count?')))return;}resetDraft();$('count-message').textContent=wording('Draft cleared.');};
  $('logout').onclick=async()=>{try{await api('/api/logout','POST');location.href='/login';}catch(error){$('count-message').textContent=error.message;}};
  for(const control of form.elements)control.disabled=true;$('count-history-refresh').disabled=true;
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id)){historyLoaded=false;if(location.hash==='#history')loadHistory();}});window.addEventListener('focus',()=>{if(session&&location.hash==='#history')loadHistory();});
  window.addEventListener('hashchange',showView);showView();
- window.addEventListener('interface-text-updated',()=>{if(session){updateProgress();if(!draftWarning)$('count-draft-status').textContent=wording('Draft saved on this browser.');}});
+ window.addEventListener('interface-text-updated',()=>{if(session){updateProgress();buildSupplierMenu();if(!draftWarning)$('count-draft-status').textContent=wording('Draft saved on this browser.');}});
  (async()=>{
   try{session=await api('/api/session');if(!session.csrf){location.href='/login';return;}const legacyKey='souvlaki-stock-count-'+session.id;draftKey=legacyKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(draftKey)===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(draftKey,localStorage.getItem(legacyKey));}catch{}const catalogue=await api('/api/catalogue');products=catalogue.products;suppliers=catalogue.suppliers;
-   for(const supplier of suppliers){const option=el('option',supplier.name);option.value=supplier.id;$('count-supplier').append(option);}
    form.elements.countDate.value=today();let restored=false;
-   try{const draft=JSON.parse(localStorage.getItem(draftKey)||'null');if(draft&&typeof draft==='object'){for(const key of ['countDate','location','notes'])if(typeof draft[key]==='string')form.elements[key].value=draft[key];for(const product of products)if(typeof draft.quantities?.[product.id]==='string')quantities[product.id]=draft.quantities[product.id];requestId=typeof draft.requestId==='string'?draft.requestId:'';requestSignature=typeof draft.requestSignature==='string'?draft.requestSignature:'';restored=Object.values(quantities).some(value=>value.trim())||Boolean(form.elements.location.value||form.elements.notes.value);}}catch{}
-   buildRows();for(const control of form.elements)control.disabled=false;updateProgress();$('count-history-refresh').disabled=false;$('count-draft-status').textContent=wording('Draft saves automatically on this browser.');$('count-loading').textContent='';if(restored)$('count-message').textContent=wording('Your unsaved count was restored.');showView();
+   try{const draft=JSON.parse(localStorage.getItem(draftKey)||'null');if(draft&&typeof draft==='object'){for(const key of ['countDate','notes'])if(typeof draft[key]==='string')form.elements[key].value=draft[key];for(const product of products)if(typeof draft.quantities?.[product.id]==='string')quantities[product.id]=draft.quantities[product.id];requestId=typeof draft.requestId==='string'?draft.requestId:'';requestSignature=typeof draft.requestSignature==='string'?draft.requestSignature:'';restored=Object.values(quantities).some(value=>value.trim())||Boolean(form.elements.notes.value);}}catch{}
+   buildRows();buildSupplierMenu();for(const control of form.elements)control.disabled=false;updateProgress();$('count-history-refresh').disabled=false;$('count-draft-status').textContent=wording('Draft saves automatically on this browser.');$('count-loading').textContent='';if(restored)$('count-message').textContent=wording('Your unsaved count was restored.');showView();
   }catch(error){$('count-loading').textContent=error.message;}
  })();
 })();
