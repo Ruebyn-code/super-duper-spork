@@ -44,7 +44,7 @@ function applyElementOverrides(root=document){
 
  }
 }
-async function refreshElementOverrides(){try{const response=await fetch('/element-overrides');if(response.ok){elementOverrides=await response.json();applyElementOverrides();}}catch{}}
+async function refreshElementOverrides(){try{const response=await fetch('/element-overrides',{headers:companyHeaders()});if(response.ok){elementOverrides=await response.json();applyElementOverrides();}}catch{}}
 const localRoots=new Set();let localScheduled=false;
 function queueElementRoot(node){const root=node.nodeType===Node.TEXT_NODE?node.parentElement:node;if(!root||root.nodeType!==Node.ELEMENT_NODE||root.closest('script,style,.unified-app-editor,.app-edit-indicator,#admin-edit-controls'))return;localRoots.add(root);}
 const elementObserver=new MutationObserver(records=>{

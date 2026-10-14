@@ -4,7 +4,7 @@
  const money=value=>value===null?wording('Price pending'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
  let session,catalogue,totals,cartKey='',loading=false,refreshAgain=false;
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
- async function api(path){const response=await fetch(path,{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}if(!response.ok)throw Error('Unable to load dashboard.');return response.json();}
+ async function api(path){const response=await fetch(path,{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}if(!response.ok)throw Error('Unable to load dashboard.');return response.json();}
  function renderCart(){
   if(!session||!catalogue)return;
   try{
@@ -43,14 +43,14 @@
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
- $('logout').onclick=async()=>{try{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(!response.ok)throw Error();location.href='/login';}catch{template($('home-status'),'Please sign in again.');}};
+ $('logout').onclick=async()=>{try{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(!response.ok)throw Error();location.href=companyLoginUrl();}catch{template($('home-status'),'Please sign in again.');}};
  window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)))refresh();});
  window.addEventListener('focus',()=>{renderCart();refresh();});window.addEventListener('pageshow',event=>{renderCart();if(event.persisted)refresh();});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderCart();refresh();}});
  window.addEventListener('interface-text-updated',render);setInterval(refresh,60000);
  (async()=>{
   try{
-   session=await api('/api/session');if(!session.csrf){location.href='/login';return;}
+   session=await api('/api/session');if(!session.csrf){location.href=companyLoginUrl();return;}
    const legacyKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyKey+(session.locationId?'-'+session.locationId:'');
    try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyKey));}catch{}
    $('home-admin').hidden=!['admin','franchisee'].includes(session.role);

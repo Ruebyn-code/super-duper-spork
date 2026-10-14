@@ -1084,3 +1084,7 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 @media(max-width:600px){.companies-directory .users-directory-heading{flex-wrap:wrap}.companies-table td{font-size:12px}.companies-table .user-name{font-size:14px}.companies-table button.header-link{padding:7px;font-size:11px}}
 
 @media(max-width:600px){.companies-table .company-record{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:10px;padding:14px;border-bottom:1px solid var(--line)}.companies-table .company-record td{display:block;width:auto;padding:0;border:0}.companies-table .company-locations-cell,.companies-table .company-switch-cell{grid-column:1/-1}.companies-table .company-edit-toggle{width:40px;height:40px;min-height:40px;margin:0}}
+
+.company-customisation-notice{overflow-wrap:anywhere;margin:0 0 18px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--primary) 15%,white);border-radius:10px;background:color-mix(in srgb,var(--primary) 5%,white);font-size:12px;line-height:1.5;color:var(--muted)}.company-customisation-notice strong{color:var(--primary)}
+
+.unified-app-editor .editor-kicker{overflow-wrap:anywhere}

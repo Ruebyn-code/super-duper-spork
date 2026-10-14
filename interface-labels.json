@@ -3636,5 +3636,11 @@
       "Companies",
       "Navigation"
     ]
+  },
+  {
+    "text": "Open this company’s sign-in page",
+    "locations": [
+      "settings"
+    ]
   }
 ]
