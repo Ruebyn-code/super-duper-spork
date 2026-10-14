@@ -73,22 +73,32 @@ function allTimeTotals(records,orders,session){
  }
  return {salesCents,recordedDays,placedOrdersCents,orderCount,pricePending,expensePercent:salesCents>0&&!pricePending?placedOrdersCents/salesCents*100:null};
 }
+function quarterAverages(records,orders,session,quarter,now){
+ const firstMonday=shift(quarter.startDate,(8-new Date(quarter.startDate+'T00:00:00Z').getUTCDay())%7),currentMonday=currentWeek(now),completed=[];
+ for(let start=firstMonday;shift(start,6)<currentMonday&&shift(start,6)<=quarter.endDate;start=shift(start,7))completed.push(start);
+ // Match sales and costs to the same full weeks; missing sales are not zero.
+ const included=completed.map(start=>records.find(record=>belongs(record,session)&&record.weekStart===start)).filter(record=>Array.isArray(record?.days)&&record.days.length===7&&record.days.every(value=>Number.isSafeInteger(value)&&value>=0));
+ const starts=new Set(included.map(record=>record.weekStart)),formatter=calendar(defaultTimeZone);
+ const placed=allTimeTotals([],orders.filter(order=>{
+  const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
+  const date=dateLabel(dayNumber(created,formatter)),offset=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7;
+  return starts.has(shift(date,-offset));
+ }),session),salesCents=included.reduce((total,record)=>total+record.days.reduce((sum,value)=>sum+value,0),0),weeksRecorded=included.length;
+ return {fromDate:included[0]?.weekStart||null,throughDate:weeksRecorded?shift(included.at(-1).weekStart,6):null,completedWeeks:completed.length,weeksRecorded,skippedWeeks:completed.length-weeksRecorded,recordedDays:weeksRecorded*7,weeklySalesCents:weeksRecorded?Math.round(salesCents/weeksRecorded):null,weeklyCostCents:weeksRecorded&&!placed.pricePending?Math.round(placed.placedOrdersCents/weeksRecorded):null,pricePending:placed.pricePending,expensePercent:salesCents>0&&!placed.pricePending?placed.placedOrdersCents/salesCents*100:null};
+}
 function homeTotals(records,orders,session,{now=new Date()}={}){
- const quarter=currentQuarter(now),formatter=calendar(defaultTimeZone),today=dateLabel(dayNumber(now,formatter)),allOrders=allTimeTotals([],orders,session);let salesCents=0,recordedDays=0,toDateSalesCents=0,toDateRecordedDays=0;
+ const quarter=currentQuarter(now),formatter=calendar(defaultTimeZone),allOrders=allTimeTotals([],orders,session);let salesCents=0,recordedDays=0;
  for(const record of records){
   if(!belongs(record,session)||!Array.isArray(record.days))continue;try{week(record.weekStart);}catch{continue;}
   for(const [index,value] of record.days.slice(0,7).entries()){
    const date=shift(record.weekStart,index);if(date<quarter.startDate||date>quarter.endDate||!Number.isSafeInteger(value)||value<0)continue;
-   salesCents+=value;recordedDays++;if(date<=today){toDateSalesCents+=value;toDateRecordedDays++;}
+   salesCents+=value;recordedDays++;
   }
  }
  const withinQuarter=orders.filter(order=>{
   const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
   const date=dateLabel(dayNumber(created,formatter));return date>=quarter.startDate&&date<=quarter.endDate;
- }),quarterOrders=allTimeTotals([],withinQuarter,session),toDateOrders=allTimeTotals([],withinQuarter.filter(order=>dateLabel(dayNumber(new Date(order.createdAt),formatter))<=today),session);
- // Calendar days avoid DST distortion and include the current partial week.
- const elapsedDays=(Date.parse(today)-Date.parse(quarter.startDate))/86400000+1;
- const averages={throughDate:today,elapsedDays,recordedDays:toDateRecordedDays,weeklySalesCents:toDateRecordedDays?Math.round(toDateSalesCents*7/elapsedDays):null,weeklyCostCents:toDateOrders.pricePending?null:Math.round(toDateOrders.placedOrdersCents*7/elapsedDays),pricePending:toDateOrders.pricePending,expensePercent:toDateSalesCents>0&&!toDateOrders.pricePending?toDateOrders.placedOrdersCents/toDateSalesCents*100:null};
+ }),quarterOrders=allTimeTotals([],withinQuarter,session),averages=quarterAverages(records,withinQuarter,session,quarter,now);
  return {...allOrders,salesCents,recordedDays,quarter,averages,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
 }
 function createStore(){

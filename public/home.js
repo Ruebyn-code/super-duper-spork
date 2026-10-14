@@ -30,12 +30,12 @@
   const averages=totals.averages;
   if(!averages)return;
   $('home-average-sales').textContent=averages.weeklySalesCents===null?'—':money(averages.weeklySalesCents);
-  $('home-average-cost').textContent=money(averages.weeklyCostCents);
+  $('home-average-cost').textContent=!averages.weeksRecorded?'—':money(averages.weeklyCostCents);
   $('home-average-expense').textContent=averages.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(averages.expensePercent)+'%';
   const date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
-  template($('home-averages-period'),'{start} – {end} · {days} days so far',{start:date(quarter.startDate),end:date(averages.throughDate),days:averages.elapsedDays});
-  const averageHint=averages.pricePending?'Some order prices are pending. Weekly cost and expense percentage are unavailable.':!averages.recordedDays?'Add sales for this quarter to calculate the weekly sales average.':'Quarter-to-date totals ÷ elapsed weeks, including this partial week. Weekly expense = cost ÷ sales × 100.';
-  template($('home-averages-status'),averageHint);
+  if(averages.weeksRecorded)template($('home-averages-period'),averages.weeksRecorded===1?'{start} – {end} · 1 completed week':'{start} – {end} · {weeks} completed weeks',{start:date(averages.fromDate),end:date(averages.throughDate),weeks:averages.weeksRecorded});else template($('home-averages-period'),'Completed weeks only');
+  const averageHint=!averages.completedWeeks?'Averages appear after the first full Monday–Sunday week of this quarter.':!averages.weeksRecorded?'Enter all seven sales days for a completed week to calculate quarter averages.':averages.pricePending?'Some order prices are pending. Weekly cost and expense percentage are unavailable.':averages.skippedWeeks?'Completed-week totals ÷ completed weeks. {weeks} weeks with missing sales excluded. Weekly expense = cost ÷ sales × 100.':'Completed-week totals ÷ completed weeks. Weekly expense = cost ÷ sales × 100.';
+  template($('home-averages-status'),averageHint,{weeks:averages.skippedWeeks});
  }
  function render(){
   if(session){$('home-user-name').textContent=session.username+'!';template($('home-location'),'You are in {location}',{location:session.locationName||''});}

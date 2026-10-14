@@ -3726,5 +3726,47 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "{start} – {end} · {weeks} completed weeks",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Completed weeks only",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Averages appear after the first full Monday–Sunday week of this quarter.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Enter all seven sales days for a completed week to calculate quarter averages.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Completed-week totals ÷ completed weeks. {weeks} weeks with missing sales excluded. Weekly expense = cost ÷ sales × 100.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Completed-week totals ÷ completed weeks. Weekly expense = cost ÷ sales × 100.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "{start} – {end} · 1 completed week",
+    "locations": [
+      "Home"
+    ]
   }
 ]

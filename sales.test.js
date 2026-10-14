@@ -96,33 +96,42 @@ test('home splits sales weeks at both quarter edges and ratios quarter orders wi
  const next=sales.homeTotals(records,orders,actor,{now:new Date('2026-12-31T13:00:00Z')});assert.equal(next.salesCents,87993);assert.equal(next.quarterPlacedOrdersCents,1000);assert.equal(next.quarter.number,1);assert.equal(next.quarter.year,2027);
 });
 
-test('quarter weekly averages use elapsed calendar weeks, shared location data and only placed orders through today',()=>{
+test('quarter averages use only full completed Monday–Sunday weeks in the quarter and shared location orders once',()=>{
  const actor={id:'member',locationId:'shop'},record=(weekStart,days,locationId='shop')=>({weekStart,days,locationId});
- const records=[record('2026-09-28',[900000,900000,900000,10000,0,null,null]),record('2026-10-12',[30000,null,10000,250000,null,null,null]),record('2026-10-12',Array(7).fill(999999),'other')];
+ const records=[record('2026-09-28',Array(7).fill(900000)),record('2026-10-05',Array(7).fill(10000)),record('2026-10-12',Array(7).fill(999999)),record('2026-10-19',Array(7).fill(999999)),record('2026-10-05',Array(7).fill(999999),'other')];
  const order=(id,total,createdAt,extra={})=>({id,total,createdAt,locationId:'shop',requestOwnerId:'teammate',status:'requested',items:[{price:100}],...extra});
- const orders=[order('old',99999,'2026-09-30T13:59:59Z',{pricePending:true}),order('opening',5000,'2026-09-30T14:00:00Z'),order('opening',5000,'2026-09-30T14:00:00Z'),order('today',10000,'2026-10-14T00:00:00Z'),order('future',99999,'2026-10-14T13:00:00Z',{pricePending:true}),order('other',99999,'2026-10-13T00:00:00Z',{locationId:'other'}),order('draft',99999,'2026-10-13T00:00:00Z',{status:'draft'})];
+ const orders=[order('partial',99999,'2026-10-04T12:59:59Z',{pricePending:true}),order('opening',5000,'2026-10-04T13:00:00Z'),order('opening',5000,'2026-10-04T13:00:00Z'),order('closing',9000,'2026-10-11T12:59:59Z'),order('current',99999,'2026-10-11T13:00:00Z',{pricePending:true}),order('future',99999,'2026-10-19T00:00:00Z',{pricePending:true}),order('other',99999,'2026-10-07T00:00:00Z',{locationId:'other'}),order('draft',99999,'2026-10-07T00:00:00Z',{status:'draft'})];
  const options={now:new Date('2026-10-14T00:00:00Z')};
- assert.deepEqual(sales.homeTotals(records,orders,actor,options).averages,{throughDate:'2026-10-14',elapsedDays:14,recordedDays:4,weeklySalesCents:25000,weeklyCostCents:7500,pricePending:false,expensePercent:30});
- records[1].days[0]=40000;const corrected=sales.homeTotals(records,orders,{id:'teammate',locationId:'shop'},options).averages;
- assert.equal(corrected.weeklySalesCents,30000);assert.equal(corrected.weeklyCostCents,7500);assert.equal(corrected.expensePercent,25);
+ assert.deepEqual(sales.homeTotals(records,orders,actor,options).averages,{fromDate:'2026-10-05',throughDate:'2026-10-11',completedWeeks:1,weeksRecorded:1,skippedWeeks:0,recordedDays:7,weeklySalesCents:70000,weeklyCostCents:14000,pricePending:false,expensePercent:20});
+ records[1].days[0]=20000;const corrected=sales.homeTotals(records,orders,{id:'teammate',locationId:'shop'},options).averages;
+ assert.equal(corrected.weeklySalesCents,80000);assert.equal(corrected.weeklyCostCents,14000);assert.equal(corrected.expensePercent,17.5);
  assert.equal(sales.homeTotals(records,orders,{id:'member',locationId:'empty'},options).averages.weeklySalesCents,null);
 });
-test('quarter averages distinguish missing sales, recorded zero and unknown prices, and keep percentages unrounded',()=>{
- const actor={id:'member',locationId:'shop'},options={now:new Date('2026-10-03T00:00:00Z')},record={weekStart:'2026-09-28',locationId:'shop',days:[null,null,null,10001,null,null,null]};
- const order={id:'order',total:2800,createdAt:'2026-10-02T00:00:00Z',locationId:'shop',status:'requested',items:[{price:2800}]};
- let averages=sales.homeTotals([record],[order],actor,options).averages;
- assert.equal(averages.elapsedDays,3);assert.equal(averages.weeklySalesCents,23336);assert.equal(averages.weeklyCostCents,6533);assert.equal(averages.expensePercent,2800/10001*100);
+test('completed-week averages distinguish missing sales, recorded zero and unknown prices, and keep percentages unrounded',()=>{
+ const actor={id:'member',locationId:'shop'},options={now:new Date('2026-10-20T00:00:00Z')},record={weekStart:'2026-10-05',locationId:'shop',days:[10001,0,0,0,0,0,0]},second={...record,weekStart:'2026-10-12',days:Array(7).fill(0)};
+ const order={id:'order',total:2801,createdAt:'2026-10-07T00:00:00Z',locationId:'shop',status:'requested',items:[{price:2801}]};
+ let averages=sales.homeTotals([record,second],[order],actor,options).averages;
+ assert.equal(averages.weeksRecorded,2);assert.equal(averages.weeklySalesCents,5001);assert.equal(averages.weeklyCostCents,1401);assert.equal(averages.expensePercent,2801/10001*100);
  assert.notEqual(averages.expensePercent,averages.weeklyCostCents/averages.weeklySalesCents*100);
- averages=sales.homeTotals([record],[{...order,items:[{price:null}]}],actor,options).averages;assert.equal(averages.weeklySalesCents,23336);assert.equal(averages.weeklyCostCents,null);assert.equal(averages.expensePercent,null);assert.equal(averages.pricePending,true);
- averages=sales.homeTotals([],[],actor,options).averages;assert.equal(averages.weeklySalesCents,null);assert.equal(averages.weeklyCostCents,0);assert.equal(averages.expensePercent,null);
+ averages=sales.homeTotals([record],[{...order,items:[{price:null}]}],actor,options).averages;assert.equal(averages.weeklySalesCents,10001);assert.equal(averages.weeklyCostCents,null);assert.equal(averages.expensePercent,null);assert.equal(averages.pricePending,true);
+ averages=sales.homeTotals([],[],actor,options).averages;assert.equal(averages.weeklySalesCents,null);assert.equal(averages.weeklyCostCents,null);assert.equal(averages.expensePercent,null);
  averages=sales.homeTotals([{...record,days:Array(7).fill(0)}],[],actor,options).averages;assert.equal(averages.weeklySalesCents,0);assert.equal(averages.weeklyCostCents,0);assert.equal(averages.expensePercent,null);
 });
-test('quarter average elapsed days follow Melbourne dates through DST, leap days and quarter resets',()=>{
- const averages=now=>sales.homeTotals([],[],account,{now:new Date(now)}).averages;
- assert.equal(averages('2026-10-03T13:59:59Z').elapsedDays,3);assert.equal(averages('2026-10-03T14:00:00Z').elapsedDays,4);
- assert.equal(averages('2026-10-04T12:59:59Z').elapsedDays,4);assert.equal(averages('2026-10-04T13:00:00Z').elapsedDays,5);
- assert.equal(averages('2024-02-29T00:00:00Z').elapsedDays,60);
- assert.equal(averages('2026-12-31T12:59:59Z').elapsedDays,92);assert.equal(averages('2026-12-31T13:00:00Z').elapsedDays,1);
+test('weeks with missing sales exclude both their sales and orders until the full week is recorded',()=>{
+ const actor={id:'member',locationId:'shop'},options={now:new Date('2026-10-20T00:00:00Z')},record={weekStart:'2026-10-05',locationId:'shop',days:[10001,0,0,0,0,0,0]},second={...record,weekStart:'2026-10-12',days:[999999,0,0,0,0,0,null]};
+ const order={id:'missing-week',total:99999,createdAt:'2026-10-14T00:00:00Z',locationId:'shop',status:'requested',items:[{price:null}]};
+ let averages=sales.homeTotals([record,second],[order],actor,options).averages;
+ assert.equal(averages.completedWeeks,2);assert.equal(averages.weeksRecorded,1);assert.equal(averages.skippedWeeks,1);assert.equal(averages.weeklySalesCents,10001);assert.equal(averages.weeklyCostCents,0);assert.equal(averages.pricePending,false);
+ second.days[6]=0;averages=sales.homeTotals([record,second],[order],actor,options).averages;assert.equal(averages.weeksRecorded,2);assert.equal(averages.skippedWeeks,0);assert.equal(averages.weeklySalesCents,505000);assert.equal(averages.pricePending,true);assert.equal(averages.weeklyCostCents,null);
+});
+test('completed weeks roll forward only at Melbourne Monday midnight and reset each quarter, including DST and leap years',()=>{
+ const actor={id:'member',locationId:'shop'},record={weekStart:'2026-10-05',locationId:'shop',days:Array(7).fill(100)};
+ const averages=now=>sales.homeTotals([record],[],actor,{now:new Date(now)}).averages;
+ assert.equal(averages('2026-10-11T12:59:59Z').weeksRecorded,0);assert.equal(averages('2026-10-11T13:00:00Z').weeksRecorded,1);
+ assert.equal(averages('2026-10-04T13:00:00Z').completedWeeks,0);
+ assert.equal(averages('2026-04-12T13:59:59Z').completedWeeks,0);assert.equal(averages('2026-04-12T14:00:00Z').completedWeeks,1);
+ assert.equal(averages('2024-02-29T00:00:00Z').completedWeeks,8);
+ assert.equal(averages('2026-12-31T12:59:59Z').completedWeeks,12);assert.equal(averages('2026-12-31T13:00:00Z').completedWeeks,0);
 });
 
 test('current-week performance compares matched recorded weekdays, excludes future sales and flags past gaps',()=>{
