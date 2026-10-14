@@ -141,6 +141,16 @@ Ordering items show **Par**, **Stock count**, and **Recommended order** together
 
 **Recommended order = max(0, par − stock count)**, rounded up to whole units/packs. A zero count is valid; a missing count, or no usage history and no manual par, leaves the recommendation unavailable. Recommendations use the counted stock directly. You choose the quantity to add to the cart. Saving a newer count updates the displayed counts and recommendations automatically without overwriting entered quantities.
 
+## Companies
+
+Use **Users → Companies → Add company** to create a company and its first location. Head Office can rename companies from each row’s edit icon. Select the company above the location in the sidebar (or phone header) to switch without signing out. The location selector then shows that company’s accessible locations. Switching remembers the last location used in each company during this sign-in session.
+
+Head Office has full access to every company. Franchisees and Ordering managers see companies where they have assigned locations. In the user editor, choose locations across companies to give one account access to several companies; other-company locations include their company name. The existing permission hierarchy still applies: users cannot create or promote someone above their own permission level, and Franchisees can manage only users whose locations are entirely within their own access.
+
+Every company has a separate supplier and stock catalogue. New companies start with an empty catalogue: switch to the company, then add its suppliers and stock. Sales, stock counts, pars, budgets, carts, drafts and order senders stay attached to their existing locations. Supplier contact details belong to the selected company’s catalogue; sender email settings remain in location settings. App appearance, logos and interface customisation are shared across the app.
+
+Upgrading creates **Souvlaki GR** as the initial company for all existing locations and retains their IDs, user passwords, catalogue, prices, images, orders and saved data. Rename this company if needed. Company names persist in **data/companies.json**; additional catalogues are in **data/company-catalogues/**. The initial company keeps **data/catalogue.json**. Keep the entire **data** folder when updating. A company must retain at least one active location.
+
 ## Sales and ordering budgets
 
 Every signed-in account can open **Sales** in the navigation and enter or edit daily sales in AUD. Sales weeks run **Monday–Sunday in Melbourne time**. Select any date in a week, use Previous/Next week, or return to This week. Blank days are unrecorded; zero records a day with no sales. Partial weeks can be saved. Unsaved entries are kept in this browser per account, location and week. **Reload saved week** discards that week's draft after confirmation. Concurrent edits are detected so another tab's saved sales are not silently overwritten.

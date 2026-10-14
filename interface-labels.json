@@ -3489,5 +3489,152 @@
       "sales",
       "cart"
     ]
+  },
+  {
+    "text": "Companies",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Company name",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Add company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "First location name",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Create company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Save company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Current company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Switch company",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Switching company…",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Unable to switch company.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Search companies",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "No companies match your search.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "No companies available.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Wait for saving to finish before switching companies.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Creating company…",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Saving company…",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Company saved.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Company created. Switch to it to add suppliers, stock and users.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "{count} location",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
+  },
+  {
+    "text": "Switch companies from the sidebar. Each company has its own suppliers and stock, with sales, counts and order emails kept within its locations.",
+    "locations": [
+      "Companies",
+      "Navigation"
+    ]
   }
 ]

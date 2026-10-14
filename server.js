@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const {createAuth}=require('./auth');
 const {headOffice,managesUsers,locationIds}=require('./permissions');
-const {mergeSpreadsheet}=require('./catalogue-import');
+const companies=require('./companies'),catalogues=require('./catalogue-store');
 const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
 const deliverySettings=require('./delivery-settings');
@@ -47,30 +47,11 @@ function validateOrder(body, menu, requester = '') {
 function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
   const auth=createAuth(dataDir);
   const locationStore=locations.createStore(dataDir,auth);
+  const companyStore=companies.createStore(dataDir,locationStore);
+  const catalogueStore=catalogues.createStore(dataDir,menu);
   const usageHistory=stockUsage.createReader();
   const salesStore=sales.createStore();
   const manualParStore=manualPar.createStore();
-  const catalogueFile = path.join(dataDir,'catalogue.json');
-  let pending = Promise.resolve();
-  let initialization;
-  async function readCatalogue() {
-    if(!initialization)initialization=(async()=>{
-      let catalogue;
-      try{catalogue=JSON.parse(await fs.readFile(catalogueFile,'utf8'));}
-      catch(error){if(error.code!=='ENOENT')throw error;catalogue={suppliers:[{id:'office',name:'Office Supplies'},{id:'packaging',name:'Packaging Supplies'},{id:'safety',name:'Safety Supplies'}],products:menu.map(p=>({...p,supplierId:p.category.toLowerCase()}))};}
-      let changed=!catalogue.imports?.includes('book2-v1');if(changed)mergeSpreadsheet(catalogue);
-      for(const product of catalogue.products)if(!stockCountGroups.valid(product.stockCountGroup)){product.stockCountGroup=stockCountGroups.resolve(product);changed=true;}
-      if(changed){await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(catalogueFile+'.tmp',JSON.stringify(catalogue,null,2),{mode:0o600});await fs.rename(catalogueFile+'.tmp',catalogueFile);}
-    })();
-    await initialization;return JSON.parse(await fs.readFile(catalogueFile,'utf8'));
-  }
-  function mutate(change) {
-    const operation=pending.then(async()=>{
-      const catalogue=await readCatalogue();const result=change(catalogue);
-      await fs.mkdir(dataDir,{recursive:true});
-      const temp=catalogueFile+'.tmp';await fs.writeFile(temp,JSON.stringify(catalogue,null,2),{mode:0o600});await fs.rename(temp,catalogueFile);return result;
-    });pending=operation.catch(()=>{});return operation;
-  }
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
@@ -114,25 +95,36 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const etag='"'+fontRequest[1]+'"';res.setHeader('ETag',etag);res.setHeader('Cache-Control','public, max-age=31536000, immutable');res.setHeader('X-Content-Type-Options','nosniff');
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
-      await locationStore.ensure();
-      const session=await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,locations:await locationStore.accessible(session),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
+      await locationStore.ensure();await companyStore.ensure();
+      const session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
+      const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change);
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
         const loggedIn=await auth.login(req,await body(req));
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
-      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url==='/api/logo'||req.url==='/api/sidebar-logo'||req.url==='/api/settings'||req.url==='/api/fonts'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
-      if(management){if(!session)fail('Sign-in required.',401);const userManagement=(req.url==='/api/accounts'&&['GET','POST'].includes(req.method))||(/^\/api\/accounts\/[a-zA-Z0-9-]+$/.test(req.url)&&['PUT','DELETE'].includes(req.method))||(req.url==='/api/locations'&&req.method==='GET');if(!headOffice(session)&&!(userManagement&&managesUsers(session)))fail('Head Office permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
+      const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url.startsWith('/api/companies')||req.url==='/api/logo'||req.url==='/api/sidebar-logo'||req.url==='/api/settings'||req.url==='/api/fonts'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
+      if(management){if(!session)fail('Sign-in required.',401);const userManagement=(req.url==='/api/companies'&&req.method==='GET')||(req.url==='/api/accounts'&&['GET','POST'].includes(req.method))||(/^\/api\/accounts\/[a-zA-Z0-9-]+$/.test(req.url)&&['PUT','DELETE'].includes(req.method))||(req.url==='/api/locations'&&req.method==='GET');if(!headOffice(session)&&!(req.url==='/api/companies'&&req.method==='GET')&&!(userManagement&&managesUsers(session)))fail('Head Office permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/session/location'&&req.method==='PUT'){
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
         const input=await body(req);await auth.selectLocation(session,input?.locationId,id=>locationStore.get(id,{active:true}));return json(200,{locationId:input.locationId});
       }
-      if(req.url==='/api/locations'&&req.method==='GET'){const records=await locationStore.list();if(!headOffice(session))return json(200,records.filter(record=>!record.archived&&locationIds(session).includes(record.id)).map(({id,name,archived})=>({id,name,archived})));return json(200,await Promise.all(records.map(async record=>{const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...record,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));}
-      if(req.url==='/api/locations'&&req.method==='POST')return json(201,await locationStore.create(await body(req)));
+      if(req.url==='/api/session/company'&&req.method==='PUT'){
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        const input=await body(req),target=await companyStore.switchLocation(session,input?.companyId);await auth.selectLocation(session,target.id,id=>locationStore.get(id,{active:true}));return json(200,{companyId:input.companyId,locationId:target.id});
+      }
+      if(req.url==='/api/companies'&&req.method==='GET')return json(200,await companyStore.list(session));
+      if(req.url==='/api/companies'&&req.method==='POST')return json(201,await companyStore.create(await body(req)));
+      const companyRoute=req.url.match(/^\/api\/companies\/([a-zA-Z0-9-]+)$/);if(companyRoute&&req.method==='PUT')return json(200,await companyStore.update(companyRoute[1],await body(req)));
+      if(req.url==='/api/locations'&&req.method==='GET'){
+        const all=requestUrl.searchParams.get('all')==='true',companyList=await companyStore.list(session),records=(await locationStore.list()).filter(record=>(all||record.companyId===session.companyId)&&(headOffice(session)||(!record.archived&&locationIds(session).includes(record.id))));
+        return json(200,await Promise.all(records.map(async record=>{const company=companyList.find(company=>company.id===record.companyId),base={...record,companyName:company?.name||''};if(!headOffice(session))return all?{id:base.id,name:base.name,archived:base.archived,companyId:base.companyId,companyName:base.companyName}:{id:base.id,name:base.name,archived:base.archived};const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...base,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));
+      }
+      if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);return json(201,await locationStore.create({...input,companyId}));}
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
       if(locationRoute&&req.method==='PUT')return json(200,await locationStore.update(locationRoute[1],await body(req)));
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
@@ -159,7 +151,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       if(req.url==='/api/stock-usage'&&req.method==='PUT'){
         res.setHeader('Allow','GET');fail('Weekly usage is automatic. Save Sunday stock counts and place orders instead.',405);
       }
-      if(req.url==='/api/stock-counts'&&req.method==='GET')return json(200,await stockCounts.list(dataDir,session));
+      if(req.url==='/api/stock-counts'&&req.method==='GET'){const records=await stockCounts.list(dataDir,session);if(!headOffice(session))return json(200,records);const ids=new Set((await locationStore.list()).filter(record=>record.companyId===session.companyId).map(record=>record.id));return json(200,records.filter(record=>record.locationId?ids.has(record.locationId):session.companyId===companies.defaultCompanyId));}
       if(req.url==='/api/stock-counts'&&req.method==='POST'){
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
         const saved=await stockCounts.save(dataDir,await body(req,2000000),await readCatalogue(),session);return json(saved.created?201:200,saved.record);
@@ -189,7 +181,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(!png&&!jpeg)fail('Choose a PNG or JPG image.');
         const target=path.join(dataDir,req.url==='/api/sidebar-logo'?'sidebar-logo.json':'logo.json'),temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(temp,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});await fs.rename(temp,target);return json(200,{saved:true});
       }
-      if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list(session));
+      if(req.url==='/api/accounts'&&req.method==='GET'){const records=await auth.list(session);if(requestUrl.searchParams.get('all')==='true')return json(200,records);const ids=new Set((await locationStore.list()).filter(record=>record.companyId===session.companyId).map(record=>record.id));return json(200,records.filter(account=>locationIds(account).some(id=>ids.has(id))));}
       if(req.url==='/api/accounts'&&req.method==='POST'){const account=await auth.create(session,await body(req),id=>locationStore.get(id,{active:true}));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));}
       const accountRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)$/);
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
@@ -243,7 +235,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
-        if(requestId)order.id=requestId;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        if(requestId)order.id=requestId;order.companyId=session.companyId;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
         try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
@@ -251,7 +243,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/home':'home.html','/home.js':'home.js','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-performance.js':'sales-performance.js','/sales-performance-view.js':'sales-performance-view.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-count-groups.js':'stock-count-groups.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/locations.js':'locations.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/font-uploads.js':'font-uploads.js','/admin/appearance/signin':'login.html','/admin/appearance/setup':'setup.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/location-picker.js':'location-picker.js','/edit-parts.js':'edit-parts.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/admin-ui.js':'admin-ui.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/auth-preview.js':'auth-preview.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/home':'home.html','/home.js':'home.js','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-performance.js':'sales-performance.js','/sales-performance-view.js':'sales-performance-view.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-count-groups.js':'stock-count-groups.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/locations.js':'locations.js','/companies.js':'companies.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/font-uploads.js':'font-uploads.js','/admin/appearance/signin':'login.html','/admin/appearance/setup':'setup.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/location-picker.js':'location-picker.js','/edit-parts.js':'edit-parts.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/admin-ui.js':'admin-ui.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/auth-preview.js':'auth-preview.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';
