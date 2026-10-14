@@ -997,3 +997,38 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 .manual-par-editor h3{margin:0;font-size:16px}.manual-par-editor label{margin-top:10px}.manual-par-editor input{max-width:180px}
 .manual-par-editor button{margin-top:6px}.manual-par-editor .manual-par-status:empty{display:none}
 .count-par-source{font-size:10px;color:var(--muted)}.count-par-source:empty{display:none}
+
+/* Keep the editor readable while previewing any app theme. */
+.unified-app-editor{width:min(580px,calc(100vw - 32px));border:1px solid #dce5ed;border-radius:24px;background:#fff!important}
+.unified-app-editor::backdrop{background:#122b4266;backdrop-filter:blur(5px)}
+.app-editor-header{padding:22px 24px 16px;background:#fff!important}
+.editor-kicker{display:block;margin-bottom:5px;font:700 10px/1.4 Arial,sans-serif;letter-spacing:1.6px;color:var(--primary)!important}
+.app-editor-header h2{font-size:24px}.app-editor-header p{max-width:420px;font-size:12px}
+.unified-app-editor #app-editor-close{display:grid;place-items:center;width:40px;height:40px;background:#f0f4f8!important}
+.app-editor-scope{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:0 24px 16px;border:0;background:#fff!important}
+.unified-app-editor #app-edit-scope{margin:0;background:#f5f8fc!important;font-size:12px;padding:10px}
+.editor-tabs{display:flex;gap:4px;padding:4px;margin:0 24px 16px;border-radius:12px;background:#edf3f8!important;flex-shrink:0}
+.unified-app-editor .editor-tabs button{flex:1;margin:0;padding:10px 12px;border:0;border-radius:9px;font-size:13px;font-weight:600;color:#617484!important;background:transparent!important;min-height:40px}
+.unified-app-editor .editor-tabs button[aria-selected=true]{background:#fff!important;color:var(--primary)!important;box-shadow:0 2px 6px #182b3a0d}
+.app-editor-body{background:#f8fafc!important;padding:18px 24px 20px;border-top:1px solid #edf1f5;scrollbar-width:thin}
+.editor-preview-section{margin-bottom:16px}.editor-preview-label{display:block;font:600 11px/1.4 Arial,sans-serif;color:#617484;margin-bottom:8px}
+.editor-preview-checker{overflow:hidden;border:1px solid #dce5ed;border-radius:12px;background-color:white;background-image:conic-gradient(#e9eef3 25%,transparent 0 50%,#e9eef3 0 75%,transparent 0);background-size:16px 16px}
+#editor-preview-card{display:grid;place-items:center;min-height:84px;padding:18px;background-size:cover;background-position:center;background-repeat:no-repeat}
+#editor-preview-text{font-size:23px;line-height:1.4;text-align:center;overflow-wrap:anywhere;max-width:100%}
+.unified-app-editor .editor-preview-hint{margin:7px 0 0;font-size:10px;line-height:1.5}
+.unified-app-editor .editor-section{border:1px solid #e4eaf0;border-radius:14px;padding:16px;margin-bottom:12px;background:#fff!important}
+.unified-app-editor .editor-section:last-child{margin-bottom:0}.unified-app-editor .editor-section h3{font-size:13px;margin-bottom:12px}
+.editor-colour-field{margin-top:16px}.editor-section h3+.editor-colour-field{margin-top:0}
+.editor-transparency{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}
+.editor-transparency output{font:600 12px/1.4 Arial,sans-serif;color:var(--primary);font-variant-numeric:tabular-nums}
+.unified-app-editor .app-editor-form input[type=range]{grid-column:1/-1;appearance:auto;accent-color:var(--primary);height:22px;padding:0;margin:0;border:0;border-radius:0;background:transparent!important;box-shadow:none;cursor:pointer}
+.editor-range-ends{grid-column:1/-1;display:flex;justify-content:space-between;font:11px/1.4 Arial,sans-serif;color:#7a8b98}
+.unified-app-editor .editor-image-panel{padding:16px;margin-top:12px;border:1px solid #e4eaf0;border-radius:14px;background:#fff!important}
+.editor-image-panel summary{font-size:13px;font-weight:600;cursor:pointer}
+.unified-app-editor .editor-image-upload{display:flex;flex-direction:column;gap:4px;padding:16px;margin-top:14px!important;border:1px dashed #b8cfe0;border-radius:10px;background:#f6faff!important;color:var(--primary)!important;cursor:pointer;text-align:center}
+.editor-image-upload span{font-size:11px;font-weight:400;color:#617484}
+.unified-app-editor .app-editor-form input[type=file]{font-size:11px;padding:6px;background:#fff!important}
+.unified-app-editor .editor-background-preview{width:100%;height:120px;object-fit:cover;border-radius:9px;margin-top:10px}
+.app-editor-footer{padding:14px 24px;background:#fff!important}.unified-app-editor #app-editor-save{box-shadow:0 3px 8px #0d74c022;min-height:44px}
+.unified-app-editor #app-edit-cancel{background:#f4f7fa!important;border-color:transparent;min-height:44px}
+@media(max-width:520px){.unified-app-editor{width:calc(100vw - 16px);border-radius:20px}.app-editor-header{padding:18px 18px 14px}.app-editor-scope{grid-template-columns:minmax(0,1fr);gap:6px;padding:0 18px 14px}.editor-tabs{margin:0 18px 14px}.app-editor-body{padding:14px 18px 16px}.app-editor-footer{padding:12px 18px}.editor-inline{gap:8px;flex-wrap:wrap}}

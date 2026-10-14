@@ -14,9 +14,15 @@
  const selectors={body:'body',appName:'.brand',greeting:'#user-greeting',headings:'h1,h2,h3',stockNames:'.product h3,.stock-name,.cart-row>strong',buttons:'button:not(.sidebar-signout),.product-bottom button,.submit,summary',labels:'label,.badge,.eyebrow',inputs:'input,textarea,select,.password-control .password-input,.login-page input[type=password],#account-form input[type=password]',navigation:'.header-link,.admin-nav a,.admin-dropdown nav a,.admin-sidebar a:not(.brand),.secondary-sidebar a,.sidebar-signout,#mobile-more'};
  const backgrounds={page:'html,body:not(.authentication-page)',panels:'.management,.cart-page>aside,.ordering-budget,.account-location-group,.location-row',cards:'.product',images:'.product-art',buttons:'button:not([data-copy-editor] button)',inputs:'input,textarea,select',greeting:'.hero',sidebar:'.app-shell>.admin-sidebar,.app-shell>.secondary-sidebar,.mobile-brand-header',signin:'.authentication-page'};
  const hex=value=>/^#[0-9a-f]{6}$/i.test(value||'');
- const colour=value=>hex(value)||['primary','secondary'].includes(value);
- const colourValue=value=>colour(value)?(['primary','secondary'].includes(value)?'var(--'+value+')':value):'';
- const resolveColour=(value,settings)=>['primary','secondary'].includes(value)?settings[value]:value;
+ function parseColour(value){
+  if(hex(value)||['primary','secondary'].includes(value))return {colour:value,opacity:1};
+  if(typeof value==='string'&&/^#[0-9a-f]{8}$/i.test(value))return {colour:value.slice(0,7),opacity:parseInt(value.slice(7),16)/255};
+  if(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===2&&Object.hasOwn(value,'colour')&&Object.hasOwn(value,'opacity')&&(hex(value.colour)||['primary','secondary'].includes(value.colour))&&typeof value.opacity==='number'&&Number.isFinite(value.opacity)&&value.opacity>=0&&value.opacity<=1)return {colour:value.colour,opacity:value.opacity};
+  return null;
+ }
+ const colour=value=>Boolean(parseColour(value));
+ function colourValue(value){const parsed=parseColour(value);if(!parsed)return '';const base=['primary','secondary'].includes(parsed.colour)?'var(--'+parsed.colour+')':parsed.colour;return parsed.opacity===1?base:'color-mix(in srgb, '+base+' '+Number((parsed.opacity*100).toFixed(4))+'%, transparent)';}
+ const resolveColour=(value,settings)=>{const parsed=parseColour(value);return parsed?(['primary','secondary'].includes(parsed.colour)?settings[parsed.colour]:parsed.colour):'';};
  const image=value=>/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(value||'');
  function rule(selector,properties){return ':where('+selector+'){'+properties+'}';}
  function build(settings,uploaded=library){
@@ -48,7 +54,7 @@
    if(properties)css+='[data-edit-id="'+id+'"]{'+properties+'}';
   }return css;
  }
- const helpers={fonts,build,buildElements,colourValue,resolveColour,fontLabels,fontFaces,registerFonts,isUploadedFont};
+ const helpers={fonts,build,buildElements,colourValue,resolveColour,parseColour,colour,fontLabels,fontFaces,registerFonts,isUploadedFont};
  if(typeof module==='object'&&module.exports)module.exports=helpers;
  else{root.appearanceStyles=helpers;try{root.appBootstrap=JSON.parse(document.getElementById('app-bootstrap')?.textContent||'{}');}catch{root.appBootstrap={};}registerFonts(root.appBootstrap.fontLibrary||[]);}
 })(globalThis);
