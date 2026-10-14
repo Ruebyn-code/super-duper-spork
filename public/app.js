@@ -96,10 +96,11 @@ async function reload(){
   const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;latestStockTake=data.stockTake;renderParPeriod();
   for(const id of Object.keys(cart))if(!products.some(p=>p.id===id)||!Number.isInteger(cart[id])||cart[id]<1||cart[id]>999)delete cart[id];
   if(category!=='All'&&!suppliers.some(s=>s.id===category))category='All';
-  if($('filters')){$('filters').replaceChildren();
-  for(const supplier of [{id:'All',name:'All suppliers'},...suppliers]){const b=el('button',supplier.name,category===supplier.id?'active':'');b.onclick=()=>{category=supplier.id;page=1;for(const child of $('filters').children)child.classList.toggle('active',child===b);renderMenu();};$('filters').append(b);}}
+  if($('supplier-filter')){const select=$('supplier-filter');select.replaceChildren();
+  for(const supplier of [{id:'All',name:wording('All suppliers')},...suppliers]){const option=el('option',supplier.name);option.value=supplier.id;if(supplier.id!=='All')option.dataset.userText='';select.append(option);}select.value=category;}
   render();
 }
+if($('supplier-filter'))$('supplier-filter').onchange=event=>{category=event.target.value;page=1;renderMenu();};
 $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href='/login';}catch(error){$('message').textContent=error.message;}};
 (async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}if($('user-greeting'))$('user-greeting').replaceChildren(el('span','Yassou,','greeting-intro'),document.createElement('br'),el('span',session.username+'!','greeting-name'));$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
 
