@@ -90,7 +90,7 @@ Orders save before sending and report submitted, not configured, failed, or unco
 
 Head Office users can rename built-in menus, headings, buttons, instructions, placeholders, and cart/pagination messages under **App settings → Interface text**. Search for the original wording, edit it, and save. Matching labels change everywhere; leave a field blank to restore its default. Preserve `{quantity}`, `{page}`, and other placeholders in formatted messages. Settings persist in `data/interface-text.json`. Supplier names, stock names, account names and location names continue to be managed through their own editing forms.
 
-Head Office users can also use **App edit** in the sidebar. Switch it on, click highlighted text where it appears, enter new wording, and save. **Finish editing** restores normal page interactions. This mode edits interface wording, not stock, supplier, account or location data.
+Head Office users can also use **App edit** in the sidebar. Switch it on, click highlighted text where it appears, enter new wording, and save. **Finish editing** restores normal page interactions. While editing, an orange border stays around the screen with “You’re in app edit mode” centred at the top, including over the edit pop-up. The small top-right close button finishes editing from any page or mobile screen. This mode edits interface wording, not stock, supplier, account or location data.
 
 In App edit, select **Leave blank** and save to hide a label. **Restore original** brings its default wording back. Blank labels have a small `(blank)` marker only while editing, so you can click and restore them. The Interface text settings page also includes a Leave blank checkbox for each label.
 
