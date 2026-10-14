@@ -3,6 +3,12 @@ async function refreshLogo(){await Promise.all(['/logo','/sidebar-logo'].map(asy
 if(window.appBootstrap?.hasLogo===undefined)refreshLogo();
 
 const appearanceFonts=appearanceStyles.fonts;
+function applyFontLibrary(library){
+ appearanceStyles.registerFonts(library);window.appBootstrap.fontLibrary=library;
+ let style=document.getElementById('uploaded-font-faces');if(!style){style=document.createElement('style');style.id='uploaded-font-faces';document.head.append(style);}style.textContent=appearanceStyles.fontFaces();
+ window.dispatchEvent(new Event('font-library-updated'));
+ if(typeof applyElementOverrides==='function')applyElementOverrides();
+}
 function applyAppearance(settings){
  const css=appearanceStyles.build(settings);if(!css)return;
  let style=document.getElementById('appearance-style');if(!style){style=document.createElement('style');style.id='appearance-style';document.head.append(style);}if(style.textContent!==css)style.textContent=css;

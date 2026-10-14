@@ -344,6 +344,11 @@ label{font-size:12px;line-height:1.5}
 .sidebar-collapsed .sidebar-location{display:none}
 .sidebar-logo-form{margin-top:28px;padding-top:22px;border-top:1px solid var(--line)}
 .sidebar-logo-preview{width:100%;max-width:360px;height:100px;padding:12px;background-color:white}
+.font-upload-preview{padding:20px;border:1px solid var(--line);border-radius:14px;background-color:color-mix(in srgb,var(--primary) 4%,white);font-size:28px;line-height:1.6;overflow-wrap:anywhere}
+.font-upload-preview[hidden]{display:none}
+.uploaded-font-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.uploaded-font-row>div{min-width:0;overflow-wrap:anywhere}.uploaded-font-row p{margin:6px 0 0}.uploaded-font-row button{flex-shrink:0;margin:0}
+@media(max-width:480px){.uploaded-font-row{flex-wrap:wrap}.font-upload-preview{font-size:22px}}
 #sidebar-logo-preview-caption{font-size:13px;color:var(--muted)}
 .app-shell{--sidebar-expanded-width:260px;transition:grid-template-columns .48s cubic-bezier(.2,.8,.2,1)}
 .app-shell>.admin-sidebar{width:var(--sidebar-expanded-width);z-index:20;transition:width .48s cubic-bezier(.2,.8,.2,1),box-shadow .48s ease}

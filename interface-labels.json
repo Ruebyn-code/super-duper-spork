@@ -2533,5 +2533,77 @@
     "locations": [
       "App settings"
     ]
+  },
+  {
+    "text": "Font uploads",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Upload a TTF, OTF, WOFF or WOFF2 font up to 2 MB. Preview it before saving, then select it for any text group above or in App edit.",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Font file",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Font name",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Name for your font",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Upload font",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Uploaded fonts",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Preview font",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "No additional fonts uploaded yet.",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Uploading font…",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "This font is already in your library.",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Font uploaded. Choose it for a part of the app, then save app settings.",
+    "locations": [
+      "App settings"
+    ]
   }
 ]

@@ -54,7 +54,7 @@ The spreadsheet provides 106 prices; 22 items have blank prices and display **Pr
 
 The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** at the top of the left sidebar to review quantities and submit a request on its own page. Carts are saved per signed-in account and assigned location in this browser’s local storage and cleared after a successful order.
 
-Administrators can change primary/secondary colours and choose fonts for body text, app name, greeting, headings, stock names, buttons, labels, inputs, and navigation in **Administration → App settings**. Choices save in `data/appearance.json` and apply across pages, including sign-in. Refresh other open pages after saving.
+Administrators can change primary/secondary colours and choose fonts for body text, app name, greeting, headings, stock names, buttons, labels, inputs, and navigation in **Administration → App settings**. Choices save in `data/appearance.json` and apply across pages, including sign-in. Refresh other open pages after saving. Upload additional fonts under **App settings → Fonts → Font uploads**. TTF, OTF, WOFF and WOFF2 files up to 2 MB are supported, with a preview before upload. Each uploaded font becomes available for every text group and for individual elements through App edit. Uploading does not change the current font until you choose it and save. Fonts persist in `data/fonts/` and `data/fonts.json`; keep the entire data folder when updating. Re-uploading the same font reuses its existing entry.
 
 ## Locations, users and email sending
 
