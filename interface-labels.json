@@ -1457,7 +1457,8 @@
   {
     "text": "Not recorded",
     "locations": [
-      "Stock count · weekly usage"
+      "Stock count · weekly usage",
+      "Reporting"
     ]
   },
   {
@@ -2033,7 +2034,8 @@
   {
     "text": "prices pending",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "Reporting"
     ]
   },
   {
@@ -3767,6 +3769,438 @@
     "text": "{start} – {end} · 1 completed week",
     "locations": [
       "Home"
+    ]
+  },
+  {
+    "text": "Reporting",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Location reports",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Report period",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "This quarter",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Last week",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Last 4 completed weeks",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Custom dates",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "From",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "To",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Refresh report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Export CSV",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Loading report…",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Report totals",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Placed-order cost",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly sales & order costs",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Order costs",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Select a week to view its daily sales.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Week",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Order cost",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Expense",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Sales days",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Completed weekly averages",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly sales",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly cost",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Show all days",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Order costs by supplier",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Placed orders only. Costs use the prices saved when each order was placed.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Units / packs",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Stock usage",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Completed Sunday–Saturday cycles: opening Sunday count + orders − next Sunday count. Missing counts and negative usage are excluded.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Stock item",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Storage group",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Ordered",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Used",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Complete cycles",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Search report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "No records for this report period.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Reporting options",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Orders & suppliers",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Overview",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{recorded} of {days} sales days recorded",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Known subtotal · prices pending",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Prices saved with placed orders",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Percentage unavailable",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Target · 28%",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Selected location only",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "1 completed week",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{weeks} completed weeks",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Enter all seven sales days for a completed week to calculate averages.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Some included order prices are pending. Weekly cost and percentage are unavailable.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Full Monday–Sunday weeks inside this period, with all seven sales days recorded.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "1 completed cycle",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{weeks} completed cycles",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Prices pending",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Negative usage needs checking",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Missing Sunday counts",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Page {page} of {pages} · {count} rows",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Selected week · {date}",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Choose both report dates.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Some sales days are missing. Totals include recorded sales only.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Sales, order costs and expense percentage use the selected period.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Unable to load report.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Unable to load report: {message}",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Unable to sign out. Try again.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Edit From",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Edit To",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly sales and order costs",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Daily report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Suppliers report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Usage report",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Report pages",
+    "locations": [
+      "Reporting"
     ]
   }
 ]

@@ -73,7 +73,7 @@ function allTimeTotals(records,orders,session){
  }
  return {salesCents,recordedDays,placedOrdersCents,orderCount,pricePending,expensePercent:salesCents>0&&!pricePending?placedOrdersCents/salesCents*100:null};
 }
-function quarterAverages(records,orders,session,quarter,now){
+function completedWeekAverages(records,orders,session,quarter,now){
  const firstMonday=shift(quarter.startDate,(8-new Date(quarter.startDate+'T00:00:00Z').getUTCDay())%7),currentMonday=currentWeek(now),completed=[];
  for(let start=firstMonday;shift(start,6)<currentMonday&&shift(start,6)<=quarter.endDate;start=shift(start,7))completed.push(start);
  // Match sales and costs to the same full weeks; missing sales are not zero.
@@ -98,7 +98,7 @@ function homeTotals(records,orders,session,{now=new Date()}={}){
  const withinQuarter=orders.filter(order=>{
   const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
   const date=dateLabel(dayNumber(created,formatter));return date>=quarter.startDate&&date<=quarter.endDate;
- }),quarterOrders=allTimeTotals([],withinQuarter,session),averages=quarterAverages(records,withinQuarter,session,quarter,now);
+ }),quarterOrders=allTimeTotals([],withinQuarter,session),averages=completedWeekAverages(records,withinQuarter,session,quarter,now);
  return {...allOrders,salesCents,recordedDays,quarter,averages,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
 }
 function createStore(){
@@ -124,14 +124,15 @@ function createStore(){
   const records=await Promise.all(starts.map(start=>read(dir,session,start)));
   return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:calculate(records,orders,session,{now})};
  }
- async function totals(dir,session,{orders=[],now=new Date()}={}){
+ async function history(dir,session){
   const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];
   const weeks=new Set();
   for(const folder of folders){let files;try{files=await fs.readdir(folder);}catch(error){if(error.code==='ENOENT')continue;throw error;}for(const file of files){if(!/^\d{4}-\d{2}-\d{2}\.json$/.test(file))continue;const start=file.slice(0,-5);try{week(start);weeks.add(start);}catch{}}}
   // Use the same location-over-legacy precedence as the weekly sales editor.
   const starts=[...weeks],records=[];for(let offset=0;offset<starts.length;offset+=32)records.push(...await Promise.all(starts.slice(offset,offset+32).map(start=>read(dir,session,start))));
-  return homeTotals(records,orders,session,{now});
+  return records;
  }
- return {save,report,totals};
+ async function totals(dir,session,{orders=[],now=new Date()}={}){return homeTotals(await history(dir,session),orders,session,{now});}
+ return {save,report,totals,history};
 }
-module.exports={calculate,allTimeTotals,homeTotals,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
+module.exports={calculate,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

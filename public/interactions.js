@@ -14,7 +14,7 @@ busyObserver.observe(document.body,{subtree:true,attributes:true,attributeFilter
 document.querySelectorAll('.catalogue-search').forEach(control=>{
  const button=control.querySelector('.search-toggle'),field=control.querySelector('.search-field'),input=field.querySelector('input[type=search]');
  const wording=text=>typeof interfaceLabel==='function'?interfaceLabel(text):text;
- function updateLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':'Search stock');button.setAttribute('aria-label',label);button.title=label;}
+ function updateLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':button.dataset.searchLabel||'Search stock');button.setAttribute('aria-label',label);button.title=label;}
  function setOpen(open,focus=true){
   if(open&&input.disabled)return;
   control.classList.toggle('search-open',open);button.setAttribute('aria-expanded',String(open));field.inert=!open;field.setAttribute('aria-hidden',String(!open));input.tabIndex=open?0:-1;updateLabel();

@@ -19,6 +19,7 @@ const stockCountGroups=require('./public/stock-count-groups');
 const manualPar=require('./manual-par');
 const stockUsage=require('./stock-usage');
 const sales=require('./sales');
+const reporting=require('./reporting');
 const locations=require('./locations');
 const {belongs}=require('./location-scope');
 const menu = [
@@ -143,6 +144,12 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,location.id)));
         if(req.method==='PUT'){if(location.archived)fail('Restore the location before changing its email settings.');try{return json(200,await deliverySettings.save(dataDir,await body(req),location.id));}catch(error){fail(error.message);}}
       }
+      if(req.url==='/api/reporting'&&req.method==='GET'){
+        if(!managesUsers(session))fail('Franchisee or Head Office permission required.',403);
+        const params=Object.fromEntries(requestUrl.searchParams),now=new Date();reporting.range(params,now);
+        const [records,history,catalogue]=await Promise.all([salesStore.history(dataDir,session),usageHistory(dataDir),readCatalogue()]);
+        return json(200,reporting.calculate(records,history.orders,history.counts,catalogue,session,params,{now}));
+      }
       if(req.url==='/api/home-totals'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.totals(dataDir,session,{orders:history.orders}));
@@ -198,8 +205,9 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
-      if(req.method==='GET'&&['/','/home','/cart','/stock-count','/sales','/email-settings','/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/','/home','/cart','/stock-count','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&['/email-settings','/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!headOffice(session)&&!(req.url==='/admin/accounts'&&managesUsers(session))){res.writeHead(303,{Location:'/'});return res.end();}
+      if(req.method==='GET'&&req.url==='/reporting'&&!managesUsers(session)){res.writeHead(303,{Location:'/home'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
@@ -254,7 +262,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
         return json(201,order);
       }
-      const files = {'/':'index.html','/home':'home.html','/home.js':'home.js','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/sales-performance.js':'sales-performance.js','/sales-performance-view.js':'sales-performance-view.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-count-groups.js':'stock-count-groups.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/locations.js':'locations.js','/companies.js':'companies.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/font-uploads.js':'font-uploads.js','/admin/appearance/signin':'login.html','/admin/appearance/setup':'setup.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/company-context.js':'company-context.js','/location-picker.js':'location-picker.js','/edit-parts.js':'edit-parts.js','/layout-model.js':'layout-model.js','/app-layout.js':'app-layout.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/admin-ui.js':'admin-ui.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/auth-preview.js':'auth-preview.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
+      const files = {'/':'index.html','/home':'home.html','/home.js':'home.js','/cart':'cart.html','/stock-count':'stock-count.html','/sales':'sales.html','/sales.js':'sales.js','/reporting':'reporting.html','/reporting.js':'reporting.js','/reporting-export.js':'reporting-export.js','/sales-performance.js':'sales-performance.js','/sales-performance-view.js':'sales-performance-view.js','/sales-budget.js':'sales-budget.js','/stock-count.js':'stock-count.js','/stock-count-groups.js':'stock-count-groups.js','/stock-usage.js':'stock-usage.js','/email-settings.js':'email-settings.js','/locations.js':'locations.js','/companies.js':'companies.js','/admin':'admin.html','/admin/accounts':'accounts.html','/admin/settings':'settings.html','/settings.js':'settings.js','/font-uploads.js':'font-uploads.js','/admin/appearance/signin':'login.html','/admin/appearance/setup':'setup.html','/admin/login':'login.html','/login':'login.html','/setup':'setup.html','/setup.js':'setup.js','/branding.js':'branding.js','/company-context.js':'company-context.js','/location-picker.js':'location-picker.js','/edit-parts.js':'edit-parts.js','/layout-model.js':'layout-model.js','/app-layout.js':'app-layout.js','/appearance-style.js':'appearance-style.js','/password.js':'password.js','/admin.js':'admin.js','/admin-panels.js':'admin-panels.js','/admin-ui.js':'admin-ui.js','/login.js':'login.js','/app.js':'app.js','/style.css':'style.css','/smooth.css':'smooth.css','/interactions.js':'interactions.js','/navigation.js':'navigation.js','/interface-text.js':'interface-text.js','/auth-preview.js':'auth-preview.js','/app-editor.js':'app-editor.js','/element-overrides.js':'element-overrides.js','/fonts/Opsilon-xRj8m.ttf':'fonts/Opsilon-xRj8m.ttf'};
       if (req.method !== 'GET' || !files[req.url]) return json(404,{error:'Not found'});
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':'text/javascript';

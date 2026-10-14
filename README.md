@@ -86,6 +86,14 @@ Supplier emails use the subject **Stock order for [location name]** and list ite
 
 Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again, and an old request cannot be retried under another location. Older account-addressed email API URLs remain read-only and reject changes; old email page bookmarks open the corresponding location’s settings. Supplier order delivery continues to use the selected location’s sender.
 
+## Reporting
+
+**Franchisee** and **Head Office** users can open **Reporting** in the left sidebar, or **More → Reporting** on phones. **Ordering managers** cannot access its page or API. Reports cover the selected location within its company; switch companies or locations from the sidebar as usual.
+
+Choose **This quarter**, **This week**, **Last week**, **Last 4 completed weeks** or **Custom dates** using the expanding calendar controls. All dates use Melbourne time and end no later than today. **Overview** shows recorded sales, placed-order cost, expense percentage against the 28% target, order count and a weekly chart. Select a chart week to open its daily sales. **Sales** shows each calendar day, **Orders & suppliers** groups order costs by supplier, and **Stock usage** shows item usage for completed Sunday–Saturday cycles wholly inside the selected period. Missing Sunday counts and negative usage remain flagged rather than contributing to usage totals; removed items remain available in history.
+
+Order costs use the prices saved with placed orders, including saved orders whose supplier delivery failed. Draft carts are excluded. Missing sales differ from recorded zero sales, and pending item prices flag known subtotals and leave expense percentages unavailable. Weekly averages include only completed Monday–Sunday weeks wholly inside the chosen period with all seven sales days recorded. **Export CSV** downloads the current view, including every page of matching rows and any active search or chart-week filter. Reporting sections, cards, wording and appearance can be changed through the same company-wide **App edit** controls.
+
 ## Interface text
 
 Head Office users can rename built-in menus, headings, buttons, instructions, placeholders, and cart/pagination messages under **App settings → Interface text**. Search for the original wording, edit it, and save. Matching labels change everywhere; leave a field blank to restore its default. Preserve `{quantity}`, `{page}`, and other placeholders in formatted messages. Settings persist in `data/interface-text.json`. Supplier names, stock names, account names and location names continue to be managed through their own editing forms.
