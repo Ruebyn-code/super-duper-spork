@@ -983,7 +983,7 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 .home-page .home-action{background-color:color-mix(in srgb,var(--primary) 10%,white);border-color:color-mix(in srgb,var(--primary) 20%,white)}
 .home-page .home-action:hover{background-color:color-mix(in srgb,var(--primary) 16%,white);border-color:var(--primary)}
 .home-page .home-admin-links a{background-color:color-mix(in srgb,var(--primary) 10%,white)}
-/* Location totals sit below the greeting and use recorded figures. */
+/* Location totals sit beside the greeting and use recorded figures. */
 .home-total-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
 .home-total-metrics>div{min-width:0}.home-total-metrics>div+div{border-left:1px solid var(--line);padding-left:18px}
 .home-total-metrics span{display:block;font-size:11px;color:var(--muted);line-height:1.5}
@@ -1075,3 +1075,5 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 @media(max-width:480px){.sales-performance-metrics{gap:8px}.sales-performance-metrics>div+div{padding-left:8px}.sales-performance-metrics h2{font-size:20px}.sales-performance-heading h2{font-size:15px}}
 
 #sales-performance-difference[data-performance=behind]{color:#c62828!important}#sales-performance-difference[data-performance=ahead]{color:#15803d!important}
+
+.home-overview{display:flex;align-items:center;flex-wrap:wrap;gap:24px;margin-bottom:20px}.home-page .home-overview .home-hero{flex:1 1 200px;min-width:0;margin:0;padding:4px 0;border-bottom:0}.home-overview>#home-totals{flex:2.2 1 480px;min-width:0;margin:0}
