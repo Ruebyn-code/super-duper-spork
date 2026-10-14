@@ -3375,85 +3375,99 @@
   {
     "text": "This week so far",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Actual sales",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Expected sales",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Difference from projection",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Add daily sales",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Projection unavailable",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Ahead of projection",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Behind projection",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "On projection",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Comparing {count} recorded days through {date} with the same weekdays in this week’s projection.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Enter this week’s daily sales to compare your progress with the projection.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Complete the previous four weeks to see the difference from projection.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "1 earlier day has no sales entered and is excluded.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "{count} earlier days have no sales entered and are excluded.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
@@ -3465,13 +3479,15 @@
   {
     "text": "Percentage difference is unavailable when expected sales are $0.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   },
   {
     "text": "Comparing 1 recorded day through {date} with the same weekday in this week’s projection.",
     "locations": [
-      "sales"
+      "sales",
+      "cart"
     ]
   }
 ]

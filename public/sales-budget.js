@@ -5,7 +5,7 @@
  let session,projection,loading=false,refreshAgain=false,cart={total:0,pricePending:false};
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  function render(){
-  if(!projection)return;
+  if(!projection)return;window.salesPerformanceView?.render(projection);
   $('ordering-projected-sales').textContent=money(projection.projectedSalesCents);$('ordering-week-budget').textContent=money(projection.budgetCents);
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   const remaining=projection.remainingCents===null||cart.pricePending?null:projection.remainingCents-cart.total;
