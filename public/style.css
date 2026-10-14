@@ -770,3 +770,50 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 #account-locations .account-location-choice{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;background:color-mix(in srgb,var(--primary) 5%,white);font-size:13px;min-width:0;margin:0;cursor:pointer}
 #account-locations input{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:var(--primary)}
 .account-location-choice span{overflow-wrap:anywhere}
+
+#app-sidebar .mobile-tabbar,.mobile-menu-heading,.mobile-brand-header,.mobile-nav-backdrop{display:none}
+/* Phone navigation uses the full page width and keeps destinations within thumb reach. */
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
+ :root{--mobile-nav-height:68px;--mobile-nav-space:calc(var(--mobile-nav-height) + env(safe-area-inset-bottom,0px))}
+ .app-shell,.app-shell.subsidebar-open,.sidebar-collapsed .app-shell,.sidebar-hover-expanded .app-shell{display:block;min-height:100dvh;transition:none}
+ .app-page{padding-bottom:calc(var(--mobile-nav-space) + 16px)}
+ .app-shell>#app-sidebar,.sidebar-collapsed .app-shell>#app-sidebar,.sidebar-hover-expanded .app-shell>#app-sidebar{position:fixed;inset:auto 0 0;width:100%;height:var(--mobile-nav-space);min-height:0;padding:0;border:0;border-top:1px solid var(--line);border-radius:0;background-color:white;box-shadow:0 -4px 24px #182b3a0b;overflow:visible;z-index:40;transition:none}
+ #app-sidebar .mobile-tabbar{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;width:100%;height:var(--mobile-nav-height);margin:0;padding:6px max(4px,env(safe-area-inset-right,0px)) 6px max(4px,env(safe-area-inset-left,0px));gap:3px}
+ #app-sidebar .mobile-tabbar>.main-sidebar-nav{display:contents;margin:0!important}
+ #app-sidebar .mobile-tabbar a,#app-sidebar .mobile-tabbar .mobile-nav-tab{position:relative;display:flex;flex:1 1 0;min-width:0;min-height:44px;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:5px 2px;margin:0;border:0;border-radius:10px;background-color:transparent;color:var(--primary);text-align:center;font-size:10px;line-height:1.2;text-decoration:none;box-shadow:none}
+ #app-sidebar .mobile-tabbar a .sidebar-label,#app-sidebar .mobile-tabbar .mobile-nav-tab .sidebar-label{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #app-sidebar .mobile-tabbar .sidebar-navigation-icon,#app-sidebar .mobile-tabbar .cart-icon{width:22px;height:22px;color:var(--primary)}
+ #app-sidebar .mobile-tabbar a:hover,#app-sidebar .mobile-tabbar a[aria-current=page],#app-sidebar .mobile-tabbar a[data-submenu-open=true],#app-sidebar .mobile-tabbar .mobile-nav-tab.active{background-color:color-mix(in srgb,var(--primary) 12%,white);box-shadow:none}
+ #app-sidebar .mobile-tabbar a[data-sidebar-group]::after{display:none}
+ #app-sidebar .mobile-tabbar #cart-badge{position:absolute;top:1px;left:calc(50% + 5px);margin:0;padding:2px 4px;min-width:15px;max-width:36px;font:9px/1.2 Arial,sans-serif;overflow:hidden;text-overflow:ellipsis;border:2px solid white;border-radius:12px}
+ #app-sidebar>.sidebar-scroll,.sidebar-collapsed #app-sidebar>.sidebar-scroll,.sidebar-hover-expanded #app-sidebar>.sidebar-scroll{display:none;position:fixed;inset:auto max(8px,env(safe-area-inset-right,0px)) calc(var(--mobile-nav-space) + 8px) max(8px,env(safe-area-inset-left,0px));width:auto;max-height:calc(100dvh - var(--mobile-nav-space) - env(safe-area-inset-top,0px) - 32px);height:auto;padding:14px;overflow-y:auto;border:1px solid var(--line);border-radius:18px;background-color:white;box-shadow:0 -10px 40px #182b3a20}
+ .mobile-more-open #app-sidebar>.sidebar-scroll{display:block;animation:mobile-menu-in var(--motion-medium,.22s) ease both}
+ .mobile-menu-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+ #app-sidebar .mobile-menu-heading h2{font-size:17px;margin:0;padding:0;border:0}
+ .mobile-menu-heading button{display:grid;place-items:center;width:44px;height:44px;padding:10px;color:var(--primary);border:0;background-color:transparent}
+ #app-sidebar .sidebar-scroll h2{margin:10px 0 8px;padding:0;border:0}
+ #app-sidebar .sidebar-scroll .main-sidebar-nav{display:flex;flex-direction:column;margin:0!important}
+ #app-sidebar .sidebar-scroll .main-sidebar-nav a,#app-sidebar .sidebar-scroll .sidebar-signout{min-height:44px;font-size:14px;padding:10px 12px;gap:12px}
+ #app-sidebar .sidebar-scroll .sidebar-label{display:block}
+ #app-sidebar .sidebar-scroll .sidebar-footer{width:auto;flex-direction:row;padding:8px;margin:12px 0 0;border-radius:10px}
+ #app-sidebar .sidebar-scroll .sidebar-footer:has(.sidebar-edit-controls[hidden]){display:none}
+ #app-sidebar .sidebar-edit-controls{flex:1}
+ #app-sidebar .sidebar-footer .sidebar-edit-label{display:block}
+ #app-sidebar .sidebar-footer #app-edit-toggle{width:100%;height:auto;min-height:44px;padding:10px}
+ #app-sidebar #sidebar-toggle{display:none}
+ .app-shell>.secondary-sidebar,.sidebar-hover-expanded .app-shell>.secondary-sidebar{position:fixed;inset:auto max(8px,env(safe-area-inset-right,0px)) calc(var(--mobile-nav-space) + 8px) max(8px,env(safe-area-inset-left,0px));width:auto;max-width:none;height:auto;max-height:calc(100dvh - var(--mobile-nav-space) - env(safe-area-inset-top,0px) - 32px);min-height:0;padding:14px;border:1px solid var(--line);border-radius:18px;box-shadow:0 -10px 40px #182b3a20;z-index:41;transform:none;animation:mobile-menu-in var(--motion-medium,.22s) ease both}
+ .secondary-sidebar .subsidebar-heading{margin-bottom:10px}
+ .secondary-sidebar .subsidebar-heading h2{font-size:17px}
+ .secondary-sidebar #subsidebar-close{width:44px;height:44px;padding:10px}
+ .secondary-sidebar a{min-height:44px;padding:10px 12px;font-size:14px}
+ .mobile-nav-backdrop:not([hidden]){display:block;position:fixed;inset:0;background:#182b3a40;z-index:39;animation:sidebar-reveal var(--motion-medium,.22s) ease both}
+ .mobile-brand-header{display:block;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background-color:white}
+ .mobile-brand-header .sidebar-brand-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;margin:0}
+ .mobile-brand-header .brand{flex:1;min-width:0;padding:0;margin:0;max-width:50%;font-size:19px;line-height:1.35;letter-spacing:.04em}
+ .mobile-brand-header .app-logo{width:100%;height:auto;max-width:160px;max-height:48px;object-fit:contain;object-position:left center;border-radius:0}
+ .mobile-brand-header .location-switcher{display:flex;flex:0 1 46%;min-width:100px;min-height:44px;gap:7px;padding:8px 10px;margin:0}
+ .mobile-brand-header .location-name,.mobile-brand-header .location-chevron{display:block}
+ .mobile-brand-header .location-switch-status{flex-basis:100%;margin:0}
+ .app-page .hero{padding-top:18px}
+ @keyframes mobile-menu-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+}
