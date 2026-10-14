@@ -1,5 +1,6 @@
 // One style builder for the initial HTML and later edits in the browser.
 (function(root){
+ const parts=typeof module==='object'&&module.exports?require('./edit-parts'):root.appEditParts;
  const baseFonts={opsilon:"'Opsilon',sans-serif",arial:'Arial,Helvetica,sans-serif',verdana:'Verdana,sans-serif',georgia:'Georgia,serif',trebuchet:"'Trebuchet MS',sans-serif",monospace:'monospace'};
  const fonts={...baseFonts};let library=[];
  const baseLabels={opsilon:'Opsilon (your font)',arial:'Arial',verdana:'Verdana',georgia:'Georgia',trebuchet:'Trebuchet MS',monospace:'Monospace'};
@@ -42,16 +43,22 @@
   }
   return css;
  }
+ function styleProperties(settings,families){
+  let properties='';if(Object.hasOwn(families,settings.font))properties+='font-family:'+families[settings.font]+'!important;font-weight:'+((settings.font==='opsilon'||isUploadedFont(settings.font))?400:600)+'!important;';
+  if(colour(settings.fontColour))properties+='color:'+colourValue(settings.fontColour)+'!important;';if(colour(settings.background))properties+='background-color:'+colourValue(settings.background)+'!important;';
+  if(settings.backgroundImage==='')properties+='background-image:none!important;';if(image(settings.backgroundImage))properties+='background-image:url("'+settings.backgroundImage+'")!important;background-size:cover;background-position:center;background-repeat:no-repeat;';
+  if(colour(settings.iconColour))properties+='color:'+colourValue(settings.iconColour)+'!important;stroke:'+colourValue(settings.iconColour)+'!important;';
+  if(Number.isInteger(settings.iconSize)&&settings.iconSize>=8&&settings.iconSize<=96)properties+='width:'+settings.iconSize+'px!important;height:'+settings.iconSize+'px!important;';
+  if(typeof settings.iconStroke==='number'&&settings.iconStroke>=0.5&&settings.iconStroke<=4)properties+='stroke-width:'+settings.iconStroke+'!important;';return properties;
+ }
  function buildElements(overrides,html,uploaded=library){
-  const families=fontFamilies(uploaded);
-  let css='';for(const [id,settings] of Object.entries(overrides||{})){
-   if(!/^[a-zA-Z0-9_.:-]{1,240}$/.test(id)||!html.includes('data-edit-id="'+id+'"'))continue;
-   let properties='';if(Object.hasOwn(families,settings.font))properties+='font-family:'+families[settings.font]+'!important;font-weight:'+((settings.font==='opsilon'||isUploadedFont(settings.font))?400:600)+'!important;';
-   if(colour(settings.fontColour))properties+='color:'+colourValue(settings.fontColour)+'!important;';
-   if(colour(settings.background))properties+='background-color:'+colourValue(settings.background)+'!important;';
-   if(settings.backgroundImage==='')properties+='background-image:none!important;';
-   if(image(settings.backgroundImage))properties+='background-image:url("'+settings.backgroundImage+'")!important;background-size:cover;background-position:center;background-repeat:no-repeat;';
-   if(properties)css+='[data-edit-id="'+id+'"]{'+properties+'}';
+  const families=fontFamilies(uploaded);let css='';
+  for(const [id,settings] of Object.entries(overrides||{})){
+   if(!/^[a-zA-Z0-9_.:-]{1,240}$/.test(id))continue;let selector;
+   if(id.startsWith('type:')){const type=id.slice(5);if(!parts||!Object.hasOwn(parts.typeLabels,type))continue;const exclude=Object.entries(overrides).filter(([key,entry])=>!key.startsWith('type:')&&entry.linked===false&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(key)).map(([key])=>'[data-edit-id="'+key+'"]').join(',');selector=':where([data-app-part="'+type+'"]'+(exclude?':not('+exclude+')':'')+')';}
+   else{if(!html.includes('data-edit-id="'+id+'"'))continue;selector='[data-edit-id="'+id+'"]';}
+   const properties=styleProperties(settings,families);if(properties)css+=selector+'{'+properties+'}';
+   if(colour(settings.iconDetailColour))css+=selector+' .icon-detail,'+selector+' .icon-detail *{stroke:'+colourValue(settings.iconDetailColour)+'!important;}';
   }return css;
  }
  const helpers={fonts,build,buildElements,colourValue,resolveColour,parseColour,colour,fontLabels,fontFaces,registerFonts,isUploadedFont};

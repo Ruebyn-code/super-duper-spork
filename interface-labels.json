@@ -3341,5 +3341,17 @@
     "locations": [
       "Users"
     ]
+  },
+  {
+    "text": "Edit sign-in page",
+    "locations": [
+      "App settings"
+    ]
+  },
+  {
+    "text": "Edit setup page",
+    "locations": [
+      "App settings"
+    ]
   }
 ]

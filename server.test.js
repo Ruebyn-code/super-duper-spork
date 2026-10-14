@@ -125,7 +125,7 @@ test('only administrators can upload a logo and sign-in uses blue background',as
  const logo=await fetch(url+'/logo');assert.equal(logo.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await logo.arrayBuffer()),png);
  assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:Buffer.from('<svg/>').toString('base64')})})).status,400);
  const saved=JSON.parse(await fs.readFile(path.join(dir,'logo.json'),'utf8'));assert.equal(saved.data,png.toString('base64'));
- const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo" alt="Souvlaki GR" class="app-logo">/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
+ const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo" alt="Souvlaki GR" class="app-logo"[^>]*>/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 test('sidebar logo has separate admin-only upload, persists and falls back to the app logo',async()=>{
@@ -142,7 +142,7 @@ test('sidebar logo has separate admin-only upload, persists and falls back to th
  assert.equal((await upload(admin)).status,200);
  assert.equal((await fetch(url+'/logo')).status,404);
  assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
- const html=await(await fetch(url+'/',{headers:admin})).text();assert.match(html,/<img src="\/sidebar-logo" alt="Souvlaki GR" class="app-logo">/);
+ const html=await(await fetch(url+'/',{headers:admin})).text();assert.match(html,/<img src="\/sidebar-logo" alt="Souvlaki GR" class="app-logo"[^>]*>/);
  await new Promise(r=>server.close(r));url=await start();admin=await login(url);staff=await login(url,'staff','test-password-for-staff');
  assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
  assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:jpg.toString('base64')})})).status,200);
@@ -413,4 +413,9 @@ test('storage groups migrate safely, accept only Head Office edits and preserve 
   await new Promise(resolve=>server.close(resolve));await start();catalogue=await(await request('/api/catalogue')).json();assert.equal(catalogue.products.find(product=>product.id==='fresh').stockCountGroup,'dry');assert.equal(catalogue.products.find(product=>product.id==='rice').stockCountGroup,'cool-room');
   const history=await(await request('/api/stock-counts/'+record.id,'GET',undefined,staff)).json();assert.equal(history.items.find(item=>item.id==='fresh').stockCountGroup,'cool-room');assert.equal(history.items.find(item=>item.id==='fresh').name,'Chicken (15kg box)');assert.equal(history.items.find(item=>item.id==='frozen').quantity,1.25);
  }finally{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
+});
+
+test('authentication design previews are Head Office-only, keep real page identities and omit account-submit scripts',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'auth-design-preview-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
+ try{const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');for(const [preview,script] of [['/admin/appearance/signin','login'],['/admin/appearance/setup','setup']]){assert.equal((await fetch(url+preview,{redirect:'manual'})).headers.get('location'),'/login');assert.equal((await fetch(url+preview,{headers:staff,redirect:'manual'})).headers.get('location'),'/');const response=await fetch(url+preview,{headers:admin});assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');const html=await response.text();assert.ok(html.includes('class="auth-preview-toolbar"'));assert.ok(html.includes('src="/auth-preview.js"'));assert.ok(html.includes('src="/app-editor.js"'));assert.ok(!html.includes('src="/'+script+'.js"'));assert.ok(html.includes('data-edit-id="'+(script==='login'?'login':'setup')+'-1"'));}const actual=await(await fetch(url+'/login')).text();assert.ok(actual.includes('src="/login.js"'));assert.ok(!actual.includes('auth-preview-toolbar'));const change={id:'part:login-7:svg:0',scope:'type',type:'icon-cart',changes:{icon:'check',iconColour:{colour:'primary',opacity:0.5}}};assert.equal((await fetch(url+'/api/element-overrides',{method:'PATCH',headers:staff,body:JSON.stringify(change)})).status,403);assert.equal((await fetch(url+'/api/element-overrides',{method:'PATCH',headers:{Cookie:admin.Cookie},body:JSON.stringify(change)})).status,403);assert.equal((await fetch(url+'/api/element-overrides',{method:'PATCH',headers:admin,body:JSON.stringify(change)})).status,200);const saved=await(await fetch(url+'/element-overrides')).json();assert.equal(saved['type:icon-cart'].icon,'check');assert.deepEqual(saved[change.id],{linked:true});}finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
