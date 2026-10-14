@@ -817,3 +817,78 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
  .app-page .hero{padding-top:18px}
  @keyframes mobile-menu-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 }
+
+/* Users share one searchable directory, with locations and permissions in each row. */
+.admin-page .users-directory.management{padding:0;border:0;background-color:transparent;box-shadow:none}
+.users-directory-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px}
+.users-company{display:flex;align-items:center;gap:13px;min-width:0}
+.users-company-mark{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:50%;background-color:var(--primary);color:white;overflow:hidden}
+.users-company-mark img{width:100%;height:100%;object-fit:contain;background-color:white}
+.users-company-mark span{font-size:17px;font-weight:600}
+.users-company-mark [hidden]{display:none}
+.app-page .admin-page .users-company h1{margin:0 0 4px;font-size:28px;line-height:1.3;letter-spacing:.02em}
+.users-company p{margin:0;color:var(--muted);font-size:13px}
+.users-search{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:14px 16px;border:1px solid #d3dfea;border-radius:8px;background-color:white;min-height:54px}
+.users-search svg{flex:0 0 22px;width:22px;height:22px;color:var(--primary)}
+.users-search input{min-width:0;margin:0;padding:0;border:0;border-radius:0;background-color:transparent;font-size:15px;font-weight:400;line-height:1.5}
+.users-search:focus-within{outline:2px solid var(--primary);outline-offset:2px}
+.users-search input:focus{outline:0;box-shadow:none}
+.users-directory-tools{display:flex;align-items:stretch;gap:16px;margin-bottom:16px;min-width:0}
+.users-filter-toolbar{display:flex;align-items:center;flex-wrap:wrap;flex:1;gap:10px;padding:14px;border:1px solid var(--line);border-radius:10px;background-color:color-mix(in srgb,var(--primary) 2%,white);min-width:0}
+.admin-page .users-directory #users-filter-toggle{display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:40px;margin:0;padding:9px 14px;border-color:var(--primary);background-color:var(--primary);color:white;font-size:13px}
+#users-filter-toggle svg{width:20px;height:20px}
+.users-filter-chips{display:flex;align-items:center;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.users-all-locations{font-size:12px;color:var(--muted)}
+.admin-page .users-location-chip{display:flex;align-items:center;gap:7px;padding:5px 9px;margin:0;min-width:0;max-width:100%;border:0;border-radius:20px;font-size:12px;background-color:color-mix(in srgb,var(--primary) 10%,white);color:var(--primary)}
+.users-location-chip span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.users-location-chip span:last-child{font:17px/1 Arial,sans-serif}
+.admin-page .users-directory #users-clear-filters{margin:0;padding:8px 2px;border:0;background-color:transparent;color:var(--primary);font-size:12px}
+.users-directory-actions{display:flex;align-items:center;padding:14px;border:1px solid var(--line);border-radius:10px;background-color:color-mix(in srgb,var(--primary) 2%,white)}
+.admin-page .users-directory #create-user{margin:0;min-height:40px;padding:9px 16px;font-size:13px;white-space:nowrap}
+.users-filter-panel{padding:14px 16px;margin:0 0 16px;border:1px solid var(--line);border-radius:10px;background-color:white}
+.users-filter-panel[hidden]{display:none}
+.users-filter-panel fieldset{min-width:0;border:0;padding:0;margin:0}
+.users-filter-panel legend{margin-bottom:10px;padding:0;font-size:13px;font-weight:600}
+.admin-page #account-location-filter.users-location-options{max-width:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:7px;max-height:240px;overflow:auto}
+.users-location-options label{display:flex;align-items:center;gap:8px;margin:0;padding:8px;border:1px solid var(--line);border-radius:7px;font-size:12px;cursor:pointer;min-width:0}
+.users-location-options input{flex:0 0 16px;width:16px;height:16px;padding:0;margin:0;accent-color:var(--primary)}
+.users-location-options span{overflow-wrap:anywhere;color:inherit}
+.users-table-shell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background-color:white}
+.users-table{width:100%;border-collapse:collapse;table-layout:fixed;text-align:left}
+.users-table th{padding:17px 18px;font-size:12px;line-height:1.5;font-weight:600;border-bottom:1px solid var(--line);background-color:color-mix(in srgb,var(--primary) 2%,white);overflow-wrap:anywhere}
+.users-name-column{width:30%}.users-locations-column{width:27%}.users-permissions-column{width:35%}.users-edit-column{width:8%}
+.users-table td{padding:18px;vertical-align:middle;border-bottom:1px solid var(--line);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.users-table .user-record:last-of-type td{border-bottom:0}
+.users-identity{display:flex;align-items:center;gap:12px;min-width:0}
+.users-identity>div{min-width:0}
+.user-avatar{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:50%;background-color:color-mix(in srgb,var(--primary) 16%,white);color:var(--primary);font-size:14px;font-weight:600}
+.user-record:nth-of-type(4n+3) .user-avatar{background-color:color-mix(in srgb,var(--secondary) 16%,white);color:color-mix(in srgb,var(--secondary) 65%,#182b3a)}
+.users-table .user-name{margin:0 0 5px;font-size:16px;line-height:1.4;font-weight:400;letter-spacing:.025em}
+.users-role{margin:0;font-size:11px;color:var(--muted);line-height:1.45}
+.users-location-list{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.users-location-tag{display:inline-block;padding:4px 7px;border-radius:5px;background-color:color-mix(in srgb,var(--primary) 4%,white);font-size:12px;line-height:1.5}
+.users-permissions-cell .permission-badge{display:inline-block;padding:5px 8px;font-size:11px}
+.users-permission-help{margin:7px 0 0;font-size:11px;line-height:1.5;color:var(--muted)}
+.users-table .users-edit-cell{padding:12px 10px;text-align:center}
+.users-edit-cell .user-edit-toggle{margin:0 auto}
+.users-cell-label{display:none}
+.users-table .user-editor-row[hidden]{display:none!important}
+.users-table .user-editor-row>td{padding:0 12px 12px}
+.users-table .user-edit-panel{margin:0}
+.users-table .users-empty{padding:32px 18px;color:var(--muted);text-align:center}
+.users-results{margin:12px 0 0!important;font-size:11px;color:var(--muted)}
+@media(max-width:900px){.users-table th,.users-table td{padding:14px 12px}.users-identity{gap:8px}.user-avatar{width:34px;height:34px;flex-basis:34px}.users-table .user-name{font-size:14px}}
+@media(max-width:600px){
+ .users-directory-tools{flex-wrap:wrap;gap:8px}.users-filter-toolbar{flex-basis:100%;padding:10px;gap:8px}.users-directory-actions{padding:0;border:0;background-color:transparent;justify-content:flex-end;width:100%}
+ .users-table,.users-table tbody{display:block}.users-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .users-table .user-record{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:12px 10px;padding:16px;border-bottom:1px solid var(--line)}
+ .users-table .user-record td{display:block;padding:0;border:0;width:auto}
+ .users-name-cell{grid-column:1;grid-row:1}.users-table .users-edit-cell{grid-column:2;grid-row:1}.users-locations-cell,.users-permissions-cell{grid-column:1/-1}
+ .users-cell-label{display:block;margin:0 0 6px;font-size:10px;line-height:1.5;font-weight:600;color:var(--muted)}
+ .users-table .user-editor-row{display:block}.users-table .user-editor-row>td{display:block;padding:0 10px 12px}
+ .user-avatar{flex-basis:40px;width:40px;height:40px}.users-table .user-name{font-size:16px}.users-table .user-edit-toggle{width:40px;height:40px;min-height:40px;margin:0}
+ .users-company-mark{flex-basis:44px;width:44px;height:44px}.app-page .admin-page .users-company h1{font-size:23px}.users-company p{font-size:12px}.users-directory-heading{margin-bottom:16px}
+ .users-search{min-height:48px;padding:11px 12px;margin-bottom:12px}.users-search input{font-size:14px}.users-permission-help{margin-top:5px}
+ .users-directory #account-form{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.users-directory #account-form>label{margin:0}
+}
+@media(pointer:coarse){.users-location-options label,.admin-page .users-location-chip,.admin-page .users-directory #users-clear-filters{min-height:44px}}

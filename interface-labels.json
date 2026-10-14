@@ -2653,5 +2653,89 @@
     "locations": [
       "Mobile navigation"
     ]
+  },
+  {
+    "text": "Souvlaki GR",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Search people",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Filters",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Filter by locations",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Clear all",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Name & Role",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "{count} users",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Showing {shown} of {total} users",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "No users match your search or location filters.",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Remove location filter: {name}",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Full app access",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Ordering access",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Users, locations, suppliers and settings",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "Orders, stock counts and sales",
+    "locations": [
+      "Users"
+    ]
   }
 ]
