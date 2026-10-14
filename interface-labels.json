@@ -3237,5 +3237,91 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "Manual par",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Manual par (whole units / packs)",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Leave blank to remove manual par",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Used until the first completed week of usage is available.",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Automatic par: {level} · {weeks} completed week(s).",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Save manual par",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Manual par saved.",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Based on 1 completed week",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Average of {weeks} completed weeks",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Manual par or usage needed",
+    "locations": [
+      "Stock editor",
+      "Stock count",
+      "Ordering"
+    ]
+  },
+  {
+    "text": "Par is your location’s average usage from up to four completed Sunday–Saturday weeks, rounded up to whole units or packs. Usage is calculated from Sunday stock + that week’s orders − the next Sunday stock count. Save Sunday counts and place orders as usual; usage updates automatically. With no completed usage weeks, Head Office can set a manual par in the stock editor for this location. After one completed week, par uses that week, then averages two, three and finally four available completed weeks. Missing counts or negative usage need checking; they are excluded. Recommended order = par − the latest stock count, rounded up to whole units, with a minimum of zero.",
+    "locations": [
+      "Ordering"
+    ]
   }
 ]

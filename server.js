@@ -15,6 +15,7 @@ const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');
 const stockCounts=require('./stock-counts');
 const stockCountGroups=require('./public/stock-count-groups');
+const manualPar=require('./manual-par');
 const stockUsage=require('./stock-usage');
 const sales=require('./sales');
 const locations=require('./locations');
@@ -48,6 +49,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
   const locationStore=locations.createStore(dataDir,auth);
   const usageHistory=stockUsage.createReader();
   const salesStore=sales.createStore();
+  const manualParStore=manualPar.createStore();
   const catalogueFile = path.join(dataDir,'catalogue.json');
   let pending = Promise.resolve();
   let initialization;
@@ -198,9 +200,19 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
-        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory});
+        const manualLevels=await manualParStore.read(dataDir,session.locationId||session.id);
+        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels});
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
         return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:session.role==='admin'?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
+      }
+      const manualParRoute=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)\/par$/);
+      if(manualParRoute&&req.method==='PUT'){
+        const input=await body(req);
+        return json(200,await manualParStore.save(dataDir,session.locationId||session.id,manualParRoute[1],input,async()=>{
+          const catalogue=await readCatalogue();if(!catalogue.products.some(product=>product.id===manualParRoute[1]))fail('Stock not found.',404);
+          const automatic=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory});
+          if(automatic.levels[manualParRoute[1]].weeksRecorded>0)fail('This item uses automatic par because completed usage history is available.');
+        }));
       }
       if(req.method==='POST' && req.url==='/api/suppliers'){
         const input=await body(req);const supplierName=name(input?.name,'supplier name');

@@ -141,3 +141,26 @@ test('home totals share quarter sales and expense with all-time placed orders wi
  await app.restart();const after=await app.login('first');totals=(await app.request(after,'/api/home-totals')).data;assert.equal(totals.salesCents,30000);assert.equal(totals.placedOrdersCents,9750);
  }finally{await app.close();}
 });
+
+test('manual pars are Head Office-only location fallbacks, survive restarts and yield to progressive automatic usage',async()=>{
+ const app=await fixture();try{let admin=await app.login('admin');const shop=(await app.request(admin,'/api/locations','POST',{name:'Shop'})).data,other=(await app.request(admin,'/api/locations','POST',{name:'Other'})).data;await app.assign(admin,'first',shop.id);let user=await app.login('first');const pin={'X-Location-Id':shop.id};
+ assert.equal((await app.request(user,'/api/products/paper/par','PUT',{level:12})).status,403);assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level:12},{...pin,'X-CSRF-Token':''})).status,403);
+ for(const level of [-1,1.25,1000001,'12',{},[]])assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level},pin)).status,400);
+ assert.equal((await app.request(admin,'/api/products/missing/par','PUT',{level:12},pin)).status,404);
+ assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level:12},pin)).status,200);assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level:40},{'X-Location-Id':other.id})).status,200);
+ const paper=async()=> (await app.request(user,'/api/catalogue')).data.products.find(product=>product.id==='paper');let item=await paper();assert.equal(item.par.level,12);assert.equal(item.par.source,'manual');assert.equal(item.par.weeksRecorded,0);
+ assert.equal((await app.request(admin,'/api/catalogue','GET',undefined,{'X-Location-Id':other.id})).data.products.find(product=>product.id==='paper').par.level,40);
+ await app.request(user,'/api/stock-counts','POST',{countDate:'2026-10-14',items:[{id:'paper',quantity:3}]});assert.equal((await paper()).ordering.recommended,9);
+ await app.restart();admin=await app.login('admin');user=await app.login('first');assert.equal((await paper()).par.level,12);
+ assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level:null},pin)).status,200);assert.equal((await paper()).par.level,null);await app.request(admin,'/api/products/paper/par','PUT',{level:12},pin);
+ const sunday=par.windowFor().currentWeekStart;
+ await app.request(user,'/api/stock-counts','POST',{countDate:sunday,items:[{id:'paper',quantity:4}]});
+ for(let weeks=1;weeks<=4;weeks++){
+  const opening=shift(sunday,-7*weeks);await app.request(user,'/api/stock-counts','POST',{countDate:opening,items:[{id:'paper',quantity:10}]});const quantity=[7,8,6,4][weeks-1],order=(await app.request(user,'/api/orders','POST',{items:[{id:'paper',quantity}]})).data;order.createdAt=opening+'T00:00:00Z';await fs.writeFile(path.join(app.dir,order.id+'.json'),JSON.stringify(order));
+  item=await paper();assert.equal(item.par.weeksRecorded,weeks);assert.equal(item.par.level,[13,11,9,8][weeks-1]);assert.equal(item.par.manualLevel,12);assert.equal(item.par.source,'usage');
+ }
+ assert.equal((await app.request(admin,'/api/products/paper/par','PUT',{level:999},pin)).status,400);
+ assert.equal((await app.request(admin,'/api/catalogue','GET',undefined,{'X-Location-Id':other.id})).data.products.find(product=>product.id==='paper').par.level,40);
+ const simultaneous=await Promise.all(['pens','boxes'].map(id=>app.request(admin,'/api/products/'+id+'/par','PUT',{level:0},pin)));assert.ok(simultaneous.every(response=>response.status===200));const catalogue=(await app.request(user,'/api/catalogue')).data;for(const id of ['pens','boxes'])assert.equal(catalogue.products.find(product=>product.id===id).par.level,0);
+ }finally{await app.close();}
+});

@@ -69,10 +69,10 @@ function orderingSuggestions(counts,products,session,levels){
   return [product.id,{stockCount:counted,recommended:recommendation}];
  }))};
 }
-async function parLevels(dir,session,products,{reader=readHistory,now=new Date()}={}){
+async function parLevels(dir,session,products,{reader=readHistory,now=new Date(),manualLevels={}}={}){
  const window=par.windowFor(now),history=await reader(dir);
  const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)));
- const result=par.calculate(records,products,session,{now});
+ const result=par.calculate(records,products,session,{now,manualLevels});
  const suggestions=orderingSuggestions(history.counts,products,session,result.levels);
  return {...result,stockTake:suggestions.stockTake,suggestions:suggestions.items};
 }
