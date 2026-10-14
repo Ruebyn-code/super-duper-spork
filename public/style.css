@@ -932,3 +932,18 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 @keyframes count-cart-confirm{from{transform:scale(.97)}to{transform:scale(1)}}
 @media(max-width:600px){.stock-count-page .count-order-item{grid-template-columns:minmax(0,1fr) 105px;gap:10px}.count-order-actions{grid-template-columns:minmax(0,1fr);gap:6px}.count-order-stats{gap:5px;margin-top:6px}}
 @media(pointer:coarse){.count-order-actions .count-recommend-add{min-height:44px}}
+/* Compact cart rows stay grouped beneath each collapsible supplier. */
+.cart-page .cart-supplier-group{margin-top:12px;border-radius:10px}
+.cart-page .cart-supplier-group>summary{padding:10px 12px;cursor:pointer;color:var(--primary)}
+.cart-page .cart-supplier-group>summary h3{font-size:15px;overflow-wrap:anywhere}
+.cart-page .cart-supplier-group .stock-items-count{margin:0 0 0 8px;font-size:10px;padding:2px 7px;color:var(--muted)}
+.cart-page .cart-supplier-items{padding:0 12px}
+.cart-page .cart-supplier-items .cart-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;padding:9px 0}
+.cart-page .cart-supplier-items .cart-row:last-child{border-bottom:0}
+.cart-page .cart-supplier-items .cart-row>strong{font-size:15px;min-width:0}
+.cart-page .cart-supplier-items .quantity{margin:0;gap:6px;flex-wrap:nowrap;min-width:0}
+.cart-page .cart-supplier-items .quantity button{width:32px;height:32px;flex-shrink:0;border-radius:7px}
+.cart-page .cart-supplier-items .quantity input{width:52px;min-height:32px;padding:5px 4px;flex-shrink:0;border-radius:7px;font-size:12px}
+.cart-page .cart-supplier-items .quantity span{margin-left:6px;font-size:12px;white-space:nowrap;text-align:right;min-width:60px}
+@media(max-width:600px){.cart-page .cart-supplier-items .cart-row{grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 0}.cart-page .cart-supplier-items .cart-row>strong{font-size:14px}.cart-page .cart-supplier-items .quantity span{margin-left:auto}.cart-page .cart-supplier-items{padding:0 10px}}
+@media(pointer:coarse){.cart-page .cart-supplier-group>summary{min-height:44px}.cart-page .cart-supplier-items .quantity button{width:44px;height:44px}.cart-page .cart-supplier-items .quantity input{min-height:44px}}

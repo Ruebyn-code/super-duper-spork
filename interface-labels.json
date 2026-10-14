@@ -2983,5 +2983,17 @@
     "locations": [
       "Stock count"
     ]
+  },
+  {
+    "text": "{count} item",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
+  },
+  {
+    "text": "{count} items",
+    "locations": [
+      "Catalogue & cart messages"
+    ]
   }
 ]

@@ -56,7 +56,9 @@ The spreadsheet provides 106 prices; 22 items have blank prices and display **Pr
 
 ## Ordering and cart
 
-The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** at the top of the left sidebar to review quantities and submit a request on its own page. Carts are saved per signed-in account and assigned location in this browser’s local storage and cleared after a successful order.
+The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** at the top of the left sidebar to review quantities and submit a request on its own page.
+
+Cart items are grouped under collapsible supplier headings with item counts. Select a supplier heading to hide or show its compact rows; your expanded/collapsed choices stay in place while quantities change or another tab adds stock. Each row keeps its quantity, remove controls and line total together. All suppliers, including collapsed groups, are included when submitting. Carts are saved per signed-in account and assigned location in this browser’s local storage. Successful orders remove the submitted quantities, keeping any additions made while the request was saving.
 
 Select a supplier in the horizontal menu to filter the catalogue; scroll it sideways when needed. The small search icon beside **Menu / List** smoothly expands into a search field when selected. Select its close icon or press Escape to collapse it and clear the search while keeping the chosen supplier. Search and supplier filters work together. Navigation and submenus use compact icon rows; the collapsed sidebar is 64 pixels wide. Stock cards, budgets, forms and admin records use consistent spacing and lighter panels, with two-column account/stock/email forms on larger screens. Head Office views display only the selected panel. Existing colours, uploaded fonts, logos, wording and individual appearance edits still apply. Search expansion respects reduced-motion preferences.
 
