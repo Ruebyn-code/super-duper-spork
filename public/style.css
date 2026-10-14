@@ -913,3 +913,6 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 #location-email-form-home[hidden]{display:none!important}
 @media(max-width:600px){.users-table .locations-users-cell,.users-table .locations-email-cell{grid-column:1/-1}.locations-table .location-edit-toggle{width:40px;height:40px;min-height:40px;margin:0}#location-email-editor #email-form{grid-template-columns:minmax(0,1fr)}}
 @media(pointer:coarse){.admin-page .users-directory .directory-filter-toggle,.admin-page .users-directory .directory-clear-filters,.admin-page .users-directory .directory-create{min-height:44px}}
+
+/* User management is scoped for franchisees; global administration belongs to Head Office. */
+html[data-account-role=franchisee] [data-head-office-only]{display:none!important}

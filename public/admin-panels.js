@@ -1,7 +1,7 @@
 function applyAdminPanels(){
  const defaults={'/admin':'stock','/admin/accounts':'accounts','/admin/settings':'colours'};
  const allowed=[...document.querySelectorAll('.admin-subnav a')].filter(a=>new URL(a.href).pathname===location.pathname).map(a=>new URL(a.href).hash.slice(1));
- let selected=location.hash.slice(1)||defaults[location.pathname];if(selected==='create-account')selected='accounts';if(selected==='email'){selected='locations';history.replaceState(null,'',location.pathname+location.search+'#locations');}if(!allowed.includes(selected))selected=defaults[location.pathname];
+ let selected=location.hash.slice(1)||defaults[location.pathname];if(selected==='create-account')selected='accounts';if(selected==='email'){selected='locations';history.replaceState(null,'',location.pathname+location.search+'#locations');}if(document.documentElement.dataset.accountRole!=='admin'&&location.pathname==='/admin/accounts'&&selected!=='accounts'){selected='accounts';history.replaceState(null,'',location.pathname+location.search+'#accounts');}if(!allowed.includes(selected))selected=defaults[location.pathname];
  document.querySelectorAll('[data-admin-views]').forEach(element=>{element.hidden=!element.dataset.adminViews.split(' ').includes(selected);});
  document.querySelectorAll('.admin-subnav a').forEach(link=>{const url=new URL(link.href);if(url.pathname===location.pathname&&url.hash==='#'+selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
 }

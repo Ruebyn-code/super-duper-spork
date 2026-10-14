@@ -2821,5 +2821,101 @@
     "locations": [
       "Locations"
     ]
+  },
+  {
+    "text": "Head Office",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Franchisee",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Ordering manager",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Head Office — full access to everything",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Ordering manager — orders, sales and stock counts",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Franchisee — manage users within assigned locations",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Location user management",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Orders, sales, stock counts and users in assigned locations",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Head Office can review counts from every location.",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Only Head Office can change this location’s sender email and sending credentials.",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "HEAD OFFICE ACCESS",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Create your Head Office account",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Create Head Office account",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Create the first Head Office account on this computer. After signing in, you can create more accounts and assign permissions in the app.",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Sign in to order, record sales and count stock. Franchisees manage users in their locations; Head Office has full access.",
+    "locations": [
+      "Permissions"
+    ]
+  },
+  {
+    "text": "Create the first Head Office account on this computer. After signing in, you can create more accounts and set permissions in Administration.",
+    "locations": [
+      "Setup"
+    ]
   }
 ]

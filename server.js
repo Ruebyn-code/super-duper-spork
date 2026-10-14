@@ -3,6 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const {createAuth}=require('./auth');
+const {headOffice,managesUsers,locationIds}=require('./permissions');
 const {mergeSpreadsheet}=require('./catalogue-import');
 const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
@@ -118,14 +119,14 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         return json(200,{role:loggedIn.role});
       }
       const management=req.url.startsWith('/api/products')||req.url.startsWith('/api/suppliers')||req.url.startsWith('/api/accounts')||req.url.startsWith('/api/locations')||req.url==='/api/logo'||req.url==='/api/sidebar-logo'||req.url==='/api/settings'||req.url==='/api/fonts'||req.url==='/api/delivery-status'||req.url==='/api/delivery-settings'||req.url==='/api/my-email-settings'||req.url==='/api/interface-text'||req.url==='/api/element-overrides';
-      if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
+      if(management){if(!session)fail('Sign-in required.',401);const userManagement=(req.url==='/api/accounts'&&['GET','POST'].includes(req.method))||(/^\/api\/accounts\/[a-zA-Z0-9-]+$/.test(req.url)&&['PUT','DELETE'].includes(req.method))||(req.url==='/api/locations'&&req.method==='GET');if(!headOffice(session)&&!(userManagement&&managesUsers(session)))fail('Head Office permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/session/location'&&req.method==='PUT'){
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
         const input=await body(req);await auth.selectLocation(session,input?.locationId,id=>locationStore.get(id,{active:true}));return json(200,{locationId:input.locationId});
       }
-      if(req.url==='/api/locations'&&req.method==='GET'){const records=await locationStore.list();return json(200,await Promise.all(records.map(async record=>{const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...record,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));}
+      if(req.url==='/api/locations'&&req.method==='GET'){const records=await locationStore.list();if(!headOffice(session))return json(200,records.filter(record=>!record.archived&&locationIds(session).includes(record.id)).map(({id,name,archived})=>({id,name,archived})));return json(200,await Promise.all(records.map(async record=>{const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...record,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));}
       if(req.url==='/api/locations'&&req.method==='POST')return json(201,await locationStore.create(await body(req)));
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
       if(locationRoute&&req.method==='PUT')return json(200,await locationStore.update(locationRoute[1],await body(req)));
@@ -179,14 +180,14 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(!png&&!jpeg)fail('Choose a PNG or JPG image.');
         const target=path.join(dataDir,req.url==='/api/sidebar-logo'?'sidebar-logo.json':'logo.json'),temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(dataDir,{recursive:true});await fs.writeFile(temp,JSON.stringify({type:png?'image/png':'image/jpeg',data:bytes.toString('base64')}),{mode:0o600});await fs.rename(temp,target);return json(200,{saved:true});
       }
-      if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list());
+      if(req.url==='/api/accounts'&&req.method==='GET')return json(200,await auth.list(session));
       if(req.url==='/api/accounts'&&req.method==='POST'){const account=await auth.create(session,await body(req),id=>locationStore.get(id,{active:true}));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));}
       const accountRoute=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)$/);
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
       if(req.method==='GET'&&['/','/cart','/stock-count','/sales','/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
-      if(req.method==='GET'&&['/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&session.role!=='admin'){res.writeHead(303,{Location:'/'});return res.end();}
+      if(req.method==='GET'&&['/email-settings','/admin','/admin/accounts','/admin/settings'].includes(req.url)&&!headOffice(session)&&!(req.url==='/admin/accounts'&&managesUsers(session))){res.writeHead(303,{Location:'/'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
@@ -241,7 +242,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix))).map(([,entry])=>entry.font)]);
         const uploadedPreloads=fontLibrary.filter(entry=>usedFonts.has(entry.id)).map(entry=>'<link rel="preload" href="'+entry.url+'" as="font" type="font/'+entry.extension+'" crossorigin>').join('');
-        const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
+        const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';document.documentElement.dataset.accountRole='+JSON.stringify(session?.role||'')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const sidebarPage=markup.includes('id="app-sidebar"'),source=sidebarPage?'/sidebar-logo':'/logo',branded=(sidebarPage?hasSidebarLogo:hasLogo)?markup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Souvlaki GR" class="app-logo"></a>'):markup;return res.end(branded.replace('</head>',initial+'</head>'));
       }
       const cached=await asset(file);res.setHeader('ETag',cached.etag);
