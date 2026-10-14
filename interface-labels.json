@@ -3323,5 +3323,11 @@
     "locations": [
       "Ordering"
     ]
+  },
+  {
+    "text": "You are in {location}",
+    "locations": [
+      "home"
+    ]
   }
 ]

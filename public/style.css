@@ -950,7 +950,8 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 /* The home dashboard shares the app's greeting, palette and compact panels. */
 .home-page{padding-top:28px;padding-bottom:36px}
 .home-page .home-hero{padding:4px 0 24px;align-items:center}
-.home-page .home-hero h1{font-size:40px;margin:6px 0 10px}
+.home-page .home-hero h1{display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:40px;margin:6px 0 10px}
+.home-page .home-hero .greeting-intro{line-height:1}
 .home-page .home-hero p{margin:0}
 .home-context{display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:40%;font-size:12px;color:var(--muted);text-align:right}
 .home-context strong{font-size:15px;color:var(--primary);overflow-wrap:anywhere}

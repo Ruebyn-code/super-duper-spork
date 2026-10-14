@@ -28,7 +28,7 @@
   template($('home-totals-status'),hint);
  }
  function render(){
-  if(session){$('home-user-name').textContent=session.username+'!';$('home-location').textContent=session.locationName||'';}
+  if(session){$('home-user-name').textContent=session.username+'!';template($('home-location'),'You are in {location}',{location:session.locationName||''});}
   $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
   renderTotals();
   if(!catalogue)return;
