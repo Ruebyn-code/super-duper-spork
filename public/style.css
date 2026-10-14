@@ -979,10 +979,11 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 .home-page .home-hero .eyebrow{display:inline-block}
 .home-card-arrow{width:18px;height:18px;flex-shrink:0}
 
-/* Home shortcuts use a pale tint of the configured primary colour. */
-.home-page .home-action{background-color:color-mix(in srgb,var(--primary) 10%,white);border-color:color-mix(in srgb,var(--primary) 20%,white)}
-.home-page .home-action:hover{background-color:color-mix(in srgb,var(--primary) 16%,white);border-color:var(--primary)}
-.home-page .home-admin-links a{background-color:color-mix(in srgb,var(--primary) 10%,white)}
+/* Home shortcuts use a pale tint of the configured secondary colour. */
+.home-page .home-action{background-color:color-mix(in srgb,var(--secondary) 10%,white);border-color:color-mix(in srgb,var(--secondary) 20%,white)}
+.home-page .home-action:hover{background-color:color-mix(in srgb,var(--secondary) 16%,white);border-color:var(--secondary)}
+.home-page .home-admin-links a{background-color:color-mix(in srgb,var(--secondary) 10%,white)}
+.home-page .home-admin-links a:hover{background-color:color-mix(in srgb,var(--secondary) 16%,white);border-color:var(--secondary)}
 /* Location totals sit beside the greeting and use recorded figures. */
 .home-total-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
 .home-total-metrics>div{min-width:0}.home-total-metrics>div+div{border-left:1px solid var(--line);padding-left:18px}
