@@ -17,6 +17,7 @@
   }catch{template($('home-cart-summary'),'Open Cart to review your saved items.');window.dispatchEvent(new CustomEvent('ordering-cart-updated',{detail:{total:0,pricePending:true}}));}
  }
  function renderTotals(){
+  if(typeof interfaceLabel==='function')template($('home-totals-heading'),'Location totals');
   if(session)$('home-totals-location').textContent=session.locationName||'';
   if(!totals)return;
   $('home-total-sales').textContent=money(totals.salesCents);
@@ -26,6 +27,15 @@
   template($('home-sales-period'),'Current quarter · {quarter}',{quarter:label});template($('home-expense-period'),'Quarter orders · {quarter}: {total}',{quarter:label,total:money(totals.quarterPlacedOrdersCents)+(totals.quarterPricePending?' + '+wording('prices pending'):'')});
   const hint=totals.quarterPricePending?'Some quarter order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales for this quarter to calculate your expense percentage.':'Expense = quarter placed orders ÷ quarter sales × 100.';
   template($('home-totals-status'),hint);
+  const averages=totals.averages;
+  if(!averages)return;
+  $('home-average-sales').textContent=averages.weeklySalesCents===null?'—':money(averages.weeklySalesCents);
+  $('home-average-cost').textContent=money(averages.weeklyCostCents);
+  $('home-average-expense').textContent=averages.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(averages.expensePercent)+'%';
+  const date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
+  template($('home-averages-period'),'{start} – {end} · {days} days so far',{start:date(quarter.startDate),end:date(averages.throughDate),days:averages.elapsedDays});
+  const averageHint=averages.pricePending?'Some order prices are pending. Weekly cost and expense percentage are unavailable.':!averages.recordedDays?'Add sales for this quarter to calculate the weekly sales average.':'Quarter-to-date totals ÷ elapsed weeks, including this partial week. Weekly expense = cost ÷ sales × 100.';
+  template($('home-averages-status'),averageHint);
  }
  function render(){
   if(session){$('home-user-name').textContent=session.username+'!';template($('home-location'),'You are in {location}',{location:session.locationName||''});}
@@ -39,7 +49,7 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected')template($('home-totals-status'),'Unable to load location totals. Try again shortly.');$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
@@ -47,7 +57,7 @@
  window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)))refresh();});
  window.addEventListener('focus',()=>{renderCart();refresh();});window.addEventListener('pageshow',event=>{renderCart();if(event.persisted)refresh();});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderCart();refresh();}});
- window.addEventListener('interface-text-updated',render);setInterval(refresh,60000);
+ document.addEventListener('DOMContentLoaded',render);window.addEventListener('interface-text-updated',render);setInterval(refresh,60000);
  (async()=>{
   try{
    session=await api('/api/session');if(!session.csrf){location.href=companyLoginUrl();return;}

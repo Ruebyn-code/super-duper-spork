@@ -74,19 +74,22 @@ function allTimeTotals(records,orders,session){
  return {salesCents,recordedDays,placedOrdersCents,orderCount,pricePending,expensePercent:salesCents>0&&!pricePending?placedOrdersCents/salesCents*100:null};
 }
 function homeTotals(records,orders,session,{now=new Date()}={}){
- const quarter=currentQuarter(now),allOrders=allTimeTotals([],orders,session);let salesCents=0,recordedDays=0;
+ const quarter=currentQuarter(now),formatter=calendar(defaultTimeZone),today=dateLabel(dayNumber(now,formatter)),allOrders=allTimeTotals([],orders,session);let salesCents=0,recordedDays=0,toDateSalesCents=0,toDateRecordedDays=0;
  for(const record of records){
   if(!belongs(record,session)||!Array.isArray(record.days))continue;try{week(record.weekStart);}catch{continue;}
   for(const [index,value] of record.days.slice(0,7).entries()){
    const date=shift(record.weekStart,index);if(date<quarter.startDate||date>quarter.endDate||!Number.isSafeInteger(value)||value<0)continue;
-   salesCents+=value;recordedDays++;
+   salesCents+=value;recordedDays++;if(date<=today){toDateSalesCents+=value;toDateRecordedDays++;}
   }
  }
- const formatter=calendar(defaultTimeZone),quarterOrders=allTimeTotals([],orders.filter(order=>{
+ const withinQuarter=orders.filter(order=>{
   const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
   const date=dateLabel(dayNumber(created,formatter));return date>=quarter.startDate&&date<=quarter.endDate;
- }),session);
- return {...allOrders,salesCents,recordedDays,quarter,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
+ }),quarterOrders=allTimeTotals([],withinQuarter,session),toDateOrders=allTimeTotals([],withinQuarter.filter(order=>dateLabel(dayNumber(new Date(order.createdAt),formatter))<=today),session);
+ // Calendar days avoid DST distortion and include the current partial week.
+ const elapsedDays=(Date.parse(today)-Date.parse(quarter.startDate))/86400000+1;
+ const averages={throughDate:today,elapsedDays,recordedDays:toDateRecordedDays,weeklySalesCents:toDateRecordedDays?Math.round(toDateSalesCents*7/elapsedDays):null,weeklyCostCents:toDateOrders.pricePending?null:Math.round(toDateOrders.placedOrdersCents*7/elapsedDays),pricePending:toDateOrders.pricePending,expensePercent:toDateSalesCents>0&&!toDateOrders.pricePending?toDateOrders.placedOrdersCents/toDateSalesCents*100:null};
+ return {...allOrders,salesCents,recordedDays,quarter,averages,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
 }
 function createStore(){
  const pending=new Map();

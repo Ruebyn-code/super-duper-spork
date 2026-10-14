@@ -3648,5 +3648,83 @@
     "locations": [
       "settings"
     ]
+  },
+  {
+    "text": "Quarter totals",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading quarter totals…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load quarter totals. Try again shortly.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quarter averages",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Average weekly sales",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Average weekly cost",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Weekly expense percentage",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "{start} – {end} · {days} days so far",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Some order prices are pending. Weekly cost and expense percentage are unavailable.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add sales for this quarter to calculate the weekly sales average.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quarter-to-date totals ÷ elapsed weeks, including this partial week. Weekly expense = cost ÷ sales × 100.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading quarter averages…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load quarter averages. Try again shortly.",
+    "locations": [
+      "Home"
+    ]
   }
 ]

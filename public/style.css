@@ -984,7 +984,7 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 .home-page .home-action:hover{background-color:color-mix(in srgb,var(--secondary) 16%,white);border-color:var(--secondary)}
 .home-page .home-admin-links a{background-color:color-mix(in srgb,var(--secondary) 10%,white)}
 .home-page .home-admin-links a:hover{background-color:color-mix(in srgb,var(--secondary) 16%,white);border-color:var(--secondary)}
-/* Location totals sit beside the greeting and use recorded figures. */
+/* Quarter totals sit beside the greeting and use recorded figures. */
 .home-total-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
 .home-total-metrics>div{min-width:0}.home-total-metrics>div+div{border-left:1px solid var(--line);padding-left:18px}
 .home-total-metrics span{display:block;font-size:11px;color:var(--muted);line-height:1.5}
@@ -992,6 +992,16 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 @media(max-width:600px){.home-total-metrics{grid-template-columns:minmax(0,1fr);gap:0;margin-top:10px}.home-total-metrics>div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}.home-total-metrics>div+div{border-left:0;border-top:1px solid var(--line);padding-left:0}.home-total-metrics strong{margin-top:0;font-size:22px;max-width:65%;text-align:right}.home-total-metrics span{font-size:12px}}
 .home-total-metrics .home-total-period{margin-top:6px;font-size:10px;color:var(--muted)}
 @media(max-width:600px){.home-total-metrics>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px}.home-total-metrics strong{max-width:none;justify-self:end}.home-total-metrics .home-total-period{grid-column:1/-1;margin-top:0}}
+.home-page .home-totals{--home-totals-inset:16px;padding:var(--home-totals-inset)}
+.home-quarter-averages{margin:16px calc(-1 * var(--home-totals-inset)) calc(-1 * var(--home-totals-inset));padding:14px var(--home-totals-inset);border-top:1px solid color-mix(in srgb,var(--primary) 18%,white);border-radius:0 0 10px 10px;background-color:color-mix(in srgb,var(--primary) 10%,white)}
+.home-quarter-averages .ordering-budget-heading h3{margin:0;font-size:14px;color:var(--primary)}
+.home-quarter-averages .home-total-metrics{margin-top:12px}
+.home-quarter-averages .home-total-metrics strong{font-size:22px}
+.home-quarter-averages .home-total-metrics>div+div{border-color:color-mix(in srgb,var(--primary) 18%,white)}
+.home-quarter-averages #home-averages-status{margin:12px 0 0;font-size:10px;line-height:1.5}
+#home-averages-period{font-size:10px;color:var(--muted)}
+@media(max-width:720px){.home-page .home-totals{--home-totals-inset:12px}.home-quarter-averages{padding-top:12px;padding-bottom:12px}}
+@media(max-width:600px){.home-quarter-averages .home-total-metrics{margin-top:8px}.home-quarter-averages .home-total-metrics strong{font-size:20px}}
 .manual-par-editor{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .manual-par-editor h3{margin:0;font-size:16px}.manual-par-editor label{margin-top:10px}.manual-par-editor input{max-width:180px}
 .manual-par-editor button{margin-top:6px}.manual-par-editor .manual-par-status:empty{display:none}
