@@ -2737,5 +2737,89 @@
     "locations": [
       "Users"
     ]
+  },
+  {
+    "text": "Search locations",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Store email",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "{count} locations",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Showing {shown} of {total} locations",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "No locations match your search or filters.",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Location settings",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Not set",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Automatic email on",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Automatic email off",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Remove user access before archiving this location.",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Restore this location before changing its email settings.",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Create and manage locations, their users and order email settings.",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "Only administrators can change this location’s sender email and sending credentials.",
+    "locations": [
+      "Locations"
+    ]
+  },
+  {
+    "text": "{count} user",
+    "locations": [
+      "Locations"
+    ]
   }
 ]

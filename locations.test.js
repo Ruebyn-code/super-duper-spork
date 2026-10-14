@@ -121,3 +121,11 @@ test('single-location account upgrade preserves credentials and CLI password rec
   await app.request(nextAdmin,'/api/accounts/'+original.id,'PUT',{username:'first',role:'user',locationId:original.locationId,locationIds:[original.locationId,admin.session.locationId]});await saveUser(app.dir,'first','test-first-password');const recovered=await app.login('first');assert.deepEqual(recovered.session.locations.map(location=>location.id).sort(),[original.locationId,admin.session.locationId].sort());
  }finally{await app.close();}
 });
+test('location directory exposes only sender summaries and account-addressed email writes cannot change a store',async()=>{
+ const app=await fixture();try{const admin=await app.login('admin'),user=await app.login('first'),id=user.session.locationId;const values={ORDER_FROM_EMAIL:'store@example.com',RESEND_API_KEY:'private-location-secret',DELIVERY_EMAIL_ENABLED:true};
+ assert.equal((await app.request(admin,'/api/locations/'+id+'/email','PUT',values)).status,200);const before=await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8');
+ const listing=await app.request(admin,'/api/locations');assert.equal(listing.status,200);const record=listing.data.find(record=>record.id===id);assert.equal(record.senderEmail,'store@example.com');assert.equal(record.orderEmailEnabled,true);assert.ok(!JSON.stringify(listing).includes('private-location-secret'));assert.ok(!Object.hasOwn(record,'RESEND_API_KEY'));
+ for(const route of ['/api/accounts/'+user.session.id+'/email','/api/my-email-settings']){assert.equal((await app.request(admin,route,'PUT',{...values,ORDER_FROM_EMAIL:'wrong@example.com'})).status,405);assert.equal((await app.request(user,route,'PUT',values)).status,403);}
+ assert.equal(await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8'),before);assert.equal((await app.request(user,'/api/locations')).status,403);assert.ok(!JSON.stringify(user.session.locations).includes('store@example.com'));
+ }finally{await app.close();}
+});

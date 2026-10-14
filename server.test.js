@@ -207,20 +207,21 @@ test('delivery configuration is admin-only, secrets stay private, and repeat ord
  body.items[0].quantity=3;assert.equal((await fetch(url+'/api/orders',{method:'POST',headers:staff,body:JSON.stringify(body)})).status,409);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
-test('initial locations retain separate email settings, account-URL compatibility and administrator sidebar pages',async()=>{
+test('location email settings are edited through locations while legacy account URLs remain read-only',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-personal-email-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'first','first-account-password');await saveUser(dir,'second','second-account-password');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{const first=await login(url,'first','first-account-password'),second=await login(url,'second','second-account-password'),admin=await login(url);
  const firstSession=await(await fetch(url+'/api/session',{headers:first})).json();const secondSession=await(await fetch(url+'/api/session',{headers:second})).json();
  const settings={ORDER_FROM_EMAIL:'first@example.com',RESEND_API_KEY:'first-test-key',DELIVERY_EMAIL_ENABLED:true};
- const saved=await fetch(url+'/api/accounts/'+firstSession.id+'/email',{method:'PUT',headers:admin,body:JSON.stringify(settings)});assert.equal(saved.status,200);assert.ok(!(await saved.text()).includes('first-test-key'));
+ assert.equal((await fetch(url+'/api/accounts/'+firstSession.id+'/email',{method:'PUT',headers:admin,body:JSON.stringify(settings)})).status,405);assert.equal((await fetch(url+'/api/my-email-settings',{method:'PUT',headers:admin,body:JSON.stringify(settings)})).status,405);
+ const saved=await fetch(url+'/api/locations/'+firstSession.locationId+'/email',{method:'PUT',headers:admin,body:JSON.stringify(settings)});assert.equal(saved.status,200);assert.ok(!(await saved.text()).includes('first-test-key'));
  const other=await(await fetch(url+'/api/accounts/'+secondSession.id+'/email',{headers:admin})).json();assert.equal(other.values.ORDER_FROM_EMAIL,'');assert.equal(other.secrets.RESEND_API_KEY,false);
  assert.equal((await fetch(url+'/api/my-email-settings',{method:'GET'})).status,401);
  assert.equal((await fetch(url+'/api/my-email-settings',{headers:{Cookie:first.Cookie}})).status,403);
  assert.equal((await fetch(url+'/api/my-email-settings',{method:'PUT',headers:first,body:JSON.stringify(settings)})).status,403);
  assert.equal((await fetch(url+'/api/accounts/'+firstSession.id+'/email',{method:'PUT',headers:first,body:JSON.stringify(settings)})).status,403);
  assert.equal((await fetch(url+'/email-settings',{headers:first,redirect:'manual'})).headers.get('location'),'/');
- const oldEmailPage=await fetch(url+'/email-settings?account='+firstSession.id,{headers:admin,redirect:'manual'});assert.equal(oldEmailPage.status,303);assert.equal(oldEmailPage.headers.get('location'),'/admin/accounts?account='+firstSession.id+'#email');
- const emailPage=await fetch(url+'/admin/accounts?account='+firstSession.id,{headers:admin});assert.equal(emailPage.status,200);const emailHtml=await emailPage.text();assert.match(emailHtml,/id="email-account"/);assert.match(emailHtml,/data-admin-views="email"/);assert.match(emailHtml,/href="\/admin\/accounts#email"/);assert.ok(!emailHtml.includes('href="/email-settings#email"'));
+ const oldEmailPage=await fetch(url+'/email-settings?account='+firstSession.id,{headers:admin,redirect:'manual'});assert.equal(oldEmailPage.status,303);assert.equal(oldEmailPage.headers.get('location'),'/admin/accounts?location='+firstSession.locationId+'#locations');
+ const emailPage=await fetch(url+'/admin/accounts?account='+firstSession.id,{headers:admin});assert.equal(emailPage.status,200);const emailHtml=await emailPage.text();assert.match(emailHtml,/id="location-email-editor"/);assert.match(emailHtml,/class="management users-directory locations-directory"/);assert.ok(!emailHtml.includes('href="/admin/accounts#email"'));assert.ok(!emailHtml.includes('id="email-account"'));assert.ok(!emailHtml.includes('href="/email-settings#email"'));
  const deliverySettings=require('./delivery-settings');const firstEnv=await deliverySettings.deliveryEnvironment(dir,firstSession.id);const secondEnv=await deliverySettings.deliveryEnvironment(dir,secondSession.id);assert.equal(firstEnv.RESEND_API_KEY,'first-test-key');assert.equal(secondEnv.RESEND_API_KEY,undefined);
  await deliverySettings.save(dir,{ORDER_FROM_EMAIL:'second@example.com',RESEND_API_KEY:'second-test-key',DELIVERY_EMAIL_ENABLED:true},secondSession.id);
  const {deliverSupplier}=require('./order-delivery');const calls=[];const fetchImpl=async(url,options)=>{calls.push(options);return {ok:true};};const order={orderId:'test',supplierId:'office',requester:'Buyer',phone:'0400000000',location:'Office',notes:'',items:[{name:'Paper',price:650,quantity:1}],total:650};
