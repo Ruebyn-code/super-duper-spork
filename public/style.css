@@ -474,16 +474,22 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 .catalogue-toolbar .catalogue-view{flex-shrink:0;margin:0;padding:3px;border-radius:9px;gap:2px;background-color:#fff}
 .catalogue-view button{padding:6px 10px;font-size:11px;border-radius:6px;gap:6px;min-height:30px}
 .catalogue-view svg{width:16px;height:16px}
-.catalogue-search{display:flex;align-items:center;flex-shrink:0;width:36px;max-width:100%;min-width:0;height:36px;border:1px solid var(--line);border-radius:9px;background-color:#fff;transition:width 360ms var(--motion-ease),border-color var(--motion-fast),box-shadow var(--motion-fast)}
-.catalogue-search.search-open{width:320px;border-color:color-mix(in srgb,var(--primary) 30%,var(--line))}
-.catalogue-search:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 10%,transparent)}
-.search-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:var(--primary)}
-.search-toggle svg{flex-shrink:0}
+.catalogue-search,.date-control{display:flex;align-items:center;flex-shrink:0;width:36px;max-width:100%;min-width:0;height:36px;border:1px solid var(--line);border-radius:9px;background-color:#fff;transition:width 360ms var(--motion-ease),border-color var(--motion-fast),box-shadow var(--motion-fast)}
+.catalogue-search.search-open,.date-control.date-open{border-color:color-mix(in srgb,var(--primary) 30%,var(--line))}
+.catalogue-search.search-open{width:320px}.date-control.date-open{width:220px}
+.catalogue-search:focus-within,.date-control:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 10%,transparent)}
+.search-toggle,.date-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:var(--primary)}
+.search-toggle svg,.date-toggle svg{flex-shrink:0}
 .search-close-icon,.search-open .search-open-icon{display:none}
 .search-open .search-close-icon{display:block}
-.search-field{flex:1;min-width:0;overflow:hidden;visibility:hidden;opacity:0;transform:translateX(-4px);transition:opacity 200ms ease,transform 360ms var(--motion-ease),visibility 0s 360ms}
-.search-open .search-field{visibility:visible;opacity:1;transform:none;transition-delay:0s}
-.catalogue-search #search{width:100%;margin:0;min-height:34px;height:34px;font-size:13px;padding:6px 10px 6px 2px;border:0;border-radius:0 8px 8px 0;background-color:transparent;box-shadow:none;outline:none}
+.date-close-icon,.date-open .date-calendar-icon{display:none}.date-open .date-close-icon{display:block}
+.date-calendar-icon .icon-detail{stroke:var(--secondary)}
+.search-field,.date-field{flex:1;min-width:0;overflow:hidden;visibility:hidden;opacity:0;transform:translateX(-4px);transition:opacity 200ms ease,transform 360ms var(--motion-ease),visibility 0s 360ms}
+.search-open .search-field,.date-open .date-field{visibility:visible;opacity:1;transform:none;transition-delay:0s}
+.catalogue-search #search,.date-control input[type=date]{width:100%;min-width:0;margin:0;min-height:34px;height:34px;font-size:13px;padding:6px 10px 6px 2px;border:0;border-radius:0 8px 8px 0;background-color:transparent;box-shadow:none;outline:none}
+.date-edit{min-width:0;max-width:100%}.date-edit>label{cursor:pointer}.date-control{margin-top:7px}
+.management .date-control>.date-toggle{margin:0}
+.sales-week-controls>.date-edit{min-width:0;max-width:100%}.sales-week-controls>.date-edit>label{margin:0}
 #filters{min-width:0;max-width:100%;display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--primary) 18%,white) transparent;margin:0 0 12px;padding:3px 2px 8px}
 #filters button{flex-shrink:0;white-space:nowrap;border-radius:18px;border-color:var(--line);font-size:11px;padding:7px 12px;min-height:32px}
 #filters button.active{border-color:var(--primary)}
@@ -623,6 +629,6 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 @media(pointer:coarse){
  #app-sidebar .main-sidebar-nav a,#app-sidebar .sidebar-signout,.secondary-sidebar a{min-height:44px}
  .catalogue-view button,.stock-actions button,.pagination button{min-height:40px}
- .catalogue-search{height:42px}.search-toggle{width:34px;height:40px}.catalogue-search #search{height:40px}
+ .catalogue-search,.date-control{height:42px}.search-toggle,.date-toggle{width:34px;height:40px}.catalogue-search #search,.date-control input[type=date]{height:40px}
  #filters button{min-height:40px}
 }

@@ -96,7 +96,7 @@ if($('search-toggle')){
     if(open)input.focus({preventScroll:true});else{const hadQuery=Boolean(input.value);input.value='';if(hadQuery){page=1;renderMenu();}button.focus({preventScroll:true});}
   }
   button.onclick=()=>setSearchOpen(button.getAttribute('aria-expanded')!=='true');
-  container.addEventListener('keydown',event=>{if(event.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){event.preventDefault();setSearchOpen(false);}});
+  container.addEventListener('keydown',event=>{if(event.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){event.preventDefault();event.stopPropagation();setSearchOpen(false);}});
   window.addEventListener('interface-text-updated',updateSearchLabel);
   if(input.value)setSearchOpen(true);
 }
