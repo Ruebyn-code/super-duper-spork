@@ -68,6 +68,8 @@ On the first update to locations, each existing account receives a location name
 
 An unused location can be **Archived** and later **Restored**. Move its users elsewhere first; archiving keeps its data and email settings. Keep the entire **data** folder across updates and restarts.
 
+Supplier emails use the subject **Stock order for [location name]** and list item names and quantities, the requesting user, location, order reference and notes. Prices, pending-price messages and totals are omitted from the email. Prices remain available in the app for budgets and saved orders.
+
 Orders save before sending and report submitted, not configured, failed, or unconfirmed per supplier. Submitted means the email service accepted the request, not confirmed receipt. Unconfirmed submissions are not automatically retried. Repeated identical checkout request identifiers do not send again, and an old request cannot be retried under another location. Older account email URLs resolve to that account's assigned location for compatibility.
 
 ## Interface text
