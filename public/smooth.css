@@ -1,15 +1,26 @@
-:root{--motion-fast:160ms;--motion-medium:220ms;--motion-ease:cubic-bezier(.2,.7,.2,1)}
+:root{--motion-fast:160ms;--motion-medium:220ms;--motion-enter:260ms;--motion-ease:cubic-bezier(.2,.7,.2,1)}
 html{scroll-behavior:smooth;scroll-padding-top:24px}
 button,input,select,textarea,summary,.header-link,.admin-sidebar a,.secondary-sidebar a{transition:background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast),box-shadow var(--motion-fast),opacity var(--motion-fast),transform var(--motion-fast) var(--motion-ease)}
-button:not(:disabled):active{transform:scale(.97)}button:disabled{transform:none}
+button:not(:disabled):active{transform:scale(.98)}button:disabled{transform:none}
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 12%,transparent)}
 .product{transition:box-shadow var(--motion-medium),border-color var(--motion-medium),transform var(--motion-medium) var(--motion-ease)}
 @media(hover:hover){.product:hover{border-color:color-mix(in srgb,var(--primary) 35%,#dce5ed);box-shadow:0 8px 22px #182b3a0c;transform:translateY(-2px)}}
 .admin-dropdown[open] nav,.stock-edit-panel:not([hidden]){animation:panel-enter var(--motion-medium) var(--motion-ease)}
-@keyframes panel-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes panel-enter{from{opacity:.85;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.app-page main,.authentication-page .management{animation:surface-enter var(--motion-enter) var(--motion-ease)}
+.product{animation:surface-enter var(--motion-enter) var(--motion-ease) backwards}
+.product:nth-child(4n+2){animation-delay:20ms}.product:nth-child(4n+3){animation-delay:40ms}.product:nth-child(4n){animation-delay:60ms}
+[data-count-view]:not([hidden]),[data-sales-view]:not([hidden]),section[data-admin-views]:not([hidden]),form[data-admin-views]:not([hidden]):not(.supplier-delivery):not(#appearance-form),.management>div[data-admin-views]:not([hidden]){animation:surface-enter var(--motion-medium) var(--motion-ease)}
+.supplier-stock-menu[open]>.supplier-stock-content,.admin-collapse[open]>.admin-collapse-content{animation:surface-enter var(--motion-medium) var(--motion-ease)}
+.secondary-sidebar:not([hidden]),.secondary-sidebar nav:not([hidden]),.cart-row,[role=status]:not(:empty){animation:soft-reveal var(--motion-medium) var(--motion-ease)}
+.app-text-dialog[open]{animation:dialog-enter var(--motion-medium) var(--motion-ease)}
+.app-text-dialog[open]::backdrop{animation:soft-reveal var(--motion-fast) ease-out}
+@keyframes surface-enter{from{opacity:.9;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes soft-reveal{from{opacity:.85}to{opacity:1}}
+@keyframes dialog-enter{from{opacity:.8;transform:translateY(3px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 .add-feedback{transition:color var(--motion-fast)}#cart-badge{font-variant-numeric:tabular-nums;min-width:26px;text-align:center}
 .cart-row,.total{font-variant-numeric:tabular-nums}.product-art img{border-radius:8px}
 form[aria-busy=true] button[type=submit]{cursor:progress}form[aria-busy=true]{cursor:progress}
 button,summary,.admin-sidebar a{touch-action:manipulation}
 
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}::view-transition-old(root),::view-transition-new(root){animation:none!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after,dialog::backdrop{animation:none!important;transition:none!important}.product:hover,button:not(:disabled):active{transform:none}::view-transition-old(root),::view-transition-new(root){animation:none!important}}
