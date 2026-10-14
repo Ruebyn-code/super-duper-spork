@@ -3353,5 +3353,23 @@
     "locations": [
       "App settings"
     ]
+  },
+  {
+    "text": "No locations match your search.",
+    "locations": [
+      "Location selectors"
+    ]
+  },
+  {
+    "text": "No locations available.",
+    "locations": [
+      "Location selectors"
+    ]
+  },
+  {
+    "text": "Choose a location",
+    "locations": [
+      "Location selectors"
+    ]
   }
 ]

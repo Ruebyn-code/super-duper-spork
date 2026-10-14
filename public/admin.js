@@ -53,7 +53,8 @@ const userRoleNames={admin:'Head Office',franchisee:'Franchisee',user:'Ordering 
 function selectedAccountLocations(){return [...document.querySelectorAll('#account-locations input:checked')].map(input=>input.value);}
 function setAccountLocations(ids){
  const choices=$('account-locations');if(!choices)return;choices.replaceChildren();
- for(const record of accountLocations.filter(record=>!record.archived)){const label=el('label',undefined,'account-location-choice'),input=el('input'),name=el('span',record.name);name.dataset.userText='';input.type='checkbox';input.name='locationIds';input.value=record.id;input.checked=ids.includes(record.id);input.onchange=()=>{if(!selectedAccountLocations().includes($('account-location').value))$('account-location').value=selectedAccountLocations()[0]||'';};label.append(input,name);choices.append(label);}
+ for(const record of accountLocations.filter(record=>!record.archived)){const label=el('label',undefined,'account-location-choice'),input=el('input'),name=el('span',record.name);name.dataset.userText='';input.type='checkbox';input.name='locationIds';input.value=record.id;input.checked=ids.includes(record.id);input.onchange=()=>{if(!selectedAccountLocations().includes($('account-location').value))$('account-location').value=selectedAccountLocations()[0]||'';window.locationPickers?.refresh($('account-location'));};label.append(input,name);choices.append(label);}
+ window.locationPickers?.refresh($('account-location'));
 }
 if($('account-location'))$('account-location').onchange=()=>{const input=[...document.querySelectorAll('#account-locations input')].find(input=>input.value===$('account-location').value);if(input)input.checked=true;};
 function returnAccountForm(){
@@ -67,7 +68,7 @@ if($('account-cancel'))$('account-cancel').onclick=resetAccountForm;
 function editAccount(account,panel,button){
  if(accountEditId===account.id&&!panel.hidden){resetAccountForm();button.focus({preventScroll:true});return;}
  resetAccountForm();accountEditId=account.id;panel.prepend($('account-form'));adminUI.set(button,panel,true);panel.closest('.user-editor-row').hidden=false;
- const form=$('account-form');form.elements.username.value=account.username;form.elements.role.value=account.role;form.elements.locationId.value=account.locationId;setAccountLocations(account.locationIds||[account.locationId]);form.elements.password.value='';$('account-password').required=false;$('password-help').textContent='Leave blank to keep the current password.';$('account-form-title').textContent='Edit account';$('account-save').textContent='Save account';form.elements.username.focus({preventScroll:true});
+ const form=$('account-form');form.elements.username.value=account.username;form.elements.role.value=account.role;form.elements.locationId.value=account.locationId;setAccountLocations(account.locationIds||[account.locationId]);window.locationPickers?.refresh($('account-location'));form.elements.password.value='';$('account-password').required=false;$('password-help').textContent='Leave blank to keep the current password.';$('account-form-title').textContent='Edit account';$('account-save').textContent='Save account';form.elements.username.focus({preventScroll:true});
 }
 const userWording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
 function userInitials(username){const words=username.trim().split(/\s+/);return (words.length>1?(Array.from(words[0])[0]||'')+(Array.from(words.at(-1))[0]||''):Array.from(username.trim()).slice(0,2).join('')).toLocaleUpperCase();}
