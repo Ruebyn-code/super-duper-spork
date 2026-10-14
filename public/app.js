@@ -88,6 +88,18 @@ function render(refreshMenu=true){if(refreshMenu)renderMenu();const focused=docu
   $('count').dataset.appValues=JSON.stringify({count});$('count').textContent=wording('{count} units',{count});$('total').textContent=money(total)+(pricePending?' + prices pending':'');$('submit').disabled=!count||busy;$('submit').textContent=busy?'Saving request…':'Submit stock request →';if(focusedLabel&&!focused.isConnected){const replacement=[...$('cart').querySelectorAll('[aria-label]')].find(element=>element.getAttribute('aria-label')===focusedLabel);replacement?.focus({preventScroll:true});}
 }
 if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
+if($('search-toggle')){
+  const container=$('catalogue-search'),button=$('search-toggle'),field=$('search-field'),input=$('search');
+  function updateSearchLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':'Search stock');button.setAttribute('aria-label',label);button.title=label;}
+  function setSearchOpen(open){
+    container.classList.toggle('search-open',open);button.setAttribute('aria-expanded',String(open));field.inert=!open;field.setAttribute('aria-hidden',String(!open));input.tabIndex=open?0:-1;updateSearchLabel();
+    if(open)input.focus({preventScroll:true});else{const hadQuery=Boolean(input.value);input.value='';if(hadQuery){page=1;renderMenu();}button.focus({preventScroll:true});}
+  }
+  button.onclick=()=>setSearchOpen(button.getAttribute('aria-expanded')!=='true');
+  container.addEventListener('keydown',event=>{if(event.key==='Escape'&&button.getAttribute('aria-expanded')==='true'){event.preventDefault();setSearchOpen(false);}});
+  window.addEventListener('interface-text-updated',updateSearchLabel);
+  if(input.value)setSearchOpen(true);
+}
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}cart={};window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':'submission unconfirmed')).join('; ');e.target.reset();}catch(error){$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};
@@ -96,11 +108,10 @@ async function reload(){
   const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;latestStockTake=data.stockTake;renderParPeriod();
   for(const id of Object.keys(cart))if(!products.some(p=>p.id===id)||!Number.isInteger(cart[id])||cart[id]<1||cart[id]>999)delete cart[id];
   if(category!=='All'&&!suppliers.some(s=>s.id===category))category='All';
-  if($('supplier-filter')){const select=$('supplier-filter');select.replaceChildren();
-  for(const supplier of [{id:'All',name:wording('All suppliers')},...suppliers]){const option=el('option',supplier.name);option.value=supplier.id;if(supplier.id!=='All')option.dataset.userText='';select.append(option);}select.value=category;}
+  if($('filters')){$('filters').replaceChildren();
+  for(const supplier of [{id:'All',name:wording('All suppliers')},...suppliers]){const button=el('button',supplier.name);button.type='button';button.dataset.supplierId=supplier.id;button.classList.toggle('active',category===supplier.id);button.setAttribute('aria-pressed',String(category===supplier.id));if(supplier.id!=='All')button.dataset.userText='';button.onclick=()=>{category=supplier.id;page=1;for(const child of $('filters').children){const active=child===button;child.classList.toggle('active',active);child.setAttribute('aria-pressed',String(active));}renderMenu();};$('filters').append(button);}}
   render();
 }
-if($('supplier-filter'))$('supplier-filter').onchange=event=>{category=event.target.value;page=1;renderMenu();};
 $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href='/login';}catch(error){$('message').textContent=error.message;}};
 (async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href='/login';return;}csrf=session.csrf;scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}if($('user-greeting'))$('user-greeting').replaceChildren(el('span','Yassou,','greeting-intro'),document.createElement('br'),el('span',session.username+'!','greeting-name'));$('admin-link').hidden=session.role!=='admin';await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
 
