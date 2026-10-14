@@ -374,7 +374,7 @@ label{font-size:12px;line-height:1.5}
 .sidebar-collapsed #app-sidebar .main-sidebar-nav a,.sidebar-collapsed #app-sidebar .sidebar-signout{justify-content:center;padding:12px 6px;gap:0}
 #admin-link[hidden]{display:none!important}
 #app-sidebar .sidebar-signout{width:100%;margin-top:16px}
-.secondary-sidebar{position:sticky;top:0;width:var(--subsidebar-width);height:100vh;height:100dvh;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 14px;border:0;border-right:1px solid var(--line);border-radius:0;background:color-mix(in srgb,var(--primary) 3%,white);z-index:19;transition:transform .48s cubic-bezier(.2,.8,.2,1)}
+.secondary-sidebar{position:sticky;top:0;width:var(--subsidebar-width);height:100vh;height:100dvh;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 14px;border:0;border-right:1px solid var(--line);border-radius:0;background:color-mix(in srgb,var(--primary) 3%,white);z-index:19}
 .secondary-sidebar[hidden],.secondary-sidebar nav[hidden]{display:none!important}
 .subsidebar-heading{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;margin-bottom:24px}
 .subsidebar-heading h2{font-size:18px;line-height:1.5;letter-spacing:.04em;margin:4px 0;overflow-wrap:anywhere;min-width:0}
@@ -384,12 +384,10 @@ label{font-size:12px;line-height:1.5}
 .submenu-label{min-width:0;overflow-wrap:anywhere}
 .secondary-sidebar a:hover,.secondary-sidebar a[aria-current=page]{background:color-mix(in srgb,var(--primary) 12%,white)}
 .secondary-sidebar a[aria-current=page]{box-shadow:inset 3px 0 var(--primary)}
-.sidebar-hover-expanded .secondary-sidebar{transform:translateX(calc(var(--sidebar-expanded-width) - var(--sidebar-collapsed-width)))}
 @media(max-width:1150px){.app-shell{--subsidebar-width:200px}}
 @media(max-width:900px){
  .app-shell.subsidebar-open,.sidebar-collapsed .app-shell.subsidebar-open,.sidebar-hover-expanded .app-shell.subsidebar-open{grid-template-columns:var(--primary-track) minmax(0,1fr)}
  .secondary-sidebar{position:fixed;left:var(--primary-track);width:var(--subsidebar-width);max-width:calc(100vw - var(--primary-track));box-shadow:12px 0 30px #17324620;padding:20px 10px}
- .sidebar-hover-expanded .secondary-sidebar{max-width:calc(100vw - var(--sidebar-expanded-width))}
  #app-sidebar .main-sidebar-nav a,#app-sidebar .sidebar-signout{padding:10px 8px;gap:8px;font-size:13px}
  .subsidebar-heading h2{font-size:16px}
 }

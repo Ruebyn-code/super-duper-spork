@@ -75,12 +75,12 @@
  function renderSidebar(){const preview=!mobile.matches&&collapsed&&hoverEnabled&&(pointerInside||keyboardInside);root.classList.toggle('sidebar-collapsed',!mobile.matches&&collapsed&&!preview);root.classList.toggle('sidebar-hover-expanded',preview);updateToggle();}
  function setMode(mode){collapsed=mode!=='expanded';hoverEnabled=mode==='hover';pointerInside=false;keyboardInside=false;renderSidebar();try{localStorage.setItem(preference,String(collapsed));localStorage.setItem(hoverPreference,String(hoverEnabled));}catch{}}
  if(toggle)toggle.onclick=()=>setMode(!collapsed?'collapsed':!hoverEnabled?'hover':'expanded');
- const inNavigation=element=>Boolean(element&&(sidebar?.contains(element)||secondary?.contains(element)));
- for(const rail of [sidebar,secondary].filter(Boolean)){
+ const inNavigation=element=>Boolean(element&&sidebar?.contains(element));
+ for(const rail of [sidebar].filter(Boolean)){
   rail.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&matchMedia('(hover:hover) and (pointer:fine)').matches){pointerInside=true;renderSidebar();}});
   rail.addEventListener('pointerleave',event=>{pointerInside=inNavigation(event.relatedTarget);renderSidebar();});
   rail.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible')){keyboardInside=true;renderSidebar();}});
-  rail.addEventListener('focusout',()=>{queueMicrotask(()=>{keyboardInside=Boolean(sidebar?.querySelector(':focus-visible')||secondary?.querySelector(':focus-visible'));renderSidebar();});});
+  rail.addEventListener('focusout',()=>{queueMicrotask(()=>{keyboardInside=Boolean(sidebar?.querySelector(':focus-visible'));renderSidebar();});});
  }
  updateToggle();updateNavigationLabels();syncMobileLayout();
  window.addEventListener('storage',event=>{if(event.key!==preference&&event.key!==hoverPreference&&event.key!==null)return;try{collapsed=localStorage.getItem(preference)==='true';hoverEnabled=localStorage.getItem(hoverPreference)==='true';}catch{}pointerInside=false;keyboardInside=false;renderSidebar();});
