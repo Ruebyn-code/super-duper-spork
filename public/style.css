@@ -916,3 +916,19 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 
 /* User management is scoped for franchisees; global administration belongs to Head Office. */
 html[data-account-role=franchisee] [data-head-office-only]{display:none!important}
+/* Stock counts use the quantity being entered to prepare a recommended cart. */
+.stock-count-page .count-order-item{grid-template-columns:minmax(0,1fr) 190px;gap:16px;padding:12px 0}
+.count-order-stats{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;margin-top:8px;font-size:11px;line-height:1.5}
+.count-item-par{display:inline-block;padding:3px 7px;background-color:color-mix(in srgb,var(--primary) 7%,white);border-radius:5px;color:var(--primary);font-size:11px}
+.count-item-recommended{font-size:11px;color:var(--primary)}
+.count-order-hint{flex-basis:100%;color:var(--muted);font-size:10px}
+.count-order-actions{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:end;gap:6px 8px;min-width:0}
+.stock-count-page .count-order-actions label{min-width:0}
+.count-order-actions .count-recommend-add{width:100%;min-width:0;min-height:34px;margin:0;padding:8px 6px;border:0;border-radius:7px;background-color:var(--secondary);color:white;font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+.count-order-actions .count-recommend-add:hover{background-color:color-mix(in srgb,var(--secondary) 85%,black)}
+.count-order-actions .count-cart-added{background-color:var(--primary);animation:count-cart-confirm .24s ease both}
+.stock-count-page .count-order-actions .count-cart-feedback{grid-column:1/-1;margin:0;font-size:10px;color:var(--primary);text-align:right;overflow-wrap:anywhere}
+.count-cart-feedback:empty{display:none}
+@keyframes count-cart-confirm{from{transform:scale(.97)}to{transform:scale(1)}}
+@media(max-width:600px){.stock-count-page .count-order-item{grid-template-columns:minmax(0,1fr) 105px;gap:10px}.count-order-actions{grid-template-columns:minmax(0,1fr);gap:6px}.count-order-stats{gap:5px;margin-top:6px}}
+@media(pointer:coarse){.count-order-actions .count-recommend-add{min-height:44px}}

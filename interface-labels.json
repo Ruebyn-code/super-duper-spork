@@ -2917,5 +2917,71 @@
     "locations": [
       "Setup"
     ]
+  },
+  {
+    "text": "Recommended order: {quantity}",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Add {quantity} to cart",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Add recommended to cart",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Add recommended order for {name} to cart",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Enter a valid count to see your recommended order.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Recommendation exceeds the 999-per-item cart limit.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "In cart: {quantity}",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "In cart",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Open Cart to check your saved cart.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "Unable to add the recommendation to your cart.",
+    "locations": [
+      "Stock count"
+    ]
+  },
+  {
+    "text": "No order needed. In cart: {quantity}.",
+    "locations": [
+      "Stock count"
+    ]
   }
 ]
