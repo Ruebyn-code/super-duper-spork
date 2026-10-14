@@ -22,7 +22,9 @@
   $('home-total-sales').textContent=money(totals.salesCents);
   $('home-total-orders').textContent=money(totals.placedOrdersCents)+(totals.pricePending?' + '+wording('prices pending'):'');
   $('home-total-expense').textContent=totals.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(totals.expensePercent)+'%';
-  const hint=totals.pricePending?'Some order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales to calculate your expense percentage.':'Recorded sales and placed orders. Expense = placed order total ÷ sales × 100.';
+  const quarter=totals.quarter,label=wording('Q{quarter} {year}',{quarter:quarter.number,year:quarter.year});
+  template($('home-sales-period'),'Current quarter · {quarter}',{quarter:label});template($('home-expense-period'),'Quarter orders · {quarter}: {total}',{quarter:label,total:money(totals.quarterPlacedOrdersCents)+(totals.quarterPricePending?' + '+wording('prices pending'):'')});
+  const hint=totals.quarterPricePending?'Some quarter order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales for this quarter to calculate your expense percentage.':'Expense = quarter placed orders ÷ quarter sales × 100.';
   template($('home-totals-status'),hint);
  }
  function render(){
@@ -37,7 +39,7 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected')template($('home-totals-status'),'Unable to load all-time totals. Try again shortly.');$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected')template($('home-totals-status'),'Unable to load location totals. Try again shortly.');$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }

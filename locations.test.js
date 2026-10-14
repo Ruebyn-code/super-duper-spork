@@ -130,14 +130,14 @@ test('location directory exposes only sender summaries and account-addressed ema
  }finally{await app.close();}
 });
 
-test('home totals share all-time placed orders and sales within the selected location and reject unauthorized locations',async()=>{
+test('home totals share quarter sales and expense with all-time placed orders within the selected location and reject unauthorized locations',async()=>{
  const app=await fixture();try{const admin=await app.login('admin'),shop=(await app.request(admin,'/api/locations','POST',{name:'Shop'})).data,other=(await app.request(admin,'/api/locations','POST',{name:'Other'})).data;
  for(const name of ['first','second'])await app.assign(admin,name,shop.id);await app.assign(admin,'third',other.id);const first=await app.login('first'),second=await app.login('second'),third=await app.login('third');
  assert.equal((await app.request(null,'/api/home-totals')).status,401);
  await app.request(first,'/api/sales','PUT',{weekStart:'2020-01-06',days:[10000,null,null,null,null,null,null],revision:0});await app.request(second,'/api/sales','PUT',{weekStart:sales.currentWeek(),days:[30000,null,null,null,null,null,null],revision:0});
  await app.request(first,'/api/orders','POST',{items:[{id:'paper',quantity:10}]});const body={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:5}]};await app.request(second,'/api/orders','POST',body);await app.request(second,'/api/orders','POST',body);
- let totals=(await app.request(first,'/api/home-totals')).data;assert.equal(totals.salesCents,40000);assert.equal(totals.placedOrdersCents,9750);assert.equal(totals.orderCount,2);assert.equal(totals.expensePercent,24.375);assert.deepEqual((await app.request(second,'/api/home-totals')).data,totals);
+ let totals=(await app.request(first,'/api/home-totals')).data;assert.equal(totals.salesCents,30000);assert.equal(totals.placedOrdersCents,9750);assert.equal(totals.orderCount,2);assert.equal(totals.expensePercent,32.5);assert.deepEqual((await app.request(second,'/api/home-totals')).data,totals);
  assert.equal((await app.request(third,'/api/home-totals')).data.salesCents,0);assert.equal((await app.request(first,'/api/home-totals','GET',undefined,{'X-Location-Id':other.id})).status,403);assert.equal((await app.request(admin,'/api/home-totals','GET',undefined,{'X-Location-Id':shop.id})).data.placedOrdersCents,9750);
- await app.restart();const after=await app.login('first');totals=(await app.request(after,'/api/home-totals')).data;assert.equal(totals.salesCents,40000);assert.equal(totals.placedOrdersCents,9750);
+ await app.restart();const after=await app.login('first');totals=(await app.request(after,'/api/home-totals')).data;assert.equal(totals.salesCents,30000);assert.equal(totals.placedOrdersCents,9750);
  }finally{await app.close();}
 });

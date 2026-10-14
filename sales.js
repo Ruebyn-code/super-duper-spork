@@ -13,6 +13,11 @@ function currentWeek(now=new Date()){
  const today=dayNumber(now,calendar(defaultTimeZone));
  return dateLabel(today-(new Date(today*86400000).getUTCDay()+6)%7);
 }
+function currentQuarter(now=new Date()){
+ const localDate=new Date(dateLabel(dayNumber(now,calendar(defaultTimeZone)))+'T00:00:00Z');
+ const year=localDate.getUTCFullYear(),month=Math.floor(localDate.getUTCMonth()/3)*3;
+ return {startDate:new Date(Date.UTC(year,month,1)).toISOString().slice(0,10),endDate:new Date(Date.UTC(year,month+3,0)).toISOString().slice(0,10),number:month/3+1,year,timeZone:defaultTimeZone};
+}
 function accountFolder(dir,session){
  if(!/^[a-zA-Z0-9-]{1,100}$/.test(session?.id||'')||(session.locationId&&!/^[a-zA-Z0-9-]{1,100}$/.test(session.locationId)))invalid('Sign-in required.',401);
  return session.locationId?path.join(dir,'location-sales',session.locationId):path.join(dir,'sales',session.id);
@@ -65,6 +70,21 @@ function allTimeTotals(records,orders,session){
  }
  return {salesCents,recordedDays,placedOrdersCents,orderCount,pricePending,expensePercent:salesCents>0&&!pricePending?placedOrdersCents/salesCents*100:null};
 }
+function homeTotals(records,orders,session,{now=new Date()}={}){
+ const quarter=currentQuarter(now),allOrders=allTimeTotals([],orders,session);let salesCents=0,recordedDays=0;
+ for(const record of records){
+  if(!belongs(record,session)||!Array.isArray(record.days))continue;try{week(record.weekStart);}catch{continue;}
+  for(const [index,value] of record.days.slice(0,7).entries()){
+   const date=shift(record.weekStart,index);if(date<quarter.startDate||date>quarter.endDate||!Number.isSafeInteger(value)||value<0)continue;
+   salesCents+=value;recordedDays++;
+  }
+ }
+ const formatter=calendar(defaultTimeZone),quarterOrders=allTimeTotals([],orders.filter(order=>{
+  const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
+  const date=dateLabel(dayNumber(created,formatter));return date>=quarter.startDate&&date<=quarter.endDate;
+ }),session);
+ return {...allOrders,salesCents,recordedDays,quarter,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
+}
 function createStore(){
  const pending=new Map();
  async function save(dir,session,input){
@@ -87,14 +107,14 @@ function createStore(){
   const [record,...history]=await Promise.all([read(dir,session,selectedWeek||current),...[1,2,3,4].map(index=>read(dir,session,shift(current,-7*index)))]);
   return {record,projection:calculate(history,orders,session,{now})};
  }
- async function totals(dir,session,{orders=[]}={}){
+ async function totals(dir,session,{orders=[],now=new Date()}={}){
   const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];
   const weeks=new Set();
   for(const folder of folders){let files;try{files=await fs.readdir(folder);}catch(error){if(error.code==='ENOENT')continue;throw error;}for(const file of files){if(!/^\d{4}-\d{2}-\d{2}\.json$/.test(file))continue;const start=file.slice(0,-5);try{week(start);weeks.add(start);}catch{}}}
   // Use the same location-over-legacy precedence as the weekly sales editor.
   const starts=[...weeks],records=[];for(let offset=0;offset<starts.length;offset+=32)records.push(...await Promise.all(starts.slice(offset,offset+32).map(start=>read(dir,session,start))));
-  return allTimeTotals(records,orders,session);
+  return homeTotals(records,orders,session,{now});
  }
  return {save,report,totals};
 }
-module.exports={calculate,allTimeTotals,createStore,validate,maximumDailyCents,currentWeek};
+module.exports={calculate,allTimeTotals,homeTotals,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

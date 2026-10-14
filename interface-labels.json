@@ -3177,5 +3177,65 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "Location totals",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading location totals…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load location totals. Try again shortly.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "All time",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Q{quarter} {year}",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Current quarter · {quarter}",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Some quarter order prices are pending. Expense percentage is unavailable.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add sales for this quarter to calculate your expense percentage.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Expense = quarter placed orders ÷ quarter sales × 100.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quarter orders · {quarter}: {total}",
+    "locations": [
+      "Home"
+    ]
   }
 ]

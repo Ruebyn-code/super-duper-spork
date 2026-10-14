@@ -62,15 +62,36 @@ test('all-time expense uses recorded sales and placed orders once for one locati
  assert.equal(sales.allTimeTotals(records,[],actor).expensePercent,0);
 });
 
-test('all-time sales keeps legacy weeks but uses location corrections once across restarts',async()=>{
+test('quarter sales keeps legacy weeks but uses location corrections once across restarts',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'sales-all-time-')),actor={id:'member',locationId:'shop',legacyAccountIds:['original']};
  try{const legacy=path.join(dir,'sales','original');await fs.mkdir(legacy,{recursive:true});
  for(const weekStart of ['2020-01-06','2020-01-13'])await fs.writeFile(path.join(legacy,weekStart+'.json'),JSON.stringify({accountId:'original',weekStart,days:Array(7).fill(100),revision:1}));
  await fs.writeFile(path.join(legacy,'credentials.json'),'{}');await fs.writeFile(path.join(legacy,'2020-01-12.json'),JSON.stringify({days:Array(7).fill(999999)}));
- const store=sales.createStore();assert.equal((await store.totals(dir,actor)).salesCents,1400);
+ const store=sales.createStore();assert.equal((await store.totals(dir,actor,{now:new Date('2020-01-14T00:00:00Z')})).salesCents,1400);
  await store.save(dir,actor,{weekStart:'2020-01-06',days:[300,null,null,null,null,null,null],revision:1});
- const totals=await sales.createStore().totals(dir,actor);assert.equal(totals.salesCents,1000);assert.equal(totals.recordedDays,8);
+ const totals=await sales.createStore().totals(dir,actor,{now:new Date('2020-01-14T00:00:00Z')});assert.equal(totals.salesCents,1000);assert.equal(totals.recordedDays,8);
  assert.equal((await store.totals(dir,{id:'member',locationId:'another'})).salesCents,0);
  assert.equal(JSON.parse(await fs.readFile(path.join(legacy,'2020-01-06.json'),'utf8')).days[0],100);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
+
+test('current calendar quarter uses Melbourne midnight across DST and year boundaries',()=>{
+ const boundary=(before,after,end,start,number)=>{assert.equal(sales.currentQuarter(new Date(before)).endDate,end);const next=sales.currentQuarter(new Date(after));assert.equal(next.startDate,start);assert.equal(next.number,number);};
+ boundary('2026-03-31T12:59:59Z','2026-03-31T13:00:00Z','2026-03-31','2026-04-01',2);
+ boundary('2026-06-30T13:59:59Z','2026-06-30T14:00:00Z','2026-06-30','2026-07-01',3);
+ boundary('2026-09-30T13:59:59Z','2026-09-30T14:00:00Z','2026-09-30','2026-10-01',4);
+ boundary('2026-12-31T12:59:59Z','2026-12-31T13:00:00Z','2026-12-31','2027-01-01',1);
+ assert.equal(sales.currentQuarter(new Date('2024-02-29T00:00:00Z')).endDate,'2024-03-31');
+});
+
+test('home splits sales weeks at both quarter edges and ratios quarter orders without older pending prices or other locations',()=>{
+ const actor={id:'member',locationId:'shop'},record=(weekStart,days,locationId='shop')=>({weekStart,days,locationId});
+ const records=[record('2026-09-28',[9000,8000,7000,100,200,300,400]),record('2026-12-28',[10,20,30,40,5000,6000,7000]),record('2026-10-12',[0,null,100,null,null,null,null]),record('2027-01-04',Array(7).fill(9999)),record('2026-10-12',Array(7).fill(9999),'other')];
+ const order=(id,total,createdAt,extra={})=>({id,total,createdAt,locationId:'shop',status:'requested',items:[{price:100}],...extra});
+ const orders=[order('before',4000,'2026-09-30T13:59:59Z',{pricePending:true}),order('opening',100,'2026-09-30T14:00:00Z'),order('opening',100,'2026-09-30T14:00:00Z'),order('closing',200,'2026-12-31T12:59:59Z'),order('after',1000,'2026-12-31T13:00:00Z'),order('other',9999,'2026-10-13T00:00:00Z',{locationId:'other'}),order('draft',9999,'2026-10-13T00:00:00Z',{status:'draft'})];
+ const options={now:new Date('2026-10-14T00:00:00Z')};let totals=sales.homeTotals(records,orders,actor,options);
+ assert.equal(totals.salesCents,1200);assert.equal(totals.recordedDays,10);assert.equal(totals.placedOrdersCents,5300);assert.equal(totals.pricePending,true);assert.equal(totals.quarterPlacedOrdersCents,300);assert.equal(totals.quarterOrderCount,2);assert.equal(totals.quarterPricePending,false);assert.equal(totals.expensePercent,25);
+ totals=sales.homeTotals(records,[...orders,order('pending',50,'2026-10-13T00:00:00Z',{items:[{price:null}]})],actor,options);assert.equal(totals.quarterPricePending,true);assert.equal(totals.expensePercent,null);
+ totals=sales.homeTotals([record('2026-10-12',Array(7).fill(0))],orders,actor,options);assert.equal(totals.salesCents,0);assert.equal(totals.expensePercent,null);
+ const next=sales.homeTotals(records,orders,actor,{now:new Date('2026-12-31T13:00:00Z')});assert.equal(next.salesCents,87993);assert.equal(next.quarterPlacedOrdersCents,1000);assert.equal(next.quarter.number,1);assert.equal(next.quarter.year,2027);
 });
