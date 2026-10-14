@@ -1,4 +1,5 @@
 const {belongs}=require('./location-scope');
+const stockCountGroups=require('./public/stock-count-groups');
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
@@ -27,7 +28,7 @@ async function save(dir,input,catalogue,session){
  const fingerprint=crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
  const previous=await read(dir,id);if(previous){if(previous.accountId!==session.id||!belongs(previous,session)||previous.fingerprint!==fingerprint)invalid('This count reference was already used. Start a new count.',409);return {created:false,record:previous};}
  const products=new Map(catalogue.products.map(product=>[product.id,product])),suppliers=new Map(catalogue.suppliers.map(supplier=>[supplier.id,supplier.name]));
- const items=normalized.items.map(item=>{const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');return {...item,name:product.name,sku:product.sku||'',category:product.category||'',description:product.description||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};});
+ const items=normalized.items.map(item=>{const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');return {...item,name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),description:product.description||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};});
  const record={...normalized,items,id,accountId:session.id,counterName:session.username,...(session.locationId?{locationId:session.locationId,locationName:session.locationName}:{}),createdAt:new Date().toISOString(),fingerprint};
  await fs.mkdir(folder(dir),{recursive:true});const temp=path.join(folder(dir),id+'.'+crypto.randomUUID()+'.tmp'),target=path.join(folder(dir),id+'.json');
  try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});try{await fs.link(temp,target);}catch(error){if(error.code!=='EEXIST')throw error;const existing=await read(dir,id);if(existing.accountId!==session.id||!belongs(existing,session)||existing.fingerprint!==fingerprint)invalid('This count reference was already used. Start a new count.',409);return {created:false,record:existing};}}finally{await fs.rm(temp,{force:true});}

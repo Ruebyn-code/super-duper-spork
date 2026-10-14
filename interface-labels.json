@@ -2995,5 +2995,61 @@
     "locations": [
       "Catalogue & cart messages"
     ]
+  },
+  {
+    "text": "Stock count group",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "All groups",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "Cool Room Stock",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "Freezer Stock",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "Packaging",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "Chemical",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "Dry Stock",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
+  },
+  {
+    "text": "No stock items in this group.",
+    "locations": [
+      "Stock count",
+      "Stock editor"
+    ]
   }
 ]

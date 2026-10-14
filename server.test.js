@@ -379,3 +379,37 @@ test('catalogue stock counts and recommendations use the newest own stock take w
  const other=await(await fetch(url+'/api/catalogue',{headers:admin})).json();assert.equal(other.stockTake,null);assert.equal(other.products.find(item=>item.id==='paper').ordering.stockCount,null);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('storage groups migrate safely, accept only Head Office edits and preserve count snapshots across restarts',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-count-groups-'));
+ await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');
+ const original={imports:['book2-v1'],suppliers:[{id:'supplier',name:'Mixed supplier'}],products:[
+  {id:'fresh',name:'Chicken (15kg box)',supplierId:'supplier',price:100,category:'General',description:'',photo:null},
+  {id:'frozen',name:'Frozen chicken nuggets (1kg bag)',supplierId:'supplier',price:200,category:'General',description:''},
+  {id:'container',name:'Plastic container for Greek salad',supplierId:'supplier',price:300,category:'General',description:''},
+  {id:'cleaner',name:'Food surface cleaner',supplierId:'supplier',price:400,category:'General',description:''},
+  {id:'rice',name:'Jasmine rice',supplierId:'supplier',price:500,category:'General',description:'',stockCountGroup:'cool-room'}
+ ]};await fs.writeFile(path.join(dir,'catalogue.json'),JSON.stringify(original));
+ let server,url,admin,staff;
+ async function start(){server=createServer(dir);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));url='http://127.0.0.1:'+server.address().port;admin=await login(url);staff=await login(url,'staff','test-password-for-staff');}
+ async function request(route,method='GET',body,headers=admin){return fetch(url+route,{method,headers:{...headers,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});}
+ try{
+  await start();let catalogue=await(await request('/api/catalogue')).json();
+  assert.deepEqual(catalogue.products.map(product=>product.stockCountGroup),['cool-room','freezer','packaging','chemical','cool-room']);
+  const stored=JSON.parse(await fs.readFile(path.join(dir,'catalogue.json'),'utf8'));
+  assert.deepEqual(stored.products.map(({stockCountGroup,...product})=>product),original.products.map(({stockCountGroup,...product})=>product));assert.deepEqual(stored.suppliers,original.suppliers);
+  assert.equal((await request('/stock-count-groups.js')).status,200);
+  const record=await(await request('/api/stock-counts','POST',{countDate:'2026-10-11',items:[{id:'fresh',quantity:0},{id:'frozen',quantity:1.25}]},staff)).json();
+  assert.equal(record.items.find(item=>item.id==='fresh').stockCountGroup,'cool-room');assert.equal(record.items.find(item=>item.id==='frozen').stockCountGroup,'freezer');
+  assert.equal(record.items.find(item=>item.id==='fresh').supplier,'Mixed supplier');
+  const body={name:'Changed fresh chicken',supplierId:'supplier',price:1,stockCountGroup:'dry'};
+  assert.equal((await request('/api/products/fresh','PUT',body,staff)).status,403);
+  for(const value of ['fridge','',null,{},['dry']])assert.equal((await request('/api/products/fresh','PUT',{...body,stockCountGroup:value})).status,400);
+  let response=await request('/api/products/fresh','PUT',body);assert.equal(response.status,200);assert.equal((await response.json()).stockCountGroup,'dry');
+  response=await request('/api/products/fresh','PUT',{name:'Frozen chicken renamed',supplierId:'supplier',price:1});assert.equal(response.status,200);assert.equal((await response.json()).stockCountGroup,'dry');
+  response=await request('/api/products','POST',{name:'Frozen squid',supplierId:'supplier',price:2});assert.equal(response.status,201);const added=await response.json();assert.equal(added.stockCountGroup,'freezer');
+  response=await request('/api/products','POST',{name:'Lettuce',supplierId:'supplier',price:2,stockCountGroup:'dry'});assert.equal(response.status,201);assert.equal((await response.json()).stockCountGroup,'dry');
+  await new Promise(resolve=>server.close(resolve));await start();catalogue=await(await request('/api/catalogue')).json();assert.equal(catalogue.products.find(product=>product.id==='fresh').stockCountGroup,'dry');assert.equal(catalogue.products.find(product=>product.id==='rice').stockCountGroup,'cool-room');
+  const history=await(await request('/api/stock-counts/'+record.id,'GET',undefined,staff)).json();assert.equal(history.items.find(item=>item.id==='fresh').stockCountGroup,'cool-room');assert.equal(history.items.find(item=>item.id==='fresh').name,'Chicken (15kg box)');assert.equal(history.items.find(item=>item.id==='frozen').quantity,1.25);
+ }finally{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
+});

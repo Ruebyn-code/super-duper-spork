@@ -2,9 +2,9 @@
  window.addEventListener('before-location-switch',event=>{if(saving)event.preventDefault();else writeDraft();});
 
  const $=id=>document.getElementById(id),form=$('count-form');
- let session,products=[],suppliers=[],quantities=Object.create(null),draftKey='',saving=false,historyLoaded=false,historyLoading=false,historyGeneration=0,reportGeneration=0;
+ let session,products=[],quantities=Object.create(null),draftKey='',saving=false,historyLoaded=false,historyLoading=false,historyGeneration=0,reportGeneration=0;
  let cartKey='',parRefreshPending=false;const cartConfirmations=new Map();
- let requestId='',requestSignature='',draftWarning=false,selectedSupplier='all';
+ let requestId='',requestSignature='',draftWarning=false,selectedGroup='all';
  const rows=new Map(),groups=new Map();
  const wording=(original,values={})=>typeof interfaceLabel==='function'?interfaceLabel(original,values):original.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  const el=(tag,text,className)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(className)element.className=className;return element;};
@@ -26,7 +26,7 @@
  function updateProgress(productId){
   refreshRecommendations(productId);
   const counted=products.filter(product=>hasCount(product.id)).length;setTemplate($('count-progress'),'{counted} of {total} items counted',{counted,total:products.length});
-  for(const [id,group] of groups){const items=products.filter(product=>product.supplierId===id);setTemplate(group.progress,'{counted} of {total} items counted',{counted:items.filter(product=>hasCount(product.id)).length,total:items.length});}
+  for(const [id,group] of groups){const items=products.filter(product=>stockCountGroups.resolve(product)===id);setTemplate(group.progress,'{counted} of {total} items counted',{counted:items.filter(product=>hasCount(product.id)).length,total:items.length});}
   $('count-save').disabled=saving||!counted;
  }
  function readCart(){const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');if(!stored||typeof stored!=='object'||Array.isArray(stored))throw Error('Your cart could not be read. Open Cart to check it.');return Object.fromEntries(Object.entries(stored).filter(([id,quantity])=>products.some(product=>product.id===id)&&Number.isInteger(quantity)&&quantity>0&&quantity<=999));}
@@ -44,26 +44,28 @@
   try{const cart=readCart(),current=cart[product.id]||0;if(current>=amount){refreshRecommendations();return;}cart[product.id]=amount;localStorage.setItem(cartKey,JSON.stringify(cart));setTemplate(row.feedback,'Added to cart · {quantity} {unit}',{quantity:amount-current,unit:amount-current===1?'unit':'units'});setTemplate(row.add,'Added to cart',{});row.add.classList.add('count-cart-added');const timer=setTimeout(()=>{cartConfirmations.delete(product.id);row.add.classList.remove('count-cart-added');refreshRecommendations();},1400);cartConfirmations.set(product.id,timer);refreshRecommendations();window.dispatchEvent(new CustomEvent('cart-updated',{detail:{key:cartKey}}));}
   catch(error){row.feedback.textContent=error.message||wording('Unable to add the recommendation to your cart.');}
  }
- async function refreshPar(){if(!session||parRefreshPending||document.hidden)return;parRefreshPending=true;try{const catalogue=await api('/api/catalogue');for(const product of products){const latest=catalogue.products.find(record=>record.id===product.id);product.par=latest?.par||null;}refreshRecommendations();}catch{}finally{parRefreshPending=false;}}
+ async function refreshPar(){if(!session||saving||parRefreshPending||document.hidden)return;parRefreshPending=true;try{const catalogue=await api('/api/catalogue');if(saving)return;let regroup=false;for(const product of products){const latest=catalogue.products.find(record=>record.id===product.id);product.par=latest?.par||null;if(latest&&stockCountGroups.resolve(product)!==stockCountGroups.resolve(latest)){product.stockCountGroup=stockCountGroups.resolve(latest);regroup=true;}}if(regroup)buildRows();else refreshRecommendations();}catch{}finally{parRefreshPending=false;}}
  function filterRows(){
-  const query=$('count-search').value.trim().toLowerCase(),supplier=selectedSupplier;let visible=0;
-  for(const product of products){const row=rows.get(product.id);const show=(supplier==='all'||product.supplierId===supplier)&&(product.name+' '+(product.sku||'')+' '+(product.category||'')).toLowerCase().includes(query);row.element.hidden=!show;if(show)visible++;}
-  for(const [id,group] of groups){const show=products.some(product=>product.supplierId===id&&!rows.get(product.id).element.hidden);group.element.hidden=!show;if(show&&(query||supplier!=='all'))group.element.open=true;}
-  $('count-no-results').hidden=visible>0;
+  const query=$('count-search').value.trim().toLowerCase(),groupId=selectedGroup;let visible=0;
+  for(const product of products){const row=rows.get(product.id);const show=(groupId==='all'||stockCountGroups.resolve(product)===groupId)&&(product.name+' '+(product.sku||'')+' '+(product.category||'')).toLowerCase().includes(query);row.element.hidden=!show;if(show)visible++;}
+  for(const [id,group] of groups){const show=(!query&&(groupId==='all'||groupId===id))||products.some(product=>stockCountGroups.resolve(product)===id&&!rows.get(product.id).element.hidden);group.element.hidden=!show;if(show&&(query||groupId!=='all'))group.element.open=true;}
+  $('count-no-results').hidden=visible>0||!query;
  }
- function selectSupplier(id){selectedSupplier=id;for(const button of $('count-supplier').children){const active=button.dataset.supplierId===id;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}filterRows();}
- function buildSupplierMenu(){
+ function selectGroup(id){selectedGroup=id;for(const button of $('count-supplier').children){const active=button.dataset.stockCountGroup===id;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}filterRows();}
+ function buildGroupMenu(){
   $('count-supplier').replaceChildren();
-  for(const supplier of [{id:'all',name:wording('All suppliers')},...suppliers]){const button=el('button',supplier.name);button.type='button';button.dataset.supplierId=supplier.id;button.dataset.editId='count-filter-'+supplier.id;if(supplier.id!=='all')button.dataset.userText='';button.onclick=()=>selectSupplier(supplier.id);$('count-supplier').append(button);}
-  selectSupplier(selectedSupplier);
+  for(const group of [{id:'all',name:'All groups'},...stockCountGroups.groups]){const button=el('button',wording(group.name));button.type='button';button.dataset.stockCountGroup=group.id;button.dataset.editId='count-group-filter-'+group.id;button.onclick=()=>selectGroup(group.id);$('count-supplier').append(button);}
+  selectGroup(selectedGroup);
  }
- function reveal(input){$('count-search').value='';selectSupplier('all');let parent=input.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}}
+ function reveal(input){$('count-search').value='';selectGroup('all');let parent=input.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}}
  function buildRows(){
+  const open=new Set([...groups].filter(([,group])=>group.element.open).map(([id])=>id));
   $('count-items').replaceChildren();rows.clear();groups.clear();
-  for(const supplier of suppliers){
-   const stock=products.filter(product=>product.supplierId===supplier.id);if(!stock.length)continue;
-   const group=el('details',undefined,'supplier-stock-menu count-supplier-group');group.dataset.supplierId=supplier.id;
-   const summary=el('summary',undefined,'supplier-title'),name=el('h3',supplier.name),progress=el('span',undefined,'stock-items-count');summary.append(name,progress);const content=el('div',undefined,'supplier-stock-content');group.append(summary,content);groups.set(supplier.id,{element:group,progress});
+  for(const storage of stockCountGroups.groups){
+   const stock=products.filter(product=>stockCountGroups.resolve(product)===storage.id);
+   const group=el('details',undefined,'supplier-stock-menu count-stock-group');group.dataset.stockCountGroup=storage.id;group.dataset.editId='count-group-'+storage.id;group.open=open.has(storage.id);
+   const summary=el('summary'),name=el('h3',wording(storage.name)),progress=el('span',undefined,'stock-items-count');summary.dataset.editId='count-group-'+storage.id+'-summary';name.dataset.editId='count-group-'+storage.id+'-name';summary.append(name,progress);const content=el('div',undefined,'supplier-stock-content');group.append(summary,content);groups.set(storage.id,{element:group,progress,title:name,name:storage.name});
+   if(!stock.length)content.append(el('p',wording('No stock items in this group.'),'small'));
    for(const product of stock){
     const row=el('div',undefined,'count-item');row.dataset.productId=product.id;const details=el('div');const title=el('h3',product.name,'stock-name');title.dataset.userText='';details.append(title);
     if(product.sku||product.description){const meta=el('p',[product.sku,product.description].filter(Boolean).join(' · '),'small');meta.dataset.userText='';details.append(meta);}
@@ -84,8 +86,7 @@
  function renderReport(record){
   const report=$('count-report');report.replaceChildren();report.hidden=false;report.dataset.editId='stock-count-report-'+record.id;
   const title=el('h2',displayDate(record.countDate));title.dataset.userText='';const meta=el('p',[record.locationName,record.counterName,record.location].filter(Boolean).join(' · '));meta.dataset.userText='';report.append(title,meta);
-  const supplierNames=new Map(record.items.map(item=>[item.supplierId,item.supplier]));
-  for(const [id,name] of supplierNames){const group=el('details',undefined,'supplier-stock-menu');group.dataset.supplierId=id;group.open=true;const summary=el('summary',undefined,'supplier-title');summary.append(el('h3',name));group.append(summary);const content=el('div',undefined,'supplier-stock-content');for(const item of record.items.filter(item=>item.supplierId===id)){const row=el('div',undefined,'count-item');row.dataset.productId=item.id;const itemName=el('span',item.name,'stock-name');itemName.dataset.userText='';const quantity=el('strong',new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(item.quantity));quantity.dataset.userText='';row.append(itemName,quantity);content.append(row);}group.append(content);report.append(group);}
+  for(const storage of stockCountGroups.groups){const items=record.items.filter(item=>stockCountGroups.resolve(item)===storage.id);if(!items.length)continue;const group=el('details',undefined,'supplier-stock-menu');group.dataset.stockCountGroup=storage.id;group.dataset.editId='stock-count-report-'+record.id+'-group-'+storage.id;group.open=true;const summary=el('summary');summary.append(el('h3',wording(storage.name)));group.append(summary);const content=el('div',undefined,'supplier-stock-content');for(const item of items){const row=el('div',undefined,'count-item');row.dataset.productId=item.id;const itemName=el('span',item.name,'stock-name');itemName.dataset.userText='';const quantity=el('strong',new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(item.quantity));quantity.dataset.userText='';row.append(itemName,quantity);content.append(row);}group.append(content);report.append(group);}
   if(record.notes){const notes=el('p',record.notes);notes.dataset.userText='';report.append(notes);}
  }
  async function viewCount(id){const version=++reportGeneration;$('count-message').textContent=wording('Loading count…');try{const record=await api('/api/stock-counts/'+encodeURIComponent(id));if(version!==reportGeneration)return;renderReport(record);$('count-message').textContent='';$('count-report').scrollIntoView({behavior:'smooth',block:'start'});}catch(error){if(version===reportGeneration)$('count-message').textContent=error.message;}}
@@ -101,9 +102,9 @@
   event.preventDefault();if(saving)return;const items=products.filter(product=>hasCount(product.id)).map(product=>({id:product.id,quantity:Number(quantities[product.id])}));if(!items.length){$('count-message').textContent=wording('Enter a quantity for at least one stock item.');return;}
   const body={countDate:form.elements.countDate.value,notes:form.elements.notes.value,items},signature=JSON.stringify(body);
   if(signature!==requestSignature||!requestId){requestId=crypto.randomUUID();requestSignature=signature;}body.requestId=requestId;writeDraft();saving=true;for(const control of form.elements)control.disabled=true;$('count-message').textContent=wording('Saving stock count…');
-  try{const record=await api('/api/stock-counts','POST',body);try{localStorage.setItem('souvlaki-usage-updated-'+(session.dataScope||session.id),String(Date.now()));}catch{}resetDraft();historyLoaded=false;await loadHistory();refreshPar();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
+  try{const record=await api('/api/stock-counts','POST',body);try{localStorage.setItem('souvlaki-usage-updated-'+(session.dataScope||session.id),String(Date.now()));}catch{}resetDraft();historyLoaded=false;await loadHistory();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
   catch(error){$('count-message').textContent=error.message;}
-  finally{saving=false;for(const control of form.elements)control.disabled=false;updateProgress();}
+  finally{saving=false;for(const control of form.elements)control.disabled=false;updateProgress();refreshPar();}
  };
  for(const key of ['countDate','notes'])form.elements[key].addEventListener('input',writeDraft);
  $('count-search').oninput=filterRows;$('count-history-refresh').onclick=loadHistory;
@@ -112,12 +113,12 @@
  for(const control of form.elements)control.disabled=true;$('count-history-refresh').disabled=true;
  window.addEventListener('storage',event=>{if(event.key===cartKey)refreshRecommendations();if(event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id)){historyLoaded=false;refreshPar();if(location.hash==='#history')loadHistory();}});window.addEventListener('focus',()=>{refreshRecommendations();refreshPar();if(session&&location.hash==='#history')loadHistory();});document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshRecommendations();refreshPar();}});setInterval(refreshPar,60000);
  window.addEventListener('hashchange',showView);showView();
- window.addEventListener('interface-text-updated',()=>{if(session){updateProgress();buildSupplierMenu();if(!draftWarning)$('count-draft-status').textContent=wording('Draft saved on this browser.');}});
+ window.addEventListener('interface-text-updated',()=>{if(session){for(const group of groups.values())group.title.textContent=wording(group.name);updateProgress();buildGroupMenu();if(!draftWarning)$('count-draft-status').textContent=wording('Draft saved on this browser.');}});
  (async()=>{
-  try{session=await api('/api/session');if(!session.csrf){location.href='/login';return;}const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}const legacyKey='souvlaki-stock-count-'+session.id;draftKey=legacyKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(draftKey)===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(draftKey,localStorage.getItem(legacyKey));}catch{}const catalogue=await api('/api/catalogue');products=catalogue.products;suppliers=catalogue.suppliers;
+  try{session=await api('/api/session');if(!session.csrf){location.href='/login';return;}const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}const legacyKey='souvlaki-stock-count-'+session.id;draftKey=legacyKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(draftKey)===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(draftKey,localStorage.getItem(legacyKey));}catch{}const catalogue=await api('/api/catalogue');products=catalogue.products;
    form.elements.countDate.value=today();let restored=false;
    try{const draft=JSON.parse(localStorage.getItem(draftKey)||'null');if(draft&&typeof draft==='object'){for(const key of ['countDate','notes'])if(typeof draft[key]==='string')form.elements[key].value=draft[key];for(const product of products)if(typeof draft.quantities?.[product.id]==='string')quantities[product.id]=draft.quantities[product.id];requestId=typeof draft.requestId==='string'?draft.requestId:'';requestSignature=typeof draft.requestSignature==='string'?draft.requestSignature:'';restored=Object.values(quantities).some(value=>value.trim())||Boolean(form.elements.notes.value);}}catch{}
-   buildRows();buildSupplierMenu();for(const control of form.elements)control.disabled=false;updateProgress();$('count-history-refresh').disabled=false;$('count-draft-status').textContent=wording('Draft saves automatically on this browser.');$('count-loading').textContent='';if(restored)$('count-message').textContent=wording('Your unsaved count was restored.');showView();
+   buildRows();buildGroupMenu();for(const control of form.elements)control.disabled=false;updateProgress();$('count-history-refresh').disabled=false;$('count-draft-status').textContent=wording('Draft saves automatically on this browser.');$('count-loading').textContent='';if(restored)$('count-message').textContent=wording('Your unsaved count was restored.');showView();
   }catch(error){$('count-loading').textContent=error.message;}
  })();
 })();
