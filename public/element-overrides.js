@@ -26,7 +26,7 @@ function applyElementOverrides(root=document){
    let record=previous;
    if(!record?.node?.isConnected){const walker=document.createTreeWalker(element,NodeFilter.SHOW_TEXT);let found;while(walker.nextNode()){const node=walker.currentNode;const original=(originalNodes.get(node)?.source||node.nodeValue).trim().replace(/\s+/g,' ');if(original===spec.original||(element.dataset.appTemplate===spec.original&&node.parentElement===element)){found=node;break;}}if(found){record={node:found,original:spec.original};localTextRecords.set(element,record);}}
    if(record?.node){element.dataset.localWording=spec.original;const rendered=formatted(spec.value);if(record.node.nodeValue!==rendered)record.node.nodeValue=rendered;originalNodes.set(record.node,{source:record.original,rendered});}
-  }else if(previous){element.removeAttribute('data-local-wording');const value=formatted(Object.hasOwn(interfaceOverrides,previous.original)?interfaceOverrides[previous.original]:previous.original);if(previous.attribute)element.setAttribute(previous.attribute,value);else if(previous.node?.isConnected){previous.node.nodeValue=value;originalNodes.set(previous.node,{source:previous.original,rendered:value});}localTextRecords.delete(element);}
+  }else if(previous){element.removeAttribute('data-local-wording');const value=formatted(Object.hasOwn(interfaceOverrides,previous.original)?interfaceOverrides[previous.original]:(interfaceDefaults[previous.original]??previous.original));if(previous.attribute)element.setAttribute(previous.attribute,value);else if(previous.node?.isConnected){previous.node.nodeValue=value;originalNodes.set(previous.node,{source:previous.original,rendered:value});}localTextRecords.delete(element);}
 
  }
 }

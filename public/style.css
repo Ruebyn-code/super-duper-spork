@@ -684,3 +684,69 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
  .stock-count-page .supplier-stock-content{padding-left:10px;padding-right:10px}
 }
 @media(pointer:coarse){.stock-count-page .count-item input{min-height:40px}.stock-count-page .count-actions button{min-height:40px}}
+
+/* Administrator lists share a single compact row and an inline pencil editor. */
+.admin-page .management{padding:18px;margin-top:12px;margin-bottom:14px;border-radius:12px}
+.admin-page .management>p{font-size:11px;line-height:1.5;margin:8px 0 12px}
+.admin-page .eyebrow{font-size:9px;letter-spacing:1px;margin:0 0 10px}
+.admin-page h1{font-size:28px;margin-bottom:14px}
+.admin-page h2{font-size:18px}.admin-page h3{font-size:15px}
+.admin-record,.admin-setting-row{min-width:0;border-bottom:1px solid var(--line)}
+.admin-record:last-child,.admin-setting-row:last-child{border-bottom:0}
+.admin-record-header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:10px 0}
+.admin-record-header h3{margin:0;font-size:15px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.admin-record-info{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0}
+.admin-record-info strong{font-size:13px;overflow-wrap:anywhere;min-width:0}
+.admin-record-info p{margin:0;font-size:10px}
+.admin-page .admin-edit-button{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:32px;height:32px;min-height:32px;margin:0;padding:6px;border:1px solid var(--line);border-radius:8px;background-color:#fff;color:var(--primary)}
+.admin-edit-button svg{flex-shrink:0;color:var(--primary)}.admin-edit-button .icon-detail{stroke:var(--secondary)}
+.admin-close,.admin-edit-button[aria-expanded=true] .admin-pencil{display:none}
+.admin-edit-button[aria-expanded=true] .admin-close{display:block}
+.admin-page .stock-actions .admin-edit-button{background-color:#fff;border-color:var(--line)}
+.admin-page .admin-edit-button:hover,.admin-page .stock-actions .admin-edit-button:hover{background-color:color-mix(in srgb,var(--primary) 6%,white);border-color:color-mix(in srgb,var(--primary) 25%,white)}
+.admin-page .admin-edit-button[aria-expanded=true]{background-color:color-mix(in srgb,var(--primary) 8%,white);border-color:color-mix(in srgb,var(--primary) 25%,white)}
+.admin-page .stock-actions .admin-edit-button[aria-expanded=true]{background-color:color-mix(in srgb,var(--primary) 8%,white);border-color:color-mix(in srgb,var(--primary) 25%,white)}
+.admin-edit-panel{min-width:0;padding:14px;margin:0 0 12px;border:1px solid var(--line);border-radius:9px;background-color:color-mix(in srgb,var(--primary) 3%,white)}
+.admin-edit-panel[hidden],.admin-page .stock-edit-panel[hidden]{display:none!important}
+.admin-edit-panel>form{margin:0!important;max-width:100%}
+.admin-edit-panel>label:first-child{margin-top:0}
+.admin-editor-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.admin-editor-actions button{font-size:11px;margin:0;padding:7px 10px}
+.admin-editor-actions a{font-size:11px}
+.admin-form-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;grid-column:1 / -1}
+.admin-page .admin-form-actions button{width:auto;margin:0;font-size:11px;padding:9px 12px}
+.admin-page form button[type=submit]{background-color:var(--primary);border-color:var(--primary);color:#fff}
+.admin-page form button[type=submit]:hover{background-color:var(--primary-hover)}
+.admin-create-section{margin:10px 0 14px}
+.admin-page .admin-create-button,.admin-page #create-user{width:auto;margin:0 0 10px;padding:9px 12px;background-color:var(--primary);border-color:var(--primary);color:#fff;font-size:12px}
+.admin-create-panel>form>h2,.admin-create-panel>form>h3{display:none}
+.admin-list-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.admin-list-toolbar #create-user{margin:0}
+.permission-badge{font-size:10px;line-height:1.4;background-color:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary);border:1px solid color-mix(in srgb,var(--primary) 12%,white);border-radius:20px;padding:3px 7px}
+.account-location-group{margin-top:12px;padding:10px 12px;border-radius:9px;background-color:#fff}
+.account-location-group>h3{font-size:14px;margin-bottom:2px}
+.admin-page #account-location-filter{max-width:280px}
+.admin-page #account-form{max-width:100%}
+.user-record .admin-record-header{padding:8px 0}
+.admin-page .managed-stock{flex-direction:row;align-items:center;gap:10px;padding:9px 0}
+.admin-page .managed-stock>div:first-child{flex:1;min-width:0}
+.admin-page .managed-stock .stock-name{font-size:15px;margin-bottom:2px}
+.admin-page .managed-stock .stock-actions{flex-wrap:nowrap}
+.admin-page .stock-edit-panel{padding:14px;margin-top:4px;border-radius:9px}
+.admin-page .supplier-delivery{border:0;padding:0}
+.admin-page .location-row{padding:0 12px;margin-top:10px;background-color:#fff;border-radius:9px}
+.location-row .admin-record-info{flex-direction:column;align-items:flex-start;gap:3px}
+.admin-page #location-form{padding-bottom:0;border-bottom:0}
+.settings-fonts,.settings-colours{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.settings-fonts>.admin-setting-row,.settings-colours>.admin-setting-row{border:1px solid var(--line);border-radius:9px;padding:0 10px;background-color:#fff}
+.admin-page .sidebar-logo-form{padding-top:0;border-top:0}
+.admin-page .text-setting-row{padding:0 10px;margin-bottom:6px;background-color:#fff}
+.text-setting-row .admin-record-info{display:block;flex:1;min-width:0}
+.text-setting-row .admin-record-info label{margin:0;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.text-setting-row .admin-record-info small{font-size:9px;margin:3px 0 0}
+.admin-page .supplier-stock-menu{margin-top:8px;border-radius:9px}
+.admin-page .supplier-stock-menu>summary{padding:10px 12px}
+.admin-page .supplier-stock-content{padding:0 12px 8px}
+@media(max-width:720px){.admin-page .management{padding:14px}.settings-fonts,.settings-colours{grid-template-columns:minmax(0,1fr)}.admin-edit-panel{padding:12px}}
+@media(max-width:480px){.admin-page .management{padding:12px}.admin-page .account-location-group{padding:8px}.admin-page .location-row{padding:0 8px}.admin-record-info{align-items:flex-start;flex-direction:column;gap:4px}.admin-page .managed-stock .stock-name{font-size:14px}.admin-edit-panel{padding:10px}.admin-page .admin-edit-button{width:30px;height:30px;min-height:30px}}
+@media(pointer:coarse){.admin-page .admin-edit-button{width:40px;height:40px;min-height:40px}.admin-page .admin-create-button,.admin-page #create-user{min-height:40px}}
