@@ -947,3 +947,31 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 .cart-page .cart-supplier-items .quantity span{margin-left:6px;font-size:12px;white-space:nowrap;text-align:right;min-width:60px}
 @media(max-width:600px){.cart-page .cart-supplier-items .cart-row{grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 0}.cart-page .cart-supplier-items .cart-row>strong{font-size:14px}.cart-page .cart-supplier-items .quantity span{margin-left:auto}.cart-page .cart-supplier-items{padding:0 10px}}
 @media(pointer:coarse){.cart-page .cart-supplier-group>summary{min-height:44px}.cart-page .cart-supplier-items .quantity button{width:44px;height:44px}.cart-page .cart-supplier-items .quantity input{min-height:44px}}
+/* The home dashboard shares the app's greeting, palette and compact panels. */
+.home-page{padding-top:28px;padding-bottom:36px}
+.home-page .home-hero{padding:4px 0 24px;align-items:center}
+.home-page .home-hero h1{font-size:40px;margin:6px 0 10px}
+.home-page .home-hero p{margin:0}
+.home-context{display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:40%;font-size:12px;color:var(--muted);text-align:right}
+.home-context strong{font-size:15px;color:var(--primary);overflow-wrap:anywhere}
+#home-status{font-size:12px;color:var(--muted);margin:0 0 14px}#home-status:empty{display:none}
+.home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.home-action{display:flex;align-items:flex-start;gap:14px;padding:18px;text-decoration:none;color:inherit;min-width:0;border-radius:12px;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.home-action:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:var(--panel-shadow)}
+.home-action:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.home-card-icon{display:grid;place-items:center;flex:0 0 44px;height:44px;border-radius:11px;background-color:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary)}
+.home-card-icon .sidebar-navigation-icon{width:24px;height:24px}
+.home-card-icon .icon-detail{stroke:var(--secondary)}
+.home-card-content{flex:1;min-width:0}.home-card-content h2{font-size:20px;margin:0 0 5px;color:var(--primary)}
+.home-card-content p{font-size:12px;line-height:1.6;margin:0;color:var(--muted)}
+.home-card-value{display:block;margin-top:10px;font-size:12px;font-weight:600;line-height:1.5;color:var(--primary);overflow-wrap:anywhere}
+.home-card-arrow{color:var(--secondary);font:20px/1.2 Arial,sans-serif}
+.home-page .home-admin{padding:16px;margin:0;border-radius:12px}.home-admin h2{font-size:17px;margin:0 0 12px}
+.home-admin-links{display:flex;flex-wrap:wrap;gap:8px}.home-admin-links a{display:block;padding:9px 12px;min-height:38px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--primary);font-size:12px}.home-admin-links a:hover{background-color:color-mix(in srgb,var(--primary) 7%,white)}
+@media(max-width:600px){.home-actions{grid-template-columns:minmax(0,1fr)}.home-action{padding:15px;gap:12px}.home-page .home-hero{align-items:flex-start;gap:12px}.home-page .home-hero h1{font-size:32px}.home-context{max-width:40%;font-size:10px}.home-context strong{font-size:12px}.home-page .home-hero>div:first-child{min-width:0}.home-page .home-hero>div:first-child p:not(.eyebrow){font-size:12px}.home-page .ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){#app-sidebar .mobile-tabbar:has([data-sidebar-name=Home]) a,#app-sidebar .mobile-tabbar:has([data-sidebar-name=Home]) .mobile-nav-tab{font-size:9px}.home-admin-links a{min-height:44px}}
+.home-admin[hidden],.home-admin-links a[hidden]{display:none!important}
+.home-page .home-hero>div:first-child{display:block;width:auto;flex:1;min-width:0}
+.home-page .home-hero .eyebrow{display:inline-block}
+.home-page .home-hero>.home-context{display:flex;width:auto;flex:0 1 auto}
+.home-card-arrow{width:18px;height:18px;flex-shrink:0}

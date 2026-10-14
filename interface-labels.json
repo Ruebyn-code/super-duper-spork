@@ -3051,5 +3051,77 @@
       "Stock count",
       "Stock editor"
     ]
+  },
+  {
+    "text": "Home",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Everything you need for your location, in one place.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading your dashboard…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Browse stock and build your next order.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Review your items and send your order.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Count stock and add recommended orders.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Record daily sales and view projections.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "{count} stock items",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "{count} units · {total}",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Latest: {date}",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load your dashboard. Use the navigation to open a page.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Open Cart to review your saved items.",
+    "locations": [
+      "Home"
+    ]
   }
 ]
