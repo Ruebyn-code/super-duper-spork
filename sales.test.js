@@ -95,3 +95,29 @@ test('home splits sales weeks at both quarter edges and ratios quarter orders wi
  totals=sales.homeTotals([record('2026-10-12',Array(7).fill(0))],orders,actor,options);assert.equal(totals.salesCents,0);assert.equal(totals.expensePercent,null);
  const next=sales.homeTotals(records,orders,actor,{now:new Date('2026-12-31T13:00:00Z')});assert.equal(next.salesCents,87993);assert.equal(next.quarterPlacedOrdersCents,1000);assert.equal(next.quarter.number,1);assert.equal(next.quarter.year,2027);
 });
+
+test('current-week performance compares matched recorded weekdays, excludes future sales and flags past gaps',()=>{
+ const records=history(),current={accountId:account.id,weekStart:'2026-10-12',days:[3000,2200,null,900000,null,null,null]};records.push(current,{...current,accountId:'another',days:Array(7).fill(999999)});
+ let result=sales.calculate(records,[],account,{now});
+ assert.equal(result.today,'2026-10-13');assert.deepEqual(result.performance,{actualCents:5200,expectedCents:5100,differenceCents:100,differencePercent:100/5100*100,recordedDays:2,missingDays:0,dates:['2026-10-12','2026-10-13']});
+ current.days=[null,0,null,null,null,null,null];result=sales.calculate(records,[],account,{now});assert.equal(result.performance.actualCents,0);assert.equal(result.performance.expectedCents,2600);assert.equal(result.performance.differenceCents,-2600);assert.equal(result.performance.differencePercent,-100);assert.equal(result.performance.missingDays,1);assert.equal(result.performance.recordedDays,1);
+ current.days=[2500,2600,null,null,null,null,null];result=sales.calculate(records,[],account,{now});assert.equal(result.performance.differenceCents,0);assert.equal(result.performance.differencePercent,0);
+});
+test('sales progress distinguishes missing entries, missing history and zero expected sales, and uses Melbourne date boundaries',()=>{
+ const records=history(),current={accountId:account.id,weekStart:'2026-10-12',days:Array(7).fill(null)};records.push(current);
+ let progress=sales.calculate(records,[],account,{now}).performance;assert.equal(progress.recordedDays,0);assert.equal(progress.expectedCents,null);assert.equal(progress.differenceCents,null);assert.equal(progress.differencePercent,null);
+ current.days[0]=100;records[0].days[6]=null;progress=sales.calculate(records,[],account,{now}).performance;assert.equal(progress.actualCents,100);assert.equal(progress.expectedCents,null);
+ for(const record of records.slice(0,4))record.days=Array(7).fill(0);progress=sales.calculate(records,[],account,{now}).performance;assert.equal(progress.expectedCents,0);assert.equal(progress.differenceCents,100);assert.equal(progress.differencePercent,null);
+ current.days[1]=250;const before=sales.calculate(records,[],account,{now:new Date('2026-10-12T12:59:59Z')}),after=sales.calculate(records,[],account,{now:new Date('2026-10-12T13:00:00Z')});assert.equal(before.today,'2026-10-12');assert.equal(before.performance.recordedDays,1);assert.equal(after.today,'2026-10-13');assert.equal(after.performance.recordedDays,2);
+});
+test('current-week comparison stays shared within a location when editing a historical week and recalculates historical corrections',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'sales-performance-')),actor={id:'first',locationId:'shop'},teammate={id:'second',locationId:'shop'},store=sales.createStore();
+ try{
+ for(let index=1;index<=4;index++)await store.save(dir,actor,{weekStart:shift('2026-10-12',-index*7),days:[10000,20000,30000,40000,50000,60000,70000],revision:0});
+ await store.save(dir,teammate,{weekStart:'2026-10-12',days:[12000,18000,null,null,null,null,null],revision:0});
+ let report=await store.report(dir,actor,'2026-10-05',{now});assert.equal(report.record.weekStart,'2026-10-05');assert.equal(report.projection.performance.actualCents,30000);assert.equal(report.projection.performance.expectedCents,30000);
+ await store.save(dir,actor,{weekStart:'2026-10-05',days:[20000,20000,30000,40000,50000,60000,70000],revision:1});
+ report=await sales.createStore().report(dir,teammate,'2026-10-05',{now});assert.equal(report.projection.performance.actualCents,30000);assert.equal(report.projection.performance.expectedCents,32500);assert.equal(report.projection.performance.differenceCents,-2500);
+ const other=await store.report(dir,{id:'first',locationId:'other'},undefined,{now});assert.equal(other.projection.performance.recordedDays,0);assert.equal(other.projection.performance.expectedCents,null);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

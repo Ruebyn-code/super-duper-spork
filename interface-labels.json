@@ -3371,5 +3371,107 @@
     "locations": [
       "Location selectors"
     ]
+  },
+  {
+    "text": "This week so far",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Actual sales",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Expected sales",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Difference from projection",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Add daily sales",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Projection unavailable",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Ahead of projection",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Behind projection",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "On projection",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Comparing {count} recorded days through {date} with the same weekdays in this week’s projection.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Enter this week’s daily sales to compare your progress with the projection.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Complete the previous four weeks to see the difference from projection.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "1 earlier day has no sales entered and is excluded.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "{count} earlier days have no sales entered and are excluded.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Includes unsaved sales.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Percentage difference is unavailable when expected sales are $0.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Comparing 1 recorded day through {date} with the same weekday in this week’s projection.",
+    "locations": [
+      "sales"
+    ]
   }
 ]

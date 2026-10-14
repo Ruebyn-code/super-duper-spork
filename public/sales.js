@@ -24,11 +24,26 @@
  async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
  const draftKey=()=>session&&selectedWeek?'souvlaki-sales-draft-'+session.id+(session.locationId?'-'+session.locationId:'')+'-'+selectedWeek:'';
  function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({revision,days:inputs.map(input=>input.value)}));$('sales-draft-status').textContent=wording('Unsaved sales are kept in this browser.');}catch{$('sales-draft-status').textContent=wording('Browser storage is unavailable. Save sales before leaving this page.');}}
- function renderProgress(){let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});}
+ function renderProgress(){let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});renderPerformance();}
+ function renderPerformance(){
+  if(!report)return;const projection=report.projection,currentEntry=selectedWeek===projection.weekStart;
+  const performance=currentEntry?salesPerformance.compare(inputs.map(input=>input.value!==''&&input.validity.valid?Math.round(Number(input.value)*100):null),projection):projection.performance;
+  $('sales-performance-actual').textContent=performance.recordedDays?money(performance.actualCents):'—';$('sales-performance-expected').textContent=money(performance.expectedCents);
+  const difference=performance.differenceCents,percent=performance.differencePercent;
+  $('sales-performance-difference').textContent=difference===null?'—':(difference>0?'+':'')+money(difference);
+  $('sales-performance-percent').textContent=percent===null?'':(percent>0?'+':'')+new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(percent)+'%';
+  const status=!performance.recordedDays?'Add daily sales':difference===null?'Projection unavailable':difference>0?'Ahead of projection':difference<0?'Behind projection':'On projection';
+  template($('sales-performance-status'),status);$('sales-performance-status').dataset.performance=difference===null?'unavailable':difference<0?'behind':difference>0?'ahead':'on';
+  template($('sales-performance-coverage'),performance.recordedDays?(performance.recordedDays===1?'Comparing 1 recorded day through {date} with the same weekday in this week’s projection.':'Comparing {count} recorded days through {date} with the same weekdays in this week’s projection.'):'Enter this week’s daily sales to compare your progress with the projection.',{count:performance.recordedDays,date:dateLabel(projection.today)});
+  const notes=[];if(performance.recordedDays&&difference===null)notes.push('Complete the previous four weeks to see the difference from projection.');
+  if(performance.missingDays)notes.push(performance.missingDays===1?'1 earlier day has no sales entered and is excluded.':'{count} earlier days have no sales entered and are excluded.');
+  if(currentEntry&&dirty)notes.push('Includes unsaved sales.');if(difference!==null&&performance.expectedCents===0)notes.push('Percentage difference is unavailable when expected sales are $0.');
+  template($('sales-performance-note'),notes.join(' '),{count:performance.missingDays});$('sales-performance-note').hidden=!notes.length;
+ }
  function setBusy(value){busy=value;form.setAttribute('aria-busy',String(value));for(const control of form.elements)control.disabled=value;for(const button of document.querySelectorAll('[data-entry-week]'))button.disabled=value;}
  function showView(){const view=location.hash==='#projection'?'projection':'entry';document.querySelectorAll('[data-sales-view]').forEach(panel=>panel.hidden=panel.dataset.salesView!==view);document.querySelectorAll('.sales-nav a').forEach(link=>{if(link.hash==='#'+view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});}
  function renderProjection(){
-  if(!report)return;const projection=report.projection;
+  if(!report)return;renderPerformance();const projection=report.projection;
   $('sales-current-period').textContent=dateLabel(projection.weekStart)+' – '+dateLabel(projection.weekEnd)+' · Melbourne';
   $('sales-projected-value').textContent=money(projection.projectedSalesCents);$('sales-budget-value').textContent=money(projection.budgetCents);
   template($('sales-projection-status'),projection.weeksRecorded===4?'Based on your location’s previous four complete weeks.':'{weeks} of 4 complete weeks. Record all seven days in each week to calculate your projection.',{weeks:projection.weeksRecorded});
