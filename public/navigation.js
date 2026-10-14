@@ -12,7 +12,7 @@
  const footerSlot=document.createComment('desktop footer position');footer?.before(footerSlot);let brandSlot;
  if(sidebar&&scroll){scroll.id='app-sidebar-menu';scroll.prepend(menuTitle);sidebar.append(mobileBar);mobileBar.append(more);shell.before(backdrop);page?.prepend(mobileHeader);}
  function updateMore(){
-  more.setAttribute('aria-expanded',String(moreOpen));const active=moreOpen||['stock','accounts','settings','reporting'].includes(selectedGroup||currentGroup());more.classList.toggle('active',active);
+  more.setAttribute('aria-expanded',String(moreOpen));const active=moreOpen||['stock','accounts','settings'].includes(selectedGroup||currentGroup())||location.pathname==='/reporting';more.classList.toggle('active',active);
   menuTitle.querySelector('h2').textContent=wording('More');menuTitle.querySelector('button').setAttribute('aria-label',wording('Close menu')||'Close menu');menuTitle.querySelector('button').title=wording('Close menu')||'Close menu';more.querySelector('.sidebar-label').textContent=wording('More');more.title=wording('More')||'More';more.setAttribute('aria-label',more.title);
  }
  function renderMobileSheets(){shell?.classList.toggle('mobile-more-open',mobile.matches&&moreOpen);backdrop.hidden=!(mobile.matches&&(moreOpen||selectedGroup));if(mobile.matches&&scroll)scroll.inert=!moreOpen;updateMore();}
@@ -40,12 +40,12 @@
   if(typeof interfaceLabel==='function')return interfaceLabel(text,values);
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
- const currentGroup=()=>({'/stock-count':'count','/sales':'sales','/reporting':'reporting','/admin':'stock','/admin/accounts':'accounts','/admin/settings':'settings'}[location.pathname]||'');
+ const currentGroup=()=>({'/stock-count':'count','/sales':'sales','/admin':'stock','/admin/accounts':'accounts','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar?.querySelector('[data-sidebar-group="'+group+'"]');
  function updateSubmenuTitle(){const link=groupLink(selectedGroup),title=document.getElementById('subsidebar-title');if(link&&title){title.dataset.localWording=link.dataset.sidebarName;const text=link.querySelector('.sidebar-label')?.textContent||'';if(title.textContent!==text)title.textContent=text;}const close=document.getElementById('subsidebar-close');if(close){close.title=wording('Close submenu')||'Close submenu';close.setAttribute('aria-label',close.title);}}
- function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary)secondary.hidden=true;shell?.classList.remove('subsidebar-open');sidebar?.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});renderMobileSheets();if(restoreFocus){if(mobile.matches&&['stock','accounts','settings','reporting'].includes(previous)){openMore();groupLink(previous)?.focus();}else groupLink(previous)?.focus();}}
+ function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary)secondary.hidden=true;shell?.classList.remove('subsidebar-open');sidebar?.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});renderMobileSheets();if(restoreFocus){if(mobile.matches&&['stock','accounts','settings'].includes(previous)){openMore();groupLink(previous)?.focus();}else groupLink(previous)?.focus();}}
  function openSubmenu(group,focus=false){
-  if(!secondary||(!isAdmin&&['stock','settings'].includes(group))||(!isUserManager&&['accounts','reporting'].includes(group)))return;
+  if(!secondary||(!isAdmin&&['stock','settings'].includes(group))||(!isUserManager&&group==='accounts'))return;
   const menu=secondary.querySelector('[data-subsidebar-group="'+group+'"]');if(!menu)return;selectedGroup=group;if(mobile.matches)closeMore();
   secondary.querySelectorAll('[data-subsidebar-group]').forEach(nav=>nav.hidden=nav!==menu);secondary.hidden=false;shell?.classList.add('subsidebar-open');
   sidebar?.querySelectorAll('[data-sidebar-group]').forEach(link=>{const active=link.dataset.sidebarGroup===group;link.setAttribute('aria-expanded',String(active));if(active)link.dataset.submenuOpen='true';else delete link.dataset.submenuOpen;});updateSubmenuTitle();

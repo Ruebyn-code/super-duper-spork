@@ -1,6 +1,12 @@
 const {belongs}=require('./location-scope'),sales=require('./sales'),usage=require('./stock-usage'),par=require('./par-levels'),storage=require('./public/stock-count-groups');
 const maximumDays=3660;
 function invalid(message){const error=Error(message);error.status=400;throw error;}
+function selectLocations(value,available){
+ if(typeof value!=='string'||!value.length||value.length>20000)invalid('Choose at least one report location.');
+ const ids=[...new Set(value.split(','))];if(ids.some(id=>!/^[a-zA-Z0-9-]{1,100}$/.test(id)))invalid('Choose valid report locations.');
+ const allowed=new Set(available.map(location=>location.id));if(ids.some(id=>!allowed.has(id))){const error=Error('You do not have access to one or more report locations.');error.status=403;throw error;}
+ return ids;
+}
 function validDate(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const date=new Date(value+'T00:00:00Z');return Number.isFinite(date.valueOf())&&date.toISOString().slice(0,10)===value;}
 const monday=date=>usage.shift(date,-(new Date(date+'T00:00:00Z').getUTCDay()+6)%7);
 function range(input={},now=new Date()){
@@ -36,4 +42,4 @@ function calculate(records,orders,counts,catalogue,session,input={},options={}){
  for(const row of stockRows.values()){row.used=row.used===null?null:Math.round(row.used*1000)/1000;row.missingWeeks=row.totalWeeks-row.completeWeeks-row.negativeWeeks;}
  return {period,company:{id:session.companyId,name:session.companyName},location:{id:session.locationId,name:session.locationName},summary,averages,daily,weekly,suppliers:[...supplierRows.values()].sort((a,b)=>b.orderCostCents-a.orderCostCents||a.name.localeCompare(b.name)),stockUsage:{weekCount:usageWeeks.length,fromDate:usageWeeks[0]||null,throughDate:usageWeeks.length?usage.shift(usageWeeks.at(-1),6):null,items:[...stockRows.values()].sort((a,b)=>a.name.localeCompare(b.name))}};
 }
-module.exports={calculate,range,maximumDays};
+module.exports={calculate,range,selectLocations,maximumDays};

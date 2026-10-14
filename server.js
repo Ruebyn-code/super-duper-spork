@@ -144,9 +144,24 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,location.id)));
         if(req.method==='PUT'){if(location.archived)fail('Restore the location before changing its email settings.');try{return json(200,await deliverySettings.save(dataDir,await body(req),location.id));}catch(error){fail(error.message);}}
       }
+      if(req.url==='/api/reporting/locations'&&req.method==='GET'){
+        if(!managesUsers(session))fail('Franchisee or Head Office permission required.',403);
+        const [available,companyList]=await Promise.all([locationStore.accessible(session,{allCompanies:true}),companyStore.accessible(session)]),names=new Map(companyList.map(company=>[company.id,company.name]));
+        return json(200,{locations:available.map(location=>({...location,companyName:names.get(location.companyId)||''}))});
+      }
       if(req.url==='/api/reporting'&&req.method==='GET'){
         if(!managesUsers(session))fail('Franchisee or Head Office permission required.',403);
         const params=Object.fromEntries(requestUrl.searchParams),now=new Date();reporting.range(params,now);
+        if(Object.hasOwn(params,'locations')){
+          const ids=reporting.selectLocations(params.locations,await locationStore.accessible(session,{allCompanies:true}));
+          const contexts=await Promise.all(ids.map(async id=>companyStore.context(await locationStore.sessionContext(session,id))));
+          const [history,entries]=await Promise.all([usageHistory(dataDir),Promise.all([...new Set(contexts.map(context=>context.companyId))].map(async id=>[id,await catalogueStore.read(id)]))]),catalogues=new Map(entries),reports=[];
+          for(let offset=0;offset<contexts.length;offset+=8)reports.push(...await Promise.all(contexts.slice(offset,offset+8).map(async context=>{
+            const records=await salesStore.history(dataDir,context);
+            return reporting.calculate(records,history.orders,history.counts,catalogues.get(context.companyId),context,params,{now});
+          })));
+          return json(200,{period:reports[0].period,reports});
+        }
         const [records,history,catalogue]=await Promise.all([salesStore.history(dataDir,session),usageHistory(dataDir),readCatalogue()]);
         return json(200,reporting.calculate(records,history.orders,history.counts,catalogue,session,params,{now}));
       }

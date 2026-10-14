@@ -2755,7 +2755,8 @@
   {
     "text": "{count} locations",
     "locations": [
-      "Locations"
+      "Locations",
+      "Reporting"
     ]
   },
   {
@@ -4199,6 +4200,144 @@
   },
   {
     "text": "Report pages",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Report type",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Choose report locations",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Location comparison",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "The same report period is used for every location. Expense percentage = order cost ÷ recorded sales × 100.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Company & location",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Weekly averages by location",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Completed weeks",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Compare locations",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Close locations",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Current location",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Select all",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Apply",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{locations} locations · {companies} companies",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{count} locations selected",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{recorded} of {days} location sales days recorded",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Combined · {count} selected locations",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Each location uses its own completed Monday–Sunday weeks with all seven sales days recorded.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{weeks} completed cycles per location",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Sales & order costs by location",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "Select a location to view its daily sales.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "The same dates apply to every selected location. Top figures combine those locations.",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "{locations} locations · {company}",
+    "locations": [
+      "Reporting"
+    ]
+  },
+  {
+    "text": "1 completed cycle per location",
     "locations": [
       "Reporting"
     ]
