@@ -1,4 +1,6 @@
 (()=>{
+ window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();else if(dirty)saveDraft();});
+
  const $=id=>document.getElementById(id),form=$('sales-form');if(!form)return;
  const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
  const money=value=>value===null?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
@@ -19,7 +21,7 @@
   field.append(currency,input);label.append(name,date);row.append(label,field);$('sales-days').append(row);inputs.push(input);
   input.oninput=()=>{dirty=true;saveDraft();renderProgress();};
  }
- async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
+ async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
  const draftKey=()=>session&&selectedWeek?'souvlaki-sales-draft-'+session.id+(session.locationId?'-'+session.locationId:'')+'-'+selectedWeek:'';
  function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({revision,days:inputs.map(input=>input.value)}));$('sales-draft-status').textContent=wording('Unsaved sales are kept in this browser.');}catch{$('sales-draft-status').textContent=wording('Browser storage is unavailable. Save sales before leaving this page.');}}
  function renderProgress(){let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});}

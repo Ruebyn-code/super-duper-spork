@@ -109,8 +109,8 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
       await locationStore.ensure();
-      const session=await locationStore.sessionContext(await auth.session(req));
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
+      const session=await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']);
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,locations:await locationStore.accessible(session),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
         const loggedIn=await auth.login(req,await body(req));
@@ -121,6 +121,10 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       if(management){if(!session)fail('Sign-in required.',401);if(session.role!=='admin')fail('Administrator permission required.',403);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);}
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/session/location'&&req.method==='PUT'){
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        const input=await body(req);await auth.selectLocation(session,input?.locationId,id=>locationStore.get(id,{active:true}));return json(200,{locationId:input.locationId});
+      }
       if(req.url==='/api/locations'&&req.method==='GET')return json(200,await locationStore.list());
       if(req.url==='/api/locations'&&req.method==='POST')return json(201,await locationStore.create(await body(req)));
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
@@ -237,7 +241,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix))).map(([,entry])=>entry.font)]);
         const uploadedPreloads=fontLibrary.filter(entry=>usedFonts.has(entry.id)).map(entry=>'<link rel="preload" href="'+entry.url+'" as="font" type="font/'+entry.extension+'" crossorigin>').join('');
-        const initial=uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
+        const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const sidebarPage=markup.includes('id="app-sidebar"'),source=sidebarPage?'/sidebar-logo':'/logo',branded=(sidebarPage?hasSidebarLogo:hasLogo)?markup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Souvlaki GR" class="app-logo"></a>'):markup;return res.end(branded.replace('</head>',initial+'</head>'));
       }
       const cached=await asset(file);res.setHeader('ETag',cached.etag);

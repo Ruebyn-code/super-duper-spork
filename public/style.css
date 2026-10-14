@@ -750,3 +750,23 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 @media(max-width:720px){.admin-page .management{padding:14px}.settings-fonts,.settings-colours{grid-template-columns:minmax(0,1fr)}.admin-edit-panel{padding:12px}}
 @media(max-width:480px){.admin-page .management{padding:12px}.admin-page .account-location-group{padding:8px}.admin-page .location-row{padding:0 8px}.admin-record-info{align-items:flex-start;flex-direction:column;gap:4px}.admin-page .managed-stock .stock-name{font-size:14px}.admin-edit-panel{padding:10px}.admin-page .admin-edit-button{width:30px;height:30px;min-height:30px}}
 @media(pointer:coarse){.admin-page .admin-edit-button{width:40px;height:40px;min-height:40px}.admin-page .admin-create-button,.admin-page #create-user{min-height:40px}}
+
+/* Location access and the sidebar switcher share the compact navigation style. */
+.location-switcher{position:relative;display:flex;align-items:center;gap:8px;min-height:36px}
+.location-switcher .location-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.location-pin{flex:0 0 18px;width:18px;height:18px;fill:none;stroke:var(--primary);stroke-width:1.8}
+.location-pin circle{stroke:var(--secondary)}
+.location-chevron{font-family:Arial,sans-serif;font-size:18px;line-height:1}
+.location-switcher select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.location-switcher:focus-within{outline:2px solid var(--primary);outline-offset:3px}
+.location-switcher:has(select:not(:disabled)):hover{background:color-mix(in srgb,var(--primary) 12%,white)}
+.location-switch-status{font:12px/1.4 Arial,sans-serif;margin:0;color:var(--primary);overflow-wrap:anywhere}
+.sidebar-collapsed .location-switcher{display:flex;justify-content:center;margin-top:10px;padding:6px}
+.sidebar-collapsed .location-name,.sidebar-collapsed .location-chevron{display:none}
+.account-location-access{border:1px solid color-mix(in srgb,var(--primary) 15%,white);border-radius:10px;padding:10px;margin:0;min-width:0;grid-column:1/-1}
+.account-location-access legend{font-size:13px;font-weight:600;padding:0 5px}
+.account-location-access .small{margin:0 0 8px}
+#account-locations{max-height:240px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:6px}
+#account-locations .account-location-choice{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;background:color-mix(in srgb,var(--primary) 5%,white);font-size:13px;min-width:0;margin:0;cursor:pointer}
+#account-locations input{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:var(--primary)}
+.account-location-choice span{overflow-wrap:anywhere}

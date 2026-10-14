@@ -10,7 +10,7 @@
   for(const location of locations){
    const row=node('form',undefined,'location-row');row.dataset.editId='location-'+location.id;
    const heading=node('h3',location.name);heading.dataset.userText='';heading.dataset.editId='location-'+location.id+'-name';
-   const members=accounts.filter(account=>account.locationId===location.id),status=node('p',undefined,'small');status.dataset.userText='';status.textContent=members.length+' '+wording(members.length===1?'user':'users')+(location.archived?' · '+wording('Archived'):'');
+   const members=accounts.filter(account=>(account.locationIds||[account.locationId]).includes(location.id)),status=node('p',undefined,'small');status.dataset.userText='';status.textContent=members.length+' '+wording(members.length===1?'user':'users')+(location.archived?' · '+wording('Archived'):'');
    const label=node('label',wording('Location name')),input=node('input');input.name='name';input.value=location.name;input.maxLength=100;input.required=true;input.dataset.editId='location-'+location.id+'-input';label.dataset.editId='location-'+location.id+'-label';label.append(input);
    const actions=node('div',undefined,'stock-actions'),save=node('button',wording('Save location')),archive=node('button',wording(location.archived?'Restore location':'Archive location'));
    save.type='submit';archive.type='button';archive.disabled=!location.archived&&members.length>0;archive.title=archive.disabled?wording('Move users to another location before archiving.'):'';archive.dataset.requiresEmpty=String(!location.archived&&members.length>0);

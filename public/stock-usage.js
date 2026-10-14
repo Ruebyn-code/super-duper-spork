@@ -8,7 +8,7 @@
  const dateLabel=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
  let session,products=[],suppliers=[],report=null,loading=false,initializing=false,generation=0,currentWeek='',defaultWeek='',selectedSupplier='all';
  const rows=new Map(),groups=new Map();
- async function api(url){const response=await fetch(url);if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load weekly usage.');return result;}
+ async function api(url){const response=await fetch(url,{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load weekly usage.');return result;}
  function thisWeek(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=kind=>parts.find(part=>part.type===kind).value;return sunday(value('year')+'-'+value('month')+'-'+value('day'));}
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  function setBusy(){for(const control of controls.querySelectorAll('input,select,button'))control.disabled=loading||initializing;}

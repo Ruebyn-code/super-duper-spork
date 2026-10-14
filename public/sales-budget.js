@@ -15,7 +15,7 @@
  }
  async function refresh(){
   if(document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const response=await fetch('/api/sales');if(!response.ok)throw Error('Unable to load sales budget.');projection=(await response.json()).projection;render();}
+  try{const response=await fetch('/api/sales',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(!response.ok)throw Error('Unable to load sales budget.');projection=(await response.json()).projection;render();}
   catch{template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
@@ -23,5 +23,5 @@
  window.addEventListener('sales-budget-updated',refresh);window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('interface-text-updated',render);
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id))refresh();});
  setInterval(refresh,60000);
- (async()=>{try{session=await(await fetch('/api/session')).json();await refresh();}catch{}})();
+ (async()=>{try{session=await(await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}})).json();await refresh();}catch{}})();
 })();

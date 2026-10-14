@@ -2605,5 +2605,41 @@
     "locations": [
       "App settings"
     ]
+  },
+  {
+    "text": "Default location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Location access",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Choose all locations this user can switch between.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Switch location",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Wait for saving to finish before switching locations.",
+    "locations": [
+      "Locations and shared ordering"
+    ]
+  },
+  {
+    "text": "Switching location…",
+    "locations": [
+      "Locations and shared ordering"
+    ]
   }
 ]

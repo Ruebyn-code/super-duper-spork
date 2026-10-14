@@ -13,21 +13,22 @@ function createStore(dir,auth){
  function ensure(fresh=false){
   if(fresh)initializing=undefined;
   if(!initializing)initializing=auth.initializeLocations(async accounts=>{
-   if(!accounts.some(account=>!account.locationId))return;
+   if(!accounts.some(account=>!account.locationId||!account.locationIds))return;
    await mutate(async records=>{
-    for(const account of accounts){if(account.locationId)continue;let location=records.find(record=>record.id===account.id);
+    for(const account of accounts){if(account.locationId){account.locationIds||=[account.locationId];continue;}let location=records.find(record=>record.id===account.id);
      if(!location){let locationName=account.username,suffix=2;while(records.some(record=>record.name.toLowerCase()===locationName.toLowerCase()))locationName=account.username+' ('+(suffix++)+')';location={id:account.id,name:locationName,archived:false,legacyAccountIds:[account.id],createdAt:new Date().toISOString()};records.push(location);}
-     await migrateEmail(account.id,location.id);account.locationId=location.id;
+     await migrateEmail(account.id,location.id);account.locationId=location.id;account.locationIds=[location.id];
     }
    });
   }).catch(error=>{initializing=undefined;throw error;});
   return initializing;
  }
  async function get(id,{active=false}={}){const record=(await read()).find(record=>record.id===id);if(!record)invalid('Location not found.',404);if(active&&record.archived)invalid('Choose an active location.');return record;}
- async function sessionContext(session){if(!session)return null;if(!session.locationId){await ensure(true);const account=(await auth.list()).find(account=>account.id===session.id);session={...session,locationId:account?.locationId};}const location=await get(session.locationId,{active:true});return {...session,locationName:location.name,legacyAccountIds:location.legacyAccountIds||[],dataScope:'location-'+location.id,canMigrateBrowserData:(location.legacyAccountIds||[]).includes(session.id)};}
- async function list(){await ensure();const [records,accounts]=await Promise.all([read(),auth.list()]);return records.map(({legacyAccountIds,...record})=>({...record,memberCount:accounts.filter(account=>account.locationId===record.id).length}));}
+ async function sessionContext(session,requestedLocationId){if(!session)return null;if(!session.locationId){await ensure(true);const account=(await auth.list()).find(account=>account.id===session.id);session={...session,locationId:account?.locationId,locationIds:account?.locationIds};}const allowed=session.locationIds||[session.locationId];if(requestedLocationId!==undefined){if(!allowed.includes(requestedLocationId))invalid('You do not have access to this location.',403);session={...session,locationId:requestedLocationId};}if(!allowed.includes(session.locationId))invalid('You do not have access to this location.',403);const location=await get(session.locationId,{active:true});return {...session,locationName:location.name,legacyAccountIds:location.legacyAccountIds||[],dataScope:'location-'+location.id,canMigrateBrowserData:(location.legacyAccountIds||[]).includes(session.id)};}
+ async function list(){await ensure();const [records,accounts]=await Promise.all([read(),auth.list()]);return records.map(({legacyAccountIds,...record})=>({...record,memberCount:accounts.filter(account=>(account.locationIds||[account.locationId]).includes(record.id)).length}));}
  async function create(input){const locationName=name(input?.name);await ensure();return mutate(records=>{if(records.some(record=>record.name.toLowerCase()===locationName.toLowerCase()))invalid('That location name already exists.');const record={id:crypto.randomUUID(),name:locationName,archived:false,legacyAccountIds:[],createdAt:new Date().toISOString()};records.push(record);return {...record,legacyAccountIds:undefined,memberCount:0};});}
- async function update(id,input){const locationName=name(input?.name);if(input.archived!==undefined&&typeof input.archived!=='boolean')invalid('Choose whether the location is archived.');return auth.initializeLocations(accounts=>mutate(async records=>{const record=records.find(record=>record.id===id);if(!record)invalid('Location not found.',404);if(records.some(other=>other.id!==id&&other.name.toLowerCase()===locationName.toLowerCase()))invalid('That location name already exists.');const memberCount=accounts.filter(account=>account.locationId===id).length;if(input.archived&&memberCount)invalid('Move all users to another location before archiving this location.');record.name=locationName;if(input.archived!==undefined)record.archived=input.archived;return {...record,legacyAccountIds:undefined,memberCount};}));}
- return {ensure,get,list,create,update,sessionContext};
+ async function update(id,input){const locationName=name(input?.name);if(input.archived!==undefined&&typeof input.archived!=='boolean')invalid('Choose whether the location is archived.');return auth.initializeLocations(accounts=>mutate(async records=>{const record=records.find(record=>record.id===id);if(!record)invalid('Location not found.',404);if(records.some(other=>other.id!==id&&other.name.toLowerCase()===locationName.toLowerCase()))invalid('That location name already exists.');const memberCount=accounts.filter(account=>(account.locationIds||[account.locationId]).includes(id)).length;if(input.archived&&memberCount)invalid('Move all users to another location before archiving this location.');record.name=locationName;if(input.archived!==undefined)record.archived=input.archived;return {...record,legacyAccountIds:undefined,memberCount};}));}
+ async function accessible(session){return (await read()).filter(record=>!record.archived&&(session.locationIds||[session.locationId]).includes(record.id)).map(({id,name})=>({id,name}));}
+ return {ensure,get,list,create,update,sessionContext,accessible};
 }
 module.exports={createStore};
