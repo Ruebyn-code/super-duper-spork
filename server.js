@@ -139,6 +139,10 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
         if(req.method==='GET')return json(200,deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,location.id)));
         if(req.method==='PUT'){if(location.archived)fail('Restore the location before changing its email settings.');try{return json(200,await deliverySettings.save(dataDir,await body(req),location.id));}catch(error){fail(error.message);}}
       }
+      if(req.url==='/api/home-totals'&&req.method==='GET'){
+        const history=await usageHistory(dataDir);
+        return json(200,await salesStore.totals(dataDir,session,{orders:history.orders}));
+      }
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders}));

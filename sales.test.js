@@ -49,3 +49,28 @@ test('all signed-in users can manage their own sales; APIs require sign-in and C
  await new Promise(resolve=>server.close(resolve));url=await start();headers=await login('staff');assert.equal((await request()).data.projection.budgetCents,245000);
  }finally{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('all-time expense uses recorded sales and placed orders once for one location, with zero sales and pending prices distinct',()=>{
+ const actor={id:'member',locationId:'shop'},record=(weekStart,days,locationId='shop')=>({weekStart,days,locationId});
+ const records=[record('2020-01-06',[10000,null,0,null,null,null,null]),record('2026-10-12',[30000,null,null,null,null,null,null]),record('2026-10-12',Array(7).fill(999999),'other')];
+ const order=(id,total,extra={})=>({id,total,locationId:'shop',requestOwnerId:'teammate',status:'requested',items:[{id:'paper',price:650}],...extra});
+ const orders=[order('old',6500,{createdAt:'2020-01-06T00:00:00Z'}),order('old',6500),order('new',3500),order('draft',99999,{status:'draft'}),order('other',999999,{locationId:'other'})];
+ assert.deepEqual(sales.allTimeTotals(records,orders,actor),{salesCents:40000,recordedDays:3,placedOrdersCents:10000,orderCount:2,pricePending:false,expensePercent:25});
+ let totals=sales.allTimeTotals(records,[...orders,order('pending',100,{pricePending:true})],actor);assert.equal(totals.placedOrdersCents,10100);assert.equal(totals.expensePercent,null);assert.equal(totals.pricePending,true);
+ totals=sales.allTimeTotals(records,[order('unknown',0,{items:[{id:'unknown',price:null}]})],actor);assert.equal(totals.expensePercent,null);
+ totals=sales.allTimeTotals([record('2026-10-12',Array(7).fill(0))],orders,actor);assert.equal(totals.salesCents,0);assert.equal(totals.expensePercent,null);
+ assert.equal(sales.allTimeTotals(records,[],actor).expensePercent,0);
+});
+
+test('all-time sales keeps legacy weeks but uses location corrections once across restarts',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'sales-all-time-')),actor={id:'member',locationId:'shop',legacyAccountIds:['original']};
+ try{const legacy=path.join(dir,'sales','original');await fs.mkdir(legacy,{recursive:true});
+ for(const weekStart of ['2020-01-06','2020-01-13'])await fs.writeFile(path.join(legacy,weekStart+'.json'),JSON.stringify({accountId:'original',weekStart,days:Array(7).fill(100),revision:1}));
+ await fs.writeFile(path.join(legacy,'credentials.json'),'{}');await fs.writeFile(path.join(legacy,'2020-01-12.json'),JSON.stringify({days:Array(7).fill(999999)}));
+ const store=sales.createStore();assert.equal((await store.totals(dir,actor)).salesCents,1400);
+ await store.save(dir,actor,{weekStart:'2020-01-06',days:[300,null,null,null,null,null,null],revision:1});
+ const totals=await sales.createStore().totals(dir,actor);assert.equal(totals.salesCents,1000);assert.equal(totals.recordedDays,8);
+ assert.equal((await store.totals(dir,{id:'member',locationId:'another'})).salesCents,0);
+ assert.equal(JSON.parse(await fs.readFile(path.join(legacy,'2020-01-06.json'),'utf8')).days[0],100);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

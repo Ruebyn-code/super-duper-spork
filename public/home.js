@@ -2,7 +2,7 @@
  const $=id=>document.getElementById(id);
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  const money=value=>value===null?wording('Price pending'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
- let session,catalogue,cartKey='',loading=false,refreshAgain=false;
+ let session,catalogue,totals,cartKey='',loading=false,refreshAgain=false;
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  async function api(path){const response=await fetch(path,{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}if(!response.ok)throw Error('Unable to load dashboard.');return response.json();}
  function renderCart(){
@@ -16,9 +16,19 @@
    window.dispatchEvent(new CustomEvent('ordering-cart-updated',{detail:{total,pricePending}}));
   }catch{template($('home-cart-summary'),'Open Cart to review your saved items.');window.dispatchEvent(new CustomEvent('ordering-cart-updated',{detail:{total:0,pricePending:true}}));}
  }
+ function renderTotals(){
+  if(session)$('home-totals-location').textContent=session.locationName||'';
+  if(!totals)return;
+  $('home-total-sales').textContent=money(totals.salesCents);
+  $('home-total-orders').textContent=money(totals.placedOrdersCents)+(totals.pricePending?' + '+wording('prices pending'):'');
+  $('home-total-expense').textContent=totals.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(totals.expensePercent)+'%';
+  const hint=totals.pricePending?'Some order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales to calculate your expense percentage.':'Recorded sales and placed orders. Expense = placed order total ÷ sales × 100.';
+  template($('home-totals-status'),hint);
+ }
  function render(){
   if(session){$('home-user-name').textContent=session.username+'!';$('home-location').textContent=session.locationName||'';}
   $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
+  renderTotals();
   if(!catalogue)return;
   template($('home-stock-items'),'{count} stock items',{count:catalogue.products.length});
   const date=catalogue.stockTake?.countDate;
@@ -27,12 +37,12 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{catalogue=await api('/api/catalogue');render();$('home-status').textContent='';}
+  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected')template($('home-totals-status'),'Unable to load all-time totals. Try again shortly.');$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
  $('logout').onclick=async()=>{try{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(!response.ok)throw Error();location.href='/login';}catch{template($('home-status'),'Please sign in again.');}};
- window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id))refresh();});
+ window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)))refresh();});
  window.addEventListener('focus',()=>{renderCart();refresh();});window.addEventListener('pageshow',event=>{renderCart();if(event.persisted)refresh();});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderCart();refresh();}});
  window.addEventListener('interface-text-updated',render);setInterval(refresh,60000);

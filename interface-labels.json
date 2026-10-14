@@ -3123,5 +3123,59 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "All-time totals",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Total sales",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Placed orders",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Expense percentage",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading all-time totals…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Some order prices are pending. Expense percentage is unavailable.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add sales to calculate your expense percentage.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Recorded sales and placed orders. Expense = placed order total ÷ sales × 100.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load all-time totals. Try again shortly.",
+    "locations": [
+      "Home"
+    ]
   }
 ]

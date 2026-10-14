@@ -55,6 +55,16 @@ function calculate(records,orders,session,{now=new Date()}={}){
  }
  return {weekStart,weekEnd:shift(weekStart,6),timeZone:defaultTimeZone,history,weeksRecorded,dailyProjections,projectedSalesCents,budgetPercent:28,budgetCents,spentCents,orderCount,pricePending,remainingCents:budgetCents===null||pricePending?null:budgetCents-spentCents};
 }
+function allTimeTotals(records,orders,session){
+ let salesCents=0,recordedDays=0,placedOrdersCents=0,orderCount=0,pricePending=false;
+ for(const record of records){if(!belongs(record,session)||!Array.isArray(record.days))continue;for(const value of record.days){if(Number.isSafeInteger(value)&&value>=0){salesCents+=value;recordedDays++;}}}
+ const seen=new Set();
+ for(const order of orders){
+  if(order?.status!=='requested'||!belongs(order,session,'requestOwnerId')||typeof order.id!=='string'||seen.has(order.id)||!Array.isArray(order.items)||!Number.isSafeInteger(order.total)||order.total<0)continue;
+  seen.add(order.id);placedOrdersCents+=order.total;orderCount++;if(order.pricePending||order.items.some(item=>item?.price===null))pricePending=true;
+ }
+ return {salesCents,recordedDays,placedOrdersCents,orderCount,pricePending,expensePercent:salesCents>0&&!pricePending?placedOrdersCents/salesCents*100:null};
+}
 function createStore(){
  const pending=new Map();
  async function save(dir,session,input){
@@ -77,6 +87,14 @@ function createStore(){
   const [record,...history]=await Promise.all([read(dir,session,selectedWeek||current),...[1,2,3,4].map(index=>read(dir,session,shift(current,-7*index)))]);
   return {record,projection:calculate(history,orders,session,{now})};
  }
- return {save,report};
+ async function totals(dir,session,{orders=[]}={}){
+  const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];
+  const weeks=new Set();
+  for(const folder of folders){let files;try{files=await fs.readdir(folder);}catch(error){if(error.code==='ENOENT')continue;throw error;}for(const file of files){if(!/^\d{4}-\d{2}-\d{2}\.json$/.test(file))continue;const start=file.slice(0,-5);try{week(start);weeks.add(start);}catch{}}}
+  // Use the same location-over-legacy precedence as the weekly sales editor.
+  const starts=[...weeks],records=[];for(let offset=0;offset<starts.length;offset+=32)records.push(...await Promise.all(starts.slice(offset,offset+32).map(start=>read(dir,session,start))));
+  return allTimeTotals(records,orders,session);
+ }
+ return {save,report,totals};
 }
-module.exports={calculate,createStore,validate,maximumDailyCents,currentWeek};
+module.exports={calculate,allTimeTotals,createStore,validate,maximumDailyCents,currentWeek};
