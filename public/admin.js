@@ -81,6 +81,8 @@ function renderAccountFilters(rebuild=true){
  if(!accountLocationFilters.size)chips.append(el('span',userWording('All locations'),'users-all-locations'));
  $('users-clear-filters').disabled=!accountLocationFilters.size&&!$('users-search').value;$('users-filter-toggle').classList.toggle('has-filters',Boolean(accountLocationFilters.size));
 }
+function closeUserLocationMenus(event){document.querySelectorAll('.users-locations-popover:popover-open').forEach(menu=>{if(!event?.target?.closest?.('.users-locations-popover'))menu.hidePopover();});}
+window.addEventListener('resize',closeUserLocationMenus);document.addEventListener('scroll',closeUserLocationMenus,true);
 function renderAccountList(){
  if(accountEditId)resetAccountForm();const list=$('account-list');list.replaceChildren();const query=$('users-search').value.trim().toLocaleLowerCase();
  const accounts=accountData.filter(account=>(!accountLocationFilters.size||(account.locationIds||[account.locationId]).some(id=>accountLocationFilters.has(id)))&&account.username.toLocaleLowerCase().includes(query)).sort((a,b)=>a.username.localeCompare(b.username,undefined,{sensitivity:'base'}));updateUserCounts(accounts.length);$('users-clear-filters').disabled=!accountLocationFilters.size&&!$('users-search').value;
@@ -89,7 +91,15 @@ function renderAccountList(){
   const row=el('tr',undefined,'user-record');row.dataset.accountId=account.id;row.dataset.editId='user-'+account.id;
   const nameCell=el('td',undefined,'users-name-cell'),identity=el('div',undefined,'users-identity'),avatar=el('span',userInitials(account.username),'user-avatar'),details=el('div'),heading=el('h3',account.username,'user-name'),role=el('p',userRoleNames[account.role],'users-role');heading.dataset.userText='';avatar.dataset.userText='';avatar.setAttribute('aria-hidden','true');heading.id='user-name-'+account.id;details.append(heading,role);identity.append(avatar,details);nameCell.append(identity);
   const locationCell=el('td',undefined,'users-locations-cell'),locationLabel=el('span','Locations','users-cell-label'),locationList=el('div',undefined,'users-location-list');
-  const assigned=accountLocations.filter(record=>(account.locationIds||[account.locationId]).includes(record.id));for(const record of assigned){const tag=el('span',record.name,'users-location-tag');tag.dataset.userText='';locationList.append(tag);}locationCell.append(locationLabel,locationList);
+  const assigned=accountLocations.filter(record=>(account.locationIds||[account.locationId]).includes(record.id));
+  const locationTags=assigned.map(record=>{const tag=el('span',record.name,'users-location-tag');tag.dataset.userText='';tag.title=record.name;return tag;});
+  if(locationTags.length)locationList.append(locationTags[0]);
+  if(locationTags.length>1){
+   const more=el('button',userWording('+{count} more',{count:locationTags.length-1}),'users-locations-more'),menu=el('div',undefined,'users-locations-popover');more.type='button';menu.id='user-locations-'+account.id;menu.setAttribute('popover','auto');more.setAttribute('popovertarget',menu.id);more.setAttribute('aria-label',userWording('More locations for {name}',{name:account.username}));menu.append(...locationTags.slice(1));
+   menu.addEventListener('beforetoggle',event=>{if(event.newState!=='open')return;const rect=more.getBoundingClientRect(),width=Math.min(280,innerWidth-32),below=innerHeight-rect.bottom-16,above=rect.top-16,useBelow=below>=Math.min(200,above);menu.style.width=width+'px';menu.style.left=Math.max(16,Math.min(rect.left,innerWidth-width-16))+'px';menu.style.maxHeight=Math.max(44,Math.min(200,useBelow?below:above))+'px';menu.style.top=useBelow?(rect.bottom+6)+'px':'auto';menu.style.bottom=useBelow?'auto':(innerHeight-rect.top+6)+'px';});
+   locationList.append(more,menu);
+  }
+  locationCell.append(locationLabel,locationList);
   const permissionCell=el('td',undefined,'users-permissions-cell'),permissionLabel=el('span','Permissions','users-cell-label'),permission=el('span',account.role==='admin'?'Full app access':account.role==='franchisee'?'Location user management':'Ordering access','permission-badge'),help=el('p',account.role==='admin'?'Users, locations, suppliers and settings':account.role==='franchisee'?'Orders, sales, stock counts and users in assigned locations':'Orders, stock counts and sales','users-permission-help');permissionCell.append(permissionLabel,permission,help);
   const editorRow=el('tr',undefined,'user-editor-row');editorRow.hidden=true;const editorCell=el('td');editorCell.colSpan=4;const panel=el('div',undefined,'admin-edit-panel user-edit-panel');panel.id='user-edit-'+account.id;panel.hidden=true;panel.setAttribute('aria-labelledby',heading.id);
   const edit=adminUI.button('Edit user '+account.username,panel.id);edit.classList.add('user-edit-toggle');edit.onclick=()=>editAccount(account,panel,edit);const editCell=el('td',undefined,'users-edit-cell');editCell.append(edit);

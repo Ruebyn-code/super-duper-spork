@@ -3329,5 +3329,17 @@
     "locations": [
       "home"
     ]
+  },
+  {
+    "text": "+{count} more",
+    "locations": [
+      "Users"
+    ]
+  },
+  {
+    "text": "More locations for {name}",
+    "locations": [
+      "Users"
+    ]
   }
 ]
