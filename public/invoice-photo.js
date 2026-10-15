@@ -1,0 +1,28 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory(require('./invoice-reader'));else root.invoicePhoto=factory(root.invoiceReader);})(typeof globalThis!=='undefined'?globalThis:this,reader=>{
+ function textFromTsv(tsv){
+  const words=String(tsv||'').split('\n').slice(1).map(line=>{const parts=line.split('\t');return {level:Number(parts[0]),left:Number(parts[6]),top:Number(parts[7]),width:Number(parts[8]),height:Number(parts[9]),confidence:Number(parts[10]),text:parts.slice(11).join(' ').trim()};}).filter(word=>word.level===5&&word.confidence>=0&&word.height>0&&word.width>0&&word.text),rows=[];
+  for(const word of words.sort((a,b)=>(a.top+a.height/2)-(b.top+b.height/2)||a.left-b.left)){const center=word.top+word.height/2;let row=rows.find(row=>Math.abs(row.center-center)<=Math.min(row.height,word.height)*.48);if(!row){row={center,height:word.height,words:[]};rows.push(row);}row.words.push(word);}
+  return rows.sort((a,b)=>a.center-b.center).map(row=>row.words.sort((a,b)=>a.left-b.left).map(word=>word.text).join(' ')).join('\n');
+ }
+ function score(result){const fields=reader.extract(result.text||''),letters=(result.text||'').match(/[A-Za-z]{2,}/g)||[],confidence=Number.isFinite(result.confidence)?result.confidence:0;return (fields.totalCents!==null?36:0)+(fields.invoiceNumber?20:0)+(fields.invoiceDate?14:0)+(fields.subtotalCents!==null?5:0)+(fields.taxCents!==null?5:0)+confidence*.25+Math.min(10,letters.length*.25);}
+ function readable(result){const fields=reader.extract(result.text||'');return (result.confidence===null||(result.confidence??0)>=72)&&fields.totalCents!==null&&Boolean(fields.invoiceNumber||fields.invoiceDate);}
+ function canvas(width,height){const result=document.createElement('canvas');result.width=width;result.height=height;return result;}
+ function rotate(source,degrees){const swapped=Math.abs(degrees)%180===90,result=canvas(swapped?source.height:source.width,swapped?source.width:source.height),ctx=result.getContext('2d');ctx.translate(result.width/2,result.height/2);ctx.rotate(degrees*Math.PI/180);ctx.drawImage(source,-source.width/2,-source.height/2);return result;}
+ function cropPaper(source){
+  const scale=Math.min(1,360/Math.max(source.width,source.height)),small=canvas(Math.max(1,Math.round(source.width*scale)),Math.max(1,Math.round(source.height*scale))),ctx=small.getContext('2d',{willReadFrequently:true});ctx.drawImage(source,0,0,small.width,small.height);const {width,height}=small,pixels=ctx.getImageData(0,0,width,height).data,luma=new Uint8Array(width*height),histogram=new Uint32Array(256);
+  for(let i=0;i<luma.length;i++){luma[i]=Math.round(pixels[i*4]*.299+pixels[i*4+1]*.587+pixels[i*4+2]*.114);histogram[luma[i]]++;}let sum=0,bright=255;for(let i=0;i<256;i++){sum+=histogram[i];if(sum>=luma.length*.9){bright=i;break;}}const threshold=Math.max(145,bright-32),seen=new Uint8Array(luma.length),queue=new Int32Array(luma.length);let largest=null;
+  for(let start=0;start<luma.length;start++){if(seen[start]||luma[start]<threshold)continue;let tail=1,head=0,left=width,right=0,top=height,bottom=0;queue[0]=start;seen[start]=1;while(head<tail){const index=queue[head++],x=index%width,y=Math.floor(index/width);left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);for(const next of [x>0?index-1:-1,x<width-1?index+1:-1,y>0?index-width:-1,y<height-1?index+width:-1])if(next>=0&&!seen[next]&&luma[next]>=threshold){seen[next]=1;queue[tail++]=next;}}if(!largest||tail>largest.count)largest={count:tail,left,right,top,bottom};}
+  small.width=small.height=0;if(!largest)return source;const box=(largest.right-largest.left+1)*(largest.bottom-largest.top+1),coverage=box/luma.length;
+  // Crop only a large, connected light page surrounded by a darker border.
+  if(largest.count/luma.length<.18||coverage>.94||largest.count/box<.6||largest.left<2||largest.top<2||largest.right>width-3||largest.bottom>height-3)return source;
+  const margin=Math.ceil(Math.max(largest.right-largest.left,largest.bottom-largest.top)*.035),left=Math.max(0,largest.left-margin),top=Math.max(0,largest.top-margin),right=Math.min(width,largest.right+margin),bottom=Math.min(height,largest.bottom+margin),x=left/width*source.width,y=top/height*source.height,w=(right-left)/width*source.width,h=(bottom-top)/height*source.height,result=canvas(Math.round(w),Math.round(h));result.getContext('2d').drawImage(source,x,y,w,h,0,0,result.width,result.height);return result;
+ }
+ async function read(source,run,onRetry=()=>{}){
+  let paper=source,best=null;const owned=new Set();
+  async function attempt(image,options){const raw=await run(image,{rotateAuto:true,user_defined_dpi:'300',preserve_interword_spaces:'1',tessedit_pageseg_mode:'3',...options}),plain={text:raw.text||'',confidence:raw.confidence,canvas:image},layout={...plain,text:textFromTsv(raw.tsv)};const result=layout.text&&score(layout)>score(plain)?layout:plain;if(!best||score(result)>score(best))best=result;return result;}
+  try{await attempt(source,{});if(!readable(best)){paper=cropPaper(source);if(paper!==source){owned.add(paper);onRetry('Focusing on the invoice page…');await attempt(paper,{});}}if(!readable(best)){const angles=paper.width>paper.height?[90,270,180]:[180,90,270];for(const angle of angles){onRetry('Checking photo orientation…');const image=rotate(paper,angle);owned.add(image);await attempt(image,{});if(readable(best))break;}}
+   if(!readable(best)){onRetry('Improving contrast and reading again…');await attempt(best.canvas,{tessedit_pageseg_mode:'6',thresholding_method:'2'});}return best;
+  }finally{for(const image of owned)if(image!==best?.canvas)image.width=image.height=0;}
+ }
+ return {textFromTsv,score,readable,cropPaper,rotate,read};
+});
