@@ -1385,7 +1385,8 @@
   {
     "text": "Week commencing",
     "locations": [
-      "Stock count · weekly usage"
+      "Stock count · weekly usage",
+      "sales · weekly report"
     ]
   },
   {
@@ -1848,19 +1849,22 @@
   {
     "text": "← Previous week",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "sales · weekly report"
     ]
   },
   {
     "text": "Next week →",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "sales · weekly report"
     ]
   },
   {
     "text": "This week",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "sales · weekly report"
     ]
   },
   {
@@ -1878,7 +1882,8 @@
   {
     "text": "Reload saved week",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "sales · weekly report"
     ]
   },
   {
@@ -3136,7 +3141,8 @@
   {
     "text": "Total sales",
     "locations": [
-      "Home"
+      "Home",
+      "sales · weekly report"
     ]
   },
   {
@@ -4177,7 +4183,8 @@
   {
     "text": "Weekly report",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "sales · weekly report"
     ]
   },
   {
@@ -4370,6 +4377,222 @@
     "text": "Done",
     "locations": [
       "Dropdowns"
+    ]
+  },
+  {
+    "text": "Browser storage is unavailable. Save the report before leaving.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Cash",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Cash to be deposited",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Cash to be deposited is the cash row total. Stock cost uses orders placed in the selected week. Percentages use recorded report sales.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Daily variance",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Daily variance = cash + Eftpos + petty cash − till sales.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Discard unsaved report entries and reload the saved week?",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "DoorDash",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Eftpos",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Labour",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Labour %",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Leave unrecorded cells blank. Enter 0 for unused sales channels. Daily sales totals need all three sales channels; variance needs cash, Eftpos, petty cash and till sales.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Loading weekly report…",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "OPEX %",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Operating expenses",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Petty cash",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Record your location’s daily takings and weekly costs. This report is saved separately and does not change daily sales, projected sales or your ordering budget.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Sales report",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Save weekly report",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Saved report loaded. You can edit and save this week again.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Saving weekly report…",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Separate from projections",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Stock expense",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Stock orders placed",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Till sales",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Total sales = Eftpos + Uber Eats + DoorDash.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Totals",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Uber Eats",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Unsaved report entries are kept in this browser.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Unsaved report restored from this browser.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Weekly overview",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Weekly report saved. Daily sales, projections and budget are unchanged.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Weekly sales report",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Weekly variance",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Your report draft is older than the saved report. Reload the saved week before saving.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "{count} of 7 sales days recorded · {reconciled} of 7 days reconciled",
+    "locations": [
+      "sales · weekly report"
     ]
   }
 ]

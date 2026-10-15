@@ -31,7 +31,7 @@
   salesPerformanceView.render(projection,performance,{unsaved:currentEntry&&dirty});
  }
  function setBusy(value){busy=value;form.setAttribute('aria-busy',String(value));for(const control of form.elements)control.disabled=value;for(const button of document.querySelectorAll('[data-entry-week]'))button.disabled=value;}
- function showView(){const view=location.hash==='#projection'?'projection':'entry';document.querySelectorAll('[data-sales-view]').forEach(panel=>panel.hidden=panel.dataset.salesView!==view);document.querySelectorAll('.sales-nav a').forEach(link=>{if(link.hash==='#'+view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});}
+ function showView(){const view=location.hash==='#projection'?'projection':location.hash==='#report'?'report':'entry';document.querySelectorAll('.sales-overview,.sales-performance,[data-edit-id="sales-intro"]').forEach(panel=>panel.hidden=view==='report');$('sales-message').hidden=view==='report';document.querySelectorAll('[data-sales-view]').forEach(panel=>panel.hidden=panel.dataset.salesView!==view);document.querySelectorAll('.sales-nav a').forEach(link=>{if(link.hash==='#'+view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});}
  function renderProjection(){
   if(!report)return;renderPerformance();const projection=report.projection;
   $('sales-current-period').textContent=dateLabel(projection.weekStart)+' – '+dateLabel(projection.weekEnd)+' · Melbourne';
