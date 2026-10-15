@@ -4594,5 +4594,11 @@
     "locations": [
       "sales · weekly report"
     ]
+  },
+  {
+    "text": "Enter an amount between $0 and {maximum}, with up to two decimal places.",
+    "locations": [
+      "sales · weekly report"
+    ]
   }
 ]
