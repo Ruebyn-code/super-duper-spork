@@ -51,9 +51,9 @@ function createStore(){
    await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}return {...record,operatingSchedule:schedule};
   });const settled=operation.catch(()=>{});pending.set(target,settled);try{return await operation;}finally{if(pending.get(target)===settled)pending.delete(target);}
  }
- async function report(dir,session,selectedWeek,{orders=[],now=new Date()}={}){
-  const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone),operatingExpenseTypes=await expenseTypes.read(dir,session);
-  const schedule=await operatingSchedule.read(dir,session),incomplete=record.expenseEntries.operatingExpensesCents!==null&&weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents)===null;
+ async function report(dir,session,selectedWeek,{orders=[],now=new Date(),operatingScheduleSnapshot,expenseTypesSnapshot}={}){
+  const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone),operatingExpenseTypes=expenseTypesSnapshot||await expenseTypes.read(dir,session);
+  const schedule=operatingScheduleSnapshot||await operatingSchedule.read(dir,session),incomplete=record.expenseEntries.operatingExpensesCents!==null&&weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents)===null;
   record.operatingAdditionalCents=record.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents):Object.hasOwn(record,'operatingAdditionalCents')?record.operatingAdditionalCents:record.operatingExpensesCents;
   record.operatingSchedule=schedule;record.operatingAllocations=operatingSchedule.legacyRows(schedule.bills,start);
   record.operatingExpensesCents=incomplete?null:record.operatingAdditionalCents===null&&!schedule.bills.some(bill=>bill.startWeek<=start)?null:(record.operatingAdditionalCents??0)+operatingSchedule.cost(schedule.bills,start);

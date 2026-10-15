@@ -7,7 +7,7 @@
  form.noValidate=true;
  const entry=createSalesReportEntry({host:$('weekly-report-table'),overview:$('weekly-report-overview'),feesHost:$('weekly-platform-fees'),expenseHost:$('weekly-expense-pages'),onTypeChange:changeExpenseType,onScheduleChange:changeExpenseSchedule,onRevealExpense:page=>{location.hash=page==='report'?'report':'expense-'+page;renderPage();},wording,onChange:()=>{dirty=true;saveDraft();renderProgress();}});
  const draftKey=()=>session&&selectedWeek?'souvlaki-weekly-report-draft-'+session.id+'-'+session.locationId+'-'+selectedWeek:'';
- const expenseLabels={stock:'Stock costs',labour:'Labour','operating-expenses':'Operating expenses',ro:'R&O'};
+ const expenseLabels={stock:'Cost of goods',labour:'Labour','operating-expenses':'Op Ex',ro:'R&O'};
  const selectedPage=()=>Object.hasOwn(expenseLabels,location.hash.slice(9))&&location.hash.startsWith('#expense-')?location.hash.slice(9):'report';
  function renderPage(){const page=selectedPage();$('weekly-report-content').hidden=page!=='report';$('weekly-expense-pages').hidden=page==='report';for(const link of document.querySelectorAll('[data-expense-view]')){if(link.dataset.expenseView===page)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}entry.showExpense(page);renderHeading();if(busy)setBusy(true);}
  for(const link of document.querySelectorAll('[data-expense-view]'))link.addEventListener('click',event=>{if(busy)event.preventDefault();});
@@ -27,5 +27,5 @@
  window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();else if(dirty)saveDraft();});
  async function refresh(){if(session&&!busy&&!dirty&&!document.hidden&&(location.hash==='#report'||location.hash.startsWith('#expense-')))await loadWeek(selectedWeek);}
  window.addEventListener('focus',refresh);window.addEventListener('hashchange',refresh);window.addEventListener('storage',event=>{if(event.key==='souvlaki-weekly-report-updated-'+session?.dataScope||event.key==='souvlaki-operating-expenses-updated-'+session?.dataScope)refresh();});window.addEventListener('interface-text-updated',()=>{renderHeading();renderProgress();});setInterval(refresh,60000);
- setBusy(true);(async()=>{try{const response=await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}renderHeading();await loadWeek();}catch(error){$('weekly-message').textContent=error.message;setBusy(false);}})();
+ setBusy(true);(async()=>{try{const response=await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}renderHeading();await loadWeek(new URL(location.href).searchParams.get('week')||'');}catch(error){$('weekly-message').textContent=error.message;setBusy(false);}})();
 })();

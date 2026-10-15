@@ -93,3 +93,5 @@
  .app-layout-toolbar{bottom:calc(82px + env(safe-area-inset-bottom,0px))}
 }
 @media(prefers-reduced-motion:reduce){#app-sidebar.top-navigation .toolbar-actions,#app-sidebar.top-navigation .toolbar-toggle svg{transition:none}}
+
+@media(min-width:721px){.top-navigation .top-navigation-tabs a{transition:gap .48s cubic-bezier(.2,.8,.2,1),padding .48s cubic-bezier(.2,.8,.2,1),background-color .18s ease}.top-navigation .sidebar-brand-row #sidebar-location{transition:flex-basis .48s cubic-bezier(.2,.8,.2,1),width .48s cubic-bezier(.2,.8,.2,1)}}@media(prefers-reduced-motion:reduce){.top-navigation .top-navigation-tabs a,.top-navigation .top-navigation-tabs .sidebar-label,.top-navigation .sidebar-brand-row #sidebar-location{transition:none}}
