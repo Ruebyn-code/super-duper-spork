@@ -4600,5 +4600,11 @@
     "locations": [
       "sales · weekly report"
     ]
+  },
+  {
+    "text": "{location} weekly sales report",
+    "locations": [
+      "sales · weekly report"
+    ]
   }
 ]
