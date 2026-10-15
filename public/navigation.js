@@ -6,7 +6,8 @@
   if(typeof interfaceLabel==='function')return interfaceLabel(text,values);
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
- let selectedGroup='',isAdmin=false,isUserManager=false;
+ let selectedGroup='',isAdmin=false,isUserManager=false,moreOpen=false;
+ const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
  const currentGroup=()=>({'/stock-count':'count','/sales':'sales','/admin':'stock','/admin/accounts':'accounts','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
  // Keep the original elements and edit identities when arranging the common header.
@@ -15,8 +16,36 @@
  const navs=[...scroll.querySelectorAll(':scope > .main-sidebar-nav')];navs[0]?.before(tabs);tabs.append(...navs);
  const adminButton=document.createElement('button');adminButton.id='top-admin-toggle';adminButton.type='button';adminButton.dataset.editId='top-admin-toggle-'+location.pathname.replace(/[^a-z0-9]/gi,'_');adminButton.hidden=true;adminButton.setAttribute('aria-controls','admin-link');adminButton.setAttribute('aria-expanded','false');
  adminButton.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><g class="icon-detail"><path d="M7 8h10M7 12h10M7 16h10"/></g></svg><span class="sidebar-label"></span><span class="top-menu-chevron" aria-hidden="true">⌄</span>';const adminHeading=admin?.querySelector('h2'),adminLabel=adminButton.querySelector('.sidebar-label');if(adminHeading){for(const attribute of adminHeading.attributes)adminLabel.setAttribute(attribute.name,attribute.value);adminLabel.classList.add('sidebar-label');adminLabel.append(...adminHeading.childNodes);adminHeading.remove();}adminLabel.dataset.appTemplate='Administration';tabs.append(adminButton);
- if(admin){admin.hidden=false;admin.setAttribute('popover','auto');admin.setAttribute('aria-label',wording('Administration'));admin.setAttribute('role','navigation');}
+ if(admin){admin.hidden=true;admin.setAttribute('popover','auto');admin.setAttribute('aria-label',wording('Administration'));admin.setAttribute('role','navigation');}
  const logout=document.getElementById('logout');if(logout)footer.append(logout);if(footer)scroll.append(footer);if(secondary)sidebar.append(secondary);
+ // Reuse the same links on phones so cart badges, roles and App edit identities stay intact.
+ const mobileBar=document.createElement('nav');mobileBar.id='mobile-tabbar';mobileBar.className='mobile-tabbar';mobileBar.setAttribute('aria-label','Main navigation');
+ const more=document.createElement('button');more.id='mobile-more';more.type='button';more.className='mobile-nav-tab';more.setAttribute('data-copy-editor','');more.setAttribute('aria-expanded','false');more.setAttribute('aria-controls','app-sidebar-menu');
+ more.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><g class="icon-detail"><path d="M7 8h10M7 12h10M7 16h10"/></g></svg><span class="sidebar-label">More</span>';
+ const menuTitle=document.createElement('div');menuTitle.className='mobile-menu-heading';menuTitle.setAttribute('data-copy-editor','');menuTitle.innerHTML='<h2>More</h2><button type="button" aria-label="Close menu" title="Close menu"><svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>';
+ const backdrop=document.createElement('div');backdrop.className='mobile-nav-backdrop';backdrop.hidden=true;backdrop.setAttribute('aria-hidden','true');backdrop.setAttribute('data-copy-editor','');
+ const mobileHeader=document.createElement('div');mobileHeader.className='mobile-brand-header';
+ const navSlots=navs.map(nav=>{const marker=document.createComment('top navigation position');nav.before(marker);return {nav,marker};});let brandSlot;
+ scroll.id='app-sidebar-menu';scroll.prepend(menuTitle);sidebar.append(mobileBar);mobileBar.append(more);shell.before(backdrop);page.prepend(mobileHeader);
+ function updateMore(){
+  more.setAttribute('aria-expanded',String(moreOpen));more.classList.toggle('active',moreOpen||['stock','accounts','settings'].includes(selectedGroup||currentGroup())||location.pathname==='/reporting');
+  const label=wording('More'),span=more.querySelector('.sidebar-label'),heading=menuTitle.querySelector('h2');if(span.textContent!==label)span.textContent=label;if(heading.textContent!==label)heading.textContent=label;more.title=label||'More';more.setAttribute('aria-label',more.title);const close=menuTitle.querySelector('button');close.title=wording('Close menu')||'Close menu';close.setAttribute('aria-label',close.title);
+ }
+ function renderMobileSheets(){shell.classList.toggle('mobile-more-open',mobile.matches&&moreOpen);backdrop.hidden=!(mobile.matches&&(moreOpen||selectedGroup));scroll.inert=mobile.matches&&!moreOpen;updateMore();}
+ function closeMore(restoreFocus=false){moreOpen=false;renderMobileSheets();if(restoreFocus)more.focus();}
+ function openMore(focus=false){closeSubmenu();moreOpen=true;renderMobileSheets();if(focus)(isUserManager?admin?.querySelector('a:not([hidden])'):logout)?.focus();}
+ more.onclick=event=>{if(moreOpen)closeMore();else openMore(event.detail===0);};menuTitle.querySelector('button').onclick=()=>closeMore(true);backdrop.onclick=()=>{const previous=selectedGroup;closeMore();closeSubmenu();(['count','sales'].includes(previous)?groupLink(previous):more)?.focus();};
+ function syncMobileLayout(){
+  closeAdmin();closeMore();closeSubmenu();window.locationPickers?.closeAll();pointerInside=false;keyboardInside=false;sidebar.classList.toggle('top-navigation',!mobile.matches);
+  if(mobile.matches){
+   admin?.removeAttribute('popover');for(const {nav} of navSlots)mobileBar.insertBefore(nav,more);if(logout&&footer)footer.before(logout);if(secondary)shell.insertBefore(secondary,page);
+   const brand=scroll.querySelector('.sidebar-brand-row');if(brand){if(!brandSlot){brandSlot=document.createComment('top brand position');brand.before(brandSlot);}mobileHeader.append(brand);}
+  }else{
+   admin?.setAttribute('popover','auto');for(const {nav,marker} of navSlots)marker.after(nav);if(logout&&footer)footer.append(logout);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
+  }
+  renderNavigation();renderMobileSheets();
+ }
+ mobile.addEventListener('change',syncMobileLayout);
  function updateAdmin(){const label=adminButton.querySelector('.sidebar-label').textContent;adminButton.title=label;adminButton.setAttribute('aria-label',label||'Admin');admin?.setAttribute('aria-label',label||'Admin');adminButton.classList.toggle('active',Boolean(admin?.matches(':popover-open'))||['stock','accounts','settings'].includes(currentGroup())||location.pathname==='/reporting');}
  function positionAdmin(){if(!admin?.matches(':popover-open'))return;const box=adminButton.getBoundingClientRect(),viewport=window.visualViewport,edge=12,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight;const menuWidth=Math.min(300,width-edge*2),y=Math.min(box.bottom+8,top+height-100);admin.style.width=menuWidth+'px';admin.style.left=Math.max(left+edge,Math.min(box.right-menuWidth,left+width-menuWidth-edge))+'px';admin.style.top=y+'px';admin.style.maxHeight=Math.max(80,top+height-y-edge)+'px';}
  function closeAdmin(restoreFocus=false){if(admin?.matches(':popover-open'))admin.hidePopover();if(restoreFocus)adminButton.focus();}
@@ -26,12 +55,12 @@
  admin?.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeAdmin(true);}});
  scroll.addEventListener('scroll',positionAdmin,{passive:true});window.addEventListener('resize',positionAdmin);window.addEventListener('scroll',positionAdmin,{passive:true});window.visualViewport?.addEventListener('resize',positionAdmin);
  function updateSubmenuTitle(){const link=groupLink(selectedGroup),title=document.getElementById('subsidebar-title');if(link&&title){title.dataset.localWording=link.dataset.sidebarName;const text=link.querySelector('.sidebar-label')?.textContent||'';if(title.textContent!==text)title.textContent=text;}const close=document.getElementById('subsidebar-close');if(close){close.title=wording('Close submenu')||'Close submenu';close.setAttribute('aria-label',close.title);}}
- function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary)secondary.hidden=true;shell?.classList.remove('subsidebar-open');sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});if(restoreFocus){if(['stock','accounts','settings'].includes(previous))adminButton.focus();else groupLink(previous)?.focus();}}
+ function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary)secondary.hidden=true;shell?.classList.remove('subsidebar-open');sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});renderMobileSheets();if(restoreFocus){if(['stock','accounts','settings'].includes(previous)){if(mobile.matches){openMore();groupLink(previous)?.focus();}else adminButton.focus();}else groupLink(previous)?.focus();}}
  function openSubmenu(group,focus=false){
   if(!secondary||(!isAdmin&&['stock','settings'].includes(group))||(!isUserManager&&group==='accounts'))return;
-  const menu=secondary.querySelector('[data-subsidebar-group="'+group+'"]');if(!menu){closeSubmenu();return;}selectedGroup=group;closeAdmin();
+  const menu=secondary.querySelector('[data-subsidebar-group="'+group+'"]');if(!menu){closeSubmenu();return;}selectedGroup=group;closeAdmin();if(mobile.matches)closeMore();
   secondary.querySelectorAll('[data-subsidebar-group]').forEach(nav=>nav.hidden=nav!==menu);secondary.hidden=false;shell?.classList.add('subsidebar-open');
-  sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{const active=link.dataset.sidebarGroup===group;link.setAttribute('aria-expanded',String(active));if(active)link.dataset.submenuOpen='true';else delete link.dataset.submenuOpen;});updateSubmenuTitle();if(focus)menu.querySelector('a:not([hidden])')?.focus();
+  sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{const active=link.dataset.sidebarGroup===group;link.setAttribute('aria-expanded',String(active));if(active)link.dataset.submenuOpen='true';else delete link.dataset.submenuOpen;});updateSubmenuTitle();renderMobileSheets();if(focus||mobile.matches)menu.querySelector('a:not([hidden])')?.focus();
  }
  sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>link.addEventListener('click',event=>{
   if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
@@ -39,10 +68,11 @@
   const first=secondary.querySelector('[data-subsidebar-group="'+group+'"] a[href]:not([hidden])');if(first&&first.href!==location.href)location.assign(first.href);
  }));
  document.getElementById('subsidebar-close')?.addEventListener('click',()=>closeSubmenu(true));
- sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{closeAdmin();closeSubmenu();}));
- document.addEventListener('keydown',event=>{if(event.key==='Escape'&&selectedGroup&&!document.querySelector('dialog[open], [popover]:popover-open:not(.app-edit-indicator)')){event.preventDefault();closeSubmenu(true);}});
- window.addEventListener('hashchange',()=>openSubmenu(currentGroup()));
- document.getElementById('app-edit-toggle')?.addEventListener('click',()=>closeAdmin());
+ sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{closeAdmin();closeMore();closeSubmenu();}));
+ document.addEventListener('keydown',event=>{if(event.defaultPrevented||event.key!=='Escape'||document.querySelector('dialog[open], [popover]:popover-open:not(.app-edit-indicator)'))return;if(selectedGroup){event.preventDefault();closeSubmenu(true);}else if(moreOpen){event.preventDefault();closeMore(true);}});
+ secondary?.addEventListener('click',event=>{if(mobile.matches&&event.target.closest('a'))closeSubmenu();});
+ window.addEventListener('hashchange',()=>{if(!mobile.matches)openSubmenu(currentGroup());});
+ document.getElementById('app-edit-toggle')?.addEventListener('click',()=>{closeAdmin();if(mobile.matches)closeMore();});
  const preference=companyPreferenceKey('souvlaki-top-navigation-compact'),hoverPreference=companyPreferenceKey('souvlaki-top-navigation-hover');
  let collapsed=false,hoverEnabled=false,pointerInside=false,keyboardInside=false;
  try{collapsed=localStorage.getItem(preference)==='true';hoverEnabled=localStorage.getItem(hoverPreference)==='true';}catch{}
@@ -64,9 +94,9 @@
  sidebar.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible')){keyboardInside=true;renderNavigation();}});
  sidebar.addEventListener('focusout',()=>queueMicrotask(()=>{keyboardInside=Boolean(sidebar.querySelector(':focus-visible'));renderNavigation();}));
  window.addEventListener('storage',event=>{if(event.key!==preference&&event.key!==hoverPreference&&event.key!==null)return;try{collapsed=localStorage.getItem(preference)==='true';hoverEnabled=localStorage.getItem(hoverPreference)==='true';}catch{}renderNavigation();});
- window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateSubmenuTitle();updateAdmin();});
- new MutationObserver(()=>{updateNavigationLabels();updateSubmenuTitle();updateAdmin();}).observe(scroll,{childList:true,characterData:true,subtree:true});
- updateNavigationLabels();updateAdmin();renderNavigation();
+ window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateSubmenuTitle();updateAdmin();updateMore();});
+ new MutationObserver(()=>{updateNavigationLabels();updateSubmenuTitle();updateAdmin();}).observe(sidebar,{childList:true,characterData:true,subtree:true});
+ updateNavigationLabels();updateAdmin();syncMobileLayout();
  (async()=>{
   try{
    const response=await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});const session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}
@@ -101,11 +131,11 @@
      try{const response=await fetch('/api/session/location',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},body:JSON.stringify({locationId:next})});const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to switch location.');location.reload();}
      catch(error){select.value=session.locationId;select.disabled=false;status.textContent=error.message;}
     };
-    control.append(label,arrow,select);row.append(control,status);window.locationPickers.enhance(select,{host:control,displayLabel:label,contents:[control.querySelector('.location-pin'),label,arrow],label:'Switch location',holdWhileBusy:true});renderNavigation();
+    control.append(label,arrow,select);row.append(control,status);window.locationPickers.enhance(select,{host:control,displayLabel:label,contents:[control.querySelector('.location-pin'),label,arrow],label:'Switch location',holdWhileBusy:true});syncMobileLayout();
    }
    isAdmin=session.role==='admin';isUserManager=['admin','franchisee'].includes(session.role);document.querySelectorAll('#app-sidebar a[data-head-office-only],#app-subsidebar a[data-head-office-only]').forEach(element=>element.hidden=!isAdmin);document.querySelectorAll('[data-user-manager-only]').forEach(element=>element.hidden=!isUserManager);adminButton.hidden=!isUserManager;if(admin)admin.hidden=!isUserManager;
    const editControls=document.getElementById('admin-edit-controls');if(editControls)editControls.hidden=session.role!=='admin';
-   openSubmenu(currentGroup());renderNavigation();
+   if(!mobile.matches)openSubmenu(currentGroup());renderNavigation();renderMobileSheets();
    const badge=document.getElementById('cart-badge'),cartKey='souvlaki-cart-'+(session.id||session.username)+(session.locationId?'-'+session.locationId:'');function refreshBadge(){if(!badge)return;try{const cart=JSON.parse(localStorage.getItem(cartKey)||(session.canMigrateBrowserData?localStorage.getItem('souvlaki-cart-'+(session.id||session.username)):null)||'{}');badge.textContent=Object.values(cart).filter(q=>Number.isInteger(q)&&q>0&&q<=999).reduce((sum,q)=>sum+q,0);}catch{badge.textContent='0';}}refreshBadge();window.addEventListener('storage',event=>{if(event.key===cartKey)refreshBadge();});window.addEventListener('cart-updated',event=>{if(event.detail?.key===cartKey)refreshBadge();});
    updateNavigationLabels();updateAdmin();
   }catch{}

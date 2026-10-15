@@ -1,4 +1,4 @@
-/* The shared navigation stays above the page at every screen size. */
+/* Larger screens use a compact top bar; phones use the bottom tab bar. */
 .app-shell,.app-shell.subsidebar-open{display:block;max-width:1680px;min-height:100dvh;transition:none}
 .app-shell>.top-navigation#app-sidebar{position:sticky;inset:0 0 auto;display:block;width:100%;max-width:none;margin:0;height:auto;min-height:0;padding:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background-color:white;box-shadow:0 4px 20px #182b3a06;overflow:visible;z-index:40;transition:none}
 #app-sidebar.top-navigation>.sidebar-scroll{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:12px;flex:none;position:relative;inset:auto;width:100%;height:auto;max-height:none;min-height:0;margin:0;padding:6px 16px;border:0;border-radius:0;background-color:transparent;box-shadow:none;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin}
@@ -68,3 +68,9 @@
 
 .app-edit-mode .app-shell>.top-navigation#app-sidebar{padding-top:calc(42px + env(safe-area-inset-top,0px))}
 @media(max-width:520px){.app-edit-mode .app-shell>.top-navigation#app-sidebar{padding-top:calc(82px + env(safe-area-inset-top,0px))}}
+
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
+ #app-sidebar:not(.top-navigation) #top-navigation-tabs{display:none}
+ .app-page{padding-bottom:calc(var(--mobile-nav-space) + 16px)}
+ .app-layout-toolbar{bottom:calc(82px + env(safe-area-inset-bottom,0px))}
+}
