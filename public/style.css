@@ -1138,3 +1138,4 @@ html:not([data-account-role=admin]):not([data-account-role=franchisee]) [data-us
 @media(max-width:720px){.report-location-actions button{min-height:42px}.report-location-option{min-height:42px}.report-controls #report-view,.report-controls .report-locations-toggle{flex:1;max-width:100%;min-width:0}.report-controls #report-preset{flex-basis:100%;width:100%}.report-location-menu{padding:12px}}
 .reporting-page [hidden],.report-location-menu [hidden]{display:none!important}
 .report-table td.stock-name{min-width:150px}
+#app-sidebar #admin-link>.reporting-sidebar-nav{margin-bottom:2px!important}
