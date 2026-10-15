@@ -4446,7 +4446,7 @@
     ]
   },
   {
-    "text": "Leave unrecorded cells blank. Enter 0 for unused sales channels. Daily sales totals need all three sales channels; variance needs cash, Eftpos, petty cash and till sales.",
+    "text": "Leave unrecorded cells blank. Enter 0 for unused sales channels. Daily sales totals need till sales, Uber Eats and DoorDash; variance needs cash, Eftpos, petty cash and till sales.",
     "locations": [
       "sales · weekly report"
     ]
@@ -4530,7 +4530,7 @@
     ]
   },
   {
-    "text": "Total sales = Eftpos + Uber Eats + DoorDash.",
+    "text": "Total sales = Till sales + Uber Eats + DoorDash.",
     "locations": [
       "sales · weekly report"
     ]

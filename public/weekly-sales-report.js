@@ -5,7 +5,7 @@
  function calculate(breakdown){
   const days=[],variances=[];
   for(let index=0;index<7;index++){
-   const revenue=['eftpos','uberEats','doorDash'].map(field=>breakdown[field][index]);
+   const revenue=['tillSales','uberEats','doorDash'].map(field=>breakdown[field][index]);
    days.push(revenue.every(value=>value!==null)?sum(revenue):null);
    const reconciliation=['cash','eftpos','pettyCash','tillSales'].map(field=>breakdown[field][index]);
    variances.push(reconciliation.every(value=>value!==null)?reconciliation[0]+reconciliation[1]+reconciliation[2]-reconciliation[3]:null);
