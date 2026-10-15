@@ -13,11 +13,10 @@
 .top-navigation .sidebar-brand-row .location-switch-status[hidden]{display:none}
 #app-sidebar.top-navigation .top-navigation-tabs{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;flex:1 0 auto;flex-wrap:nowrap;gap:3px;min-width:max-content;margin:0;padding:2px;overflow:visible}
 #app-sidebar.top-navigation .top-navigation-tabs>.main-sidebar-nav{display:contents;margin:0!important}
-#app-sidebar.top-navigation .top-navigation-tabs a,#app-sidebar.top-navigation #top-admin-toggle{position:relative;display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:6px;min-height:40px;margin:0;padding:8px 10px;border:0;border-radius:10px;background-color:transparent;color:var(--primary);font-size:12px;line-height:1.4;text-decoration:none;white-space:nowrap;box-shadow:none}
-#app-sidebar.top-navigation #top-admin-toggle[hidden]{display:none}
-#app-sidebar.top-navigation .top-navigation-tabs a:hover,#app-sidebar.top-navigation .top-navigation-tabs a[aria-current=page],#app-sidebar.top-navigation .top-navigation-tabs a[data-submenu-open=true],#app-sidebar.top-navigation #top-admin-toggle:hover,#app-sidebar.top-navigation #top-admin-toggle.active{background-color:color-mix(in srgb,var(--primary) 12%,white);box-shadow:none}
+#app-sidebar.top-navigation .top-navigation-tabs a{position:relative;display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:6px;min-height:40px;margin:0;padding:8px 10px;border:0;border-radius:10px;background-color:transparent;color:var(--primary);font-size:12px;line-height:1.4;text-decoration:none;white-space:nowrap;box-shadow:none}
+#app-sidebar.top-navigation .top-navigation-tabs [hidden]{display:none!important}
+#app-sidebar.top-navigation .top-navigation-tabs a:hover,#app-sidebar.top-navigation .top-navigation-tabs a[aria-current=page],#app-sidebar.top-navigation .top-navigation-tabs a[data-submenu-open=true]{background-color:color-mix(in srgb,var(--primary) 12%,white);box-shadow:none}
 #app-sidebar.top-navigation .top-navigation-tabs a::after{display:none}
-.top-menu-chevron{font:16px/1 Arial,sans-serif}
 .top-navigation #cart-badge{margin:0;padding:2px 5px;min-width:18px;max-width:48px;overflow:hidden;text-overflow:ellipsis;font:11px/1.4 Arial,sans-serif}
 #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer{display:flex;flex-direction:row;align-items:center;gap:2px;flex:0 0 auto;width:auto;margin:0;padding:3px;border:0;border-radius:10px;background-color:var(--primary);color:white}
 #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer:has(.sidebar-edit-controls[hidden]){display:flex}
@@ -27,13 +26,8 @@
 #app-sidebar.top-navigation .sidebar-footer #app-edit-toggle[aria-pressed=true]{background-color:var(--secondary)}
 #app-sidebar.top-navigation .sidebar-footer .sidebar-navigation-icon{color:inherit}
 #app-sidebar.top-navigation .sidebar-footer .sidebar-label,#app-sidebar.top-navigation .sidebar-edit-label,#app-sidebar.top-navigation .sidebar-toggle-text{display:none}
-#app-sidebar.top-navigation #admin-link{position:fixed;inset:auto;margin:0;padding:12px;border:1px solid var(--line);border-radius:16px;background-color:white;color:var(--primary);box-shadow:0 16px 48px #182b3a26;overflow-y:auto;overscroll-behavior:contain}
-#app-sidebar.top-navigation #admin-link:not(:popover-open){display:none}
-#app-sidebar.top-navigation #admin-link:popover-open{display:block;animation:sidebar-reveal var(--motion-medium,.22s) ease both}
-#app-sidebar.top-navigation #admin-link h2{margin:4px 10px 10px;font-size:12px;color:var(--muted)}
-#app-sidebar.top-navigation #admin-link>.main-sidebar-nav{display:flex;flex-direction:column;gap:3px;margin:0!important}
-#app-sidebar.top-navigation #admin-link .main-sidebar-nav a{display:flex;min-height:44px;padding:10px 12px;font-size:13px;gap:10px}
-#app-sidebar.top-navigation #admin-link .sidebar-label{display:block}
+#app-sidebar.top-navigation #admin-link,#app-sidebar.top-navigation #admin-link>.main-sidebar-nav{display:contents;margin:0!important;padding:0;border:0;background:transparent}
+#app-sidebar.top-navigation #admin-link>h2{display:none}
 #app-sidebar.top-navigation>.secondary-sidebar{position:static;inset:auto;display:flex;align-items:center;gap:16px;width:auto;max-width:none;height:auto;min-height:0;max-height:none;overflow:visible;margin:0;padding:6px 16px;border:0;border-top:1px solid var(--line);border-radius:0;background-color:color-mix(in srgb,var(--primary) 3%,white);box-shadow:none;z-index:auto;animation:none}
 .top-navigation .secondary-sidebar .subsidebar-heading{display:contents;margin:0}
 .top-navigation .secondary-sidebar .subsidebar-heading h2{flex:0 1 auto;max-width:180px;margin:0;font-size:12px;line-height:1.4;letter-spacing:.02em}
@@ -44,9 +38,9 @@
 .top-navigation .secondary-sidebar .sidebar-navigation-icon{width:17px;height:17px}
 .app-page{padding-bottom:0}
 .app-page main{scroll-margin-top:72px}
-.navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a .sidebar-label,.navigation-compact #app-sidebar.top-navigation #top-admin-toggle .sidebar-label{max-width:0;opacity:0;overflow:hidden}
-.navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a,.navigation-compact #app-sidebar.top-navigation #top-admin-toggle{gap:0;padding-inline:12px}
-.navigation-compact #app-sidebar.top-navigation #cart-badge,.navigation-compact #app-sidebar.top-navigation .top-menu-chevron{margin-left:5px}
+.navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a .sidebar-label{max-width:0;opacity:0;overflow:hidden}
+.navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a{gap:0;padding-inline:12px}
+.navigation-compact #app-sidebar.top-navigation #cart-badge{margin-left:5px}
 .top-navigation .top-navigation-tabs .sidebar-label{max-width:180px;opacity:1;transition:max-width .48s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
 .app-layout-toolbar{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
@@ -59,7 +53,7 @@
  .top-navigation #sidebar-location .location-select-trigger{min-height:36px;padding:6px;gap:4px;font-size:11px}
  .top-navigation #sidebar-location .location-pin{width:14px;height:14px;flex-basis:14px}
  #app-sidebar.top-navigation .top-navigation-tabs{gap:2px;padding:2px 0}
- #app-sidebar.top-navigation .top-navigation-tabs a,#app-sidebar.top-navigation #top-admin-toggle{min-height:40px;padding:8px;font-size:11px;gap:5px}
+ #app-sidebar.top-navigation .top-navigation-tabs a{min-height:40px;padding:8px;font-size:11px;gap:5px}
  #app-sidebar.top-navigation .top-navigation-tabs .sidebar-navigation-icon,#app-sidebar.top-navigation .top-navigation-tabs .cart-icon{width:18px;height:18px}
  #app-sidebar.top-navigation .sidebar-footer #sidebar-toggle,#app-sidebar.top-navigation .sidebar-footer #app-edit-toggle,#app-sidebar.top-navigation .sidebar-footer #logout{min-width:32px;width:32px;min-height:34px;height:34px;padding:7px}
 }
