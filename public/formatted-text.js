@@ -1,0 +1,19 @@
+(function(root){
+ const types=['paragraph','heading','quote','bullet','number'],marks=['bold','italic','underline','strike'];
+ function invalid(message){throw Object.assign(Error(message),{status:400});}
+ function safeLink(value){if(typeof value!=='string'||value.length>2048||/[\u0000-\u0020\u007f]/.test(value))return null;try{const url=new URL(value);return ['http:','https:','mailto:','tel:'].includes(url.protocol)&&!url.username&&!url.password?url.href:null;}catch{return null;}}
+ function normalize(value,maxLength=20000){
+  if(!value||typeof value!=='object'||Array.isArray(value)||value.version!==1||!Array.isArray(value.blocks)||value.blocks.length>500||Object.keys(value).some(key=>!['version','blocks'].includes(key)))invalid('Choose supported text formatting.');
+  let characters=0,spans=0;
+  const blocks=value.blocks.map(block=>{if(!block||typeof block!=='object'||!types.includes(block.type)||!Array.isArray(block.spans)||Object.keys(block).some(key=>!['type','spans','level'].includes(key))||block.level!==undefined&&(block.type!=='heading'||![2,3].includes(block.level)))invalid('Invalid formatted text block.');const result={type:block.type,...(block.type==='heading'?{level:block.level||2}:{}),spans:[]};
+   for(const part of block.spans){if(++spans>1000||!part||typeof part!=='object'||Array.isArray(part)||typeof part.text!=='string'||Object.keys(part).some(key=>!['text','href',...marks].includes(key))||marks.some(key=>part[key]!==undefined&&typeof part[key]!=='boolean'))invalid('Invalid text formatting.');const text=part.text.replace(/\r\n?/g,'\n').replace(/\u00a0/g,' ');characters+=text.length;if(characters>maxLength)invalid('Text must be '+maxLength.toLocaleString('en-AU')+' characters or fewer.');if(!text)continue;const span={text};for(const mark of marks)if(part[mark])span[mark]=true;if(part.href!==undefined){const href=safeLink(part.href);if(!href)invalid('Use a valid http, https, email or telephone link.');span.href=href;}const previous=result.spans.at(-1);if(previous&&[...marks,'href'].every(key=>previous[key]===span[key]))previous.text+=span.text;else result.spans.push(span);}
+   return result;
+  });
+  if(characters+Math.max(0,blocks.length-1)>maxLength)invalid('Text must be '+maxLength.toLocaleString('en-AU')+' characters or fewer.');return{version:1,blocks};
+ }
+ const plainText=value=>value.blocks.map(block=>block.spans.map(span=>span.text).join('')).join('\n');
+ function render(host,body,value){host.replaceChildren();host.classList.add('formatted-text');if(!value){host.classList.add('formatted-text-plain');host.textContent=body||'';return;}let documentValue;try{documentValue=normalize(value);}catch{host.classList.add('formatted-text-plain');host.textContent=body||'';return;}host.classList.remove('formatted-text-plain');let list=null,listType='';
+  for(const block of documentValue.blocks){let element;if(['bullet','number'].includes(block.type)){if(listType!==block.type){list=document.createElement(block.type==='bullet'?'ul':'ol');host.append(list);listType=block.type;}element=document.createElement('li');list.append(element);}else{list=null;listType='';element=document.createElement(block.type==='heading'?'h'+block.level:block.type==='quote'?'blockquote':'p');host.append(element);}for(const span of block.spans){let child=document.createTextNode(span.text);for(const [key,tag] of [['strike','s'],['underline','u'],['italic','em'],['bold','strong']])if(span[key]){const wrapper=document.createElement(tag);wrapper.append(child);child=wrapper;}if(span.href){const link=document.createElement('a');link.href=span.href;link.target='_blank';link.rel='noopener noreferrer';link.append(child);child=link;}element.append(child);}if(!element.childNodes.length)element.append(document.createElement('br'));}
+ }
+ const api={normalize,plainText,safeLink,render,marks};if(typeof module==='object'&&module.exports)module.exports=api;else root.formattedText=api;
+})(globalThis);
