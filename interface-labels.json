@@ -4654,5 +4654,89 @@
     "locations": [
       "sales · weekly report"
     ]
+  },
+  {
+    "text": "R&O",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "R&O %",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Fees",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Marketing",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Refunds",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Total fees",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Expected pay",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Platform fees and payouts",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "platform fees",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Close platform fees",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Edit {platform} fees",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Total fees = fees + marketing + refunds. Expected pay = platform sales − total fees.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Use Save weekly report to save fee changes. Fees and payouts do not affect profit.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Profit = report sales − stock orders − labour − operating expenses − R&O.",
+    "locations": [
+      "sales"
+    ]
   }
 ]

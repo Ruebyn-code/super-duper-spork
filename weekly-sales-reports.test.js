@@ -1,5 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const weekly=require('./public/weekly-sales-report'),{createStore,validate}=require('./weekly-sales-reports'),sales=require('./sales'),{shift}=require('./stock-usage'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
+const platformFees=()=>({uberEats:{feesCents:109496,marketingCents:32520,refundsCents:8945},doorDash:{feesCents:25041,marketingCents:15962,refundsCents:7508}});
 const actor={id:'first',username:'First',companyId:'default',locationId:'shop'};
 function input(weekStart='2026-10-05'){const breakdown=weekly.blank();for(const [field,value] of Object.entries({tillSales:170584,cash:33850,eftpos:136734,pettyCash:0,uberEats:38680,doorDash:14540}))breakdown[field][0]=value;return {weekStart,revision:0,breakdown,labourCents:668467,operatingExpensesCents:0};}
 test('weekly report totals Till sales plus Uber Eats and DoorDash, keeping Eftpos for variance only',()=>{
@@ -23,6 +24,34 @@ test('report profit subtracts stock orders, labour and operating expenses in cen
  assert.deepEqual(weekly.profit(null,costs),{amountCents:null,state:'unavailable',reason:'sales'});
  for(const field of ['stockOrdersCents','labourCents','operatingExpensesCents'])for(const value of [null,undefined,NaN,-1,1.5])assert.deepEqual(weekly.profit(100000,{...costs,[field]:value}),{amountCents:null,state:'unavailable',reason:'costs'});
  assert.deepEqual(weekly.profit(100000,{...costs,pricePending:true}),{amountCents:null,state:'unavailable',reason:'prices'});
+});
+test('platform fee settlements match the sample, distinguish blanks from zero and allow fees above sales',()=>{
+ const fees=platformFees();assert.deepEqual(weekly.settlement(342150,fees.uberEats),{salesCents:342150,totalFeesCents:150961,expectedPayCents:191189});assert.deepEqual(weekly.settlement(121260,fees.doorDash),{salesCents:121260,totalFeesCents:48511,expectedPayCents:72749});
+ assert.deepEqual(weekly.settlement(null,fees.uberEats),{salesCents:null,totalFeesCents:150961,expectedPayCents:null});
+ const blank=weekly.blankPlatformFees();assert.equal(weekly.settlement(100,blank.uberEats).totalFeesCents,null);blank.uberEats.feesCents=0;blank.uberEats.marketingCents=0;blank.uberEats.refundsCents=0;assert.deepEqual(weekly.settlement(0,blank.uberEats),{salesCents:0,totalFeesCents:0,expectedPayCents:0});assert.equal(blank.doorDash.feesCents,null);
+ assert.equal(weekly.settlement(100,{feesCents:100,marketingCents:1,refundsCents:0}).expectedPayCents,-1);
+ for(const field of weekly.feeFields)for(const value of [null,undefined,NaN,-1,1.1])assert.equal(weekly.settlement(100,{...fees.uberEats,[field]:value}).totalFeesCents,null);
+ const costs={stockOrdersCents:20000,labourCents:30000,operatingExpensesCents:10000};assert.equal(weekly.profit(100000,{...costs,roCents:40000}).state,'break-even');assert.equal(weekly.profit(100000,{...costs,roCents:40001}).amountCents,-1);assert.equal(weekly.profit(100000,{...costs,roCents:39999}).amountCents,1);assert.equal(weekly.profit(100000,{...costs,roCents:null}).reason,'costs');assert.equal(weekly.profit(100000,{...costs,platformFees:fees}).amountCents,40000);
+});
+test('R&O and platform fees persist independently, retain legacy reports and old-client edits, and detect fee-only conflicts',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'weekly-fees-'));try{
+  let store=createStore();const legacy={...input(),revision:1,locationId:actor.locationId};const target=path.join(dir,'weekly-sales-reports',actor.locationId,legacy.weekStart+'.json');await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,JSON.stringify(legacy));
+  let result=await store.report(dir,actor,legacy.weekStart);assert.equal(result.record.roCents,0);assert.deepEqual(result.record.platformFees,weekly.blankPlatformFees());assert.equal(result.profit.amountCents,-444663);
+  const first=await store.save(dir,actor,{...input(),revision:1,roCents:12345,platformFees:platformFees()});assert.equal(first.revision,2);store=createStore();result=await store.report(dir,actor,legacy.weekStart);assert.equal(result.profit.amountCents,-457008);assert.equal(result.platformSettlements.uberEats.totalFeesCents,150961);assert.equal(result.platformSettlements.uberEats.expectedPayCents,38680-150961);
+  const feesOnly={...first,platformFees:platformFees()};feesOnly.platformFees.uberEats.feesCents++;await store.save(dir,actor,feesOnly);result=await store.report(dir,actor,legacy.weekStart);assert.equal(result.profit.amountCents,-457008);assert.equal(result.platformSettlements.uberEats.totalFeesCents,150962);assert.equal(result.record.revision,3);
+  await assert.rejects(store.save(dir,actor,{...first,roCents:1}),error=>error.status===409);await assert.rejects(store.save(dir,actor,{...first,platformFees:platformFees()}),error=>error.status===409);
+  const olderClient={...input(),revision:3};olderClient.breakdown.cash[0]++;const changed=await store.save(dir,actor,olderClient);assert.equal(changed.roCents,12345);assert.equal(changed.platformFees.uberEats.feesCents,109497);assert.equal(changed.revision,4);assert.equal((await store.save(dir,actor,olderClient)).revision,4);
+  const blank=await store.report(dir,{...actor,locationId:'other'},legacy.weekStart);assert.equal(blank.record.roCents,0);assert.equal(blank.platformSettlements.uberEats.totalFeesCents,null);
+  const cleared=await store.save(dir,actor,{...changed,roCents:0,platformFees:weekly.blankPlatformFees()});assert.equal(cleared.roCents,0);assert.equal((await store.report(dir,actor,legacy.weekStart)).platformSettlements.uberEats.expectedPayCents,null);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
+test('new weekly expenses reject malformed, negative, fractional and excessive amounts',()=>{
+ const valid={...input(),roCents:0,platformFees:platformFees()};assert.equal(validate(valid).roCents,0);
+ for(const value of [-1,1.1,Infinity,NaN,'1',undefined,7000000001])assert.throws(()=>validate({...valid,roCents:value}),error=>error.status===400);
+ for(const value of [null,[],{},'fees',{...platformFees(),other:{}},{uberEats:platformFees().uberEats}])assert.throws(()=>validate({...valid,platformFees:value}),error=>error.status===400);
+ for(const platform of weekly.platforms)for(const field of weekly.feeFields)for(const value of [-1,1.1,Infinity,'1',undefined,7000000001]){const fees=platformFees();fees[platform][field]=value;assert.throws(()=>validate({...valid,platformFees:fees}),error=>error.status===400);}
+ for(const value of [[],{...platformFees().uberEats,unexpected:0}])assert.throws(()=>validate({...valid,platformFees:{...platformFees(),uberEats:value}}),error=>error.status===400);
+ assert.equal(validate({...valid,roCents:null,platformFees:weekly.blankPlatformFees()}).roCents,null);assert.equal(validate({...valid,roCents:7000000000}).roCents,7000000000);
 });
 test('weekly reports persist separately by location and protect concurrent detail and weekly cost edits even when sales totals match',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'weekly-sales-'));try{
@@ -59,9 +88,10 @@ test('all signed-in roles can share reports within assigned locations; report sa
   assert.equal((await request(null,'/api/weekly-sales-reports')).status,401);assert.equal((await request(member,'/api/weekly-sales-reports','PUT',input(week),{'X-CSRF-Token':''})).status,403);
   for(let index=1;index<=4;index++)assert.equal((await request(member,'/api/sales','PUT',{weekStart:shift(week,-7*index),revision:0,days:Array(7).fill(100000)})).status,200);
   const before=(await request(member,'/api/sales')).data,homeBefore=(await request(member,'/api/home-totals')).data;
-  for(let index=0;index<=4;index++){const record=await request(index%2?owner:member,'/api/weekly-sales-reports','PUT',input(shift(week,-7*index)));assert.equal(record.status,200);assert.equal(record.data.locationId,locationId);}
+  for(let index=0;index<=4;index++){const record=await request(index%2?owner:member,'/api/weekly-sales-reports','PUT',{...input(shift(week,-7*index)),roCents:12345,platformFees:platformFees(),profit:123,platformSettlements:{uberEats:{totalFeesCents:0}}});assert.equal(record.status,200);assert.equal(record.data.locationId,locationId);}
   assert.deepEqual((await request(member,'/api/sales')).data,before);assert.deepEqual((await request(member,'/api/home-totals')).data,homeBefore);assert.equal(before.projection.budgetCents,196000);
   assert.equal((await request(office,'/api/weekly-sales-reports')).data.summary.days[0],223804);assert.equal((await request(owner,'/api/weekly-sales-reports')).data.record.labourCents,668467);
+  const overview=(await request(member,'/api/weekly-sales-reports')).data;assert.equal(overview.record.roCents,12345);assert.equal(overview.profit.amountCents,-457008);assert.equal(overview.platformSettlements.uberEats.totalFeesCents,150961);assert.equal(overview.platformSettlements.doorDash.expectedPayCents,14540-48511);assert.equal(overview.record.profit,undefined);
   const other=(await request(office,'/api/locations','POST',{name:'Other store'})).data;assert.equal((await request(member,'/api/weekly-sales-reports','GET',undefined,{'X-Location-Id':other.id})).status,403);assert.equal((await request(member,'/api/weekly-sales-reports','PUT',{...input(week),locationId:other.id})).data.locationId,locationId);assert.equal((await request(office,'/api/weekly-sales-reports','GET',undefined,{'X-Location-Id':other.id})).data.record.revision,0);
   await new Promise(resolve=>server.close(resolve));await start();const after=await login('Member');assert.equal((await request(after,'/api/weekly-sales-reports')).data.record.revision,1);assert.equal((await request(after,'/api/sales')).data.projection.budgetCents,196000);
  }finally{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
