@@ -122,6 +122,8 @@
 .app-controls-menu #admin-edit-controls{margin:0;min-width:0}
 .app-controls-menu .sidebar-label,.app-controls-menu .sidebar-edit-label{display:block;white-space:normal}
 .app-controls-menu .sidebar-navigation-icon{flex:0 0 20px;width:20px;height:20px;color:var(--primary)}
+.app-controls-menu .appearance-chevron{margin-left:auto;width:14px;height:14px;flex-basis:14px}
+.app-controls-menu .appearance-back{margin-bottom:5px;border-bottom:1px solid color-mix(in srgb,var(--primary) 13%,white);border-radius:8px 8px 0 0;font-weight:600}
 .app-controls-menu .icon-detail,.app-controls-menu .icon-detail *{stroke:var(--secondary)}
 .app-controls-menu #app-edit-toggle[aria-pressed=true]{background:color-mix(in srgb,var(--secondary) 18%,white)}
 .app-controls-menu #logout{margin-top:5px;border-top:1px solid color-mix(in srgb,var(--primary) 13%,white);border-radius:0 0 10px 10px;padding-top:13px}

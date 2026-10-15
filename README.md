@@ -20,12 +20,12 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **App settings**, **App edit** and **Sign out**. App settings and App edit are Head Office-only. On phones the same navigation options stay at the bottom, and **More** opens the same account dropdown above the bar.
+The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **App appearance** and **Sign out**. **App appearance** groups App settings and App edit under one icon and is Head Office-only. On phones the same navigation options stay at the bottom, and **More** opens the same account dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
 - **Reporting**: Opens directly from the main bar, without a second navigation bar. Access remains limited to Franchisee and Head Office.
-- **Admin**: Users, Locations and Companies. Franchisees see Users; Head Office sees all three. Ordering managers do not see Admin. App settings are accessed only through the blue account dropdown (or **More** on phones), with their own settings options separate from Admin.
+- **Admin**: Users, Locations and Companies. Franchisees see Users; Head Office sees all three. Ordering managers do not see Admin. App settings are accessed only through **App appearance** in the blue account dropdown (or **More** on phones), with their own settings options separate from Admin.
 
 Desktop related pages appear in the row underneath the main bar. Phones open the related-page menu above the bottom bar. Selecting a main category opens its first page, with the related menu available. Existing company appearance edits, saved page layouts, permission checks, company/location switching and browser cart storage are retained.
 
