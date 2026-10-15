@@ -18,6 +18,16 @@ npm test
 
 Requests are saved as individual JSON files in `data/` (ignored by Git). Totals are calculated by the server from catalogue prices. This is a local prototype with Head Office and ordering accounts. Supplier orders use configured email sending; saved stock counts provide ordering guidance. Request files contain contact details; keep the data directory private.
 
+## Invoice scanner and weekly bundles
+
+The circular **Invoice scanner** button stays collapsed in the bottom-right corner of **Home**. On phones it sits above the bottom navigation. Open it to **Take photo** or **Upload invoice**, or drag a file into the upload area. JPEG, PNG, WebP and PDF files up to 10 MB are supported, with up to 20 pages per PDF. Camera availability follows the phone/browser file picker. Supported HEIC camera photos are converted to JPEG when the browser can read them; use JPEG or PDF otherwise.
+
+Photos and image-only PDF pages use bundled English text recognition. PDFs with readable embedded text are extracted directly. Recognition runs in the browser using the app's bundled files, without an OCR account, API key or external OCR service. The recognition libraries load only when scanning starts. Check the detected supplier, invoice number, date, subtotal, GST and total before saving; all fields remain editable. Missing values stay blank, and unreadable documents can be stored with manually entered details. Recognition accuracy depends on image quality. The original upload and a small preview are retained (converted JPEG for supported HEIC photos).
+
+**Weekly bundles** group saved invoices by Monday–Sunday for the selected location. The invoice date initially selects its bundle; change the bundle week independently if needed. Any signed-in user at that location can reopen an invoice, edit its details, move it to another bundle, download the original, or delete it with confirmation. Repeated saves do not duplicate invoices, and uploading the same original twice is rejected. Concurrent edits require reopening the saved invoice. Other locations and companies cannot read these files without access to that location.
+
+Invoices are stored separately in **data/invoices/**. They do **not** update expenses, sales, Cost of goods, stock counts, placed orders, budgets or projections. Keep the existing **data** folder when updating the app to retain every weekly bundle. Bundled recognizer versions, source archives and licenses are documented in **public/vendor/invoice/README.md**; no npm installation is needed to use the scanner.
+
 ## Suppliers and stock
 
 Sign in with a Head Office account, then open **Suppliers & stock → Suppliers** and select **Add supplier**. Enter a supplier name and select **Save supplier**. Open **Stock items → Add new stock**, choose that supplier in the stock form, enter the item name, price in AUD, then select **Save stock**. SKU, category, and description help organise your items. Use the supplier buttons above the catalogue to view their stock.
