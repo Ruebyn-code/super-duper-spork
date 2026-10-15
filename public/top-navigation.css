@@ -20,6 +20,14 @@
 .top-navigation #cart-badge{margin:0;padding:2px 5px;min-width:18px;max-width:48px;overflow:hidden;text-overflow:ellipsis;font:11px/1.4 Arial,sans-serif}
 #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer{display:flex;flex-direction:row;align-items:center;gap:2px;flex:0 0 auto;width:auto;margin:0;padding:3px;border:0;border-radius:10px;background-color:var(--primary);color:white}
 #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer:has(.sidebar-edit-controls[hidden]){display:flex}
+#app-sidebar.top-navigation>.sidebar-scroll>#sidebar-toggle{display:flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;min-height:36px;margin:0;padding:8px;border:1px solid color-mix(in srgb,var(--primary) 14%,white);border-radius:11px;background-color:color-mix(in srgb,var(--primary) 5%,white);color:var(--primary);box-shadow:0 1px 3px #182b3a04;transition:background-color .2s ease,border-color .2s ease}
+#app-sidebar.top-navigation>.sidebar-scroll>#sidebar-toggle:hover{background-color:color-mix(in srgb,var(--primary) 12%,white);border-color:color-mix(in srgb,var(--primary) 24%,white)}
+#app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer{gap:0;padding:4px;border:1px solid color-mix(in srgb,var(--primary) 80%,white);border-radius:14px;box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 13%,transparent)}
+#app-sidebar.top-navigation .sidebar-footer #toolbar-toggle{flex:0 0 34px;width:34px;height:34px;margin:0;padding:7px}
+#app-sidebar.top-navigation .toolbar-actions{display:flex;align-items:center;gap:2px;position:relative;flex:0 1 auto;min-width:0;max-width:0;margin-left:0;overflow:hidden;opacity:0;pointer-events:none;transform:translateX(5px);transition:max-width .34s cubic-bezier(.2,.8,.2,1),margin-left .34s ease,opacity .2s ease,transform .34s ease}
+#app-sidebar.top-navigation .toolbar-open .toolbar-actions{max-width:128px;margin-left:4px;opacity:1;pointer-events:auto;transform:none}
+#app-sidebar.top-navigation .toolbar-toggle svg{transition:transform .3s ease}
+#app-sidebar.top-navigation .toolbar-open .toolbar-toggle svg{transform:rotate(90deg)}
 #app-sidebar.top-navigation .sidebar-footer button,#app-sidebar.top-navigation .sidebar-footer #app-edit-toggle,#app-sidebar.top-navigation .sidebar-footer #sidebar-toggle,#app-sidebar.top-navigation .sidebar-footer #logout{display:flex;align-items:center;justify-content:center;gap:6px;min-width:32px;width:32px;min-height:34px;height:34px;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:white}
 #app-sidebar.top-navigation .sidebar-footer button:hover{background-color:#ffffff26}
 #app-sidebar.top-navigation .sidebar-footer a{display:flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;min-height:34px;height:34px;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:white;text-decoration:none}
@@ -40,6 +48,13 @@
 #app-sidebar.top-navigation .secondary-sidebar a{flex:0 0 auto;min-height:36px;padding:7px 10px;gap:7px;border-radius:8px;font-size:12px;white-space:nowrap;box-shadow:none}
 .top-navigation .secondary-sidebar .submenu-label{overflow-wrap:normal}
 .top-navigation .secondary-sidebar .sidebar-navigation-icon{width:17px;height:17px}
+.app-settings-menu.secondary-sidebar{display:none;position:fixed;inset:auto;width:280px;max-width:calc(100vw - 24px);height:auto;min-height:0;margin:0;padding:8px;border:1px solid color-mix(in srgb,var(--primary) 20%,white);border-radius:14px;background-color:color-mix(in srgb,var(--primary) 10%,white);box-shadow:0 12px 36px #182b3a24;overflow:auto;overscroll-behavior:contain}
+.app-settings-menu.secondary-sidebar:popover-open{display:block;animation:sidebar-reveal var(--motion-medium,.22s) ease both}
+.app-settings-menu.secondary-sidebar .admin-subnav{display:flex;flex-direction:column;gap:3px;margin:0!important;padding:0!important;border:0}
+.app-settings-menu.secondary-sidebar a{display:flex;align-items:center;gap:10px;min-height:42px;padding:10px 12px;border:0;border-radius:9px;color:var(--primary);font-size:13px;text-decoration:none;box-shadow:none}
+.app-settings-menu.secondary-sidebar a:hover,.app-settings-menu.secondary-sidebar a[aria-current=page]{background-color:color-mix(in srgb,var(--primary) 20%,white)}
+.app-settings-menu.secondary-sidebar a:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.app-settings-menu.secondary-sidebar .sidebar-navigation-icon{width:19px;height:19px}
 .app-page{padding-bottom:0}
 .app-page main{scroll-margin-top:72px}
 .navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a .sidebar-label{max-width:0;opacity:0;overflow:hidden}
@@ -72,6 +87,9 @@
 
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  #app-sidebar:not(.top-navigation) #top-navigation-tabs{display:none}
+ #app-sidebar:not(.top-navigation) #toolbar-toggle{display:none}
+ #app-sidebar:not(.top-navigation) .toolbar-actions{display:flex;align-items:center;flex:1;min-width:0}
  .app-page{padding-bottom:calc(var(--mobile-nav-space) + 16px)}
  .app-layout-toolbar{bottom:calc(82px + env(safe-area-inset-bottom,0px))}
 }
+@media(prefers-reduced-motion:reduce){#app-sidebar.top-navigation .toolbar-actions,#app-sidebar.top-navigation .toolbar-toggle svg{transition:none}}
