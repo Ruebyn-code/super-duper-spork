@@ -8,6 +8,7 @@ async function route({req,url,params,session,store,body,json,fail}){
  const receipt=url.match(/^\/api\/communications\/posts\/([a-f0-9-]+)\/(read|snooze)$/i);
  if(receipt&&req.method==='POST'){json(200,await store.receipt(session,receipt[1],await body(req),receipt[2]));return true;}
  need('comms.view');
+ if(url==='/api/communications/unread'&&req.method==='GET'){json(200,await store.unread(session));return true;}
  if(url==='/api/communications/people'&&req.method==='GET'){need('comms.chat');json(200,{people:await store.directory(session)});return true;}
  if(url==='/api/communications/posts'){
   if(req.method==='GET')json(200,await store.posts(session,Object.fromEntries(params)));

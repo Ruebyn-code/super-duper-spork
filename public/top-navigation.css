@@ -142,3 +142,5 @@
 .user-profile-tags{display:flex;flex-wrap:wrap;gap:5px;max-height:150px;overflow-y:auto}
 .user-profile-tags span{padding:4px 8px;border-radius:7px;background:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary);font-size:12px}
 @media(prefers-reduced-motion:reduce){.app-controls-menu:popover-open{animation:none}#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle>.account-menu-chevron{transition:none}}
+
+.communication-navigation-link{position:relative}.communications-unread-badge{position:absolute;top:0;left:26px;z-index:1;display:inline-grid;place-items:center;min-width:18px;padding:2px 4px;border:2px solid white;border-radius:9px;background:var(--secondary);color:white;font:700 10px/1.2 Arial,Helvetica,sans-serif;letter-spacing:normal;pointer-events:none;box-shadow:0 1px 4px #182b3a12}.communications-unread-badge[hidden]{display:none!important}@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){#app-sidebar .mobile-tabbar .communications-unread-badge{top:1px;left:calc(50% + 5px);font-size:9px;min-width:16px}}
