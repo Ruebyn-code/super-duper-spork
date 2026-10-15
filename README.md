@@ -18,6 +18,16 @@ npm test
 
 Requests are saved as individual JSON files in `data/` (ignored by Git). Totals are calculated by the server from catalogue prices. This is a local prototype with Head Office and ordering accounts. Supplier orders use configured email sending; saved stock counts provide ordering guidance. Request files contain contact details; keep the data directory private.
 
+## Navigation groups
+
+The main bar groups related pages under **Home**, **Ordering**, **Sales** and **Admin**. On phones the same groups appear in the bottom navigation; **More** holds sign-out and App edit controls.
+
+- **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
+- **Sales**: Daily sales, Weekly report, Projections & budget, financial Overview, Cost of goods, Labour, Op Ex, R&O and Reporting. Reporting remains limited to Franchisee and Head Office.
+- **Admin**: Users, Locations, Companies and all App settings options. Franchisees see Users; Head Office sees all administration pages. Ordering managers do not see Admin.
+
+Desktop related pages appear in the row underneath the main bar. Phones open the related-page menu above the bottom bar. Selecting a main category opens its first page, with the related menu available. Existing company appearance edits, saved page layouts, permission checks, company/location switching and browser cart storage are retained.
+
 ## Invoice scanner and weekly bundles
 
 The circular **Invoice scanner** button stays collapsed in the bottom-right corner of **Home**. On phones it sits above the bottom navigation. Open it to **Take photo** or **Upload invoice**, or drag a file into the upload area. JPEG, PNG, WebP and PDF files up to 10 MB are supported, with up to 20 pages per PDF. Camera availability follows the phone/browser file picker. Supported HEIC camera photos are converted to JPEG when the browser can read them; use JPEG or PDF otherwise.
@@ -98,7 +108,7 @@ Orders save before sending and report submitted, not configured, failed, or unco
 
 ## Reporting
 
-**Franchisee** and **Head Office** users can open **Admin → Reporting**. Ordering managers cannot access its page or API. Reporting starts with the current location; use **Locations** to compare any active locations you can access, including locations in other companies. Stores are grouped by company in the in-app picker. Comparisons do not switch the location used elsewhere in the app, and every request checks access again. Head Office can compare all active stores; franchisees can compare their assigned stores.
+**Franchisee** and **Head Office** users can open **Sales → Reporting**. Ordering managers cannot access its page or API. Reporting starts with the current location; use **Locations** to compare any active locations you can access, including locations in other companies. Stores are grouped by company in the in-app picker. Comparisons do not switch the location used elsewhere in the app, and every request checks access again. Head Office can compare all active stores; franchisees can compare their assigned stores.
 
 Reporting opens on **Financial performance**, with report types and filters on the page, without another navigation sidebar:
 

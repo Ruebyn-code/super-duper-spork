@@ -95,3 +95,22 @@
 @media(prefers-reduced-motion:reduce){#app-sidebar.top-navigation .toolbar-actions,#app-sidebar.top-navigation .toolbar-toggle svg{transition:none}}
 
 @media(min-width:721px){.top-navigation .top-navigation-tabs a{transition:gap .48s cubic-bezier(.2,.8,.2,1),padding .48s cubic-bezier(.2,.8,.2,1),background-color .18s ease}.top-navigation .sidebar-brand-row #sidebar-location{transition:flex-basis .48s cubic-bezier(.2,.8,.2,1),width .48s cubic-bezier(.2,.8,.2,1)}}@media(prefers-reduced-motion:reduce){.top-navigation .top-navigation-tabs a,.top-navigation .top-navigation-tabs .sidebar-label,.top-navigation .sidebar-brand-row #sidebar-location{transition:none}}
+
+/* Main categories share the same related-page row on desktop and menu on phones. */
+.grouped-navigation-menu .navigation-segment{display:flex;align-items:center;flex:0 0 auto;gap:4px;padding-right:9px;margin-right:5px;border-right:1px solid color-mix(in srgb,var(--primary) 14%,white)}
+.grouped-navigation-menu .navigation-segment:last-child{border-right:0;margin-right:0;padding-right:0}
+.grouped-navigation-menu .navigation-segment-title{flex-shrink:0;padding:4px 6px;font:600 10px Arial,sans-serif;color:var(--muted);white-space:nowrap;letter-spacing:normal}
+#app-sidebar.top-navigation .secondary-sidebar .navigation-segment-links{display:contents}
+#app-sidebar.top-navigation .secondary-sidebar .navigation-cart-link{display:flex;align-items:center;gap:7px;margin:0;background:transparent;color:var(--primary);border:0}
+.ordering-cart-badge{display:inline-grid;place-items:center;min-width:17px;max-width:44px;margin-left:3px;padding:2px 4px;border-radius:8px;background:var(--primary);color:white;font:10px/1.2 Arial,sans-serif;letter-spacing:normal}
+.ordering-cart-badge[hidden],.navigation-segment[hidden],.grouped-navigation-menu[hidden],.grouped-navigation-menu [hidden]{display:none!important}
+.navigation-compact #app-sidebar.top-navigation .ordering-cart-badge{margin-left:4px}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
+ #app-sidebar .mobile-tabbar>#admin-link,#app-sidebar .mobile-tabbar>#admin-link>.main-sidebar-nav{display:contents}
+ #app-sidebar .mobile-tabbar>#admin-link[hidden]{display:none!important}
+ .grouped-navigation-menu .navigation-segment{display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px 0 0;margin:7px 0 0;border:0;border-top:1px solid var(--line)}
+ .grouped-navigation-menu .navigation-segment-title{padding:5px 10px;font-size:11px}
+ .grouped-navigation-menu .navigation-segment-links{display:contents}
+ .grouped-navigation-menu .navigation-cart-link{display:flex;align-items:center;gap:9px;margin:0;padding:10px 12px;background:transparent;color:var(--primary)}
+ #app-sidebar .mobile-tabbar .ordering-cart-badge{position:absolute;top:1px;left:calc(50% + 5px);margin:0;border:2px solid white;font-size:9px;min-width:15px;padding:2px 4px}
+}
