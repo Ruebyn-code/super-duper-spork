@@ -2,7 +2,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {currentWeek,allTimeTotals,maximumDailyCents}=require('./sales');
 const {calendar,defaultTimeZone,dayNumber,dateLabel}=require('./par-levels');
 const {shift}=require('./stock-usage');
-const weeklyReport=require('./public/weekly-sales-report'),expenseTypes=require('./operating-expense-types');
+const weeklyReport=require('./public/weekly-sales-report'),expenseTypes=require('./operating-expense-types'),operatingSchedule=require('./operating-expense-schedule');
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))invalid('Choose a valid Monday-starting report week.');const date=new Date(value+'T00:00:00Z');if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value||date.getUTCDay()!==1)invalid('Choose a valid Monday-starting report week.');}
 function file(dir,session,start){week(start);if(!/^[a-zA-Z0-9-]{1,100}$/.test(session?.locationId||''))invalid('Choose an accessible location.',403);return path.join(dir,'weekly-sales-reports',session.locationId,start+'.json');}
@@ -30,33 +30,33 @@ function validate(input){
  return {weekStart:input.weekStart,breakdown,...costs,revision:input.revision};
 }
 function createStore(){
- const pending=new Map(),historyCache=new Map();
- async function allocationHistory(dir,session,start){
-  const folder=path.dirname(file(dir,session,start));let stamp;try{const stat=await fs.stat(folder);stamp=stat.mtimeMs;}catch(error){if(error.code==='ENOENT')return [];throw error;}
-  let history=historyCache.get(folder);if(history?.stamp!==stamp){const names=(await fs.readdir(folder)).filter(name=>/^\d{4}-\d{2}-\d{2}\.json$/.test(name)).sort().reverse(),records=[];for(let offset=0;offset<names.length;offset+=8)records.push(...await Promise.all(names.slice(offset,offset+8).map(async name=>JSON.parse(await fs.readFile(path.join(folder,name),'utf8')))));history={stamp,records};historyCache.set(folder,history);}
-  return history.records;
- }
+ const pending=new Map();
  async function read(dir,session,start){try{const record=JSON.parse(await fs.readFile(file(dir,session,start),'utf8'));return {...record,roCents:record.roCents===undefined?0:record.roCents,platformFees:record.platformFees??weeklyReport.blankPlatformFees(),expenseEntries:record.expenseEntries??weeklyReport.blankExpenses()};}catch(error){if(error.code!=='ENOENT')throw error;return {weekStart:start,breakdown:weeklyReport.blank(),labourCents:null,operatingExpensesCents:null,roCents:0,platformFees:weeklyReport.blankPlatformFees(),expenseEntries:weeklyReport.blankExpenses(),revision:0,updatedAt:null};}}
  async function save(dir,session,input){const normalized=validate(input),target=file(dir,session,normalized.weekStart);
   const operation=(pending.get(target)||Promise.resolve()).then(async()=>{
    const previous=await read(dir,session,normalized.weekStart),next={...normalized,roCents:Object.hasOwn(normalized,'roCents')?normalized.roCents:previous.roCents,platformFees:Object.hasOwn(normalized,'platformFees')?normalized.platformFees:previous.platformFees,expenseEntries:Object.hasOwn(normalized,'expenseEntries')?normalized.expenseEntries:previous.expenseEntries};
    for(const field of weeklyReport.expenseFields)if(next.expenseEntries[field]!==null)next[field]=weeklyReport.expenseTotal(next.expenseEntries[field]);
-   const typeCatalogue=await expenseTypes.read(dir,session),candidate={...next,operatingAllocations:normalized.operatingAllocations??previous.operatingAllocations??[]},resolved=weeklyReport.resolveOperatingAllocations(await allocationHistory(dir,session,next.weekStart),candidate,typeCatalogue.types);
-   if(resolved.length||Object.hasOwn(normalized,'operatingAllocations')||Object.hasOwn(previous,'operatingAllocations')){
-    next.operatingAllocations=resolved;next.operatingAdditionalCents=next.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(next.expenseEntries.operatingExpensesCents):Object.hasOwn(normalized,'operatingAdditionalCents')?normalized.operatingAdditionalCents:Object.hasOwn(previous,'operatingAdditionalCents')?previous.operatingAdditionalCents:previous.revision>0?previous.operatingExpensesCents:normalized.operatingExpensesCents;
-    next.operatingExpensesCents=weeklyReport.operatingCost(next.operatingAdditionalCents,next.operatingAllocations,next.weekStart,next.expenseEntries.operatingExpensesCents!==null&&next.operatingAdditionalCents===null);if(next.operatingExpensesCents!==null&&next.operatingExpensesCents>maximumDailyCents*7)invalid('The expense total exceeds the weekly limit.');
-   }
+   let schedule=await operatingSchedule.read(dir,session);
+   const preview=operatingSchedule.legacyChanges(schedule,normalized.operatingAllocations,next.weekStart);
+   next.operatingAdditionalCents=next.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(next.expenseEntries.operatingExpensesCents):Object.hasOwn(normalized,'operatingAdditionalCents')?normalized.operatingAdditionalCents:Object.hasOwn(previous,'operatingAdditionalCents')?previous.operatingAdditionalCents:previous.revision>0?previous.operatingExpensesCents:normalized.operatingExpensesCents;
+   next.operatingAllocations=operatingSchedule.legacyRows(preview.bills,next.weekStart);
+   const incomplete=next.expenseEntries.operatingExpensesCents!==null&&next.operatingAdditionalCents===null;
+   next.operatingExpensesCents=incomplete?null:next.operatingAdditionalCents===null&&!preview.bills.some(bill=>bill.startWeek<=next.weekStart)?null:(next.operatingAdditionalCents??0)+operatingSchedule.cost(preview.bills,next.weekStart);
+   if(next.operatingExpensesCents!==null&&next.operatingExpensesCents>maximumDailyCents*7)invalid('The expense total exceeds the weekly limit.');
    const content=record=>JSON.stringify([record.breakdown,record.labourCents,record.operatingExpensesCents,record.roCents,record.platformFees,record.expenseEntries,record.operatingAllocations,record.operatingAdditionalCents]);
-   if(content(previous)===content(next))return previous;
+   if(content(previous)===content(next))return {...previous,operatingSchedule:schedule};
    if(previous.revision!==normalized.revision)invalid('This report was changed by another user or tab. Reload the saved week before saving.',409);
+   schedule=await operatingSchedule.applyLegacy(dir,session,schedule,normalized.operatingAllocations,next.weekStart);
    const record={...next,revision:previous.revision+1,locationId:session.locationId,companyId:session.companyId,recordedBy:session.username,updatedAt:new Date().toISOString()},temp=target+'.'+crypto.randomUUID()+'.tmp';
-   await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}return record;
+   await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}return {...record,operatingSchedule:schedule};
   });const settled=operation.catch(()=>{});pending.set(target,settled);try{return await operation;}finally{if(pending.get(target)===settled)pending.delete(target);}
  }
  async function report(dir,session,selectedWeek,{orders=[],now=new Date()}={}){
   const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone),operatingExpenseTypes=await expenseTypes.read(dir,session);
-  const resolved=weeklyReport.resolveOperatingAllocations(await allocationHistory(dir,session,start),record,operatingExpenseTypes.types);
-  if(resolved.length||Object.hasOwn(record,'operatingAllocations')||record.revision===0){const incomplete=record.expenseEntries.operatingExpensesCents!==null&&weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents)===null;record.operatingAdditionalCents=record.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents):Object.hasOwn(record,'operatingAdditionalCents')?record.operatingAdditionalCents:record.operatingExpensesCents;record.operatingAllocations=resolved;record.operatingExpensesCents=weeklyReport.operatingCost(record.operatingAdditionalCents,resolved,start,incomplete);}
+  const schedule=await operatingSchedule.read(dir,session),incomplete=record.expenseEntries.operatingExpensesCents!==null&&weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents)===null;
+  record.operatingAdditionalCents=record.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents):Object.hasOwn(record,'operatingAdditionalCents')?record.operatingAdditionalCents:record.operatingExpensesCents;
+  record.operatingSchedule=schedule;record.operatingAllocations=operatingSchedule.legacyRows(schedule.bills,start);
+  record.operatingExpensesCents=incomplete?null:record.operatingAdditionalCents===null&&!schedule.bills.some(bill=>bill.startWeek<=start)?null:(record.operatingAdditionalCents??0)+operatingSchedule.cost(schedule.bills,start);
   const weeklyOrders=orders.filter(order=>{const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;const date=dateLabel(dayNumber(created,formatter));return date>=start&&date<=shift(start,6);});
   const seen=new Set(),stockOrders=[];for(const order of weeklyOrders){const own=allTimeTotals([],[order],session);if(!own.orderCount||seen.has(order.id))continue;seen.add(order.id);stockOrders.push({id:order.id,createdAt:order.createdAt,totalCents:own.placedOrdersCents,pricePending:own.pricePending,items:order.items.map(item=>({id:item.id||'',name:item.name||'',supplierId:item.supplierId||'',supplier:item.supplier||'',quantity:item.quantity??0,unitCostCents:item.price??null}))});}
   const costs=allTimeTotals([],weeklyOrders,session);

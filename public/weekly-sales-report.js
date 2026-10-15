@@ -7,7 +7,7 @@
  function expenseLineTotal(entry){return entry&&Number.isSafeInteger(entry.quantityMilli)&&entry.quantityMilli>=0&&Number.isSafeInteger(entry.unitCostCents)&&entry.unitCostCents>=0?Number((BigInt(entry.quantityMilli)*BigInt(entry.unitCostCents)+500n)/1000n):null;}
  function expenseTotal(entries){if(!Array.isArray(entries))return null;const amounts=entries.map(expenseLineTotal);return amounts.some(value=>value===null)?null:amounts.reduce((sum,value)=>sum+value,0);}
  function allocationCost(allocation,weekStart){
-  if(allocation.totalCents===null)return allocation.cleared?0:null;const offset=(Date.parse(weekStart+'T00:00:00Z')-Date.parse(allocation.startWeek+'T00:00:00Z'))/604800000;if(!Number.isInteger(offset)||offset<0||offset>=allocation.weeks)return 0;
+  if(allocation.stopWeek&&weekStart>=allocation.stopWeek)return 0;if(allocation.totalCents===null)return allocation.cleared?0:null;const offset=(Date.parse(weekStart+'T00:00:00Z')-Date.parse(allocation.startWeek+'T00:00:00Z'))/604800000;if(!Number.isInteger(offset)||offset<0||offset>=allocation.weeks)return 0;
   return Math.floor(allocation.totalCents/allocation.weeks)+(offset<allocation.totalCents%allocation.weeks?1:0);
  }
  function operatingCost(additionalCents,allocations,weekStart,incomplete=false){if(incomplete)return null;const amounts=allocations.map(allocation=>allocationCost(allocation,weekStart)).filter(value=>value!==null);return additionalCents===null&&!amounts.length?null:(additionalCents??0)+amounts.reduce((sum,value)=>sum+value,0);}

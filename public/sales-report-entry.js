@@ -6,7 +6,7 @@
  function parseAmount(input){const text=input.value.trim();if(!text)return {valid:true,cents:null};const match=text.replace(/^\$\s*/,'').match(/^(\d+|\d{1,3}(?:,\d{3})+)?(?:\.(\d{0,2}))?$/);if(!match||(!match[1]&&!match[2]))return {valid:false,cents:null};const cents=Number((match[1]||'0').replaceAll(',',''))*100+Number((match[2]||'').padEnd(2,'0'));return {valid:Number.isSafeInteger(cents)&&cents<=Number(input.dataset.maximumCents),cents};}
  const amount=input=>{const parsed=parseAmount(input);return parsed.valid?parsed.cents:null;};
  const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
- window.createSalesReportEntry=({host,overview,feesHost,expenseHost,onRevealExpense,onTypeChange,onChange,wording})=>{
+ window.createSalesReportEntry=({host,overview,feesHost,expenseHost,onRevealExpense,onTypeChange,onScheduleChange,onChange,wording})=>{
   let orders={totalCents:0,pricePending:false};
   const inputs={},outputs={},rowTotals={},platformCards={};
   const feeLabels={feesCents:'Fees',marketingCents:'Marketing',refundsCents:'Refunds'};
@@ -31,7 +31,7 @@
   function cost(id,label){const result=metric(id+'-value',label),{wrap,input}=currencyInput(id,label,70000000);result.value.replaceWith(wrap);return {...result,input};}
   const labour=cost('weekly-labour','Labour'),expenses=cost('weekly-operating-expenses','Operating expenses'),ro=cost('weekly-ro','R&O'),variance=metric('weekly-variance','Weekly variance');
   const costInputs={labourCents:labour.input,operatingExpensesCents:expenses.input,roCents:ro.input};
-  const expensePages=createWeeklyExpensePages({host:expenseHost,costInputs,currencyInput,amount,validateMoney,wording,onChange,onTypeChange});
+  const expensePages=createWeeklyExpensePages({host:expenseHost,costInputs,currencyInput,amount,validateMoney,wording,onChange,onTypeChange,onScheduleChange});
   for(const [field,card] of [['labourCents',labour],['operatingExpensesCents',expenses],['roCents',ro]]){const link=el('a','Edit breakdown','weekly-expense-card-link');link.href='#expense-'+expensePages.costPage(field);link.dataset.editId='weekly-expense-'+field+'-details';card.card.append(link);}
   const stockLink=el('a','View orders','weekly-expense-card-link');stockLink.href='#expense-stock';stockLink.dataset.editId='weekly-stock-details';stock.card.append(stockLink);
   function positionFees(platform){const {button,popover}=platformCards[platform];if(!popover.matches(':popover-open'))return;const rect=button.getBoundingClientRect(),width=popover.getBoundingClientRect().width,height=popover.getBoundingClientRect().height;popover.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';popover.style.top=Math.max(12,Math.min(rect.bottom+8,innerHeight-height-12))+'px';}
@@ -63,7 +63,7 @@
   }
   return {
    render,summary,
-   setOperatingTypes:expensePages.setOperatingTypes,
+   setOperatingTypes:expensePages.setOperatingTypes,async saveOperating(){try{await expensePages.saveOperating();}catch(error){onRevealExpense('operating-expenses');throw error;}},
    showExpense(page){expensePages.show(page);render();},
    setOrders(value,details){orders=value||{totalCents:0,pricePending:false};expensePages.setOrders(orders,details);render();},
    setRecord(record,draft){for(const platform of weeklySalesReport.platforms){const card=platformCards[platform];if(card.popover.matches(':popover-open'))card.popover.hidePopover();for(const field of weeklySalesReport.feeFields){const value=record.platformFees?.[platform]?.[field];card.inputs[field].value=draft?.platformFees?.[platform]?.[field]??(value===null||value===undefined?'':(value/100).toFixed(2));}}for(const field of weeklySalesReport.fields)for(let index=0;index<7;index++)inputs[field][index].value=draft?draft.breakdown[field][index]:record.breakdown?.[field][index]===null||record.breakdown?.[field][index]===undefined?'':(record.breakdown[field][index]/100).toFixed(2);for(const [key,input] of Object.entries(costInputs)){const value=key==='roCents'&&record[key]===undefined?0:record[key];input.value=draft?.[key]??(value===null||value===undefined?'':(value/100).toFixed(2));}for(const input of [...Object.values(inputs).flat(),...Object.values(costInputs),...weeklySalesReport.platforms.flatMap(platform=>Object.values(platformCards[platform].inputs))])validateMoney(input,document.activeElement!==input);expensePages.setRecord(record,draft);render();},

@@ -19,7 +19,7 @@ const stockCountGroups=require('./public/stock-count-groups');
 const manualPar=require('./manual-par');
 const stockUsage=require('./stock-usage');
 const sales=require('./sales');
-const weeklySalesReports=require('./weekly-sales-reports'),operatingExpenseTypes=require('./operating-expense-types');
+const weeklySalesReports=require('./weekly-sales-reports'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
 const reporting=require('./reporting');
 const locations=require('./locations');
 const {belongs}=require('./location-scope');
@@ -174,6 +174,11 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl}={}) {
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders}));
+      }
+      if(req.url==='/api/operating-expense-schedule'){
+        if(req.method==='GET')return json(200,await operatingExpenseSchedule.read(dataDir,session));
+        if(req.method==='PUT'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);return json(200,await operatingExpenseSchedule.change(dataDir,session,await body(req,512000)));}
+        res.setHeader('Allow','GET, PUT');fail('Unsupported expense schedule change.',405);
       }
       if(req.url==='/api/operating-expense-types'){
         if(req.method==='GET')return json(200,await operatingExpenseTypes.read(dataDir,session));
