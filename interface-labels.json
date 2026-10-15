@@ -3962,7 +3962,8 @@
   {
     "text": "Stock item",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "sales"
     ]
   },
   {
@@ -4910,6 +4911,30 @@
   },
   {
     "text": "{location} · {expense}",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Costs by supplier, from orders placed for this location during the selected Monday–Sunday week.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Items ordered",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Unassigned supplier",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "placed order",
     "locations": [
       "sales"
     ]

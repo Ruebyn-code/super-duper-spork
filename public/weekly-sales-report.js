@@ -26,6 +26,17 @@
   const amountCents=salesCents-stockOrdersCents-labourCents-operatingExpensesCents-roCents;
   return {amountCents,state:amountCents>0?'profit':amountCents<0?'loss':'break-even',reason:null};
  }
+ function stockSupplierCosts(orders){
+  const suppliers=new Map(),seen=new Set(),namedIds=new Map(),clean=value=>typeof value==='string'?value.trim():'';
+  for(const order of orders)for(const item of order.items||[]){const name=clean(item.supplier).toLowerCase(),id=clean(item.supplierId);if(name&&id){if(!namedIds.has(name))namedIds.set(name,new Set());namedIds.get(name).add(id);}}
+  for(const order of orders){if(seen.has(order.id))continue;seen.add(order.id);const missingPrice=(order.items||[]).some(item=>!Number.isSafeInteger(item.unitCostCents)||item.unitCostCents<0||!Number.isSafeInteger(item.quantity)||item.quantity<0);for(const item of order.items||[]){
+   const supplier=clean(item.supplier),nameKey=supplier.toLowerCase(),ids=namedIds.get(nameKey),supplierId=clean(item.supplierId)||(ids?.size===1?[...ids][0]:''),key=supplierId?'id:'+supplierId:'name:'+nameKey;
+   if(!suppliers.has(key))suppliers.set(key,{key,supplier:supplier||null,totalCents:null,pricePending:false,orders:new Set(),items:new Map()});const group=suppliers.get(key);if(supplier&&!group.supplier)group.supplier=supplier;group.orders.add(order.id);
+   const itemKey=clean(item.id)?'id:'+item.id:'name:'+clean(item.name).toLowerCase();if(!group.items.has(itemKey))group.items.set(itemKey,{key:itemKey,name:clean(item.name),quantity:0,totalCents:null,pricePending:false});const entry=group.items.get(itemKey),knownQuantity=Number.isSafeInteger(item.quantity)&&item.quantity>=0,knownPrice=Number.isSafeInteger(item.unitCostCents)&&item.unitCostCents>=0,total=knownQuantity&&knownPrice?item.quantity*item.unitCostCents:null;
+   if(knownQuantity)entry.quantity+=item.quantity;if(total!==null&&Number.isSafeInteger(total)){entry.totalCents=(entry.totalCents??0)+total;group.totalCents=(group.totalCents??0)+total;}else{entry.pricePending=true;group.pricePending=true;}if(order.pricePending&&!missingPrice){entry.pricePending=true;group.pricePending=true;}
+  }}
+  return [...suppliers.values()].map(group=>({key:group.key,supplier:group.supplier,totalCents:group.totalCents,pricePending:group.pricePending,orderCount:group.orders.size,items:[...group.items.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-AU'))})).sort((a,b)=>(a.supplier||'').localeCompare(b.supplier||'','en-AU')||a.key.localeCompare(b.key));
+ }
  function settlement(salesCents,fees){const values=feeFields.map(field=>fees?.[field]),totalFeesCents=values.every(value=>Number.isSafeInteger(value)&&value>=0)?values.reduce((total,value)=>total+value,0):null;return {salesCents,totalFeesCents,expectedPayCents:Number.isSafeInteger(salesCents)&&salesCents>=0&&totalFeesCents!==null?salesCents-totalFeesCents:null};}
- return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement};
+ return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement,stockSupplierCosts};
 });
