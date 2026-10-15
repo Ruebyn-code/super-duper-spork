@@ -12,6 +12,7 @@ busyObserver.observe(document.body,{subtree:true,attributes:true,attributeFilter
 
 // Ordering, stock counts and weekly usage share the same expanding search.
 document.querySelectorAll('.catalogue-search').forEach(control=>{
+ if(control.hasAttribute('data-search-bound'))return;control.dataset.searchBound='';
  const button=control.querySelector('.search-toggle'),field=control.querySelector('.search-field'),input=field.querySelector('input[type=search]');
  const wording=text=>typeof interfaceLabel==='function'?interfaceLabel(text):text;
  function updateLabel(){const label=wording(button.getAttribute('aria-expanded')==='true'?'Close search':button.dataset.searchLabel||'Search stock');button.setAttribute('aria-label',label);button.title=label;}

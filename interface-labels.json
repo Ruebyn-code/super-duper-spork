@@ -4341,5 +4341,35 @@
     "locations": [
       "Reporting"
     ]
+  },
+  {
+    "text": "Choose an option",
+    "locations": [
+      "Dropdowns"
+    ]
+  },
+  {
+    "text": "Search options",
+    "locations": [
+      "Dropdowns"
+    ]
+  },
+  {
+    "text": "No options match your search.",
+    "locations": [
+      "Dropdowns"
+    ]
+  },
+  {
+    "text": "No options available.",
+    "locations": [
+      "Dropdowns"
+    ]
+  },
+  {
+    "text": "Done",
+    "locations": [
+      "Dropdowns"
+    ]
   }
 ]
