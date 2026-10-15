@@ -8,7 +8,7 @@
  };
  let selectedGroup='',isAdmin=false,isUserManager=false,moreOpen=false;
  const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
- const currentGroup=()=>({'/':'ordering','/cart':'ordering','/stock-count':'ordering','/sales':'sales','/reporting':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'admin'}[location.pathname]||'');
+ const currentGroup=()=>({'/':'ordering','/cart':'ordering','/stock-count':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'admin'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
  // Keep the original elements and edit identities when arranging the common header.
  root.classList.remove('sidebar-collapsed','sidebar-hover-expanded');sidebar.classList.add('top-navigation');

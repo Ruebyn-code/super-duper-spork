@@ -17,16 +17,14 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  moveMenu(segment(ordersMenu,'Stock','count-pages'),menus.get('count'));
  const management=segment(ordersMenu,'Manage stock','stock-management');management.setAttribute('data-head-office-only','');moveMenu(management,menus.get('stock'));
  const salesMenu=menuFor('sales','Sales');moveMenu(salesMenu,menus.get('sales'));
- const finances=segment(salesMenu,'Weekly finances','financial-pages');
- for(const [hash,text,key] of [['overview','Overview','overview'],['expense-stock','Cost of goods','goods'],['expense-labour','Labour','labour'],['expense-operating-expenses','Op Ex','operating'],['expense-ro','R&O','ro']])finances.append(fresh(sales,'/sales#'+hash,text,'sales-'+key));
- if(reporting){reporting.setAttribute('data-user-manager-only','');reporting.querySelector('.sidebar-label')?.classList.replace('sidebar-label','submenu-label');reporting.removeAttribute('aria-current');salesMenu.append(reporting);}
+ if(reporting)reporting.setAttribute('data-user-manager-only','');
  const adminMenu=menuFor('admin','Admin');adminMenu.setAttribute('data-user-manager-only','');moveMenu(adminMenu,menus.get('accounts'));
  const appSettings=segment(adminMenu,'App settings','settings-pages');appSettings.setAttribute('data-head-office-only','');moveMenu(appSettings,menus.get('settings'));
  for(const [link,group,text] of [[ordering,'ordering','Ordering'],[sales,'sales','Sales'],[accounts,'admin','Admin']])if(link){link.dataset.sidebarGroup=group;link.setAttribute('aria-controls','app-subsidebar');link.setAttribute('aria-expanded','false');label(link,text);}
  if(accounts)accounts.setAttribute('data-user-manager-only','');
  const nav=document.createElement('nav');nav.className='main-sidebar-nav grouped-main-navigation';nav.dataset.editId=prefix+'-main';nav.setAttribute('aria-label','Main navigation');
  const original=sidebar.querySelector('.sidebar-scroll > .main-sidebar-nav');if(original)original.before(nav);else sidebar.querySelector('.sidebar-scroll')?.append(nav);
- for(const link of [home,ordering,sales])if(link)nav.append(link);
+ for(const link of [home,ordering,sales,reporting])if(link)nav.append(link);
  if(oldAdmin){const adminNav=document.createElement('nav');adminNav.className='main-sidebar-nav';adminNav.setAttribute('aria-label','Admin navigation');if(accounts)adminNav.append(accounts);oldAdmin.replaceChildren(adminNav);}
  for(const link of [stock,count,settings])link?.remove();
  for(const empty of sidebar.querySelectorAll('.sidebar-scroll > .main-sidebar-nav'))if(empty!==nav)empty.remove();

@@ -20,10 +20,11 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar groups related pages under **Home**, **Ordering**, **Sales** and **Admin**. On phones the same groups appear in the bottom navigation; **More** holds sign-out and App edit controls.
+The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. On phones the same options appear in the bottom navigation; **More** holds sign-out and App edit controls.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
-- **Sales**: Daily sales, Weekly report, Projections & budget, financial Overview, Cost of goods, Labour, Op Ex, R&O and Reporting. Reporting remains limited to Franchisee and Head Office.
+- **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
+- **Reporting**: Opens directly from the main bar, without a second navigation bar. Access remains limited to Franchisee and Head Office.
 - **Admin**: Users, Locations, Companies and all App settings options. Franchisees see Users; Head Office sees all administration pages. Ordering managers do not see Admin.
 
 Desktop related pages appear in the row underneath the main bar. Phones open the related-page menu above the bottom bar. Selecting a main category opens its first page, with the related menu available. Existing company appearance edits, saved page layouts, permission checks, company/location switching and browser cart storage are retained.
@@ -108,7 +109,7 @@ Orders save before sending and report submitted, not configured, failed, or unco
 
 ## Reporting
 
-**Franchisee** and **Head Office** users can open **Sales → Reporting**. Ordering managers cannot access its page or API. Reporting starts with the current location; use **Locations** to compare any active locations you can access, including locations in other companies. Stores are grouped by company in the in-app picker. Comparisons do not switch the location used elsewhere in the app, and every request checks access again. Head Office can compare all active stores; franchisees can compare their assigned stores.
+**Franchisee** and **Head Office** users can open **Reporting** directly from the main bar. Ordering managers cannot access its page or API. Reporting starts with the current location; use **Locations** to compare any active locations you can access, including locations in other companies. Stores are grouped by company in the in-app picker. Comparisons do not switch the location used elsewhere in the app, and every request checks access again. Head Office can compare all active stores; franchisees can compare their assigned stores.
 
 Reporting opens on **Financial performance**, with report types and filters on the page, without another navigation sidebar:
 
