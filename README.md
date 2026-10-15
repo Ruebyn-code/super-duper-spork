@@ -20,7 +20,7 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings** and **Sign out**. **Settings → App appearance** groups App settings and App edit under one icon and is Head Office-only. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
+The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings** and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
@@ -40,6 +40,18 @@ Photos and image-only PDF pages use bundled English text recognition. Photo scan
 **Weekly bundles** group saved invoices by Monday–Sunday for the selected location. The invoice date initially selects its bundle; change the bundle week independently if needed. Any signed-in user at that location can reopen an invoice, edit its details, move it to another bundle, download the original, or delete it with confirmation. Repeated saves do not duplicate invoices, and uploading the same original twice is rejected. Concurrent edits require reopening the saved invoice. Other locations and companies cannot read these files without access to that location.
 
 Invoices are stored separately in **data/invoices/**. They do **not** update expenses, sales, Cost of goods, stock counts, placed orders, budgets or projections. Keep the existing **data** folder when updating the app to retain every weekly bundle. Bundled recognizer versions, source archives and licenses are documented in **public/vendor/invoice/README.md**; no npm installation is needed to use the scanner.
+
+## Settings and permission levels
+
+Open the blue account dropdown (or **More** on phones), then **Settings**. **App appearance** opens the company’s colours, fonts, logos, backgrounds and interface text. The **App edit** button is on this card and on the appearance page. Edit mode follows you between pages in this browser until you choose **Finish editing**.
+
+**Permission levels** lets authorised users create roles, rename them, set a hierarchy number from 1–100, and choose individual permissions for ordering, stock counts, daily sales, weekly finances, reporting, invoices, administration and settings. Editing permissions require their matching view permissions. Existing roles and users retain their default access when first updated.
+
+Choose **This company only** to customise a role in the selected company. Other companies retain their network default or their own customisation. Choose **Entire network** explicitly to publish the level to every company; publishing an existing level replaces its company overrides. Network-only permissions control access to all companies and management of network permission levels. A network permission manager retains authority to restore the network permissions they already hold if their company override limits their normal access.
+
+Assign a permission level under **Admin → Users → pencil** or **Create user**. The permission assignment can apply to the selected company, or network-wide when authorised. Network-wide assignment replaces that user’s company assignments. Users can have different levels in different companies. Each user manager must have access to all of the target user’s locations and enough authority in each company to manage the account, including password resets. They cannot assign a higher hierarchy level or any permission they do not hold. Server checks apply even if a screen or request is modified. Role changes take effect on the next request; user account changes still require that user to sign in again.
+
+In-use levels cannot be deleted. At least one full network access account must remain. Concurrent permission edits require reloading before overwriting another change. Permission definitions persist in **data/permission-levels.json**, and company assignments in **data/accounts.json**. Keep the entire **data** folder when updating.
 
 ## Suppliers and stock
 

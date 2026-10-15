@@ -1,0 +1,19 @@
+(function(root){
+ const definitions=[
+  ['home.view','Home','View Home totals','Daily work'],['orders.view','Ordering','Browse stock and view the cart','Daily work'],['orders.place','Place orders','Place and send supplier orders','Daily work'],
+  ['counts.view','View stock counts','Read counts, usage and par levels','Daily work'],['counts.edit','Record stock counts','Save stock counts','Daily work'],['sales.view','View daily sales','Read daily sales, projections and budgets','Daily work'],['sales.edit','Enter daily sales','Save daily sales','Daily work'],
+  ['finances.view','View weekly finances','Read weekly reports, expenses and quarter overview','Finance'],['finances.edit','Edit weekly finances','Save reports, labour, Op Ex and R&O','Finance'],['reporting.view','Reporting','Run detailed reports for accessible locations','Finance'],['invoices.view','View invoices','Read and download weekly invoice bundles','Finance'],['invoices.edit','Manage invoices','Upload, edit and remove invoices','Finance'],
+  ['stock.manage','Manage stock','Add, edit and remove stock and manual par levels','Administration'],['suppliers.manage','Manage suppliers','Add, edit and remove suppliers and delivery options','Administration'],['users.manage','Manage users','Create and edit users within your hierarchy and location access','Administration'],['locations.manage','Manage locations','Create and edit locations in accessible companies','Administration'],['companies.manage','Manage companies','Create companies and edit accessible company details','Administration'],['email.manage','Location email settings','Edit order sender email and sending credentials','Administration'],
+  ['appearance.manage','App appearance','Change colours, fonts, images, text, layouts and App edit','Settings'],['roles.manage','Permission levels','Create and edit company permission levels','Settings'],['locations.all','All company locations','Access every location within an accessible company','Location access'],['network.access','All companies','Access the whole company network; network role only','Network'],['roles.network','Network permission levels','Manage network-wide permission levels; network role only','Network']
+ ].map(([id,name,description,group])=>({id,name,description,group}));
+ const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network'];
+ const work=['home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
+ const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'reporting.view','users.manage']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
+ function can(account,key){if(!account)return false;const permissions=account.permissions||defaults.find(role=>role.id===account.role)?.permissions||[],network=account.networkPermissions||permissions;if(key==='roles.manage'&&network.includes('roles.network'))return true;return(networkKeys.includes(key)?network:permissions).includes(key);}
+ const any=(account,permissions)=>permissions.some(key=>can(account,key));
+ const level=account=>account?.roleLevel??defaults.find(role=>role.id===account?.role)?.level??0;
+ const grants=account=>keys.filter(key=>can(account,key));
+ const canAssign=(actor,target)=>level(target)<=level(actor)&&grants(target).every(key=>can(actor,key));
+ const dependencies={'orders.place':'orders.view','counts.edit':'counts.view','sales.edit':'sales.view','finances.edit':'finances.view','invoices.edit':'invoices.view','roles.network':'roles.manage','network.access':'locations.all'};
+ const api={definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
+})(globalThis);

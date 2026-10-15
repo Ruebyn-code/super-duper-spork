@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),panel=$('weekly-overview-page');if(!panel)return;
+ const $=id=>document.getElementById(id),panel=$('weekly-overview-page');if(!panel||!appAccess.can('finances.view'))return;
  const fields=['salesCents','costOfGoodsPercent','labourPercent','opExPercent','roPercent','profitCents','profitPercent'];
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
  const money=value=>new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),shortDate=value=>value.slice(8)+'.'+value.slice(5,7),date=value=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));

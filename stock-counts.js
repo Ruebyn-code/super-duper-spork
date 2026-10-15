@@ -1,4 +1,5 @@
 const {belongs}=require('./location-scope');
+const {headOffice}=require('./permissions');
 const stockCountGroups=require('./public/stock-count-groups');
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -16,7 +17,7 @@ function normalize(input){
 }
 function folder(dir){return path.join(dir,'stock-counts');}
 async function read(dir,id){if(!uuid.test(id))return null;try{return JSON.parse(await fs.readFile(path.join(folder(dir),id+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return null;throw error;}}
-function canRead(record,session){return record&&(session.role==='admin'||belongs(record,session));}
+function canRead(record,session){return record&&(headOffice(session)||belongs(record,session));}
 async function get(dir,id,session){const record=await read(dir,id);if(!canRead(record,session))invalid('Stock count not found.',404);return record;}
 async function list(dir,session){
  let files;try{files=await fs.readdir(folder(dir));}catch(error){if(error.code==='ENOENT')return [];throw error;}

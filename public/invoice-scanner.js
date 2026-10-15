@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),dialog=$('invoice-scanner'),launcher=$('invoice-launcher'),form=$('invoice-review');if(!dialog)return;
+ const $=id=>document.getElementById(id),dialog=$('invoice-scanner'),launcher=$('invoice-launcher'),form=$('invoice-review');if(!dialog)return;if(!appAccess.can('invoices.view')){launcher.hidden=true;return;}
  const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;},wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
  const money=value=>value===null?wording('Total not entered'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),date=value=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z')),shift=(value,days)=>new Date(Date.parse(value+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);
  let session,busy=false,draft=null,previewUrl='',generation=0,bundleGeneration=0,worker,workerPromise,libraryPromise,pdfPromise,progressPage=1,progressPages=1,currentTab='scan',bundles=[],manualWeek=false,scanAbort;
@@ -11,7 +11,7 @@
  function message(text,error=false){$('invoice-message').textContent=wording(text);$('invoice-message').dataset.error=String(error);}
  async function api(url,{method='GET',body,blob=false}={}){const response=await fetch(url,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||'',...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}if(!response.ok){const result=await response.json();throw Error(result.error||'Unable to load invoices.');}return blob?response.blob():response.json();}
  async function signIn(){if(!session){session=await api('/api/session');if(!session.csrf)throw Error('Please sign in again.');$('invoice-scanner-location').textContent=session.locationName||'';}return session;}
- function setBusy(value){busy=value;launcher.dataset.busy=String(value);dialog.setAttribute('aria-busy',String(value));for(const input of form.elements)input.disabled=value;for(const id of ['invoice-camera','invoice-upload','invoice-new'])$(id).disabled=value;for(const button of dialog.querySelectorAll('[data-invoice-tab]'))button.disabled=value;}
+ function setBusy(value){busy=value;launcher.dataset.busy=String(value);dialog.setAttribute('aria-busy',String(value));for(const input of form.elements)input.disabled=value||(input.id!=='invoice-download'&&!appAccess.can('invoices.edit'));for(const id of ['invoice-camera','invoice-upload','invoice-new'])$(id).disabled=value||!appAccess.can('invoices.edit');for(const button of dialog.querySelectorAll('[data-invoice-tab]'))button.disabled=value;}
  function progress(text,value){$('invoice-progress-label').textContent=wording(text);$('invoice-progress').value=Math.max(0,Math.min(100,value));}
  function setPreview(url){if(previewUrl.startsWith('blob:'))URL.revokeObjectURL(previewUrl);previewUrl=url||'';$('invoice-preview').hidden=!url;if(url)$('invoice-preview').src=url;else $('invoice-preview').removeAttribute('src');}
  function dates(){const invoiceDate=$('invoice-date').value,week=$('invoice-week').value;$('invoice-date-caption').textContent=invoiceDate?date(invoiceDate):wording('Not detected');$('invoice-week-caption').textContent=week?date(week)+' – '+date(shift(week,6)):'';}
@@ -22,7 +22,8 @@
  function reset(){generation++;draft=null;manualWeek=false;form.reset();form.hidden=true;setPreview('');$('invoice-camera-file').value='';$('invoice-upload-file').value='';$('invoice-dropzone').hidden=false;$('invoice-scan-progress').hidden=true;$('invoice-delete-confirm').hidden=true;}
  function tab(name,openWeek){currentTab=name;$('invoice-scan-view').hidden=name!=='scan';$('invoice-bundles-view').hidden=name!=='bundles';for(const button of dialog.querySelectorAll('[data-invoice-tab]'))button.setAttribute('aria-pressed',String(button.dataset.invoiceTab===name));if(name==='bundles')return loadBundles(openWeek);}
  for(const button of dialog.querySelectorAll('[data-invoice-tab]'))button.onclick=()=>{if(!busy)tab(button.dataset.invoiceTab);};
- launcher.onclick=async()=>{dialog.showModal();launcher.setAttribute('aria-expanded','true');message('');try{await signIn();if(currentTab==='bundles')await loadBundles();}catch(error){message(error.message,true);}};$('invoice-collapse').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{if(!busy)releaseWorker();launcher.setAttribute('aria-expanded','false');launcher.focus({preventScroll:true});});
+ setBusy(false);
+ launcher.onclick=async()=>{dialog.showModal();launcher.setAttribute('aria-expanded','true');message('');try{await signIn();if(!appAccess.can('invoices.edit'))await tab('bundles');else if(currentTab==='bundles')await loadBundles();}catch(error){message(error.message,true);}};$('invoice-collapse').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{if(!busy)releaseWorker();launcher.setAttribute('aria-expanded','false');launcher.focus({preventScroll:true});});
  function loadLibrary(){if(window.Tesseract)return Promise.resolve();if(!libraryPromise)libraryPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/vendor/invoice/tesseract.min.js';script.onload=resolve;script.onerror=()=>{script.remove();libraryPromise=null;reject(Error('Unable to load text recognition. Try scanning again.'));};document.head.append(script);});return libraryPromise;}
  async function ocrWorker(){
   if(worker)return worker;
@@ -44,7 +45,7 @@
    }return {text:texts.join('\n\n').slice(0,200000),confidence:scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:null};
   }finally{await pdf.destroy();}
  }
- async function scan(file){
+ async function scan(file){if(!appAccess.can('invoices.edit'))return;
   if(!file||busy)return;if(file.size>10000000){message('Choose an invoice up to 10 MB.',true);return;}const extension=file.name.split('.').at(-1).toLowerCase(),mime=file.type||({pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',heic:'image/heic',heif:'image/heif'}[extension]);if(!['application/pdf','image/jpeg','image/png','image/webp','image/heic','image/heif'].includes(mime)){message('Choose a JPEG, PNG, WebP or PDF invoice.',true);return;}
   reset();const token=generation;scanAbort=new AbortController();draft={id:uuid(),notes:'',ocrText:'',pages:mime==='application/pdf'?null:1,confidence:null,preview:null};setBusy(true);message('');$('invoice-scan-progress').hidden=false;progress('Opening invoice…',1);progressPage=progressPages=1;
   try{await signIn();draft.source={name:file.name,mime,data:await fileData(file)};if(token!==generation)return;let result;

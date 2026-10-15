@@ -919,7 +919,7 @@ input[type=file]::file-selector-button{font:inherit;color:var(--primary);backgro
 @media(pointer:coarse){.admin-page .users-directory .directory-filter-toggle,.admin-page .users-directory .directory-clear-filters,.admin-page .users-directory .directory-create{min-height:44px}}
 
 /* User management is scoped for franchisees; global administration belongs to Head Office. */
-html[data-account-role=franchisee] [data-head-office-only]{display:none!important}
+.access-denied{display:none!important}
 /* Stock counts use the quantity being entered to prepare a recommended cart. */
 .stock-count-page .count-order-item{grid-template-columns:minmax(0,1fr) 190px;gap:16px;padding:12px 0}
 .count-order-stats{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;margin-top:8px;font-size:11px;line-height:1.5}
@@ -1120,7 +1120,7 @@ html[data-account-role=franchisee] [data-head-office-only]{display:none!importan
 @media(pointer:coarse){.layout-toolbar-selection button,.layout-toolbar-actions button{min-height:44px}.app-layout-handle{width:40px;height:40px;min-width:40px;min-height:40px}}
 
 /* Reports share the selected location's records and company appearance. */
-html:not([data-account-role=admin]):not([data-account-role=franchisee]) [data-user-manager-only]{display:none!important}
+.access-denied{display:none!important}
 .reporting-page{min-width:0;padding-top:24px}.report-header{padding:0;border:0;display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}.report-header h1{margin:4px 0 6px;font-size:30px}.report-header .eyebrow{margin:0;font-size:10px}.report-header #report-location{margin:0;font-size:12px;color:var(--muted);overflow-wrap:anywhere}.report-period{flex-shrink:0;border-radius:9px;padding:8px 11px;background:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary);font-size:12px;font-variant-numeric:tabular-nums}
 .report-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.report-controls select{width:auto;max-width:100%;min-height:36px;margin:0;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12px;color:#182b3a}.report-controls .date-control{margin:0}.report-controls .date-field{display:flex;align-items:center;gap:6px}.report-controls .date-field label{margin:0;font-size:11px;color:var(--muted)}.report-controls .date-control.date-open{width:235px}.report-controls .date-field input{font-size:12px}.report-controls>button{min-height:36px;margin:0;padding:8px 12px;font-size:12px}.report-controls .report-refresh{display:grid;place-items:center;width:36px;padding:8px;border:1px solid var(--line);background:#fff;color:var(--primary)}.report-controls .report-export{margin-left:auto;background:var(--primary);color:#fff}.reporting-page>#report-status{font-size:11px;line-height:1.5;margin:10px 0 16px;min-height:16px}
 .report-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}.reporting-page .report-metric{min-width:0;margin:0;padding:14px 16px;box-shadow:none}.report-metric>span{display:block;font-size:11px;color:var(--muted);line-height:1.45}.report-metric>strong{display:block;margin:9px 0 7px;font-size:25px;font-weight:600;line-height:1.2;color:var(--primary);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.report-metric>span.small{font-size:10px}.report-metric [data-expense-state=over]{color:#c62828}.report-metric [data-expense-state=under]{color:#15803d}

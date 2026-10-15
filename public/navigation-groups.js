@@ -29,6 +29,6 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  if(oldAdmin){const adminNav=document.createElement('nav');adminNav.className='main-sidebar-nav';adminNav.setAttribute('aria-label','Admin navigation');if(accounts)adminNav.append(accounts);oldAdmin.replaceChildren(adminNav);}
  for(const link of [stock,count,settings])link?.remove();
  for(const empty of sidebar.querySelectorAll('.sidebar-scroll > .main-sidebar-nav'))if(empty!==nav)empty.remove();
- const role=document.documentElement.dataset.accountRole;for(const item of secondary.querySelectorAll('[data-head-office-only]'))item.hidden=role!=='admin';for(const item of secondary.querySelectorAll('[data-user-manager-only]'))item.hidden=!['admin','franchisee'].includes(role);
+ window.appAccess?.apply();
  if(ordering&&cart){const badge=document.createElement('span');badge.id='ordering-cart-badge';badge.className='ordering-cart-badge';badge.dataset.userText='';ordering.append(badge);const source=cart.querySelector('#cart-badge'),sync=()=>{badge.textContent=source?.textContent||'0';badge.hidden=badge.textContent==='0';};if(source)new MutationObserver(sync).observe(source,{childList:true,characterData:true,subtree:true});sync();}
 };

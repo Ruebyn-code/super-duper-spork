@@ -1,7 +1,7 @@
 (()=>{
- window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();else if(dirty)saveDraft();});
 
- const $=id=>document.getElementById(id),form=$('sales-form');if(!form)return;
+ const $=id=>document.getElementById(id),form=$('sales-form');if(!form||!appAccess.can('sales.view'))return;
+ window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();else if(dirty)saveDraft();});
  const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
  const money=value=>value===null?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
  const shift=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10);

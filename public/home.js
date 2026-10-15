@@ -49,7 +49,7 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([api('/api/catalogue'),api('/api/home-totals')]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
@@ -63,9 +63,9 @@
    session=await api('/api/session');if(!session.csrf){location.href=companyLoginUrl();return;}
    const legacyKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyKey+(session.locationId?'-'+session.locationId:'');
    try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyKey));}catch{}
-   $('home-admin').hidden=!['admin','franchisee'].includes(session.role);
-   $('home-admin').querySelectorAll('[data-head-office-only]').forEach(link=>link.hidden=session.role!=='admin');
-   render();await refresh();
+   $('home-admin').hidden=!appAccess.any(appAccess.admin,session);
+   $('home-admin').querySelectorAll('[data-head-office-only]').forEach(link=>link.hidden=!appAccess.any(appAccess.policy(link)||[],session));
+   document.querySelector('[data-edit-id=home-totals]')?.classList.toggle('access-denied',!appAccess.can('home.view'));appAccess.apply(session);render();await refresh();
   }catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
  })();
 })();

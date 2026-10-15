@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),form=$('weekly-report-form');if(!form)return;
+ const $=id=>document.getElementById(id),form=$('weekly-report-form');if(!form||!appAccess.can('finances.view'))return;
  const shift=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*86400000).toISOString().slice(0,10),monday=date=>shift(date,-(new Date(date+'T00:00:00Z').getUTCDay()+6)%7);
  const dateLabel=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
