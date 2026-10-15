@@ -7,11 +7,23 @@
  function label(node,text,values={}){node.dataset.appTemplate=text;node.dataset.appValues=JSON.stringify(values);node.textContent=wording(text,values);}
  function cell(row,field,summary=false){const td=document.createElement('td'),value=row[field];td.dataset.userText='';td.textContent=value===null?'':field.endsWith('Cents')?money(value):value.toFixed(2)+'%';if(summary)td.title=wording('{count} completed weeks',{count:row.counts[field]});if(field.startsWith('profit')){td.className=field==='profitCents'?'overview-profit':'overview-profit-percent';td.dataset.profitState=value===null?'unavailable':value>0?'profit':value<0?'loss':'break-even';}return td;}
  function appendRow(parent,row,title,{summary=false,previous=false}={}){const tr=document.createElement('tr'),th=document.createElement('th');th.scope='row';if(summary){tr.className=previous?'overview-previous':'overview-average';th.textContent=wording(title);th.dataset.appTemplate=title;th.dataset.appValues='{}';}else{tr.dataset.week=row.weekStart;const link=document.createElement('a');link.href='/sales?week='+encodeURIComponent(row.weekStart)+'#report';link.textContent=shortDate(row.weekStart)+' – '+shortDate(row.weekEnd);link.title=date(row.weekStart)+' – '+date(row.weekEnd);th.append(link);if(row.recordedDays>0&&row.recordedDays<7){const partial=document.createElement('span');partial.className='overview-partial';partial.textContent=wording('{count}/7 days',{count:row.recordedDays});th.append(partial);}if(row.pricePending)tr.title=wording('Some placed orders have prices pending.');}tr.append(th,...fields.map(field=>cell(row,field,summary)));parent.append(tr);}
+ function appendWeeks(body){
+  let previousQuarter='';
+  for(const row of data.rows){
+   if(data.period.mode==='ytd'){
+    // A completed week belongs to its Sunday's quarter. Keep the unfinished
+    // week in the current quarter when its Sunday falls beyond the YTD cutoff.
+    const through=row.weekEnd<data.period.endDate?row.weekEnd:data.period.endDate,year=through.slice(0,4),number=Math.floor((Number(through.slice(5,7))-1)/3)+1,key=year+'-Q'+number;
+    if(key!==previousQuarter){const tr=document.createElement('tr'),th=document.createElement('th'),month=new Intl.DateTimeFormat('en-AU',{month:'short',timeZone:'UTC'}),first=new Date(Date.UTC(Number(year),(number-1)*3,1)),last=new Date(Date.UTC(Number(year),number*3-1,1));tr.className='overview-quarter-divider';tr.dataset.quarter=key;th.colSpan=8;th.scope='row';th.dataset.editId='overview-quarter-heading-'+key;label(th,'Q{quarter} · {months} {year}',{quarter:number,months:month.format(first)+'–'+month.format(last),year});tr.append(th);body.append(tr);previousQuarter=key;}
+   }
+   appendRow(body,row);
+  }
+ }
  function render(){
   for(const button of panel.querySelectorAll('[data-overview-mode]')){const active=button.dataset.overviewMode===mode;button.setAttribute('aria-pressed',String(active));}
   $('overview-quarter-controls').hidden=mode!=='quarter';$('overview-current').disabled=busy||Boolean(data&&quarter===data.period.currentQuarter);if(!data)return;
   label($('overview-title'),'{location} · Sales overview',{location:locationName});$('overview-period').textContent=data.period.label+' · '+date(data.period.startDate)+' – '+date(data.period.endDate);
-  const body=$('overview-rows'),foot=$('overview-average');body.replaceChildren();foot.replaceChildren();appendRow(body,data.previousAverage,data.period.previous.label,{summary:true,previous:true});for(const row of data.rows)appendRow(body,row);appendRow(foot,data.average,'Average',{summary:true});
+  const body=$('overview-rows'),foot=$('overview-average');body.replaceChildren();foot.replaceChildren();appendRow(body,data.previousAverage,data.period.previous.label,{summary:true,previous:true});appendWeeks(body);appendRow(foot,data.average,data.period.mode==='ytd'?'Year to date average':'Average',{summary:true});
   label($('overview-average-status'),'{count} completed weeks included in the sales average.',{count:data.average.completedWeeks});
  }
  function saveUrl(){const url=new URL(location.href);if(mode==='ytd')url.searchParams.set('period','ytd');else url.searchParams.delete('period');if(quarter)url.searchParams.set('quarter',quarter);history.replaceState(null,'',url);}
