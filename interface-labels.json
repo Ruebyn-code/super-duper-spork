@@ -3895,7 +3895,8 @@
   {
     "text": "Expense",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "sales"
     ]
   },
   {
@@ -4735,6 +4736,180 @@
   },
   {
     "text": "Profit = report sales − stock orders − labour − operating expenses − R&O.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Weekly report and expenses",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Stock costs",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Edit breakdown",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "View orders",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Hours",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Hourly rate",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Quantity",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Unit cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Name / shift",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Name or shift",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Expense name",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Expense description",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Entry cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "+ Add entry",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Record no cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Remove expense entry",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Previously recorded total",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "of report sales",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "placed orders",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "No placed orders for this week.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "No entries yet. Add an entry or record no cost for this week.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Labour cost = hours × hourly rate, rounded to cents for each entry.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Operating expenses = the total of your named cost entries.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "R&O = the total of your named cost entries.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Calculated automatically from orders placed for this location during the selected Monday–Sunday week.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Enter a quantity from 0 to 1,000,000 with up to three decimal places.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "The expense total exceeds the weekly limit.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "{location} · {expense}",
     "locations": [
       "sales"
     ]

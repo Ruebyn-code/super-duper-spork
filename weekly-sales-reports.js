@@ -17,14 +17,21 @@ function validate(input){
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);if(!object(input.platformFees)||Object.keys(input.platformFees).some(platform=>!weeklyReport.platforms.includes(platform)))invalid('Enter valid platform fees.');
   costs.platformFees=Object.fromEntries(weeklyReport.platforms.map(platform=>{const fees=input.platformFees[platform];if(!object(fees)||Object.keys(fees).some(field=>!weeklyReport.feeFields.includes(field)))invalid('Enter valid platform fees.');return [platform,Object.fromEntries(weeklyReport.feeFields.map(field=>{const value=fees[field];if(value!==null&&(!Number.isSafeInteger(value)||value<0||value>maximumDailyCents*7))invalid('Enter non-negative platform fees with up to two decimal places, or leave them blank.');return [field,value];}))];}));
  }
+ if(Object.hasOwn(input,'expenseEntries')){
+  const entries=input.expenseEntries,object=value=>value&&typeof value==='object'&&!Array.isArray(value);if(!object(entries)||Object.keys(entries).some(field=>!weeklyReport.expenseFields.includes(field)))invalid('Enter valid expense entries.');
+  costs.expenseEntries=Object.fromEntries(weeklyReport.expenseFields.map(field=>{const rows=entries[field];if(rows===null)return [field,null];if(!Array.isArray(rows)||rows.length>100)invalid('Use up to 100 entries per expense.');const ids=new Set();let knownTotal=0;
+   const normalized=rows.map(row=>{if(!object(row)||Object.keys(row).some(key=>!['id','description','quantityMilli','unitCostCents'].includes(key))||typeof row.id!=='string'||!/^[-a-zA-Z0-9]{1,80}$/.test(row.id)||ids.has(row.id)||typeof row.description!=='string'||row.description.length>120)invalid('Enter valid expense details.');ids.add(row.id);for(const [key,maximum] of [['quantityMilli',1000000000],['unitCostCents',maximumDailyCents*7]])if(row[key]!==null&&(!Number.isSafeInteger(row[key])||row[key]<0||row[key]>maximum))invalid('Enter non-negative expense quantities and costs.');const clean={id:row.id,description:row.description.trim(),quantityMilli:row.quantityMilli,unitCostCents:row.unitCostCents};knownTotal+=weeklyReport.expenseLineTotal(clean)??0;if(knownTotal>maximumDailyCents*7)invalid('The expense total exceeds the weekly limit.');return clean;});return [field,normalized];}));
+ }
  return {weekStart:input.weekStart,breakdown,...costs,revision:input.revision};
 }
 function createStore(){
  const pending=new Map();
- async function read(dir,session,start){try{const record=JSON.parse(await fs.readFile(file(dir,session,start),'utf8'));return {...record,roCents:record.roCents===undefined?0:record.roCents,platformFees:record.platformFees??weeklyReport.blankPlatformFees()};}catch(error){if(error.code!=='ENOENT')throw error;return {weekStart:start,breakdown:weeklyReport.blank(),labourCents:null,operatingExpensesCents:null,roCents:0,platformFees:weeklyReport.blankPlatformFees(),revision:0,updatedAt:null};}}
+ async function read(dir,session,start){try{const record=JSON.parse(await fs.readFile(file(dir,session,start),'utf8'));return {...record,roCents:record.roCents===undefined?0:record.roCents,platformFees:record.platformFees??weeklyReport.blankPlatformFees(),expenseEntries:record.expenseEntries??weeklyReport.blankExpenses()};}catch(error){if(error.code!=='ENOENT')throw error;return {weekStart:start,breakdown:weeklyReport.blank(),labourCents:null,operatingExpensesCents:null,roCents:0,platformFees:weeklyReport.blankPlatformFees(),expenseEntries:weeklyReport.blankExpenses(),revision:0,updatedAt:null};}}
  async function save(dir,session,input){const normalized=validate(input),target=file(dir,session,normalized.weekStart);
   const operation=(pending.get(target)||Promise.resolve()).then(async()=>{
-   const previous=await read(dir,session,normalized.weekStart),next={...normalized,roCents:Object.hasOwn(normalized,'roCents')?normalized.roCents:previous.roCents,platformFees:Object.hasOwn(normalized,'platformFees')?normalized.platformFees:previous.platformFees},content=record=>JSON.stringify([record.breakdown,record.labourCents,record.operatingExpensesCents,record.roCents,record.platformFees]);
+   const previous=await read(dir,session,normalized.weekStart),next={...normalized,roCents:Object.hasOwn(normalized,'roCents')?normalized.roCents:previous.roCents,platformFees:Object.hasOwn(normalized,'platformFees')?normalized.platformFees:previous.platformFees,expenseEntries:Object.hasOwn(normalized,'expenseEntries')?normalized.expenseEntries:previous.expenseEntries};
+   for(const field of weeklyReport.expenseFields)if(next.expenseEntries[field]!==null)next[field]=weeklyReport.expenseTotal(next.expenseEntries[field]);
+   const content=record=>JSON.stringify([record.breakdown,record.labourCents,record.operatingExpensesCents,record.roCents,record.platformFees,record.expenseEntries]);
    if(content(previous)===content(next))return previous;
    if(previous.revision!==normalized.revision)invalid('This report was changed by another user or tab. Reload the saved week before saving.',409);
    const record={...next,revision:previous.revision+1,locationId:session.locationId,companyId:session.companyId,recordedBy:session.username,updatedAt:new Date().toISOString()},temp=target+'.'+crypto.randomUUID()+'.tmp';
@@ -33,9 +40,11 @@ function createStore(){
  }
  async function report(dir,session,selectedWeek,{orders=[],now=new Date()}={}){
   const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone);
-  const costs=allTimeTotals([],orders.filter(order=>{const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;const date=dateLabel(dayNumber(created,formatter));return date>=start&&date<=shift(start,6);}),session);
+  const weeklyOrders=orders.filter(order=>{const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;const date=dateLabel(dayNumber(created,formatter));return date>=start&&date<=shift(start,6);});
+  const seen=new Set(),stockOrders=[];for(const order of weeklyOrders){const own=allTimeTotals([],[order],session);if(!own.orderCount||seen.has(order.id))continue;seen.add(order.id);stockOrders.push({id:order.id,createdAt:order.createdAt,totalCents:own.placedOrdersCents,pricePending:own.pricePending,items:order.items.map(item=>({name:item.name||'',supplier:item.supplier||'',quantity:item.quantity??0,unitCostCents:item.price??null}))});}
+  const costs=allTimeTotals([],weeklyOrders,session);
   const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:costs.placedOrdersCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
-  return {record,summary,profit,platformSettlements,weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
+  return {record,summary,profit,platformSettlements,stockOrders,weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
  }
  return {save,report};
 }

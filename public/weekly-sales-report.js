@@ -2,6 +2,10 @@
  const fields=['tillSales','cash','eftpos','pettyCash','uberEats','doorDash'];
  const platforms=['uberEats','doorDash'],feeFields=['feesCents','marketingCents','refundsCents'];
  const blankPlatformFees=()=>Object.fromEntries(platforms.map(platform=>[platform,Object.fromEntries(feeFields.map(field=>[field,null]))]));
+ const expenseFields=['labourCents','operatingExpensesCents','roCents'];
+ const blankExpenses=()=>Object.fromEntries(expenseFields.map(field=>[field,null]));
+ function expenseLineTotal(entry){return entry&&Number.isSafeInteger(entry.quantityMilli)&&entry.quantityMilli>=0&&Number.isSafeInteger(entry.unitCostCents)&&entry.unitCostCents>=0?Number((BigInt(entry.quantityMilli)*BigInt(entry.unitCostCents)+500n)/1000n):null;}
+ function expenseTotal(entries){if(!Array.isArray(entries))return null;const amounts=entries.map(expenseLineTotal);return amounts.some(value=>value===null)?null:amounts.reduce((sum,value)=>sum+value,0);}
  const blank=()=>Object.fromEntries(fields.map(field=>[field,Array(7).fill(null)]));
  const sum=values=>values.some(value=>value!==null)?values.reduce((total,value)=>total+(value??0),0):null;
  function calculate(breakdown){
@@ -23,5 +27,5 @@
   return {amountCents,state:amountCents>0?'profit':amountCents<0?'loss':'break-even',reason:null};
  }
  function settlement(salesCents,fees){const values=feeFields.map(field=>fees?.[field]),totalFeesCents=values.every(value=>Number.isSafeInteger(value)&&value>=0)?values.reduce((total,value)=>total+value,0):null;return {salesCents,totalFeesCents,expectedPayCents:Number.isSafeInteger(salesCents)&&salesCents>=0&&totalFeesCents!==null?salesCents-totalFeesCents:null};}
- return {fields,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement};
+ return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement};
 });
