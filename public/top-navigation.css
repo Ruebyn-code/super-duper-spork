@@ -24,10 +24,6 @@
 #app-sidebar.top-navigation>.sidebar-scroll>#sidebar-toggle:hover{background-color:color-mix(in srgb,var(--primary) 12%,white);border-color:color-mix(in srgb,var(--primary) 24%,white)}
 #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer{gap:0;padding:4px;border:1px solid color-mix(in srgb,var(--primary) 80%,white);border-radius:14px;box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 13%,transparent)}
 #app-sidebar.top-navigation .sidebar-footer #toolbar-toggle{flex:0 0 34px;width:34px;height:34px;margin:0;padding:7px}
-#app-sidebar.top-navigation .toolbar-actions{display:flex;align-items:center;gap:2px;position:relative;flex:0 1 auto;min-width:0;max-width:0;margin-left:0;overflow:hidden;opacity:0;pointer-events:none;transform:translateX(5px);transition:max-width .34s cubic-bezier(.2,.8,.2,1),margin-left .34s ease,opacity .2s ease,transform .34s ease}
-#app-sidebar.top-navigation .toolbar-open .toolbar-actions{max-width:128px;margin-left:4px;opacity:1;pointer-events:auto;transform:none}
-#app-sidebar.top-navigation .toolbar-toggle svg{transition:transform .3s ease}
-#app-sidebar.top-navigation .toolbar-open .toolbar-toggle svg{transform:rotate(90deg)}
 #app-sidebar.top-navigation .sidebar-footer button,#app-sidebar.top-navigation .sidebar-footer #app-edit-toggle,#app-sidebar.top-navigation .sidebar-footer #sidebar-toggle,#app-sidebar.top-navigation .sidebar-footer #logout{display:flex;align-items:center;justify-content:center;gap:6px;min-width:32px;width:32px;min-height:34px;height:34px;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:white}
 #app-sidebar.top-navigation .sidebar-footer button:hover{background-color:#ffffff26}
 #app-sidebar.top-navigation .sidebar-footer a{display:flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;min-height:34px;height:34px;margin:0;padding:8px;border:0;border-radius:8px;background-color:transparent;color:white;text-decoration:none}
@@ -48,13 +44,6 @@
 #app-sidebar.top-navigation .secondary-sidebar a{flex:0 0 auto;min-height:36px;padding:7px 10px;gap:7px;border-radius:8px;font-size:12px;white-space:nowrap;box-shadow:none}
 .top-navigation .secondary-sidebar .submenu-label{overflow-wrap:normal}
 .top-navigation .secondary-sidebar .sidebar-navigation-icon{width:17px;height:17px}
-.app-settings-menu.secondary-sidebar{display:none;position:fixed;inset:auto;width:280px;max-width:calc(100vw - 24px);height:auto;min-height:0;margin:0;padding:8px;border:1px solid color-mix(in srgb,var(--primary) 20%,white);border-radius:14px;background-color:color-mix(in srgb,var(--primary) 10%,white);box-shadow:0 12px 36px #182b3a24;overflow:auto;overscroll-behavior:contain}
-.app-settings-menu.secondary-sidebar:popover-open{display:block;animation:sidebar-reveal var(--motion-medium,.22s) ease both}
-.app-settings-menu.secondary-sidebar .admin-subnav{display:flex;flex-direction:column;gap:3px;margin:0!important;padding:0!important;border:0}
-.app-settings-menu.secondary-sidebar a{display:flex;align-items:center;gap:10px;min-height:42px;padding:10px 12px;border:0;border-radius:9px;color:var(--primary);font-size:13px;text-decoration:none;box-shadow:none}
-.app-settings-menu.secondary-sidebar a:hover,.app-settings-menu.secondary-sidebar a[aria-current=page]{background-color:color-mix(in srgb,var(--primary) 20%,white)}
-.app-settings-menu.secondary-sidebar a:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
-.app-settings-menu.secondary-sidebar .sidebar-navigation-icon{width:19px;height:19px}
 .app-page{padding-bottom:0}
 .app-page main{scroll-margin-top:72px}
 .navigation-compact #app-sidebar.top-navigation .top-navigation-tabs a .sidebar-label{max-width:0;opacity:0;overflow:hidden}
@@ -88,11 +77,9 @@
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  #app-sidebar:not(.top-navigation) #top-navigation-tabs{display:none}
  #app-sidebar:not(.top-navigation) #toolbar-toggle{display:none}
- #app-sidebar:not(.top-navigation) .toolbar-actions{display:flex;align-items:center;flex:1;min-width:0}
  .app-page{padding-bottom:calc(var(--mobile-nav-space) + 16px)}
  .app-layout-toolbar{bottom:calc(82px + env(safe-area-inset-bottom,0px))}
 }
-@media(prefers-reduced-motion:reduce){#app-sidebar.top-navigation .toolbar-actions,#app-sidebar.top-navigation .toolbar-toggle svg{transition:none}}
 
 @media(min-width:721px){.top-navigation .top-navigation-tabs a{transition:gap .48s cubic-bezier(.2,.8,.2,1),padding .48s cubic-bezier(.2,.8,.2,1),background-color .18s ease}.top-navigation .sidebar-brand-row #sidebar-location{transition:flex-basis .48s cubic-bezier(.2,.8,.2,1),width .48s cubic-bezier(.2,.8,.2,1)}}@media(prefers-reduced-motion:reduce){.top-navigation .top-navigation-tabs a,.top-navigation .top-navigation-tabs .sidebar-label,.top-navigation .sidebar-brand-row #sidebar-location{transition:none}}
 
@@ -114,3 +101,42 @@
  .grouped-navigation-menu .navigation-cart-link{display:flex;align-items:center;gap:9px;margin:0;padding:10px 12px;background:transparent;color:var(--primary)}
  #app-sidebar .mobile-tabbar .ordering-cart-badge{position:absolute;top:1px;left:calc(50% + 5px);margin:0;border:2px solid white;font-size:9px;min-width:15px;padding:2px 4px}
 }
+
+/* Account actions open vertically from the fixed blue control. */
+#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle{display:flex;align-items:center;gap:7px;width:54px;flex-basis:54px;padding:7px 9px}
+#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle>.sidebar-navigation-icon{width:20px;height:20px;flex:0 0 20px}
+#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle>.account-menu-chevron{width:13px;height:13px;flex-basis:13px;transition:transform .2s ease}
+#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle[aria-expanded=true]>.account-menu-chevron{transform:rotate(180deg)}
+.app-controls-menu{display:none;position:fixed;inset:auto;margin:0;padding:7px;border:1px solid color-mix(in srgb,var(--primary) 18%,white);border-radius:16px;background:color-mix(in srgb,var(--primary) 5%,white);color:var(--ink,#182b3a);box-shadow:0 14px 44px #182b3a26;overflow-y:auto;overscroll-behavior:contain}
+.app-controls-menu:popover-open{display:block;animation:soft-reveal var(--motion-medium,.22s) ease both}
+.app-controls-menu [hidden]{display:none!important}
+.account-menu-identity{display:flex;align-items:center;gap:10px;margin-bottom:5px;padding:9px 8px 12px;border-bottom:1px solid color-mix(in srgb,var(--primary) 13%,white)}
+.account-menu-avatar{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--primary) 13%,white);color:var(--primary);font:600 14px Arial,sans-serif;letter-spacing:normal}
+.account-menu-identity>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.account-menu-identity strong{font-size:14px;overflow-wrap:anywhere}
+.account-menu-identity>div>span{font:11px/1.3 Arial,sans-serif;color:var(--muted)}
+.app-controls-menu .account-menu-item,.app-controls-menu #app-edit-toggle,.app-controls-menu #logout{display:flex;align-items:center;justify-content:flex-start;gap:11px;width:100%;min-height:42px;height:auto;margin:0;padding:10px;border:0;border-radius:10px;background:transparent;color:var(--primary);text-align:left;text-decoration:none;font-size:13px;line-height:1.4;box-shadow:none}
+.app-controls-menu .account-menu-item:hover,.app-controls-menu .account-menu-item:focus-visible{background:color-mix(in srgb,var(--primary) 12%,white)}
+.app-controls-menu .account-menu-item:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.app-controls-menu .account-menu-item[aria-current=page]{background:color-mix(in srgb,var(--primary) 12%,white)}
+.app-controls-menu #admin-edit-controls{margin:0;min-width:0}
+.app-controls-menu .sidebar-label,.app-controls-menu .sidebar-edit-label{display:block;white-space:normal}
+.app-controls-menu .sidebar-navigation-icon{flex:0 0 20px;width:20px;height:20px;color:var(--primary)}
+.app-controls-menu .icon-detail,.app-controls-menu .icon-detail *{stroke:var(--secondary)}
+.app-controls-menu #app-edit-toggle[aria-pressed=true]{background:color-mix(in srgb,var(--secondary) 18%,white)}
+.app-controls-menu #logout{margin-top:5px;border-top:1px solid color-mix(in srgb,var(--primary) 13%,white);border-radius:0 0 10px 10px;padding-top:13px}
+.user-profile-dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:22px;border:1px solid color-mix(in srgb,var(--primary) 15%,white);border-radius:20px;box-shadow:0 20px 70px #182b3a30;overflow-y:auto}
+.user-profile-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.user-profile-heading h2{margin:0;color:var(--primary);font-size:20px}
+.user-profile-close{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;min-height:34px;margin:0;padding:7px;border:0;border-radius:10px;background:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary)}
+.user-profile-identity{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;border-radius:14px;background:color-mix(in srgb,var(--primary) 5%,white)}
+.user-profile-identity .account-menu-avatar{width:46px;height:46px;flex-basis:46px;font-size:17px}
+.user-profile-identity>div{min-width:0}
+.user-profile-identity h3{margin:0 0 3px;font-size:18px;overflow-wrap:anywhere}
+.user-profile-identity p{margin:0;color:var(--muted);font:12px/1.5 Arial,sans-serif}
+.user-profile-details{display:grid;gap:16px;margin:0}
+.user-profile-details dt{margin:0 0 5px;color:var(--muted);font:11px/1.4 Arial,sans-serif}
+.user-profile-details dd{margin:0;font:14px/1.5 Arial,sans-serif;overflow-wrap:anywhere}
+.user-profile-tags{display:flex;flex-wrap:wrap;gap:5px;max-height:150px;overflow-y:auto}
+.user-profile-tags span{padding:4px 8px;border-radius:7px;background:color-mix(in srgb,var(--primary) 7%,white);color:var(--primary);font-size:12px}
+@media(prefers-reduced-motion:reduce){.app-controls-menu:popover-open{animation:none}#app-sidebar.top-navigation .account-menu-footer #toolbar-toggle>.account-menu-chevron{transition:none}}

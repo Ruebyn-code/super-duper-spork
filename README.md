@@ -20,7 +20,7 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. On phones the same options appear in the bottom navigation; **More** holds sign-out and App edit controls.
+The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **App settings**, **App edit** and **Sign out**. App settings and App edit are Head Office-only. On phones the same navigation options stay at the bottom, and **More** opens the same account dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
@@ -28,6 +28,8 @@ The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Adm
 - **Admin**: Users, Locations, Companies and all App settings options. Franchisees see Users; Head Office sees all administration pages. Ordering managers do not see Admin.
 
 Desktop related pages appear in the row underneath the main bar. Phones open the related-page menu above the bottom bar. Selecting a main category opens its first page, with the related menu available. Existing company appearance edits, saved page layouts, permission checks, company/location switching and browser cart storage are retained.
+
+**User profile** opens an in-app panel showing the signed-in username, permissions, current company and location, and accessible companies and locations in the current company. Profile details use the current signed-in session. User administration and location email settings remain in their existing administration pages. The account dropdown supports outside-click dismissal, Escape and arrow-key navigation.
 
 ## Invoice scanner and weekly bundles
 
