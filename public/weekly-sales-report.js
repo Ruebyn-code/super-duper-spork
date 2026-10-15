@@ -6,6 +6,11 @@
  const blankExpenses=()=>Object.fromEntries(expenseFields.map(field=>[field,null]));
  function expenseLineTotal(entry){return entry&&Number.isSafeInteger(entry.quantityMilli)&&entry.quantityMilli>=0&&Number.isSafeInteger(entry.unitCostCents)&&entry.unitCostCents>=0?Number((BigInt(entry.quantityMilli)*BigInt(entry.unitCostCents)+500n)/1000n):null;}
  function expenseTotal(entries){if(!Array.isArray(entries))return null;const amounts=entries.map(expenseLineTotal);return amounts.some(value=>value===null)?null:amounts.reduce((sum,value)=>sum+value,0);}
+ function allocationCost(allocation,weekStart){
+  if(allocation.totalCents===null)return null;const offset=(Date.parse(weekStart+'T00:00:00Z')-Date.parse(allocation.startWeek+'T00:00:00Z'))/604800000;if(!Number.isInteger(offset)||offset<0||offset>=allocation.weeks)return 0;
+  return Math.floor(allocation.totalCents/allocation.weeks)+(offset<allocation.totalCents%allocation.weeks?1:0);
+ }
+ function operatingCost(additionalCents,allocations,weekStart,incomplete=false){if(incomplete)return null;const amounts=allocations.map(allocation=>allocationCost(allocation,weekStart)).filter(value=>value!==null);return additionalCents===null&&!amounts.length?null:(additionalCents??0)+amounts.reduce((sum,value)=>sum+value,0);}
  const blank=()=>Object.fromEntries(fields.map(field=>[field,Array(7).fill(null)]));
  const sum=values=>values.some(value=>value!==null)?values.reduce((total,value)=>total+(value??0),0):null;
  function calculate(breakdown){
@@ -38,5 +43,5 @@
   return [...suppliers.values()].map(group=>({key:group.key,supplier:group.supplier,totalCents:group.totalCents,pricePending:group.pricePending,orderCount:group.orders.size,items:[...group.items.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-AU'))})).sort((a,b)=>(a.supplier||'').localeCompare(b.supplier||'','en-AU')||a.key.localeCompare(b.key));
  }
  function settlement(salesCents,fees){const values=feeFields.map(field=>fees?.[field]),totalFeesCents=values.every(value=>Number.isSafeInteger(value)&&value>=0)?values.reduce((total,value)=>total+value,0):null;return {salesCents,totalFeesCents,expectedPayCents:Number.isSafeInteger(salesCents)&&salesCents>=0&&totalFeesCents!==null?salesCents-totalFeesCents:null};}
- return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement,stockSupplierCosts};
+ return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,allocationCost,operatingCost,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement,stockSupplierCosts};
 });

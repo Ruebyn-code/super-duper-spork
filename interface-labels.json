@@ -1864,7 +1864,8 @@
     "text": "This week",
     "locations": [
       "Sales and ordering budget",
-      "sales · weekly report"
+      "sales · weekly report",
+      "sales"
     ]
   },
   {
@@ -2785,7 +2786,8 @@
   {
     "text": "Not set",
     "locations": [
-      "Locations"
+      "Locations",
+      "sales"
     ]
   },
   {
@@ -4935,6 +4937,138 @@
   },
   {
     "text": "placed order",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Permanent expense types",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Enter a total cost and the number of weeks to spread it over. Costs start in the selected report week and stop after the chosen weeks. Leave unused types blank.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "+ Add expense type",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "New expense type",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Total cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Weeks",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Weeks to divide by",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Apply from this week",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Delete expense type",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Remove from this report",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Removed type",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Completed",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Rounded across weeks to match the total exactly.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Saving expense types…",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Expense types saved. Save weekly report to record this week’s costs.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Add an expense type to get started.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Enter a whole number of weeks from 1 to 520.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Additional costs this week",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Other cost for this week",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Additional operating cost",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Weekly operating cost = allocated expenses + additional costs.",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "Wait for the report to finish loading.",
     "locations": [
       "sales"
     ]
