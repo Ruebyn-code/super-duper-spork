@@ -12,5 +12,13 @@
   }
   return {days,variances,totals:{sales:sum(days),variance:sum(variances),...Object.fromEntries(fields.map(field=>[field,sum(breakdown[field])]))},recordedDays:days.filter(value=>value!==null).length,reconciledDays:variances.filter(value=>value!==null).length};
  }
- return {fields,blank,calculate};
+ function profit(salesCents,{stockOrdersCents,labourCents,operatingExpensesCents,pricePending=false}={}){
+  const valid=value=>Number.isSafeInteger(value)&&value>=0;
+  if(!valid(salesCents))return {amountCents:null,state:'unavailable',reason:'sales'};
+  if(pricePending)return {amountCents:null,state:'unavailable',reason:'prices'};
+  if(![stockOrdersCents,labourCents,operatingExpensesCents].every(valid))return {amountCents:null,state:'unavailable',reason:'costs'};
+  const amountCents=salesCents-stockOrdersCents-labourCents-operatingExpensesCents;
+  return {amountCents,state:amountCents>0?'profit':amountCents<0?'loss':'break-even',reason:null};
+ }
+ return {fields,blank,calculate,profit};
 });

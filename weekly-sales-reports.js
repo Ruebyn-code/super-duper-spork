@@ -29,7 +29,8 @@ function createStore(){
  async function report(dir,session,selectedWeek,{orders=[],now=new Date()}={}){
   const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone);
   const costs=allTimeTotals([],orders.filter(order=>{const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;const date=dateLabel(dayNumber(created,formatter));return date>=start&&date<=shift(start,6);}),session);
-  return {record,summary:weeklyReport.calculate(record.breakdown),weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
+  const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:costs.placedOrdersCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents});
+  return {record,summary,profit,weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
  }
  return {save,report};
 }

@@ -4606,5 +4606,53 @@
     "locations": [
       "sales · weekly report"
     ]
+  },
+  {
+    "text": "Profit",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Loss",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Break-even",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Add report sales.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Stock prices pending.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Complete the cost entries.",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "{status} · {count}/7 sales days",
+    "locations": [
+      "sales · weekly report"
+    ]
+  },
+  {
+    "text": "Profit = report sales − stock orders − labour − operating expenses.",
+    "locations": [
+      "sales · weekly report"
+    ]
   }
 ]

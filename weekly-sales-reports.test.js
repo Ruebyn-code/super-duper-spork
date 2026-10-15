@@ -13,12 +13,24 @@ test('weekly report totals Till sales plus Uber Eats and DoorDash, keeping Eftpo
  separate.eftpos[0]=200000;assert.equal(weekly.calculate(separate).days[0],223804);assert.equal(weekly.calculate(separate).variances[0],63266);
  separate.tillSales[0]=null;assert.equal(weekly.calculate(separate).days[0],null);
 });
+test('report profit subtracts stock orders, labour and operating expenses in cents, and waits for known inputs',()=>{
+ const costs={stockOrdersCents:20000,labourCents:30000,operatingExpensesCents:10000};
+ assert.deepEqual(weekly.profit(100000,costs),{amountCents:40000,state:'profit',reason:null});
+ assert.deepEqual(weekly.profit(50000,costs),{amountCents:-10000,state:'loss',reason:null});
+ assert.deepEqual(weekly.profit(60000,costs),{amountCents:0,state:'break-even',reason:null});
+ assert.equal(weekly.profit(60001,costs).amountCents,1);assert.equal(weekly.profit(59999,costs).amountCents,-1);
+ assert.equal(weekly.profit(0,{stockOrdersCents:0,labourCents:0,operatingExpensesCents:0}).state,'break-even');
+ assert.deepEqual(weekly.profit(null,costs),{amountCents:null,state:'unavailable',reason:'sales'});
+ for(const field of ['stockOrdersCents','labourCents','operatingExpensesCents'])for(const value of [null,undefined,NaN,-1,1.5])assert.deepEqual(weekly.profit(100000,{...costs,[field]:value}),{amountCents:null,state:'unavailable',reason:'costs'});
+ assert.deepEqual(weekly.profit(100000,{...costs,pricePending:true}),{amountCents:null,state:'unavailable',reason:'prices'});
+});
 test('weekly reports persist separately by location and protect concurrent detail and weekly cost edits even when sales totals match',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'weekly-sales-'));try{
   const store=createStore(),first=await store.save(dir,actor,input());assert.equal(first.revision,1);assert.equal((await store.save(dir,actor,input())).revision,1);
   const corrected={...input(),revision:1};corrected.breakdown.cash[0]++;
   const results=await Promise.allSettled([store.save(dir,actor,corrected),store.save(dir,actor,{...corrected,labourCents:1})]);assert.equal(results[0].status,'fulfilled');assert.equal(results[1].status,'rejected');assert.equal(results[1].reason.status,409);
   const report=await createStore().report(dir,{...actor,id:'teammate'},'2026-10-05');assert.equal(report.record.revision,2);assert.equal(report.summary.days[0],223804);assert.equal(report.summary.variances[0],1);assert.equal(report.record.labourCents,668467);
+  assert.deepEqual(report.profit,{amountCents:-444663,state:'loss',reason:null});
   const other=await store.report(dir,{...actor,locationId:'other'},'2026-10-05');assert.equal(other.record.revision,0);assert.equal(other.summary.totals.sales,null);
   assert.deepEqual((await sales.createStore().report(dir,actor,'2026-10-05')).record.days,Array(7).fill(null));assert.equal((await sales.createStore().history(dir,actor)).length,0);
   await assert.rejects(store.report(dir,{...actor,locationId:'../../outside'},'2026-10-05'),error=>error.status===403);
@@ -30,7 +42,9 @@ test('weekly overview costs use only placed orders at the selected location and 
   const order=(id,createdAt,extra={})=>({id,createdAt,locationId:'shop',status:'requested',total:100,items:[{price:100}],...extra});
   const orders=[order('before','2026-10-04T12:59:59Z',{pricePending:true}),order('opening','2026-10-04T13:00:00Z'),order('opening','2026-10-04T13:00:00Z'),order('closing','2026-10-11T12:59:59Z'),order('next','2026-10-11T13:00:00Z'),order('draft','2026-10-06T00:00:00Z',{status:'draft'}),order('other','2026-10-06T00:00:00Z',{locationId:'other'})];
   const store=createStore();assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).weeklyOrders,{totalCents:200,pricePending:false,orderCount:2});
+  await store.save(dir,actor,input());assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).profit,{amountCents:-444863,state:'loss',reason:null});
   orders.push(order('pending','2026-10-06T00:00:00Z',{items:[{price:null}]}));assert.equal((await store.report(dir,actor,'2026-10-05',{orders})).weeklyOrders.pricePending,true);
+  assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).profit,{amountCents:null,state:'unavailable',reason:'prices'});
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 test('all signed-in roles can share reports within assigned locations; report saves never alter daily sales, projections, budget or home totals',async()=>{

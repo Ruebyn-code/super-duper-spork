@@ -23,7 +23,7 @@
   }
   row('total','Total sales',true);row('tillSales',labels.tillSales);row('cash',labels.cash);row('eftpos',labels.eftpos);row('pettyCash',labels.pettyCash);row('variance','Daily variance',true);row('uberEats',labels.uberEats);row('doorDash',labels.doorDash);
   function metric(id,label){const card=el('div',undefined,'weekly-report-metric'),title=el('span',label),value=el('strong','—'),note=el('span',undefined,'small');card.dataset.editId='weekly-report-'+id+'-metric';title.dataset.editId='weekly-report-'+id+'-label';value.id=id;value.dataset.userText='';note.dataset.userText='';card.append(title,value,note);overview.append(card);return {card,value,note};}
-  const sales=metric('weekly-entry-total','Recorded weekly sales'),cash=metric('weekly-cash-deposit','Cash to be deposited'),stock=metric('weekly-stock','Stock orders placed'),variance=metric('weekly-variance','Weekly variance');
+  const sales=metric('weekly-entry-total','Recorded weekly sales'),profit=metric('weekly-profit','Profit'),cash=metric('weekly-cash-deposit','Cash to be deposited'),stock=metric('weekly-stock','Stock orders placed'),variance=metric('weekly-variance','Weekly variance');profit.card.classList.add('weekly-profit-card');
   function cost(id,label){const result=metric(id+'-value',label),{wrap,input}=currencyInput(id,label,70000000);result.value.replaceWith(wrap);return {...result,input};}
   const labour=cost('weekly-labour','Labour'),expenses=cost('weekly-operating-expenses','Operating expenses');
   const breakdown=()=>Object.fromEntries(weeklySalesReport.fields.map(field=>[field,inputs[field].map(amount)]));
@@ -32,6 +32,8 @@
    for(const [key,value] of Object.entries(result.totals))rowTotals[key==='sales'?'total':key].textContent=money(value);
    sales.value.textContent=money(result.totals.sales);cash.value.textContent=money(result.totals.cash);variance.value.textContent=money(result.totals.variance);variance.value.classList.toggle('weekly-variance-negative',result.totals.variance!==null&&result.totals.variance<0);variance.value.classList.toggle('weekly-variance-positive',result.totals.variance>0);
    stock.value.textContent=money(orders.totalCents)+(orders.pricePending?' + '+wording('prices pending'):'');stock.note.textContent=wording('Stock expense')+' · '+(orders.pricePending?'—':percent(orders.totalCents,result.totals.sales));labour.note.textContent=wording('Labour %')+' · '+percent(amount(labour.input),result.totals.sales);expenses.note.textContent=wording('OPEX %')+' · '+percent(amount(expenses.input),result.totals.sales);
+   const earnings=weeklySalesReport.profit(result.totals.sales,{stockOrdersCents:orders.totalCents,pricePending:orders.pricePending,labourCents:amount(labour.input),operatingExpensesCents:amount(expenses.input)});profit.card.dataset.profitState=earnings.state;profit.value.textContent=money(earnings.amountCents);profit.card.title=wording('Profit = report sales − stock orders − labour − operating expenses.');
+   const status=earnings.state==='profit'?'Profit':earnings.state==='loss'?'Loss':'Break-even';profit.note.textContent=earnings.state==='unavailable'?wording(earnings.reason==='sales'?'Add report sales.':earnings.reason==='prices'?'Stock prices pending.':'Complete the cost entries.'):wording(result.recordedDays===7?status:'{status} · {count}/7 sales days',{status:wording(status),count:result.recordedDays});
    return result;
   }
   return {
