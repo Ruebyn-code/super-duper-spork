@@ -2,3 +2,5 @@
 @media(max-width:760px){.permission-level-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.permission-toolbar{align-items:flex-start;flex-direction:column}.settings-options-grid{gap:12px}.settings-option{padding:18px}}@media(max-width:500px){.settings-hub{padding:20px 14px 100px}.settings-options-grid,.permission-level-grid,.permission-checkbox-groups{grid-template-columns:1fr}.permission-fields{grid-template-columns:1fr 1fr}.permission-fields label:first-child{grid-column:1/-1}.permission-dialog form{padding:18px}.permission-actions{flex-wrap:wrap}.settings-hub-heading{align-items:flex-start}.permission-dialog{max-height:calc(100dvh - 16px)}}
 
 #create-permission-level,.permission-dialog button[type=submit]{background:var(--primary);border-color:var(--primary);color:white}.settings-option-icon .icon-detail{stroke:var(--secondary)}.permission-dialog fieldset[hidden]{display:none}
+
+.permission-checkbox[hidden]{display:none}

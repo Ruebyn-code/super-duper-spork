@@ -20,7 +20,7 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings** and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
+The main bar contains **Home**, **Ordering**, **Sales**, **Communications**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings** and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
@@ -52,6 +52,16 @@ Choose **This company only** to customise a role in the selected company. Other 
 Assign a permission level under **Admin → Users → pencil** or **Create user**. The permission assignment can apply to the selected company, or network-wide when authorised. Network-wide assignment replaces that user’s company assignments. Users can have different levels in different companies. Each user manager must have access to all of the target user’s locations and enough authority in each company to manage the account, including password resets. They cannot assign a higher hierarchy level or any permission they do not hold. Server checks apply even if a screen or request is modified. Role changes take effect on the next request; user account changes still require that user to sign in again.
 
 In-use levels cannot be deleted. At least one full network access account must remain. Concurrent permission edits require reloading before overwriting another change. Permission definitions persist in **data/permission-levels.json**, and company assignments in **data/accounts.json**. Keep the entire **data** folder when updating.
+
+## Communications
+
+Open **Communications** in the main navigation (the bottom bar on phones). **Posts** shows updates for the selected company and the network. **Messages & chats** contains your private direct messages and named group chats. **New chat** lets you choose a person or create a group. Normal users can contact people in companies they share; Head Office can create network group chats. Only participants can read a conversation, including when another user is Head Office. Messages update while the page is open, show unread counts and retain older history. Enter sends a message; Shift+Enter adds a new line. Messages and posts use plain text.
+
+Head Office can create company and network posts by default. **Settings → Permission levels → Communications** controls reading, messaging, company posting, network posting and required acknowledgement separately. Network posting is a network-level permission. Existing default roles gain reading and messaging, and full network access levels retain full access. Other customised roles keep their existing explicit access until you add these permissions.
+
+Select **Require everyone to mark this post as read** when publishing an important update. The author is marked as read automatically. Other users in its audience see the post over the app and must choose **Mark as read & continue** or **Snooze for 5 minutes**. Snoozing restores platform access for exactly five minutes according to the server clock, then the prompt returns. Each outstanding required post must be read or snoozed separately. The reading requirement applies across all companies the user can access, including when another company is selected, and blocks application APIs as well as screens. Refreshing, signing in again, switching locations or using another tab does not clear it. Users without Communications access can still acknowledge required posts.
+
+Post authors can edit or delete their posts and view **Read receipts**. Editing creates a new version that users must acknowledge again when reading is required. Acknowledgements and snoozes are private to each user, saved across restarts and synchronised across tabs. The prompt rechecks when the app is focused and while it is open. Keep **data/communications.json** with the rest of the **data** folder when updating to retain conversations, posts and acknowledgements. Communications stays inside the app and does not send emails or supplier orders.
 
 ## Suppliers and stock
 
