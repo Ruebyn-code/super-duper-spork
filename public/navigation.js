@@ -15,6 +15,7 @@
  const tabs=document.createElement('nav');tabs.id='top-navigation-tabs';tabs.className='top-navigation-tabs';tabs.setAttribute('aria-label','Main navigation');
  const navs=[...scroll.querySelectorAll(':scope > .main-sidebar-nav')];navs[0]?.before(tabs);tabs.append(...navs);
  const adminSlot=document.createComment('administration links position');if(admin){admin.before(adminSlot);tabs.append(admin);}
+ const settingsLink=sidebar.querySelector('[data-sidebar-group="settings"]'),settingsSlot=document.createComment('app settings position');settingsLink?.before(settingsSlot);
  const logout=document.getElementById('logout');if(logout)footer.append(logout);if(footer)scroll.append(footer);if(secondary)sidebar.append(secondary);
  // Reuse the same links on phones so cart badges, roles and App edit identities stay intact.
  const mobileBar=document.createElement('nav');mobileBar.id='mobile-tabbar';mobileBar.className='mobile-tabbar';mobileBar.setAttribute('aria-label','Main navigation');
@@ -36,10 +37,10 @@
  function syncMobileLayout(){
   closeMore();closeSubmenu();window.locationPickers?.closeAll();pointerInside=false;keyboardInside=false;sidebar.classList.toggle('top-navigation',!mobile.matches);
   if(mobile.matches){
-   if(admin)adminSlot.after(admin);for(const {nav} of navSlots)mobileBar.insertBefore(nav,more);if(logout&&footer)footer.before(logout);if(secondary)shell.insertBefore(secondary,page);
+   if(settingsLink)settingsSlot.after(settingsLink);if(admin)adminSlot.after(admin);for(const {nav} of navSlots)mobileBar.insertBefore(nav,more);if(logout&&footer)footer.before(logout);if(secondary)shell.insertBefore(secondary,page);
    const brand=scroll.querySelector('.sidebar-brand-row');if(brand){if(!brandSlot){brandSlot=document.createComment('top brand position');brand.before(brandSlot);}mobileHeader.append(brand);}
   }else{
-   if(admin)tabs.append(admin);for(const {nav,marker} of navSlots)marker.after(nav);if(logout&&footer)footer.append(logout);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
+   if(admin)tabs.append(admin);for(const {nav,marker} of navSlots)marker.after(nav);if(logout&&footer)footer.append(logout);if(settingsLink&&footer)footer.prepend(settingsLink);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
   }
   renderNavigation();renderMobileSheets();
  }
