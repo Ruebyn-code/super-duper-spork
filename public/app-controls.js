@@ -1,5 +1,5 @@
 // Share the same account actions between the blue desktop button and mobile More tab.
-window.createAppControls=({footer,toggle,mobile,wording,beforeOpen})=>{
+window.createAppControls=({footer,toggle,mobile,wording,beforeOpen,onSettings})=>{
  const create=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
  const icon=body=>{const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');for(const [key,value] of Object.entries({viewBox:'0 0 24 24',width:'20',height:'20',fill:'none',stroke:'currentColor','stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))svg.setAttribute(key,value);svg.classList.add('sidebar-navigation-icon');svg.innerHTML=body;return svg;};
  const userIcon='<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/><g class="icon-detail"><path d="M10 18h4"/></g>';
@@ -39,6 +39,7 @@ window.createAppControls=({footer,toggle,mobile,wording,beforeOpen})=>{
  trigger.onclick=toggleMenu;trigger.onpointerdown=()=>{pointerWasOpen=opened();};trigger.onkeydown=triggerKeys;menu.addEventListener('toggle',refresh);
  menu.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(true);return;}if(event.key==='Tab'){close(true);return;}if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;event.preventDefault();const links=items(),current=links.indexOf(document.activeElement);links[event.key==='Home'?0:event.key==='End'?links.length-1:(current+(event.key==='ArrowUp'?-1:1)+links.length)%links.length]?.focus();});
  menu.addEventListener('click',event=>{if(event.target.closest('[role=menuitem]'))close();});
+ settingsLink.addEventListener('click',event=>{if(!mobile.matches||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;if(location.pathname==='/admin/settings'){event.preventDefault();close();onSettings?.();}else try{sessionStorage.setItem('souvlaki-navigation-group','settings');}catch{}});
  profileButton.onclick=()=>{if(!session)return;close();profile.showModal();};profileClose.onclick=()=>profile.close();profile.addEventListener('close',()=>anchor().focus({preventScroll:true}));profile.addEventListener('click',event=>{if(event.target!==profile)return;const box=profile.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)profile.close();});
  window.addEventListener('resize',position);window.visualViewport?.addEventListener('resize',position);window.visualViewport?.addEventListener('scroll',position);document.addEventListener('scroll',position,{capture:true,passive:true});
  function setSession(value){

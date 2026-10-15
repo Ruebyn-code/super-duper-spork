@@ -25,7 +25,7 @@ The main bar contains **Home**, **Ordering**, **Sales**, **Reporting** and **Adm
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
 - **Reporting**: Opens directly from the main bar, without a second navigation bar. Access remains limited to Franchisee and Head Office.
-- **Admin**: Users, Locations, Companies and all App settings options. Franchisees see Users; Head Office sees all administration pages. Ordering managers do not see Admin.
+- **Admin**: Users, Locations and Companies. Franchisees see Users; Head Office sees all three. Ordering managers do not see Admin. App settings are accessed only through the blue account dropdown (or **More** on phones), with their own settings options separate from Admin.
 
 Desktop related pages appear in the row underneath the main bar. Phones open the related-page menu above the bottom bar. Selecting a main category opens its first page, with the related menu available. Existing company appearance edits, saved page layouts, permission checks, company/location switching and browser cart storage are retained.
 
