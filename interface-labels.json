@@ -5072,5 +5072,29 @@
     "locations": [
       "sales"
     ]
+  },
+  {
+    "text": "Cost this week",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "week",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "weeks",
+    "locations": [
+      "sales"
+    ]
+  },
+  {
+    "text": "per week",
+    "locations": [
+      "sales"
+    ]
   }
 ]
