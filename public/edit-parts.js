@@ -33,14 +33,14 @@
    if(/stock-count/.test(role)||href.startsWith('/stock-count')||/home-stock-icon/.test(edit))return 'icon-stock';if(/reporting/i.test(role)||href.startsWith('/reporting'))return 'icon-reporting';if(/sales/i.test(role)||href.startsWith('/sales')||/home-sales-icon/.test(edit))return 'icon-sales';
    if(href.includes('#companies')||id.includes('sidebar-company'))return 'icon-company';if(/account|users/i.test(role)||href.includes('#accounts'))return 'icon-users';if(/location/i.test(role)||href.includes('#locations')||inside('location-avatar')||id.includes('sidebar-location'))return 'icon-location';
    if(/settings/i.test(role)||href.startsWith('/admin/settings'))return 'icon-settings';if(/supplier|stock/i.test(role)||href.startsWith('/admin#'))return 'icon-box';
-   if(/sign-out/.test(role)||id==='logout')return 'icon-signout';if(/toggle/.test(role)||id==='sidebar-toggle')return 'icon-collapse';if(id==='mobile-more')return 'icon-more';
+   if(/sign-out/.test(role)||id==='logout')return 'icon-signout';if(/toggle/.test(role)||id==='sidebar-toggle')return 'icon-collapse';if(id==='mobile-more'||id==='top-admin-toggle')return 'icon-more';
    if(inside('search-toggle')||inside('users-search'))return 'icon-search';if(inside('admin-edit-button'))return 'icon-edit';return 'icon-general';
   }
   if(node.tag==='img')return has(node,'app-logo')?'logo':inside('product-art')||has(node,'stock-photo-preview')?'stock-photo':'image';
   if(node.tag==='body')return 'page';if(has(node,'admin-sidebar')||has(node,'secondary-sidebar')||has(node,'mobile-brand-header'))return 'sidebar';
   if(has(node,'product'))return 'stock-card';if(has(node,'stock-name')||(node.tag==='h3'&&inside('product'))||(node.tag==='strong'&&inside('cart-row')))return 'stock-name';
   if(has(node,'greeting-name'))return 'greeting-name';if(has(node,'user-name'))return 'user-name';if(has(node,'location-name'))return 'location-name';
-  if(has(node,'sidebar-label'))return 'navigation-label';if(node.tag==='a'&&(inside('admin-sidebar')||inside('secondary-sidebar')||inside('mobile-tabbar')))return 'navigation';
+  if(has(node,'sidebar-label'))return 'navigation-label';if(node.attributes.id==='top-admin-toggle'||node.tag==='a'&&(inside('admin-sidebar')||inside('secondary-sidebar')||inside('mobile-tabbar')))return 'navigation';
   if(has(node,'app-select-option'))return 'select-option';if(has(node,'location-picker-option'))return 'location-option';if(has(node,'location-select-trigger'))return 'field';
   if(['button','summary'].includes(node.tag))return 'button';if(['input','select','textarea'].includes(node.tag))return 'field';if(['label','legend'].includes(node.tag))return 'label';
   if(has(node,'management')||has(node,'ordering-budget')||has(node,'account-location-group')||has(node,'location-row'))return 'panel';
