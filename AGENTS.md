@@ -8,7 +8,7 @@
 
 - The Knowledge Library category sidebar is a one-off exception: it uses an explicit collapse/expand button and remembers the choice per user/company. It must not expand on hover or keyboard focus. Other in-page sidebars keep the shared hover behavior.
 
-- Keep App edit in the shared bar account dropdown (More on phones). Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
+- Keep App edit in the shared bar account dropdown (the blue control at the top on phones). Phone bottom navigation contains Home, Rostering, Comms and More; More holds the other pages. Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
 
 - Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.
 

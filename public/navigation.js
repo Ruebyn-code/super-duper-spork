@@ -10,33 +10,43 @@
  const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
  const currentGroup=()=>({'/':'ordering','/cart':'ordering','/stock-count':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
- const groupFocus=group=>group==='settings'?document.getElementById(mobile.matches?'mobile-more':'toolbar-toggle'):groupLink(group);
+ const groupFocus=group=>group==='settings'?document.getElementById('toolbar-toggle'):mobile.matches?more:groupLink(group);
  // Keep the original elements and edit identities when arranging the common header.
  root.classList.remove('sidebar-collapsed','sidebar-hover-expanded');sidebar.classList.add('top-navigation');
  const tabs=document.createElement('nav');tabs.id='top-navigation-tabs';tabs.className='top-navigation-tabs';tabs.setAttribute('aria-label','Main navigation');
  const navs=[...scroll.querySelectorAll(':scope > .main-sidebar-nav')];navs[0]?.before(tabs);tabs.append(...navs);
  if(admin)tabs.append(admin);
  const logout=document.getElementById('logout');if(footer)scroll.append(footer);if(secondary)sidebar.append(secondary);
- const controls=window.createAppControls({footer,toggle,mobile,wording,beforeOpen:()=>{window.locationPickers?.closeAll();if(mobile.matches)closeSubmenu();}});
+ const controls=window.createAppControls({footer,toggle,wording,beforeOpen:()=>{window.locationPickers?.closeAll();closeMore();if(mobile.matches)closeSubmenu();}});
 
  // Reuse the same links on phones so cart badges, roles and App edit identities stay intact.
  const mobileBar=document.createElement('nav');mobileBar.id='mobile-tabbar';mobileBar.className='mobile-tabbar';mobileBar.setAttribute('aria-label','Main navigation');
- const more=document.createElement('button');more.id='mobile-more';more.type='button';more.className='mobile-nav-tab';more.setAttribute('data-copy-editor','');
+ const more=document.createElement('button');more.id='mobile-more';more.type='button';more.className='mobile-nav-tab';more.dataset.layoutUi='';more.setAttribute('data-copy-editor','');
  more.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><g class="icon-detail"><path d="M7 8h10M7 12h10M7 16h10"/></g></svg><span class="sidebar-label">More</span>';
  const backdrop=document.createElement('div');backdrop.className='mobile-nav-backdrop';backdrop.hidden=true;backdrop.setAttribute('aria-hidden','true');backdrop.setAttribute('data-copy-editor','');
  const mobileHeader=document.createElement('div');mobileHeader.className='mobile-brand-header';
- const navSlots=navs.map(nav=>{const marker=document.createComment('top navigation position');nav.before(marker);return {nav,marker};});let brandSlot;
- scroll.id='app-sidebar-menu';sidebar.append(mobileBar);mobileBar.append(more);shell.before(backdrop);page.prepend(mobileHeader);controls.setMobileTrigger(more);
- function updateMore(){const label=wording('More'),span=more.querySelector('.sidebar-label');if(span.textContent!==label)span.textContent=label;more.title=label||'More';more.setAttribute('aria-label',more.title);}
+ const moreMenu=document.createElement('nav');moreMenu.id='mobile-navigation-menu';moreMenu.className='mobile-navigation-menu';moreMenu.setAttribute('popover','auto');moreMenu.dataset.layoutUi='';
+ const moreHeading=document.createElement('div');moreHeading.className='mobile-menu-heading';const moreTitle=document.createElement('h2');moreTitle.dataset.localWording='More';moreTitle.textContent='More';
+ const moreClose=document.createElement('button');moreClose.type='button';moreClose.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';moreHeading.append(moreTitle,moreClose);moreMenu.append(moreHeading);
+ const navSlots=navs.map(nav=>{const marker=document.createComment('top navigation position');nav.before(marker);return {nav,marker};});
+ const pinnedSlots=['/home','/rostering','/communications'].map(path=>{const link=sidebar.querySelector('.main-sidebar-nav a[href="'+path+'"]');if(!link)return null;const marker=document.createComment('main link position');link.before(marker);return {link,marker};}).filter(Boolean);
+ const footerSlot=document.createComment('account control position');footer?.before(footerSlot);let brandSlot,morePointerWasOpen=false;
+ scroll.id='app-sidebar-menu';sidebar.append(mobileBar,moreMenu);mobileBar.append(more);shell.before(backdrop);page.prepend(mobileHeader);
+ function updateMore(){const label=wording('More'),span=more.querySelector('.sidebar-label'),opened=moreMenu.matches(':popover-open');if(span.textContent!==label)span.textContent=label;moreTitle.textContent=label;more.title=label||'More';more.setAttribute('aria-label',more.title);more.setAttribute('aria-haspopup','true');more.setAttribute('aria-controls',moreMenu.id);more.setAttribute('aria-expanded',String(opened));moreMenu.setAttribute('aria-label',label||'More');moreClose.title=wording('Close menu');moreClose.setAttribute('aria-label',moreClose.title);const active=Boolean(moreMenu.querySelector('a[aria-current=page],a[data-submenu-open=true]'));more.classList.toggle('active',opened||active);if(active)more.setAttribute('aria-current','true');else more.removeAttribute('aria-current');}
+ function closeMore(restoreFocus=false){if(moreMenu.matches(':popover-open'))moreMenu.hidePopover();updateMore();if(restoreFocus)more.focus({preventScroll:true});}
+ function openMore(focus=false){controls.close();closeSubmenu();window.locationPickers?.closeAll();moreMenu.showPopover({source:more});updateMore();if(focus)[...moreMenu.querySelectorAll('a')].find(link=>link.getClientRects().length)?.focus();}
+ more.onpointerdown=()=>{morePointerWasOpen=moreMenu.matches(':popover-open');};more.onclick=event=>{if(moreMenu.matches(':popover-open')||(event.detail>0&&morePointerWasOpen))closeMore();else openMore(event.detail===0);morePointerWasOpen=false;};
+ more.onkeydown=event=>{if(event.key==='ArrowDown'){event.preventDefault();openMore(true);}};moreClose.onclick=()=>closeMore(true);moreMenu.addEventListener('toggle',updateMore);moreMenu.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeMore(true);}});
  function renderMobileSheets(){backdrop.hidden=!(mobile.matches&&selectedGroup);scroll.inert=mobile.matches;updateMore();}
  backdrop.onclick=()=>{const previous=selectedGroup;closeSubmenu();groupFocus(previous)?.focus();};
  function syncMobileLayout(){
-  controls.sync();closeSubmenu();window.locationPickers?.closeAll();pointerInside=false;keyboardInside=false;sidebar.classList.toggle('top-navigation',!mobile.matches);
+  controls.sync();closeMore();closeSubmenu();window.locationPickers?.closeAll();pointerInside=false;keyboardInside=false;sidebar.classList.toggle('top-navigation',!mobile.matches);
   if(mobile.matches){
-   for(const {nav} of navSlots)mobileBar.insertBefore(nav,more);if(admin)mobileBar.insertBefore(admin,more);if(secondary)shell.insertBefore(secondary,page);
+   for(const {nav} of navSlots)moreMenu.append(nav);if(admin)moreMenu.append(admin);for(const {link} of pinnedSlots)mobileBar.insertBefore(link,more);if(secondary)shell.insertBefore(secondary,page);
    const brand=scroll.querySelector('.sidebar-brand-row');if(brand){if(!brandSlot){brandSlot=document.createComment('top brand position');brand.before(brandSlot);}mobileHeader.append(brand);}
+   if(footer)mobileHeader.append(footer);
   }else{
-   if(admin)tabs.append(admin);for(const {nav,marker} of navSlots)marker.after(nav);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
+   for(const {link,marker} of pinnedSlots)marker.after(link);if(admin)tabs.append(admin);for(const {nav,marker} of navSlots)marker.after(nav);if(footer)footerSlot.after(footer);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
   }
   renderNavigation();renderMobileSheets();
  }
@@ -46,7 +56,7 @@
  function updatePageLinks(){const defaults={'/stock-count':'#new','/sales':'#entry','/admin':'#stock','/admin/accounts':'#accounts','/admin/settings':'#colours'},hash=location.hash||defaults[location.pathname]||'';for(const link of secondary?.querySelectorAll('a[href]')||[]){const url=new URL(link.href);if(url.pathname===location.pathname&&(url.pathname==='/reporting'||url.hash===hash))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}}
  function openSubmenu(group,focus=false){
   if(!secondary||(!isUserManager&&group==='admin')||(!isAdmin&&group==='settings'))return;
-  controls.close();const menu=secondary.querySelector('[data-subsidebar-group="'+group+'"]');if(!menu){closeSubmenu();return;}selectedGroup=group;
+  controls.close();closeMore();const menu=secondary.querySelector('[data-subsidebar-group="'+group+'"]');if(!menu){closeSubmenu();return;}selectedGroup=group;
   secondary.querySelectorAll('[data-subsidebar-group]').forEach(nav=>nav.hidden=nav!==menu);secondary.hidden=false;shell?.classList.add('subsidebar-open');
   sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{const active=link.dataset.sidebarGroup===group;link.setAttribute('aria-expanded',String(active));if(active)link.dataset.submenuOpen='true';else delete link.dataset.submenuOpen;});updateSubmenuTitle();updatePageLinks();renderMobileSheets();if(focus||mobile.matches)[...menu.querySelectorAll('a')].find(link=>!link.closest('.access-denied,[hidden]'))?.focus();
  }
@@ -56,7 +66,7 @@
   const first=[...secondary.querySelectorAll('[data-subsidebar-group="'+group+'"] a[href]')].find(link=>!link.closest('.access-denied,[hidden]'));if(first&&first.href!==location.href){if(mobile.matches)try{sessionStorage.setItem('souvlaki-navigation-group',group);}catch{}location.assign(first.href);}
  }));
  document.getElementById('subsidebar-close')?.addEventListener('click',()=>closeSubmenu(true));
- sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{controls.close();closeSubmenu();}));
+ sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{controls.close();closeMore();closeSubmenu();}));
  document.addEventListener('keydown',event=>{if(event.defaultPrevented||event.key!=='Escape'||document.querySelector('dialog[open], [popover]:popover-open:not(.app-edit-indicator)'))return;if(selectedGroup){event.preventDefault();closeSubmenu(true);}});
  secondary?.addEventListener('click',event=>{if(mobile.matches&&event.target.closest('a'))closeSubmenu();});
  window.addEventListener('hashchange',()=>{updatePageLinks();if(!mobile.matches)openSubmenu(currentGroup());});
@@ -85,7 +95,7 @@
  (async()=>{
   try{
    const response=await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});const session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}
-   document.querySelectorAll('.main-sidebar-nav a').forEach(link=>{if(link.dataset.sidebarGroup?link.dataset.sidebarGroup===currentGroup():new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+   sidebar.querySelectorAll('.main-sidebar-nav a,.mobile-tabbar a').forEach(link=>{if(link.dataset.sidebarGroup?link.dataset.sidebarGroup===currentGroup():new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
    const brand=sidebar?.querySelector('.brand');
    if(session.locationName&&brand){
     let row=brand.closest('.sidebar-brand-row');if(!row){row=document.createElement('div');row.className='sidebar-brand-row';brand.before(row);row.append(brand);}

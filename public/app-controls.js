@@ -1,5 +1,5 @@
-// Share the same account actions between the blue desktop button and mobile More tab.
-window.createAppControls=({footer,toggle,mobile,wording,beforeOpen})=>{
+// Keep account actions on the blue control on desktop and phones.
+window.createAppControls=({footer,toggle,wording,beforeOpen})=>{
  const create=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;};
  const icon=body=>{const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');for(const [key,value] of Object.entries({viewBox:'0 0 24 24',width:'20',height:'20',fill:'none',stroke:'currentColor','stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))svg.setAttribute(key,value);svg.classList.add('sidebar-navigation-icon');svg.innerHTML=body;return svg;};
  const userIcon='<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/><g class="icon-detail"><path d="M10 18h4"/></g>';
@@ -17,18 +17,18 @@ window.createAppControls=({footer,toggle,mobile,wording,beforeOpen})=>{
  const profileHeader=create('div','user-profile-heading'),profileTitle=create('h2',undefined,'User profile'),profileClose=create('button','user-profile-close');profileTitle.id='user-profile-title';profileClose.type='button';profileClose.append(icon('<path d="m6 6 12 12M18 6 6 18"/>'));profileClose.autofocus=true;profileHeader.append(profileTitle,profileClose);
  const profileIdentity=create('div','user-profile-identity'),profileAvatar=create('span','account-menu-avatar'),profileName=create('h3'),profileRole=create('p'),profileText=create('div');for(const node of [profileAvatar,profileName,profileRole])node.dataset.userText='';profileText.append(profileName,profileRole);profileIdentity.append(profileAvatar,profileText);
  const details=create('dl','user-profile-details'),values={};for(const [key,label] of [['company','Company'],['location','Current location'],['companies','Companies you can access'],['locations','Locations in this company']]){const row=create('div'),title=create('dt',undefined,label),value=create('dd');value.dataset.userText='';values[key]=value;row.append(title,value);details.append(row);}profile.append(profileHeader,profileIdentity,details);document.body.append(profile);
- let mobileTrigger,session,pointerWasOpen=false;
- const anchor=()=>mobile.matches&&mobileTrigger?mobileTrigger:trigger,opened=()=>menu.matches(':popover-open');
+ let session,pointerWasOpen=false;
+ const anchor=()=>trigger,opened=()=>menu.matches(':popover-open');
  function refresh(){
-  const expanded=String(opened());for(const button of [trigger,mobileTrigger].filter(Boolean)){button.setAttribute('aria-haspopup','menu');button.setAttribute('aria-controls',menu.id);button.setAttribute('aria-expanded',expanded);}
-  trigger.title=wording('Account menu');trigger.setAttribute('aria-label',trigger.title);menu.setAttribute('aria-label',wording('Account menu'));mobileTrigger?.classList.toggle('active',opened());
+  const expanded=String(opened());trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-controls',menu.id);trigger.setAttribute('aria-expanded',expanded);
+  trigger.title=wording('Account menu');trigger.setAttribute('aria-label',trigger.title);menu.setAttribute('aria-label',wording('Account menu'));
   profileClose.setAttribute('aria-label',wording('Close profile'));profileClose.title=wording('Close profile');
   for(const [element,text] of [[profileButton.querySelector('span'),'User profile'],[settingsLink.querySelector('span'),'Settings'],[profileTitle,'User profile']]){const label=wording(text);if(element.textContent!==label)element.textContent=label;}
   if(session){const role=wording(appAccess.roleName(session));permission.textContent=profileRole.textContent=role;}
   if(['/settings','/admin/settings'].includes(location.pathname))settingsLink.setAttribute('aria-current','page');else settingsLink.removeAttribute('aria-current');
  }
  function position(){
-  if(!opened())return;const button=anchor(),box=button.getBoundingClientRect(),upperEdge=mobile.matches?(button.closest('#app-sidebar')?.getBoundingClientRect().top??box.top):box.top,viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=12,menuWidth=Math.min(272,width-edge*2),below=top+height-box.bottom-edge,above=upperEdge-top-edge,down=!mobile.matches&&below>=Math.min(300,above),room=Math.max(80,down?below:above);
+  if(!opened())return;const button=anchor(),box=button.getBoundingClientRect(),upperEdge=box.top,viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=12,menuWidth=Math.min(272,width-edge*2),below=top+height-box.bottom-edge,above=upperEdge-top-edge,down=below>=Math.min(300,above),room=Math.max(80,down?below:above);
   menu.style.width=menuWidth+'px';menu.style.maxHeight=Math.min(440,room-6)+'px';menu.style.left=Math.max(left+edge,Math.min(box.right-menuWidth,left+width-menuWidth-edge))+'px';menu.style.top=down?(box.bottom+6)+'px':'auto';menu.style.bottom=down?'auto':Math.max(edge,innerHeight-upperEdge+6)+'px';
  }
  function close(restoreFocus=false){if(opened())menu.hidePopover();refresh();if(restoreFocus)anchor().focus({preventScroll:true});}
@@ -47,5 +47,5 @@ window.createAppControls=({footer,toggle,mobile,wording,beforeOpen})=>{
   for(const [key,entries] of [['companies',value.companies],['locations',value.locations]]){values[key].replaceChildren();values[key].className='user-profile-tags';for(const entry of entries||[])values[key].append(create('span',undefined,entry.name));if(!values[key].childNodes.length)values[key].textContent='—';}
   settingsLink.hidden=!appAccess.any(['appearance.manage','roles.manage','awards.manage'],value);if(editControls)editControls.hidden=!appAccess.can('appearance.manage',value);profileButton.disabled=false;refresh();
  }
- refresh();return {close,setSession,refresh,setMobileTrigger(button){mobileTrigger=button;button.dataset.layoutUi='';button.onclick=toggleMenu;button.onpointerdown=()=>{pointerWasOpen=opened();};button.onkeydown=triggerKeys;refresh();},sync(){close();}};
+ refresh();return {close,setSession,refresh,sync(){close();}};
 };
