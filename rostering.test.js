@@ -32,7 +32,7 @@ test('labour budgets inherit network to company to location and use the existing
  await roster(app,app.office,'budget','DELETE',{scope:'location',revision:1});dash=(await roster(app,app.office)).data;assert.equal(dash.summary.budgetCents,437500);assert.equal(dash.summary.effectiveBudget.scope,'company');assert.equal((await roster(app,app.office,'budget','PUT',{scope:'location',mode:'fixed',value:1,revision:0})).status,409);
  const future=(await roster(app,app.office,'dashboard?week=2026-11-02')).data;assert.equal(future.summary.projection.projectedSalesCents,1750000);assert.equal((await app.request(app.office,'/api/sales')).data.projection.budgetPercent,28);assert.equal((await roster(app,app.member,'budget','PUT',{scope:'location',mode:'fixed',value:1,revision:2})).status,403);
  }finally{await app.close();}});
-test('availability supports recurring windows and weekly overrides, checks overnight coverage and protects own entries',async()=>{const app=await fixture();try{
+test('availability supports recurring windows and weekly overrides, checks overnight coverage and protects own entries',async()=>{const app=await fixture();try{app.advance(-14*86400000);
  const days=Array.from({length:7},()=>({status:'available'}));days[0]={status:'window',start:'10:00',end:'16:00',overnight:false};assert.equal((await roster(app,app.member,'availability','PUT',{kind:'recurring',revision:0,days})).status,200);assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id}))).status,409);assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id,allowUnavailable:true}))).status,201);assert.equal((await roster(app,app.office)).data.roster.shifts[0].availability,'unavailable');
  const weekly=Array.from({length:7},()=>({status:'available'}));await roster(app,app.member,'availability','PUT',{kind:'week',weekStart:'2026-10-19',revision:0,days:weekly});assert.equal((await roster(app,app.office)).data.roster.shifts[0].availability,'available');await roster(app,app.member,'availability','DELETE',{kind:'week',weekStart:'2026-10-19',revision:1});assert.equal((await roster(app,app.office)).data.roster.shifts[0].availability,'unavailable');assert.equal((await roster(app,app.member,'availability','PUT',{kind:'week',weekStart:'2026-10-19',revision:0,days:weekly})).status,409);
  assert.equal((await roster(app,app.member,'availability','PUT',{kind:'recurring',revision:1,userId:app.franchiseeRecord.id,days})).status,403);assert.equal((await roster(app,app.member,'availability','PUT',{kind:'recurring',revision:0,days})).status,409);
@@ -96,7 +96,7 @@ test('vacant roster shifts can overlap, be assigned and moved while published sh
 });
 
 test('moving a draft shift checks destination availability, overlaps and roster revisions',async()=>{
- const app=await fixture();try{
+ const app=await fixture();try{app.advance(-14*86400000);
   const record=await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id})),id=record.data.shift.id;
   assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.franchiseeRecord.id,date:'2026-10-20',revision:1}))).status,201);
   assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.franchiseeRecord.id,date:'2026-10-20',revision:2}))).status,409);

@@ -1150,7 +1150,8 @@
   {
     "text": "Notes (optional)",
     "locations": [
-      "Stock count"
+      "Stock count",
+      "rostering"
     ]
   },
   {
@@ -8796,6 +8797,246 @@
   },
   {
     "text": "Opstack — Rostering (Beta)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Request leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "My requests",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Team requests",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "All accessible requests",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Current requests",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pending review",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "All statuses",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "School-holiday availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "New school-holiday schedule",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Holiday schedule",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "First day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Last day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Next eligible week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Remove holiday schedule",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "School holidays",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No schedule saved yet.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Leave type",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Submit request",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Short notice",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Why 14 days’ notice was not possible",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unexpected statutory absence — short notice",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Decline",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Withdraw",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Request cancellation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approve cancellation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Keep approved",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cancel leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approve leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Decline leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Withdraw request",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cancel approved leave",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Decline cancellation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Comment (optional)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No leave requests match these filters.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Leave submitted for review.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Leave request updated.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Regular availability needs 14 days’ notice. School-holiday schedules override it for their selected dates.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Request time away and track its review. Approved leave applies across this company’s locations.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Leave types follow the Fast Food Industry Award and the NES. Eligibility, balances and leave pay are reviewed separately. Planned leave requires 14 days’ notice. Eligible unexpected statutory absences can be submitted with a short-notice reason.",
     "locations": [
       "rostering"
     ]
