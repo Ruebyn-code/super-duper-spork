@@ -74,3 +74,38 @@ test('malformed roster requests fail validation without writing records',async()
  for(const [route,method]of [['shifts','POST'],['publish','POST'],['copy-previous','POST'],['rates','PUT'],['manual-time','POST'],['timesheets/'+crypto.randomUUID(),'PUT']])for(const value of [null,[],42])assert.equal((await roster(app,app.office,route,method,value)).status,400,route);
  assert.equal((await roster(app,app.office,'rates','PUT',{effectiveDate:'2026-10-19',revision:0,rates:[null]})).status,400);assert.equal((await roster(app,app.office)).data.roster.shifts.length,0);assert.equal((await roster(app,app.office)).data.timesheets.length,0);
  }finally{await app.close();}});
+
+test('vacant roster shifts can overlap, be assigned and moved while published shifts stay private',async()=>{
+ const app=await fixture();try{
+  const vacant=await roster(app,app.office,'shifts','POST',shift({userId:null}));assert.equal(vacant.status,201);const id=vacant.data.shift.id;
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:null,revision:1}))).status,201);
+  const draft=(await roster(app,app.office)).data;assert.equal(draft.roster.shifts.length,2);assert.equal(draft.roster.shifts[0].username,'Vacant');assert.equal(draft.roster.shifts[0].availability,'vacant');assert.equal(draft.roster.shifts[0].costCents,null);assert.equal(draft.summary.plannedCostCents,null);
+  assert.equal((await roster(app,app.office,'publish','POST',{weekStart:'2026-10-19',revision:2})).status,200);
+  assert.equal((await roster(app,app.member)).data.roster.shifts.length,0);
+  const assigned=await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.memberRecord.id,date:'2026-10-20',revision:3}));assert.equal(assigned.status,200);assert.equal(assigned.data.shift.start,'09:00');assert.equal(assigned.data.shift.breakMinutes,30);
+  assert.equal((await roster(app,app.member)).data.roster.shifts.length,0);
+  assert.equal((await roster(app,app.office,'publish','POST',{weekStart:'2026-10-19',revision:4})).status,200);
+  const published=(await roster(app,app.member)).data.roster.shifts;assert.equal(published.length,1);assert.equal(published[0].date,'2026-10-20');assert.ok(!('costCents'in published[0]));
+  assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.outsideRecord.id,revision:5}))).status,400);
+  assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:null,date:'2026-10-21',revision:5}))).status,200);
+  assert.equal((await roster(app,app.member)).data.roster.shifts[0].date,'2026-10-20');
+  assert.equal((await roster(app,app.office,'copy-previous','POST',{weekStart:'2026-10-26',revision:0})).status,200);
+  const copied=(await roster(app,app.office,'dashboard?week=2026-10-26')).data.roster.shifts;assert.equal(copied.length,2);assert.ok(copied.every(item=>item.userId===null));assert.ok(copied.some(item=>item.date==='2026-10-28'));
+  await app.restart();const relogged=await app.login('Office','office-test-password');assert.equal((await roster(app,relogged)).data.roster.shifts.find(item=>item.id===id).userId,null);
+ }finally{await app.close();}
+});
+
+test('moving a draft shift checks destination availability, overlaps and roster revisions',async()=>{
+ const app=await fixture();try{
+  const record=await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id})),id=record.data.shift.id;
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.franchiseeRecord.id,date:'2026-10-20',revision:1}))).status,201);
+  assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.franchiseeRecord.id,date:'2026-10-20',revision:2}))).status,409);
+  const days=Array(7).fill(null);days[2]={status:'unavailable'};
+  assert.equal((await roster(app,app.member,'availability','PUT',{kind:'week',weekStart:'2026-10-19',revision:0,days})).status,200);
+  assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.memberRecord.id,date:'2026-10-21',revision:2}))).status,409);
+  assert.equal((await roster(app,app.office)).data.roster.shifts.find(item=>item.id===id).date,'2026-10-19');
+  assert.equal((await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.memberRecord.id,date:'2026-10-22',revision:1}))).status,409);
+  assert.equal((await roster(app,app.member,'shifts/'+id,'PUT',shift({userId:app.memberRecord.id,date:'2026-10-22',revision:2}))).status,403);
+  const moved=await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.franchiseeRecord.id,date:'2026-10-22',revision:2}));assert.equal(moved.status,200);assert.equal(moved.data.shift.userId,app.franchiseeRecord.id);assert.equal(moved.data.shift.date,'2026-10-22');assert.equal(moved.data.shift.start,'09:00');
+ }finally{await app.close();}
+});

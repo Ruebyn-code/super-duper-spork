@@ -6735,5 +6735,113 @@
     "locations": [
       "rostering"
     ]
+  },
+  {
+    "text": "Staff view",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Stacked view",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster view",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Staff",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Vacant",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "+ Add Shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Edit staff and times on a shift. Hold the grip to drag.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before dragging.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before changing view.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before refreshing.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before changing weeks.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before leaving the roster.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits before opening another editor.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save or cancel your shift edits first.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Drop on a day or staff row to move this shift.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift move cancelled.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Vacant shift — assign a staff member when ready.",
+    "locations": [
+      "rostering"
+    ]
   }
 ]
