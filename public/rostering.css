@@ -201,3 +201,28 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .rostering-heading>.rostering-weekbar{align-items:center;flex:1 1 0;gap:8px;min-width:0;margin:0;padding:6px 8px}
 .roster-board-scroll{max-height:calc(100dvh - 240px)}
 @media(max-width:720px){.rostering-heading{gap:8px}.rostering-heading>.rostering-heading-copy{max-width:112px;gap:3px}.rostering-heading-copy h1{font-size:19px}.rostering-heading-copy p{font-size:8px}.rostering-heading>.rostering-weekbar{gap:7px;padding:5px 6px}.roster-board-scroll{max-height:65vh}}
+
+/* Denser day columns keep more shifts visible without reducing the time numbers. */
+.roster-board{row-gap:4px}
+.roster-board>.roster-board-day{display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:center;align-items:baseline;gap:1px 4px;padding:3px 4px}
+.roster-board-day>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:14px}
+.roster-board-day>small{white-space:nowrap;text-align:right;line-height:12px}
+.roster-board-day>.roster-day-cost{grid-column:1/-1;text-align:left;font-size:9px;line-height:11px}
+.roster-board>.roster-board-corner{padding:3px 4px;gap:1px}
+.roster-board>.roster-staff-label{padding:5px 3px;gap:3px}
+.roster-board>.roster-cell{gap:3px;padding:2px 0 3px;min-height:24px}
+.roster-board>.roster-stack-column{min-height:64px}
+.roster-board .roster-cell-add{min-height:18px;padding:2px 4px;font-size:9px;line-height:14px}
+.roster-cell .roster-shift{min-height:46px}
+.roster-inline-form{grid-template-rows:24px 22px}
+.roster-inline-times{padding-top:1px}
+.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{height:22px;max-height:22px;padding-top:1px;padding-bottom:1px;line-height:18px}
+.roster-staff-field{padding-bottom:1px}
+.roster-staff-field .location-select-trigger{height:20px;max-height:20px;line-height:18px;padding-top:0;padding-bottom:0}
+.roster-shift-tools{bottom:0;height:22px}
+.roster-shift-grip{height:22px;min-height:22px}
+.roster-next-day{position:absolute;left:3px;top:34px;font-size:8px;pointer-events:none;color:#24445b}
+.roster-shift-content{padding-top:4px;padding-bottom:4px}
+.roster-shift-content .roster-shift-time,.roster-shift-content strong{line-height:19px}
+@media(min-width:1001px) and (max-width:1279px){.roster-board-day>strong{font-size:10px}.roster-board-day>small{font-size:9px}}
+@media(max-width:720px){.roster-board .roster-cell-add{min-height:22px;padding-top:4px;padding-bottom:4px}}
