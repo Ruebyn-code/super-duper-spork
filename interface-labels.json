@@ -57,7 +57,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -94,7 +95,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -130,7 +132,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -181,7 +184,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -206,7 +210,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -345,7 +350,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -363,7 +369,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -406,7 +413,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -430,7 +438,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -485,7 +494,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -745,7 +755,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -802,7 +813,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -852,7 +864,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -864,7 +877,8 @@
       "email-settings",
       "index",
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -952,7 +966,8 @@
     "locations": [
       "cart",
       "email-settings",
-      "index"
+      "index",
+      "Award compliance"
     ]
   },
   {
@@ -990,7 +1005,8 @@
     "text": "App edit",
     "locations": [
       "accounts",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -1081,21 +1097,24 @@
     "text": "Stock count",
     "locations": [
       "Stock count",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
     "text": "New count",
     "locations": [
       "Stock count",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
     "text": "Count history",
     "locations": [
       "Stock count",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -1270,7 +1289,8 @@
     "text": "Collapse sidebar",
     "locations": [
       "Sidebar",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -1308,7 +1328,8 @@
     "text": "Sign-in background",
     "locations": [
       "settings",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -1393,7 +1414,8 @@
     "text": "Weekly usage",
     "locations": [
       "Stock count · weekly usage",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -1821,28 +1843,32 @@
   {
     "text": "0",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "Award compliance"
     ]
   },
   {
     "text": "Sales",
     "locations": [
       "Sales and ordering budget",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
     "text": "Daily sales",
     "locations": [
       "Sales and ordering budget",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
     "text": "Projection & budget",
     "locations": [
       "Sales and ordering budget",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -2182,7 +2208,8 @@
     "text": "Locations",
     "locations": [
       "Locations and shared ordering",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -2556,7 +2583,8 @@
     "text": "Close submenu",
     "locations": [
       "Sidebar",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -3101,7 +3129,8 @@
     "text": "Home",
     "locations": [
       "Home",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -3542,7 +3571,8 @@
     "locations": [
       "Companies",
       "Navigation",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -3822,7 +3852,8 @@
     "text": "Reporting",
     "locations": [
       "Reporting",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -4231,7 +4262,8 @@
     "locations": [
       "Reporting",
       "sales · weekly report",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -5176,7 +5208,8 @@
       "login",
       "settings",
       "setup",
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -6271,7 +6304,8 @@
   {
     "text": "Effective from",
     "locations": [
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -6337,7 +6371,8 @@
   {
     "text": "Cancel",
     "locations": [
-      "rostering"
+      "rostering",
+      "Award compliance"
     ]
   },
   {
@@ -7004,6 +7039,792 @@
     "text": "Drag to move · Select a shift, then Backspace/Delete to remove.",
     "locations": [
       "rostering"
+    ]
+  },
+  {
+    "text": "Activate reviewed rules",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Add check",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "After elapsed minutes",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Agreed weekly hours",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "All employment types",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "All levels",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "All types",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Amounts and thresholds must come from the source. No legal defaults are pre-filled. Different age, classification and employment bands can use separate rules.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "An unreviewed rule update covers this shift date. Review it before relying on the existing checks.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Assign a staff member before checking this shift.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Automatic updates",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Award checks",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Award classification",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Award compliance",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Award profile ·",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Back to Settings",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Change history",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Check coverage",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Check for updates",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Check the birth date and employment start date.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Checking for rule updates…",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Checks use your reviewed, dated rule sets. No current legal rates or rules are supplied automatically. Labour costs continue to use your entered hourly rates.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose a rule set smaller than 500 KB.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose a supported check type.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose a valid employee date.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose an Opstack MA000003 rule set (schema version 1).",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose an employment type and award classification.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Choose an employment type and classification.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Clause / reference",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Combined Monday–Sunday paid time exceeds the configured",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Combined daily paid time exceeds the configured",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Complete this employee’s award profile for",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Connected updates arrive as drafts for review. Existing reviewed rules remain unchanged until a new dated version is reviewed.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Daily paid hours",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Date of birth",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Dated rule sets",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Download rule set",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Draft rule set saved. Review it before it is used.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Draft — not used",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Edit award profile for",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employee award profile saved.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employee award profiles",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employee profiles",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employer setup",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employer setup saved.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employment start",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Employment type",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enable automatic checks for rosters and timesheets",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enter 1–300 referenced rules.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enter a valid",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enter text of 1–",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enter the HTTPS source reference.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Enter valid award details.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Fast Food Industry Award 2020 · MA000003",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Feed connected.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "I have checked these rules and dates against the source.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "I have confirmed this award covers this employer and the employees assigned to it. Company locations are grouped as one employer for these checks.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Import a rule set prepared from a verified source, or enter referenced rules below. Imported and saved sets start as drafts. Reviewing a version enables its checks for its effective period; this does not certify full award compliance.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Import rule set",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Last successful update:",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Legal employer name / reference",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Level",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Level 1",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Level 2",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Level 3",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Manage company award coverage, dated rule sets and employee award profiles",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Maximum age",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Minimum age",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Minimum base hourly rate",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Minimum base rate ($)",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Minimum paid engagement",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "NES, leave and state-specific requirements",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "New rule set",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No automatic update source is connected. You can import a verified-source rule set and use automatic checks without a payroll provider.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No award settings changes yet.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No configured checks match this employee’s type, classification and age.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No current award profile",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No hourly rate is recorded for comparison with the configured base minimum.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No matching employees in this company.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No reviewed rules cover",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No reviewed rules cover this week. Import and review a dated rule set.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No rule sets yet. Add referenced rules or import a rule set prepared by your payroll adviser.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "No successful update yet.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Open award settings",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Open source reference",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Opstack — Award compliance",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Paid hours exceed agreed part-time weekly hours. Review the written variation and overtime treatment.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Paid rest breaks and break timing",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Paid time is below the configured",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Part-time variations and agreements",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Penalty and overtime pay",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Profiles are company-specific and effective-dated. Award classifications are separate from app permission levels.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Public holidays and allowances",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Record review and continue",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Recorded unpaid break is below the configured",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Remove check",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Rest between shifts",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Rest between this and an adjacent shift is below the configured",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review and activate",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review award checks",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review each value, exception and reference against the current award or payroll advice. Only the configured checks will run; other award obligations remain unchecked.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review note",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review rule set",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Review valid through",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Reviewed rules",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Reviewed rules saved. Checks use this version during its effective dates.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Rule set imported as a draft. Review it before use.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Save draft rule set",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Save employer setup",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Saved profile dates:",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Search employees",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Show configured checks",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Source reference",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Source reference URL",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Supported configured checks: minimum paid engagement, daily and weekly paid hours, rest between shifts, unpaid break duration, and minimum base hourly rates. Employee age is calculated on the shift date.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "The age range is reversed.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "The assigned hourly rate is below the configured minimum base rate. Penalties and overtime pay are not included in this check.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "The review end date must follow the effective date.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "These checks do not calculate penalty or overtime pay, public holidays, allowances, paid rest breaks, agreement variations or NES entitlements. A clear result means only that the configured checks found no warning.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "This is the award classification for the employee’s duties, not their app permission level. Earlier effective dates remain in history.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "This shift crosses the weekly boundary. Review allocation of hours and breaks between weeks.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "This shift predates the employee’s recorded employment or birth date.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Unable to save award settings.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Unpaid break duration",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Update checked. New rule sets are drafts until reviewed.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Use an HTTPS source reference without credentials.",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Use as new version",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Verification note",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Version name",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "Weekly paid hours",
+    "locations": [
+      "Award compliance"
+    ]
+  },
+  {
+    "text": "https://",
+    "locations": [
+      "Award compliance"
     ]
   }
 ]
