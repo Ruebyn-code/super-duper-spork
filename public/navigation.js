@@ -67,7 +67,7 @@
   toggle.dataset.localWording=original;toggle.setAttribute('aria-expanded',String(expanded));toggle.setAttribute('aria-label',text||original);toggle.title=text||original;toggle.querySelector('.sidebar-toggle-text').textContent=text;
   if(toggle.dataset.sidebarMode!==mode){toggle.dataset.sidebarMode=mode;toggle.querySelector('svg').innerHTML=expanded?'<path d="m6 14 6-6 6 6"/>':'<path d="m6 10 6 6 6-6"/>';}
  }
- function accessibleName(element,original){return element.querySelector('.sidebar-label,.submenu-label')?.textContent.trim()||wording(original)||original;}
+ function accessibleName(element,original){const name=element.querySelector('.sidebar-label,.submenu-label')?.textContent.trim()||wording(original)||original;return element.classList.contains('roster-navigation-link')?name+' · '+wording('Beta'):name;}
  function updateNavigationLabels(){
   sidebar.querySelectorAll('[data-sidebar-name]').forEach(link=>{let name=accessibleName(link,link.dataset.sidebarName);if(['Cart','Ordering'].includes(link.dataset.sidebarName)){const count=document.getElementById('cart-badge')?.textContent||'0';name+=' · '+wording('{count} units',{count});}if(link.dataset.sidebarName==='Comms'&&window.appMessageBadge?.count){name+=' · '+wording(appMessageBadge.count===1?'{count} unread message':'{count} unread messages',{count:appMessageBadge.count});}link.setAttribute('aria-label',name);link.title=name;});
   if(logout){const name=accessibleName(logout,'Sign out');logout.setAttribute('aria-label',name);logout.title=name;}

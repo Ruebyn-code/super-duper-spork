@@ -8786,5 +8786,18 @@
     "locations": [
       "accounts"
     ]
+  },
+  {
+    "text": "Beta",
+    "locations": [
+      "Main navigation",
+      "rostering"
+    ]
+  },
+  {
+    "text": "Opstack — Rostering (Beta)",
+    "locations": [
+      "rostering"
+    ]
   }
 ]
