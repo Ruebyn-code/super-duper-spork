@@ -7,6 +7,16 @@
  function localParts(value){const parts=Object.fromEntries(formatter.formatToParts(new Date(value)).map(part=>[part.type,part.value]));return{date:parts.year+'-'+parts.month+'-'+parts.day,time:parts.hour+':'+parts.minute,second:parts.second};}
  const today=(now=Date.now())=>localParts(now).date;
  function minutes(value){if(typeof value!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(value))fail('Enter a time in hours and minutes.');return Number(value.slice(0,2))*60+Number(value.slice(3));}
+ function parseTimeInput(value){
+  if(typeof value!=='string')return null;
+  const match=value.trim().toLowerCase().match(/^(\d{1,2})(?::?(\d{2}))?\s*([ap](?:m)?)?$/);
+  if(!match)return null;
+  let hour=Number(match[1]);const minute=Number(match[2]||0),period=match[3]?.[0];
+  if(minute>59||period&&(hour<1||hour>12)||!period&&hour>23)return null;
+  if(period)hour=hour%12+(period==='p'?12:0);
+  return String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
+ }
+ function formatTimeInput(value){const total=minutes(value),hour=Math.floor(total/60);return (hour%12||12)+':'+String(total%60).padStart(2,'0')+(hour<12?'a':'p');}
  function instant(day,time){date(day);minutes(time);const wall=Date.parse(day+'T'+time+':00Z'),offsets=new Set();for(let probe=wall-36*3600000;probe<=wall+36*3600000;probe+=6*3600000){const local=localParts(probe);offsets.add(Date.parse(local.date+'T'+local.time+':'+local.second+'Z')-Math.floor(probe/1000)*1000);}const matches=[...offsets].map(offset=>wall-offset).filter(epoch=>{const local=localParts(epoch);return local.date===day&&local.time===time;});if(matches.length!==1)fail('That local time is skipped or repeated by daylight saving. Choose another time.');return new Date(matches[0]).toISOString();}
  function interval(input){date(input.date);minutes(input.start);minutes(input.end);if(typeof input.overnight!=='boolean')fail('Choose whether the shift ends the next day.');const startAt=instant(input.date,input.start),endAt=instant(input.overnight?shiftDate(input.date,1):input.date,input.end),seconds=(Date.parse(endAt)-Date.parse(startAt))/1000;if(seconds<=0||seconds>24*3600)fail('A shift must end after it starts and last no more than 24 hours.');if(!Number.isInteger(input.breakMinutes)||input.breakMinutes<0||input.breakMinutes*60>=seconds)fail('Enter an unpaid break shorter than the shift.');return{startAt,endAt,paidSeconds:seconds-input.breakMinutes*60};}
  function project(records,weekStart,now=Date.now()){
@@ -15,5 +25,5 @@
  }
  const overlap=(a,b)=>Date.parse(a.startAt)<Date.parse(b.endAt)&&Date.parse(b.startAt)<Date.parse(a.endAt);
  const cost=(seconds,rateCents)=>Number.isInteger(rateCents)?Math.round(seconds*rateCents/3600):null;
- const api={timeZone,date,shiftDate,monday,localParts,today,minutes,instant,interval,project,overlap,cost};if(typeof module==='object'&&module.exports)module.exports=api;else root.rosteringModel=api;
+ const api={timeZone,date,shiftDate,monday,localParts,today,minutes,parseTimeInput,formatTimeInput,instant,interval,project,overlap,cost};if(typeof module==='object'&&module.exports)module.exports=api;else root.rosteringModel=api;
 })(globalThis);

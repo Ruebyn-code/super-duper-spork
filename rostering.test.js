@@ -139,3 +139,10 @@ test('daily rosters include overnight carryovers with published, user and locati
   const other=(await roster(app,app.office,'dashboard?week=2026-10-26')).data;assert.equal(other.roster.carryoverShifts.length,0);
  }finally{await app.close();}
 });
+
+test('compact roster time inputs preserve midday, midnight and 24-hour values',()=>{
+ for(const [input,expected]of [['9a','09:00'],['9:30a','09:30'],['9:30 AM','09:30'],['530p','17:30'],['12p','12:00'],['12:00a','00:00'],['00:00','00:00'],['23:59','23:59'],['2359','23:59']])assert.equal(rosterModel.parseTimeInput(input),expected,input);
+ for(const input of ['',null,'24:00','13p','0a','9:60a','99:00','9:3','7:30x'])assert.equal(rosterModel.parseTimeInput(input),null,String(input));
+ for(let minute=0;minute<1440;minute++){const time=String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');assert.equal(rosterModel.parseTimeInput(rosterModel.formatTimeInput(time)),time);}
+ assert.equal(rosterModel.formatTimeInput('00:00'),'12:00a');assert.equal(rosterModel.formatTimeInput('12:00'),'12:00p');assert.equal(rosterModel.formatTimeInput('19:05'),'7:05p');
+});

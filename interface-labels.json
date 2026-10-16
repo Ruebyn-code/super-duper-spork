@@ -6969,5 +6969,41 @@
     "locations": [
       "rostering"
     ]
+  },
+  {
+    "text": "Shift deleted.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Drag to move this shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter a time such as 9:00a or 17:00",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter a time such as 9:00a or 17:00.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Return to the deleted shift’s week to undo.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Drag to move · Select a shift, then Backspace/Delete to remove.",
+    "locations": [
+      "rostering"
+    ]
   }
 ]
