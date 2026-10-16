@@ -34,7 +34,7 @@
 .roster-inline-form{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-rows:28px 28px;gap:0;margin:0}
 .roster-position-field{grid-column:1;grid-row:1/3;position:relative;min-width:0;background:var(--secondary);border-radius:7px 0 0 7px}
 .roster-position-field .location-picker{position:absolute;inset:0;width:100%;min-width:0;height:100%}
-.roster-position-field .location-select-trigger{position:absolute;inset:0;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:7px 0 0 7px;background:transparent;color:#24445b;box-shadow:none}
+.roster-position-field .location-select-trigger{position:absolute;inset:0;margin:0;width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:7px 0 0 7px;background:transparent;color:#24445b;box-shadow:none}
 .roster-position-field .location-picker-value,.roster-position-field .location-picker-arrow{display:none}
 .roster-position-field:focus-within{outline:2px solid var(--primary);outline-offset:-2px}
 .roster-position-code{position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;pointer-events:none;text-align:center;color:#24445b;font:700 13px Arial,sans-serif}
@@ -213,16 +213,17 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .roster-board>.roster-cell{gap:3px;padding:2px 0 3px;min-height:24px}
 .roster-board>.roster-stack-column{min-height:64px}
 .roster-board .roster-cell-add{min-height:18px;padding:2px 4px;font-size:9px;line-height:14px}
-.roster-cell .roster-shift{min-height:46px}
-.roster-inline-form{grid-template-rows:24px 22px}
-.roster-inline-times{padding-top:1px}
-.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{height:22px;max-height:22px;padding-top:1px;padding-bottom:1px;line-height:18px}
-.roster-staff-field{padding-bottom:1px}
-.roster-staff-field .location-select-trigger{height:20px;max-height:20px;line-height:18px;padding-top:0;padding-bottom:0}
-.roster-shift-tools{bottom:0;height:22px}
-.roster-shift-grip{height:22px;min-height:22px}
-.roster-next-day{position:absolute;left:3px;top:34px;font-size:8px;pointer-events:none;color:#24445b}
+.roster-cell .roster-shift{min-height:41px}
+.roster-inline-form{grid-template-rows:21px 20px}
+.roster-inline-times{padding-top:0}
+.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{flex:0 1 62px;width:62px;max-width:62px;height:20px;max-height:20px;padding-top:0;padding-bottom:0;line-height:18px}
+.roster-staff-field{padding-left:3px;padding-bottom:0}
+.roster-staff-field .location-select-trigger{margin:0;height:19px;max-height:19px;line-height:16px;align-items:flex-start;padding:0 3px 0 0}
+.roster-staff-field .location-picker-arrow{align-self:center}
+.roster-shift-tools{bottom:0;height:20px}
+.roster-shift-grip{height:20px;min-height:20px}
+.roster-next-day{position:absolute;left:3px;top:29px;font-size:8px;pointer-events:none;color:#24445b}
 .roster-shift-content{padding-top:4px;padding-bottom:4px}
 .roster-shift-content .roster-shift-time,.roster-shift-content strong{line-height:19px}
-@media(min-width:1001px) and (max-width:1279px){.roster-board-day>strong{font-size:10px}.roster-board-day>small{font-size:9px}}
+@media(min-width:1001px) and (max-width:1279px){.roster-staff-field{padding-left:2px}.roster-board-day>strong{font-size:10px}.roster-board-day>small{font-size:9px}}
 @media(max-width:720px){.roster-board .roster-cell-add{min-height:22px;padding-top:4px;padding-bottom:4px}}
