@@ -109,3 +109,17 @@ test('moving a draft shift checks destination availability, overlaps and roster 
   const moved=await roster(app,app.office,'shifts/'+id,'PUT',shift({userId:app.franchiseeRecord.id,date:'2026-10-22',revision:2}));assert.equal(moved.status,200);assert.equal(moved.data.shift.userId,app.franchiseeRecord.id);assert.equal(moved.data.shift.date,'2026-10-22');assert.equal(moved.data.shift.start,'09:00');
  }finally{await app.close();}
 });
+
+test('position dropdown choices reuse location shift history without exposing other locations or staff catalogues',async()=>{
+ const app=await fixture();try{
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id,position:'Kitchen'}))).status,201);
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({weekStart:'2026-10-12',date:'2026-10-12',userId:app.memberRecord.id,position:'Service'}))).status,201);
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:null,position:'Other store only'}),{'X-Location-Id':app.other.id})).status,201);
+  assert.deepEqual((await roster(app,app.office)).data.positions,['Kitchen','Service']);
+  assert.deepEqual((await roster(app,app.franchisee)).data.positions,['Kitchen','Service']);
+  assert.deepEqual((await roster(app,app.member)).data.positions,[]);
+  const current=(await roster(app,app.office)).data.roster.shifts[0];
+  const changed=await roster(app,app.office,'shifts/'+current.id,'PUT',shift({userId:app.memberRecord.id,position:'Supervisor',revision:1}));assert.equal(changed.status,200);assert.equal(changed.data.shift.position,'Supervisor');
+  assert.deepEqual((await roster(app,app.office)).data.positions,['Service','Supervisor']);
+ }finally{await app.close();}
+});

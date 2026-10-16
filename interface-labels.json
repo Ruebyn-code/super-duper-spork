@@ -6843,5 +6843,53 @@
     "locations": [
       "rostering"
     ]
+  },
+  {
+    "text": "No position",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "+ Add position…",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Add position",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Position name",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Use position",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter a position name.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Available",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Vacant shift",
+    "locations": [
+      "rostering"
+    ]
   }
 ]
