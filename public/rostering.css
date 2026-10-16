@@ -227,3 +227,30 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .roster-shift-content .roster-shift-time,.roster-shift-content strong{line-height:19px}
 @media(min-width:1001px) and (max-width:1279px){.roster-staff-field{padding-left:2px}.roster-board-day>strong{font-size:10px}.roster-board-day>small{font-size:9px}}
 @media(max-width:720px){.roster-board .roster-cell-add{min-height:22px;padding-top:4px;padding-bottom:4px}}
+
+/* One compact scheduling row, including a tinted financial outlook. */
+.rostering-heading>.rostering-weekbar{gap:6px;padding:5px 6px}
+.rostering-week-arrows{gap:3px}
+.rostering-week-arrows>div{min-width:99px}
+.rostering-week-arrows strong{font-size:10px;line-height:1.3}
+.rostering-week-arrows>button{width:22px;height:26px;font-size:20px}
+.rostering-week-tools{gap:3px}
+.rostering-week-tools>button{padding:6px;font-size:9px}
+.rostering-weekbar .date-toggle,.rostering-weekbar .rostering-icon-button{width:26px;height:26px;min-width:26px;min-height:26px;padding:5px!important;border-radius:6px}
+.rostering-weekbar .rostering-icon-button svg,.rostering-weekbar .date-toggle svg{width:16px;height:16px}
+.roster-toolbar-controls{flex:1 0 auto;gap:6px}
+.roster-view-control{width:102px;flex-shrink:0}
+.roster-day-control{width:105px}
+.roster-view-control .location-picker,.roster-day-control .location-picker{width:100%;min-width:0}
+.roster-view-control .location-select-trigger,.roster-day-control .location-select-trigger{margin:0;width:100%;height:28px;min-height:28px;padding:4px 6px;gap:3px;border-radius:6px;font:600 10px Arial,sans-serif}
+.roster-view-control .location-picker-arrow,.roster-day-control .location-picker-arrow{width:12px;height:12px;flex-shrink:0}
+.roster-toolbar-controls .roster-actions{gap:4px}
+.roster-toolbar-controls .roster-actions button{font-size:9px;padding:7px 8px}
+.roster-copy-icon{color:var(--primary)}
+#roster-metrics{display:flex;flex:1 0 auto;gap:0;margin:0 0 0 2px;border:1px solid color-mix(in srgb,var(--primary) 18%,white);border-radius:7px;background:color-mix(in srgb,var(--primary) 9%,white)}
+#roster-metrics>.roster-metric{position:relative;display:flex;flex:1 0 87px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-width:87px;padding:5px 7px;border:0;border-right:1px solid color-mix(in srgb,var(--primary) 15%,white);border-radius:0;background:transparent}
+#roster-metrics>.roster-metric:last-child{border-right:0}
+#roster-metrics>.roster-metric>span{color:var(--primary);font:600 9px/1.2 Arial,sans-serif;white-space:nowrap}
+#roster-metrics>.roster-metric>strong{font:700 14px/1.2 Arial,sans-serif;white-space:nowrap}
+#roster-metrics>.roster-metric>small{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(min-width:1001px){.roster-board-scroll{max-height:calc(100dvh - 180px)}}
