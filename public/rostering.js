@@ -35,19 +35,28 @@
   const manage=can('rostering.manage');$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
   renderRosterBoard(manage,summary);rosterRenderKey=key;}
  // The scheduling board moves shifts, independently of company App edit layouts.
- let clockRenderKey='',rosterRenderKey='',rosterView='staff',rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0;
+ let clockRenderKey='',rosterRenderKey='',rosterView='staff',rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,newRosterShift=null;
  const rosterDirty=()=>Boolean($('roster-days')?.querySelector('.roster-shift.is-dirty'));
  const rosterEditing=()=>document.body.classList.contains('app-edit-mode');
  function rosterPayload(shift,changes={}){return{weekStart:week,revision:data.roster.revision,userId:shift.userId,date:shift.date,start:shift.start,end:shift.end,overnight:shift.overnight,breakMinutes:shift.breakMinutes,position:shift.position,notes:shift.notes,allowUnavailable:shift.allowUnavailable,...changes};}
+ function addBoardShift(day=week,userId=null){
+  if(!data||!can('rostering.manage')||rosterSaving||rosterEditing())return;
+  if(rosterDirty()){status('Save or cancel your shift edits first.');return;}
+  cancelRosterDrag();
+  newRosterShift={id:uid(),userId,username:data.people.find(person=>person.id===userId)?.username||'Vacant',date:day,start:'09:00',end:'17:00',overnight:false,breakMinutes:30,position:'',notes:'',allowUnavailable:false,paidSeconds:27000,costCents:null,availability:'unknown'};
+  rosterRenderKey='';renderRoster();status('');
+  const card=$('roster-days').querySelector('[data-shift-id="'+newRosterShift.id+'"]');
+  card.scrollIntoView({block:'nearest',inline:'nearest'});card.querySelector('[name=start]').focus({preventScroll:true});
+ }
  async function saveBoardShift(shift,changes,revision=data.roster.revision){
   if(rosterSaving)return false;
   rosterSaving=true;const board=$('roster-days');board.inert=true;board.setAttribute('aria-busy','true');
-  try{await api('shifts/'+shift.id,'PUT',rosterPayload(shift,{...changes,revision}));await load();status('Shift saved to draft. Publish when the roster is ready.',true);return true;}
+  try{const isNew=shift.id===newRosterShift?.id;await api(isNew?'shifts':'shifts/'+shift.id,isNew?'POST':'PUT',rosterPayload(shift,{...changes,revision}));if(isNew){newRosterShift=null;rosterRenderKey='';}await load();status('Shift saved to draft. Publish when the roster is ready.',true);return true;}
   catch(error){status(error.message);return false;}
   finally{rosterSaving=false;board.inert=false;board.removeAttribute('aria-busy');}
  }
  function renderRosterBoard(manage,summary){
-  cancelRosterDrag();const host=$('roster-days'),scrollLeft=host.scrollLeft,scrollTop=host.scrollTop;
+  cancelRosterDrag();const host=$('roster-days'),scrollLeft=host.scrollLeft,scrollTop=host.scrollTop,boardShifts=[...data.roster.shifts,...(newRosterShift?[newRosterShift]:[])];
   host.replaceChildren();host.className='roster-board-scroll';host.tabIndex=0;host.setAttribute('aria-label','Weekly roster. Scroll to see all days.');
   const board=node('div',undefined,'roster-board '+(rosterView==='staff'?'roster-staff-board':'roster-stacked-board'));host.append(board);
   if(rosterView==='staff'){
@@ -64,12 +73,12 @@
    // Retain shifts assigned to a person who has since left this location.
    for(const shift of data.roster.shifts)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
    for(const person of people){
-    const shifts=data.roster.shifts.filter(shift=>shift.userId===person.id),label=node('div',undefined,'roster-staff-label');
+    const shifts=boardShifts.filter(shift=>shift.userId===person.id),label=node('div',undefined,'roster-staff-label');
     label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)),user(node('small',hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0)))));board.append(label);
     for(let index=0;index<7;index++)board.append(rosterCell(M.shiftDate(week,index),person.id,shifts,manage));
    }
   }else{
-   for(let index=0;index<7;index++)board.append(rosterCell(M.shiftDate(week,index),undefined,data.roster.shifts,manage));
+   for(let index=0;index<7;index++)board.append(rosterCell(M.shiftDate(week,index),undefined,boardShifts,manage));
   }
   $('roster-view-staff').setAttribute('aria-pressed',String(rosterView==='staff'));$('roster-view-stacked').setAttribute('aria-pressed',String(rosterView==='stacked'));
   host.scrollLeft=scrollLeft;host.scrollTop=scrollTop;
@@ -78,7 +87,7 @@
   const cell=node('div',undefined,'roster-cell'+(rosterView==='stacked'?' roster-stack-column':''));cell.dataset.rosterDrop='';cell.dataset.rosterDate=day;
   if(userId!==undefined)cell.dataset.rosterUser=userId||'';
   for(const shift of shifts.filter(item=>item.date===day).sort((a,b)=>a.start.localeCompare(b.start)||a.username.localeCompare(b.username)))cell.append(rosterCard(shift,manage));
-  if(manage){const add=button('+ Add Shift',()=>shiftDialog(null,day,userId),'roster-cell-add');add.setAttribute('aria-label','Add shift on '+day+(userId===undefined?'':userId===null?' for Vacant':' for '+(data.people.find(person=>person.id===userId)?.username||'staff')));cell.append(add);}
+  if(manage){const add=button('+ Add Shift',()=>addBoardShift(day,userId),'roster-cell-add');add.setAttribute('aria-label','Add shift on '+day+(userId===undefined?'':userId===null?' for Vacant':' for '+(data.people.find(person=>person.id===userId)?.username||'staff')));cell.append(add);}
   else if(!cell.children.length)cell.append(node('span','—','roster-cell-empty'));
   return cell;
  }
@@ -98,19 +107,19 @@
   refresh();return{wrap,position,reset(){selected=shift.position||'';position.value=selected;refresh();}};
  }
  function rosterCard(shift,manage){
-  const revision=data.roster.revision,card=node('article',undefined,'roster-shift'+(shift.userId===null?' roster-vacant-shift':''));card.dataset.shiftId=shift.id;card.dataset.layoutKey='shift:'+shift.id;
+  const revision=data.roster.revision,isNew=shift.id===newRosterShift?.id,card=node('article',undefined,'roster-shift'+(shift.userId===null?' roster-vacant-shift':''));card.dataset.shiftId=shift.id;card.dataset.layoutKey='shift:'+shift.id;if(isNew)card.dataset.newShift='';
   const availability=shift.availability==='unavailable'?'Availability conflict':shift.availability==='unknown'?'Availability not entered':shift.userId===null?'Vacant shift':'Available';
   const description=[shift.position||'No position',shift.date,shift.start+' – '+shift.end+(shift.overnight?' · ends next day':''),hours(shift.paidSeconds),shift.breakMinutes+'m unpaid break',...(manage?[money(shift.costCents),availability]:[]),shift.notes].filter(Boolean).join(' · ');card.title=description;
   if(manage){
-   const form=node('form',undefined,'roster-inline-form'),position=rosterPositionControl(shift),staff=select('userId',[['','Vacant'],...data.people.map(person=>[person.id,person.username])],shift.userId||''),staffField=node('div',undefined,'roster-staff-field'),start=input('time','start',shift.start),end=input('time','end',shift.end),times=node('div',undefined,'roster-inline-times'),actions=node('div',undefined,'roster-inline-actions'),save=node('button','Save','rostering-primary'),cancel=button('Cancel',()=>{staff.value=shift.userId||'';start.value=shift.start;end.value=shift.end;position.reset();window.locationPickers?.refresh(staff);update();});
+   const form=node('form',undefined,'roster-inline-form'),position=rosterPositionControl(shift),staff=select('userId',[['','Vacant'],...data.people.map(person=>[person.id,person.username])],shift.userId||''),staffField=node('div',undefined,'roster-staff-field'),start=input('time','start',shift.start),end=input('time','end',shift.end),times=node('div',undefined,'roster-inline-times'),actions=node('div',undefined,'roster-inline-actions'),save=node('button','Save','rostering-primary'),cancel=button('Cancel',()=>{if(isNew){newRosterShift=null;rosterRenderKey='';renderRoster();status('');return;}staff.value=shift.userId||'';start.value=shift.start;end.value=shift.end;position.reset();window.locationPickers?.refresh(staff);update();});
    if(shift.userId&&!data.people.some(person=>person.id===shift.userId)){const option=user(node('option',shift.username));option.value=shift.userId;staff.append(option);staff.value=shift.userId;}
    staff.setAttribute('aria-label','Staff for shift '+shift.start+' on '+shift.date);start.setAttribute('aria-label','Shift start time');end.setAttribute('aria-label','Shift end time');start.required=end.required=true;start.step=end.step='60';
    times.append(start,end);if(shift.overnight){const next=node('span','+1','roster-next-day');next.title='Ends next day';times.append(next);}staffField.append(staff);save.type='submit';actions.hidden=true;actions.append(cancel,save);form.append(position.wrap,times,staffField,actions);card.append(form);
-   function update(){const dirty=staff.value!==(shift.userId||'')||start.value!==shift.start||end.value!==shift.end||position.position.value!==(shift.position||'');card.classList.toggle('is-dirty',dirty);actions.hidden=!dirty;}
-   form.addEventListener('input',update);form.addEventListener('change',update);
+   function update(){const dirty=isNew||staff.value!==(shift.userId||'')||start.value!==shift.start||end.value!==shift.end||position.position.value!==(shift.position||'');card.classList.toggle('is-dirty',dirty);actions.hidden=!dirty;}
+   form.addEventListener('input',update);form.addEventListener('change',update);update();
    form.onsubmit=async event=>{event.preventDefault();const assigned=staff.value||null;await saveBoardShift(shift,{userId:assigned,start:start.value,end:end.value,position:position.position.value,allowUnavailable:assigned===shift.userId?shift.allowUnavailable:false},revision);};
-   const tools=node('div',undefined,'roster-shift-tools'),grip=button('⠿',()=>{},'roster-shift-grip'),details=button('⋮',()=>shiftDialog(shift),'roster-edit-button');grip.setAttribute('aria-label','Hold and drag shift for '+shift.username);grip.title='Hold and drag to another day or staff member';details.setAttribute('aria-label','Edit shift for '+shift.username);details.title='Shift details, date, break and notes';tools.append(details,grip);card.append(tools);
-   card.addEventListener('pointerdown',event=>startRosterPress(event,shift,card));card.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});
+   if(!isNew){const tools=node('div',undefined,'roster-shift-tools'),grip=button('⠿',()=>{},'roster-shift-grip'),details=button('⋮',()=>shiftDialog(shift),'roster-edit-button');grip.setAttribute('aria-label','Hold and drag shift for '+shift.username);grip.title='Hold and drag to another day or staff member';details.setAttribute('aria-label','Edit shift for '+shift.username);details.title='Shift details, date, break and notes';tools.append(details,grip);card.append(tools);
+    card.addEventListener('pointerdown',event=>startRosterPress(event,shift,card));card.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});}
   }else{
    const position=user(node('span',shift.position?shift.position.split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase():'–','roster-position-static')),content=node('div',undefined,'roster-shift-content');position.title=shift.position||'No position';position.setAttribute('aria-label',shift.position||'No position');content.append(user(node('p',shift.start+' – '+shift.end+(shift.overnight?' +1':''),'roster-shift-time')),user(node('strong',shift.username)));card.append(position,content);card.classList.add('roster-readonly-shift');
   }
@@ -179,7 +188,7 @@
  async function formAction(form,action,message){const controls=[...form.querySelectorAll('input,select,textarea,button')];for(const control of controls)control.disabled=true;try{await action();await load();status(message,true);}catch(error){status(error.message);}finally{for(const control of controls)if(control.isConnected)control.disabled=false;}}
  function exportTimesheets(){const headers=['User','Location','Clock in','Clock out','Unpaid break (minutes)','Paid hours','Status',...(data.timesheets.some(item=>'costCents'in item)?['Estimated cost']:[])],rows=data.timesheets.map(item=>[item.username,item.locationName,localInput(item.startAt),item.endAt?localInput(item.endAt):'',(item.breakSeconds/60).toFixed(2),(item.paidSeconds/3600).toFixed(2),item.status,...(headers.includes('Estimated cost')?[item.costCents===null||item.costCents===undefined?'':(item.costCents/100).toFixed(2)]:[])]),escape=value=>'"'+String(/^[=+\-@\t\r]/.test(String(value))?"'"+value:value).replaceAll('"','""')+'"',content=[headers,...rows].map(row=>row.map(escape).join(',')).join('\r\n'),url=URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'})),link=node('a');link.href=url;link.download='timesheets-'+week+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  function selectWeek(value){if(rosterSaving||rosterDirty()){$('roster-week').value=week;status('Save or cancel your shift edits before changing weeks.');return;}try{week=M.monday(value);$('roster-week').value=week;load();}catch(error){status(error.message);}}
- $('roster-previous').onclick=()=>selectWeek(M.shiftDate(week,-7));$('roster-next').onclick=()=>selectWeek(M.shiftDate(week,7));$('roster-this-week').onclick=()=>selectWeek(M.today());$('roster-week').onchange=event=>selectWeek(event.target.value);$('roster-refresh').onclick=()=>{if(rosterDirty())status('Save or cancel your shift edits before refreshing.');else load();};$('roster-view-staff').onclick=()=>changeRosterView('staff');$('roster-view-stacked').onclick=()=>changeRosterView('stacked');$('roster-add').onclick=()=>shiftDialog();$('roster-copy').onclick=()=>rosterAction('copy-previous');$('roster-publish').onclick=()=>rosterAction('publish');$('timesheet-filter').onchange=renderTimesheets;$('timesheet-manual').onclick=()=>timeDialog();$('timesheet-export').onclick=exportTimesheets;
+ $('roster-previous').onclick=()=>selectWeek(M.shiftDate(week,-7));$('roster-next').onclick=()=>selectWeek(M.shiftDate(week,7));$('roster-this-week').onclick=()=>selectWeek(M.today());$('roster-week').onchange=event=>selectWeek(event.target.value);$('roster-refresh').onclick=()=>{if(rosterDirty())status('Save or cancel your shift edits before refreshing.');else load();};$('roster-view-staff').onclick=()=>changeRosterView('staff');$('roster-view-stacked').onclick=()=>changeRosterView('stacked');$('roster-add').onclick=()=>addBoardShift();$('roster-copy').onclick=()=>rosterAction('copy-previous');$('roster-publish').onclick=()=>rosterAction('publish');$('timesheet-filter').onchange=renderTimesheets;$('timesheet-manual').onclick=()=>timeDialog();$('timesheet-export').onclick=exportTimesheets;
  $('availability-kind').onchange=renderAvailability;$('availability-form').onsubmit=saveAvailability;$('availability-fill').onclick=()=>{for(const card of $('availability-days').children){const select=card.querySelector('[name=status]');select.value='available';select.dispatchEvent(new Event('change',{bubbles:true}));}};$('availability-reset').onclick=()=>{const record=data.availability.week;formAction($('availability-form'),()=>api('availability','DELETE',{kind:'week',weekStart:week,revision:record.revision}),'Weekly override removed. Recurring availability applies.');};
  $('budget-scope').onchange=renderBudgetForm;$('budget-mode').onchange=updateBudgetMode;$('budget-form').onsubmit=saveBudget;$('budget-inherit').onclick=()=>{const item=data.summary.budgets.find(item=>item.scope===$('budget-scope').value);formAction($('budget-form'),()=>api('budget','DELETE',{scope:item.scope,revision:item.revision}),'Budget override removed.');};$('rates-date').onchange=renderRates;$('rates-form').onsubmit=event=>{event.preventDefault();try{const payload={effectiveDate:$('rates-date').value,revision:data.rates.revision,rates:[...$('rate-people').querySelectorAll('input')].map(input=>({userId:input.dataset.userId,rateCents:input.value===''?null:cents(input.value)}))};formAction($('rates-form'),()=>api('rates','PUT',payload),'Hourly rates saved.');}catch(error){status(error.message);}};
  window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked&&session)load();});setInterval(updateClockElapsed,1000);setInterval(()=>{if(session&&!document.hidden&&!appRequiredReading.blocked)load(true);},15000);window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets','clock'].includes(section))load(false,true);});$('logout').onclick=async()=>{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
