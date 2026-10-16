@@ -15,49 +15,131 @@
  // Background refreshes must not replace active editors or announce loading in the layout.
  function rosterInteractionActive(){
   const board=$('roster-days'),focused=document.activeElement;
-  return rosterPress||rosterDrag||rosterDirty()||document.querySelector('.roster-dialog[open]')||board.querySelector('.location-select-trigger[aria-expanded="true"]')||(board.contains(focused)&&focused.matches('input,textarea,select,[role="combobox"]'));
+  return rosterSaving||rosterPress||rosterDrag||rosterDirty()||document.querySelector('.roster-dialog[open]')||board.querySelector('.location-select-trigger[aria-expanded="true"]')||(board.contains(focused)&&focused.matches('input,textarea,select,[role="combobox"]'));
  }
  function clockDisplayKey(entry){return JSON.stringify(entry?[entry.id,entry.startAt,entry.endAt,entry.onBreak,entry.locationId,entry.locationName]:null);}
  async function load(quiet=false,background=false){
   const version=quiet?loading:++loading;if(!quiet&&!background)status('Loading rostering…');
   try{
    const result=await api('dashboard?week='+week);if(version!==loading)return;
-   if(quiet&&data){data.clock=result.clock;clockOffset=Date.parse(result.serverTime)-Date.now();if(section==='clock')renderClock();syncClockShortcut();return;}
-   if(!quiet&&section==='roster'&&!rosterSaving&&rosterInteractionActive()){if($('rostering-status').textContent==='Loading rostering…')status('');return;}
+   if(quiet&&data){data.clock=result.clock;clockOffset=Date.parse(result.serverTime)-Date.now();if(section==='clock')renderClock();return;}
+   if(!quiet&&section==='roster'&&rosterInteractionActive()){if($('rostering-status').textContent==='Loading rostering…')status('');return;}
    data=result;clockOffset=Date.parse(data.serverTime)-Date.now();$('roster-week').value=week;$('roster-week-label').textContent=date(week)+' – '+date(data.weekEnd);
-   if(!quiet){renderSection();if(!background)status('');}else if(section==='clock')renderClock();syncClockShortcut();
+   if(!quiet){renderSection();if(!background)status('');}else if(section==='clock')renderClock();
   }catch(error){if(version===loading)status(error.message);}
  }
- function syncClockShortcut(){const entry=data?.clock;$('rostering-clock-shortcut-label').textContent=entry?(entry.onBreak?'On break':'Clocked in'):'Clock in / out';document.querySelector('.rostering-clock-shortcut').classList.toggle('is-clocked-in',Boolean(entry));}
- function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){history.replaceState(null,'','#roster');status('Save or cancel your shift edits before leaving the roster.');return;}if(!['roster','timesheets','clock','availability','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';section=next;$('roster-toolbar-controls').hidden=section!=='roster';for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
+ async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','clock','availability','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';section=next;$('roster-toolbar-controls').hidden=section!=='roster';for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
  function renderSection(){if(!data)return;const render={roster:renderRoster,timesheets:renderTimesheets,clock:renderClock,availability:renderAvailability,settings:renderSettings};render[section||'roster']();appAccess.apply(session);}
- function renderRoster(){const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,can('rostering.manage'),data.roster,data.people,data.positions,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+' shifts need staff or hourly rates':hours(summary.plannedSeconds)+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
-  const manage=can('rostering.manage');$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
-  renderRosterBoard(manage,summary);rosterRenderKey=key;}
+ function renderRoster(preserveBoard=false){const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+' shifts need staff or hourly rates':hours(summary.plannedSeconds)+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
+  syncRosterViewControls();const manage=can('rostering.manage');$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
+  if(preserveBoard)updateRosterBoardTotals();else renderRosterBoard(manage,summary);rosterRenderKey=key;updateRosterSaveStatus();}
  // The scheduling board moves shifts, independently of company App edit layouts.
- let clockRenderKey='',rosterRenderKey='',rosterView='staff',rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,newRosterShift=null;
+ let clockRenderKey='',rosterRenderKey='',rosterView='staff',rosterDay=M.today(),rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,rosterSaveTimer=0,rosterSaveTask=null,rosterNeedsLayout=false;
+ const rosterEditors=new Map(),newRosterShifts=new Map();
  const rosterDirty=()=>Boolean($('roster-days')?.querySelector('.roster-shift.is-dirty'));
  const rosterEditing=()=>document.body.classList.contains('app-edit-mode');
  function rosterPayload(shift,changes={}){return{weekStart:week,revision:data.roster.revision,userId:shift.userId,date:shift.date,start:shift.start,end:shift.end,overnight:shift.overnight,breakMinutes:shift.breakMinutes,position:shift.position,notes:shift.notes,allowUnavailable:shift.allowUnavailable,...changes};}
  function addBoardShift(day=week,userId=null){
-  if(!data||!can('rostering.manage')||rosterSaving||rosterEditing())return;
-  if(rosterDirty()){status('Save or cancel your shift edits first.');return;}
+  if(!data||!can('rostering.manage')||rosterEditing())return;
   cancelRosterDrag();
-  newRosterShift={id:uid(),userId,username:data.people.find(person=>person.id===userId)?.username||'Vacant',date:day,start:'09:00',end:'17:00',overnight:false,breakMinutes:30,position:'',notes:'',allowUnavailable:false,paidSeconds:27000,costCents:null,availability:'unknown'};
-  rosterRenderKey='';renderRoster();status('');
-  const card=$('roster-days').querySelector('[data-shift-id="'+newRosterShift.id+'"]');
-  card.scrollIntoView({block:'nearest',inline:'nearest'});card.querySelector('[name=start]').focus({preventScroll:true});
+  const shift={id:uid(),userId,username:data.people.find(person=>person.id===userId)?.username||'Vacant',date:day,start:'09:00',end:'17:00',overnight:false,breakMinutes:30,position:'',notes:'',allowUnavailable:false,paidSeconds:27000,costCents:null,availability:'unknown'};
+  newRosterShifts.set(shift.id,shift);
+  const cell=[...$('roster-days').querySelectorAll('[data-roster-drop]')].find(cell=>cell.dataset.rosterDate===day&&(rosterView==='stacked'||cell.dataset.rosterUser===(userId||'')));
+  const card=rosterCard(shift,true);if(rosterView==='day'){const holder=node('div',undefined,'roster-cell roster-day-editor');cell.after(holder);holder.append(card);}else cell.insertBefore(card,cell.querySelector('.roster-cell-add'));
+  card.scrollIntoView({block:'nearest',inline:'nearest'});card.querySelector('[name=start]').focus({preventScroll:true});status('');
  }
- async function saveBoardShift(shift,changes,revision=data.roster.revision){
-  if(rosterSaving)return false;
-  rosterSaving=true;const board=$('roster-days');board.inert=true;board.setAttribute('aria-busy','true');
-  try{const isNew=shift.id===newRosterShift?.id;await api(isNew?'shifts':'shifts/'+shift.id,isNew?'POST':'PUT',rosterPayload(shift,{...changes,revision}));if(isNew){newRosterShift=null;rosterRenderKey='';}await load();status('Shift saved to draft. Publish when the roster is ready.',true);return true;}
+ function updateRosterSaveStatus(){
+  const label=$('roster-save-status');if(!label)return;
+  const editors=[...rosterEditors.values()],error=editors.some(editor=>editor.error),pending=editors.some(editor=>editor.dirty);
+  label.textContent=error?'Changes need attention':rosterSaving||pending?'Saving changes…':'All changes saved';
+  label.classList.toggle('has-error',error);
+ }
+ function setRosterEditorError(editor,message){
+  if(!message&&editor.error&&$('rostering-status').textContent===editor.error)status('');
+  editor.error=message;editor.message.textContent=message;editor.message.hidden=!message;
+  editor.undo.hidden=!message;editor.card.classList.toggle('has-save-error',Boolean(message));updateRosterSaveStatus();
+ }
+ function queueRosterEditor(editor,delay=450){
+  if(editor.blocked){setRosterEditorError(editor,'The roster changed. Undo this edit and refresh before continuing.');return;}
+  setRosterEditorError(editor,'');editor.dirty=editor.isNew||JSON.stringify(editor.read())!==JSON.stringify(editor.saved);
+  editor.pending=editor.dirty;editor.card.classList.toggle('is-dirty',editor.dirty);updateRosterSaveStatus();
+  clearTimeout(rosterSaveTimer);if([...rosterEditors.values()].some(item=>item.pending&&!item.error))rosterSaveTimer=setTimeout(saveRosterEditors,delay);
+ }
+ async function refreshRosterSaved(preserveBoard=true){
+  const result=await api('dashboard?week='+week);if(result.roster.revision!==data.roster.revision)for(const editor of rosterEditors.values())if(editor.dirty){editor.pending=false;editor.blocked=true;setRosterEditorError(editor,'The roster changed. Undo this edit and refresh before continuing.');}data=result;clockOffset=Date.parse(data.serverTime)-Date.now();
+  for(const editor of rosterEditors.values()){
+   const saved=data.roster.shifts.find(shift=>shift.id===editor.shift.id);
+   if(saved&&!editor.dirty)Object.assign(editor.shift,saved);
+  }
+  if(preserveBoard){rosterRenderKey='';renderRoster(true);}else{rosterRenderKey='';renderRoster();}
+ }
+ function updateRosterBoardTotals(){
+  if(rosterView==='day'){updateDailyShiftBars();return;}
+  for(const header of $('roster-days').querySelectorAll('.roster-board-day')){
+   const shifts=data.roster.shifts.filter(shift=>shift.date===header.dataset.rosterDate),details=header.querySelectorAll('small');
+   details[0].textContent=hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0));
+   if(details[1])details[1].textContent=money(shifts.some(shift=>shift.costCents===null)?null:shifts.reduce((sum,shift)=>sum+shift.costCents,0))+' labour';
+  }
+  for(const label of $('roster-days').querySelectorAll('.roster-staff-label'))label.querySelector('small').textContent=hours(data.roster.shifts.filter(shift=>(shift.userId||'')===label.dataset.rosterStaff).reduce((sum,shift)=>sum+shift.paidSeconds,0));
+ }
+ function settleRosterLayout(){
+  if(rosterNeedsLayout&&!rosterInteractionActive()){rosterNeedsLayout=false;rosterRenderKey='';renderRoster();}
+ }
+ async function saveRosterEditors(){
+  clearTimeout(rosterSaveTimer);if(rosterSaveTask)return rosterSaveTask;
+  rosterSaveTask=(async()=>{
+   await Promise.resolve();rosterSaving=true;updateRosterSaveStatus();let wrote=false,conflict=false;
+   try{
+    for(let editor;(editor=[...rosterEditors.values()].find(item=>item.pending&&!item.error));){
+     editor.pending=false;const values=editor.read();
+     try{
+      if(!editor.form.checkValidity())throw Error('Enter valid start and end times.');
+      M.interval({...editor.shift,...values});
+      const wasNew=editor.isNew,oldId=editor.shift.id,previousUser=editor.shift.userId;
+      const result=await api(wasNew?'shifts':'shifts/'+oldId,wasNew?'POST':'PUT',rosterPayload(editor.shift,values));
+      wrote=true;data.roster.revision=result.revision;data.roster.hasChanges=true;
+      newRosterShifts.delete(oldId);rosterEditors.delete(oldId);Object.assign(editor.shift,result.shift);editor.isNew=false;
+      editor.card.dataset.shiftId=result.shift.id;editor.card.dataset.layoutKey='shift:'+result.shift.id;delete editor.card.dataset.newShift;
+      rosterEditors.set(result.shift.id,editor);editor.saved=values;
+      const savedIndex=data.roster.shifts.findIndex(shift=>shift.id===oldId);if(savedIndex<0)data.roster.shifts.push(editor.shift);else data.roster.shifts[savedIndex]=editor.shift;
+      editor.dirty=JSON.stringify(editor.read())!==JSON.stringify(values);editor.pending=editor.dirty;editor.card.classList.toggle('is-dirty',editor.dirty);
+      editor.remove.setAttribute('aria-label','Delete shift for '+editor.shift.username);editor.remove.title='Delete shift';
+      if(previousUser!==result.shift.userId)rosterNeedsLayout=true;
+     }catch(error){if(error.message.startsWith('The roster changed')){editor.blocked=true;conflict=true;}setRosterEditorError(editor,error.message);status(error.message);}
+    }
+    if(wrote||conflict)try{await refreshRosterSaved();}catch(error){status('Changes saved. '+error.message);}
+   }finally{
+    rosterSaving=false;rosterSaveTask=null;updateRosterSaveStatus();settleRosterLayout();
+    if([...rosterEditors.values()].some(editor=>editor.pending&&!editor.error))rosterSaveTimer=setTimeout(saveRosterEditors,0);
+   }
+  })();return rosterSaveTask;
+ }
+ async function flushRosterEdits(){
+  if(rosterSaving&&!rosterSaveTask){status('Saving changes…');return false;}
+  clearTimeout(rosterSaveTimer);do{await saveRosterEditors();}while([...rosterEditors.values()].some(editor=>editor.pending&&!editor.error));
+  if(rosterDirty()){
+   const editor=[...rosterEditors.values()].find(editor=>editor.dirty);
+   status(editor?.error||'Complete the shift details before continuing.');return false;
+  }
+  return true;
+ }
+ async function saveBoardShift(shift,changes){
+  if(rosterSaving||rosterDirty())return false;
+  rosterSaving=true;updateRosterSaveStatus();const board=$('roster-days');board.inert=true;board.setAttribute('aria-busy','true');
+  try{await api('shifts/'+shift.id,'PUT',rosterPayload(shift,changes));await refreshRosterSaved(false);status('Shift saved to draft. Publish when the roster is ready.',true);return true;}
   catch(error){status(error.message);return false;}
-  finally{rosterSaving=false;board.inert=false;board.removeAttribute('aria-busy');}
+  finally{rosterSaving=false;board.inert=false;board.removeAttribute('aria-busy');updateRosterSaveStatus();}
+ }
+ async function removeBoardShift(editor){
+  if(rosterSaving)return;
+  if(editor.isNew){editor.pending=false;newRosterShifts.delete(editor.shift.id);rosterEditors.delete(editor.shift.id);editor.card.closest('.roster-day-editor')?.remove();editor.card.remove();updateRosterSaveStatus();return;}
+  const ui=makeDialog('Delete shift');ui.form.append(node('p','Delete this draft shift? Publish the roster to update users.'));ui.save.textContent='Delete shift';
+  ui.form.onsubmit=async event=>{event.preventDefault();ui.busy(true);try{editor.pending=editor.dirty=false;editor.card.classList.remove('is-dirty');if(!await flushRosterEdits())throw Error('Resolve the other shift changes before deleting.');const result=await api('shifts/'+editor.shift.id,'DELETE',{weekStart:week,revision:data.roster.revision});data.roster.revision=result.revision;rosterEditors.delete(editor.shift.id);editor.card.closest('.roster-day-editor')?.remove();editor.card.remove();ui.dialog.close();await refreshRosterSaved(false);}catch(error){ui.error.textContent=error.message;ui.busy(false);}};ui.finish();
  }
  function renderRosterBoard(manage,summary){
-  cancelRosterDrag();const host=$('roster-days'),scrollLeft=host.scrollLeft,scrollTop=host.scrollTop,boardShifts=[...data.roster.shifts,...(newRosterShift?[newRosterShift]:[])];
+  cancelRosterDrag();rosterEditors.clear();const host=$('roster-days'),scrollLeft=host.scrollLeft,scrollTop=host.scrollTop,boardShifts=[...data.roster.shifts,...newRosterShifts.values()];
   host.replaceChildren();host.className='roster-board-scroll';host.tabIndex=0;host.setAttribute('aria-label','Weekly roster. Scroll to see all days.');
+  if(rosterView==='day'){renderDailyRoster(manage,boardShifts);return;}
   const board=node('div',undefined,'roster-board '+(rosterView==='staff'?'roster-staff-board':'roster-stacked-board'));host.append(board);
   if(rosterView==='staff'){
    const corner=node('div',undefined,'roster-board-corner');corner.append(node('strong','Staff'),node('small',data.people.length+' people'));board.append(corner);
@@ -91,6 +173,47 @@
   else if(!cell.children.length)cell.append(node('span','—','roster-cell-empty'));
   return cell;
  }
+ function syncRosterViewControls(){
+  if(M.monday(rosterDay)!==week)rosterDay=week;
+  for(const view of ['staff','stacked','day'])$('roster-view-'+view).setAttribute('aria-pressed',String(rosterView===view));
+  const picker=$('roster-day');$('roster-day-control').hidden=rosterView!=='day';
+  if(picker.dataset.week!==week){picker.replaceChildren();for(let index=0;index<7;index++){const day=M.shiftDate(week,index),option=user(node('option',dayNames[index].slice(0,3)+' '+date(day)));option.value=day;picker.append(option);}picker.dataset.week=week;}
+  picker.value=rosterDay;window.locationPickers?.refresh(picker);
+ }
+ function dailyShifts(){
+  return [...data.roster.shifts,...(data.roster.carryoverShifts||[])].filter(shift=>shift.date===rosterDay||shift.overnight&&M.shiftDate(shift.date,1)===rosterDay&&shift.end!=='00:00');
+ }
+ function renderDailyRoster(manage,shifts){
+  const host=$('roster-days');host.classList.add('roster-daily-scroll');host.setAttribute('aria-label','Daily roster hourly timeline');
+  const board=node('div',undefined,'roster-day-board'),corner=node('div',undefined,'roster-board-corner'),axis=node('div',undefined,'roster-day-hours');corner.append(node('strong','Staff'),user(node('small',date(rosterDay))));
+  for(let hour=0;hour<24;hour++){const tick=user(node('span',String(hour).padStart(2,'0')+':00'));axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);
+  const visible=dailyShifts(),people=[...(manage?[{id:null,username:'Vacant'}]:[]),...data.people];
+  for(const shift of visible)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
+  for(const person of people){
+   const label=node('div',undefined,'roster-staff-label'),lane=node('div',undefined,'roster-day-lane');label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)));lane.dataset.rosterDrop='';lane.dataset.rosterDate=rosterDay;lane.dataset.rosterUser=person.id||'';lane.setAttribute('aria-label',person.username+' on '+rosterDay);
+   if(manage){const add=button('+',()=>addBoardShift(rosterDay,person.id),'roster-cell-add roster-day-add');add.setAttribute('aria-label','Add shift on '+rosterDay+' for '+person.username);label.append(add);}board.append(label,lane);
+  }
+  updateDailyShiftBars();
+  if(innerWidth<=1000&&visible.length){const first=Math.min(...visible.map(shift=>shift.date===rosterDay?M.minutes(shift.start):0)),lane=board.querySelector('.roster-day-lane');host.scrollLeft=Math.max(0,(first-60)/1440*lane.getBoundingClientRect().width);}
+ }
+ function updateDailyShiftBars(){
+  const shifts=dailyShifts(),manage=can('rostering.manage');
+  for(const lane of $('roster-days').querySelectorAll('.roster-day-lane')){
+   for(const bar of lane.querySelectorAll('.roster-day-shift'))bar.remove();
+   const tracks=[],entries=shifts.filter(shift=>(shift.userId||'')===lane.dataset.rosterUser).map(shift=>({shift,start:shift.date===rosterDay?M.minutes(shift.start):0,end:shift.date===rosterDay?(shift.overnight?1440:M.minutes(shift.end)):M.minutes(shift.end)})).sort((a,b)=>a.start-b.start||a.end-b.end);
+   for(const {shift,start,end}of entries){
+    if(end<=start)continue;let track=tracks.findIndex(until=>until<=start);if(track<0)track=tracks.length;tracks[track]=end;
+    const carry=shift.date!==rosterDay,bar=node(manage&&!carry?'button':'div',undefined,'roster-day-shift'+(carry?' is-continuation':''));if(bar.tagName==='BUTTON')bar.type='button';bar.style.left=(start/1440*100)+'%';bar.style.width=((end-start)/1440*100)+'%';bar.style.top=(track*34+5)+'px';
+    const label=shift.start+' – '+shift.end+(shift.overnight?' +1':''),detail=hours(shift.paidSeconds)+' paid'+(shift.position?' · '+shift.position:'');bar.append(user(node('strong',label)),user(node('small',detail)));bar.title=shift.username+' · '+label+' · '+detail+' · '+shift.breakMinutes+'m unpaid break'+(carry?' · Continues from '+date(shift.date):'');bar.setAttribute('aria-label',bar.title);bar.dataset.timelineShift=shift.id;
+    if(manage&&!carry)bar.onclick=async()=>{
+     const existing=rosterEditors.get(shift.id);if(existing){existing.card.querySelector('[name=start]').focus({preventScroll:true});return;}
+     if(!await flushRosterEdits())return;const holder=node('div',undefined,'roster-cell roster-day-editor'),card=rosterCard(data.roster.shifts.find(item=>item.id===shift.id)||shift,true);lane.after(holder);holder.append(card);card.querySelector('[name=start]').focus({preventScroll:true});
+    };lane.append(bar);
+   }
+   lane.style.minHeight=(Math.max(1,tracks.length)*34+15)+'px';
+  }
+ }
+ async function selectRosterDay(value){if(!await flushRosterEdits()){$('roster-day').value=rosterDay;window.locationPickers?.refresh($('roster-day'));return;}rosterDay=value;renderRoster();}
  function rosterPositionControl(shift){
   const names=[...new Set([...(data.positions||[]),...data.roster.shifts.map(item=>item.position),shift.position].filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   let addValue='__add_position__';while(names.includes(addValue))addValue+='+';
@@ -107,19 +230,25 @@
   refresh();return{wrap,position,reset(){selected=shift.position||'';position.value=selected;refresh();}};
  }
  function rosterCard(shift,manage){
-  const revision=data.roster.revision,isNew=shift.id===newRosterShift?.id,card=node('article',undefined,'roster-shift'+(shift.userId===null?' roster-vacant-shift':''));card.dataset.shiftId=shift.id;card.dataset.layoutKey='shift:'+shift.id;if(isNew)card.dataset.newShift='';
+  const isNew=newRosterShifts.has(shift.id),card=node('article',undefined,'roster-shift'+(shift.userId===null?' roster-vacant-shift':''));card.dataset.shiftId=shift.id;card.dataset.layoutKey='shift:'+shift.id;if(isNew)card.dataset.newShift='';
   const availability=shift.availability==='unavailable'?'Availability conflict':shift.availability==='unknown'?'Availability not entered':shift.userId===null?'Vacant shift':'Available';
   const description=[shift.position||'No position',shift.date,shift.start+' – '+shift.end+(shift.overnight?' · ends next day':''),hours(shift.paidSeconds),shift.breakMinutes+'m unpaid break',...(manage?[money(shift.costCents),availability]:[]),shift.notes].filter(Boolean).join(' · ');card.title=description;
   if(manage){
-   const form=node('form',undefined,'roster-inline-form'),position=rosterPositionControl(shift),staff=select('userId',[['','Vacant'],...data.people.map(person=>[person.id,person.username])],shift.userId||''),staffField=node('div',undefined,'roster-staff-field'),start=input('time','start',shift.start),end=input('time','end',shift.end),times=node('div',undefined,'roster-inline-times'),actions=node('div',undefined,'roster-inline-actions'),save=node('button','Save','rostering-primary'),cancel=button('Cancel',()=>{if(isNew){newRosterShift=null;rosterRenderKey='';renderRoster();status('');return;}staff.value=shift.userId||'';start.value=shift.start;end.value=shift.end;position.reset();window.locationPickers?.refresh(staff);update();});
+   const form=node('form',undefined,'roster-inline-form'),position=rosterPositionControl(shift),staff=select('userId',[['','Vacant'],...data.people.map(person=>[person.id,person.username])],shift.userId||''),staffField=node('div',undefined,'roster-staff-field'),start=input('time','start',shift.start),end=input('time','end',shift.end),times=node('div',undefined,'roster-inline-times'),message=node('p','','roster-inline-error'),undo=button('Undo',()=>{
+    if(editor.isNew){editor.pending=false;newRosterShifts.delete(shift.id);rosterEditors.delete(shift.id);card.closest('.roster-day-editor')?.remove();card.remove();updateRosterSaveStatus();return;}
+    if(editor.blocked){const latest=data.roster.shifts.find(item=>item.id===shift.id);if(latest)Object.assign(shift,latest);editor.blocked=false;rosterNeedsLayout=true;}
+    staff.value=shift.userId||'';start.value=shift.start;end.value=shift.end;position.reset();window.locationPickers?.refresh(staff);editor.pending=editor.dirty=false;editor.saved=editor.read();card.classList.remove('is-dirty');setRosterEditorError(editor,'');settleRosterLayout();
+   },'roster-inline-undo');
    if(shift.userId&&!data.people.some(person=>person.id===shift.userId)){const option=user(node('option',shift.username));option.value=shift.userId;staff.append(option);staff.value=shift.userId;}
    staff.setAttribute('aria-label','Staff for shift '+shift.start+' on '+shift.date);start.setAttribute('aria-label','Shift start time');end.setAttribute('aria-label','Shift end time');start.required=end.required=true;start.step=end.step='60';
-   times.append(start,end);if(shift.overnight){const next=node('span','+1','roster-next-day');next.title='Ends next day';times.append(next);}staffField.append(staff);save.type='submit';actions.hidden=true;actions.append(cancel,save);form.append(position.wrap,times,staffField,actions);card.append(form);
-   function update(){const dirty=isNew||staff.value!==(shift.userId||'')||start.value!==shift.start||end.value!==shift.end||position.position.value!==(shift.position||'');card.classList.toggle('is-dirty',dirty);actions.hidden=!dirty;}
-   form.addEventListener('input',update);form.addEventListener('change',update);update();
-   form.onsubmit=async event=>{event.preventDefault();const assigned=staff.value||null;await saveBoardShift(shift,{userId:assigned,start:start.value,end:end.value,position:position.position.value,allowUnavailable:assigned===shift.userId?shift.allowUnavailable:false},revision);};
-   if(!isNew){const tools=node('div',undefined,'roster-shift-tools'),grip=button('⠿',()=>{},'roster-shift-grip'),details=button('⋮',()=>shiftDialog(shift),'roster-edit-button');grip.setAttribute('aria-label','Hold and drag shift for '+shift.username);grip.title='Hold and drag to another day or staff member';details.setAttribute('aria-label','Edit shift for '+shift.username);details.title='Shift details, date, break and notes';tools.append(details,grip);card.append(tools);
-    card.addEventListener('pointerdown',event=>startRosterPress(event,shift,card));card.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});}
+   times.append(start,end);if(shift.overnight){const next=node('span','+1','roster-next-day');next.title='Ends next day';times.append(next);}staffField.append(staff);form.append(position.wrap,times,staffField);message.hidden=undo.hidden=true;message.setAttribute('role','status');card.append(form,message,undo);
+   const tools=node('div',undefined,'roster-shift-tools'),grip=button('⠿',()=>{},'roster-shift-grip'),remove=button('×',()=>removeBoardShift(editor),'roster-delete-button');grip.setAttribute('aria-label','Hold and drag shift for '+shift.username);grip.title='Hold and drag to another day or staff member';remove.setAttribute('aria-label',(isNew?'Discard new shift':'Delete shift for '+shift.username));remove.title=isNew?'Discard new shift':'Delete shift';tools.append(remove,grip);card.append(tools);
+   const editor={shift,card,form,message,undo,remove,isNew,dirty:isNew,pending:false,error:'',read(){const assigned=staff.value||null;return{userId:assigned,start:start.value,end:end.value,position:position.position.value,allowUnavailable:assigned===shift.userId?shift.allowUnavailable:false};}};
+   editor.saved=editor.read();rosterEditors.set(shift.id,editor);
+   form.addEventListener('input',()=>queueRosterEditor(editor));form.addEventListener('change',()=>queueRosterEditor(editor,100));form.onsubmit=event=>{event.preventDefault();queueRosterEditor(editor,0);};
+   card.addEventListener('focusout',()=>setTimeout(settleRosterLayout,0));
+   card.addEventListener('pointerdown',event=>startRosterPress(event,shift,card));card.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});
+   if(isNew)queueRosterEditor(editor);
   }else{
    const position=user(node('span',shift.position?shift.position.split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase():'–','roster-position-static')),content=node('div',undefined,'roster-shift-content');position.title=shift.position||'No position';position.setAttribute('aria-label',shift.position||'No position');content.append(user(node('p',shift.start+' – '+shift.end+(shift.overnight?' +1':''),'roster-shift-time')),user(node('strong',shift.username)));card.append(position,content);card.classList.add('roster-readonly-shift');
   }
@@ -128,7 +257,7 @@
  }
  function startRosterPress(event,shift,card){
   if(!event.isPrimary||event.button!==0||rosterSaving||rosterEditing()||event.target.closest('input,select,.location-picker,button:not(.roster-shift-grip)'))return;
-  if(rosterDirty()){status('Save or cancel your shift edits before dragging.');return;}
+  if(rosterDirty()){status('Wait for shift changes to save before dragging.');return;}
   cancelRosterDrag();const press={shift,card,x:event.clientX,y:event.clientY,pointerId:event.pointerId};rosterPress=press;
   card.classList.add('is-pressing');press.timer=setTimeout(()=>{
    if(rosterPress!==press)return;const rect=card.getBoundingClientRect(),ghost=node('div',undefined,'roster-drag-ghost');ghost.dataset.layoutUi='';ghost.setAttribute('aria-hidden','true');ghost.append(user(node('strong',shift.username)),user(node('span',shift.start+' – '+shift.end)));ghost.style.width=rect.width+'px';document.body.append(ghost);
@@ -161,11 +290,11 @@
  document.addEventListener('pointerup',event=>{if(rosterDrag&&event.pointerId===rosterDrag.pointerId){event.preventDefault();dropRosterDrag();}else clearRosterPress();});
  document.addEventListener('pointercancel',()=>dropRosterDrag(true));
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&(rosterDrag||rosterPress)){event.preventDefault();dropRosterDrag(true);}});
+ document.addEventListener('click',async event=>{const link=event.target.closest('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||link.target==='_blank'||link.hasAttribute('download')||!rosterDirty()&&!rosterSaving)return;const target=new URL(link.href,location.href);if(target.origin!==location.origin||target.pathname===location.pathname)return;event.preventDefault();event.stopPropagation();if(await flushRosterEdits())location.assign(target.href);},true);
  window.addEventListener('beforeunload',event=>{if(rosterDirty()||rosterSaving){event.preventDefault();event.returnValue='';}});window.addEventListener('app-edit-mode-changed',cancelRosterDrag);window.addEventListener('blur',()=>dropRosterDrag(true));
- function changeRosterView(next){if(!data||rosterSaving)return;if(rosterDirty()){status('Save or cancel your shift edits before changing view.');return;}rosterView=next;try{localStorage.setItem('opstack-roster-view:'+session.id+':'+session.companyId,next);}catch{}renderRoster();}
+ async function changeRosterView(next){if(!data||!await flushRosterEdits())return;rosterView=next;try{localStorage.setItem('opstack-roster-view:'+session.id+':'+session.companyId,next);}catch{}renderRoster();}
  function makeDialog(title){const dialog=node('dialog',undefined,'roster-dialog');dialog.dataset.copyEditor=dialog.dataset.layoutUi='';const header=node('div',undefined,'roster-dialog-heading'),heading=node('h2',title),close=button('×',()=>{if(!dialog.dataset.busy)dialog.close();},'roster-dialog-close');heading.id='roster-dialog-title';dialog.setAttribute('aria-labelledby',heading.id);close.setAttribute('aria-label','Close dialog');header.append(heading,close);const form=node('form'),error=node('p','','roster-error'),actions=node('div',undefined,'roster-dialog-actions'),cancel=button('Cancel',()=>dialog.close()),save=node('button','Save','rostering-primary');save.type='submit';actions.append(cancel,save);error.setAttribute('role','status');dialog.append(header,form);document.body.append(dialog);dialog.addEventListener('cancel',event=>{if(dialog.dataset.busy)event.preventDefault();});dialog.addEventListener('close',()=>dialog.remove());return{dialog,form,error,actions,save,cancel,finish(){form.append(error,actions);dialog.showModal();},busy(value){dialog.dataset.busy=value?'true':'';for(const control of dialog.querySelectorAll('input,select,textarea,button'))control.disabled=value;}};}
- function shiftDialog(previous,day=week,userId){if(!can('rostering.manage')||rosterSaving)return;if(rosterDirty()){status('Save or cancel your shift edits before opening another editor.');return;}const ui=makeDialog(previous?'Edit shift':'Add shift'),person=select('userId',[['','Vacant'],...data.people.map(person=>[person.id,person.username])],previous?previous.userId||'':userId===undefined?data.people[0]?.id:userId||''),when=input('date','date',previous?.date||day),start=input('time','start',previous?.start||'09:00'),end=input('time','end',previous?.end||'17:00'),overnight=input('checkbox','overnight'),breaks=input('number','breakMinutes',previous?.breakMinutes??30),position=input('text','position',previous?.position||''),notes=node('textarea'),allow=input('checkbox','allowUnavailable'),fields=node('div',undefined,'roster-dialog-grid'),availabilityInfo=node('p','','roster-help');overnight.checked=previous?.overnight||false;allow.checked=previous?.allowUnavailable||false;breaks.min='0';breaks.step='1';position.maxLength=80;notes.name='notes';notes.maxLength=500;notes.rows=2;notes.value=previous?.notes||'';for(const field of [when,start,end,breaks])field.required=true;fields.append(field('User',person),field('Date',when),field('Starts',start),field('Ends',end),field('Unpaid break (minutes)',breaks),field('Position / area',position));if(previous)ui.form.append(user(node('p',hours(previous.paidSeconds)+' · '+previous.breakMinutes+'m unpaid break · '+money(previous.costCents),'roster-help')));ui.form.append(fields,field('Ends the next day',overnight),availabilityInfo,field('Allow outside availability',allow),field('Shift notes',notes));function hint(){const member=data.teamAvailability.find(item=>item.userId===person.value),index=Math.round((Date.parse(when.value+'T00:00:00Z')-Date.parse(week+'T00:00:00Z'))/86400000),day=member?.days[index];availabilityInfo.textContent=person.value?'Availability: '+(!day?'Not entered':day.status==='available'?'All day':day.status==='unavailable'?'Unavailable':day.start+' – '+day.end+(day.overnight?' next day':'')):'Vacant shift — assign a staff member when ready.';}person.onchange=when.onchange=hint;hint();ui.save.textContent=previous?'Save shift':'Add to draft';if(previous){let confirmed=false;const remove=button('Delete shift',async()=>{if(!confirmed){confirmed=true;remove.textContent='Confirm delete';ui.error.textContent='Delete this draft shift? Publish the roster to update users.';return;}ui.busy(true);try{await api('shifts/'+previous.id,'DELETE',{weekStart:week,revision:data.roster.revision});ui.dialog.close();await load();}catch(error){ui.error.textContent=error.message;ui.busy(false);}},'roster-danger');ui.actions.prepend(remove);}ui.form.onsubmit=async event=>{event.preventDefault();const payload={weekStart:week,revision:data.roster.revision,userId:person.value||null,date:when.value,start:start.value,end:end.value,overnight:overnight.checked,breakMinutes:Number(breaks.value),position:position.value,notes:notes.value,allowUnavailable:allow.checked};ui.busy(true);try{await api('shifts'+(previous?'/'+previous.id:''),previous?'PUT':'POST',payload);ui.dialog.close();await load();status('Shift saved to draft. Publish when the roster is ready.',true);}catch(error){ui.error.textContent=error.message;ui.busy(false);}};ui.finish();}
- async function rosterAction(action){if(rosterSaving||rosterDirty()){status('Save or cancel your shift edits first.');return;}if(action==='publish'){$('roster-publish').disabled=true;try{await api('publish','POST',{weekStart:week,revision:data.roster.revision});await load();status('Roster published.',true);}catch(error){status(error.message);$('roster-publish').disabled=false;}return;}const ui=makeDialog(action==='publish'?'Publish roster':'Copy previous week'),description=node('p',action==='publish'?'Users at this location will see their shifts from this roster.':'Copy the previous week into this empty draft.'),allow=input('checkbox','allowUnavailable');ui.form.append(description);if(action==='copy-previous')ui.form.append(field('Allow shifts outside submitted availability',allow));ui.save.textContent=action==='publish'?'Publish roster':'Copy shifts';ui.form.onsubmit=async event=>{event.preventDefault();ui.busy(true);try{await api(action,'POST',{weekStart:week,revision:data.roster.revision,allowUnavailable:allow.checked});ui.dialog.close();await load();status(action==='publish'?'Roster published.':'Previous week copied to draft.',true);}catch(error){ui.error.textContent=error.message;ui.busy(false);}};ui.finish();}
+ async function rosterAction(action){if(!await flushRosterEdits())return;if(action==='publish'){const board=$('roster-days');rosterSaving=true;board.inert=true;$('roster-publish').disabled=true;updateRosterSaveStatus();try{await api('publish','POST',{weekStart:week,revision:data.roster.revision});await refreshRosterSaved(false);status('Roster published.',true);}catch(error){status(error.message);$('roster-publish').disabled=false;}finally{rosterSaving=false;board.inert=false;updateRosterSaveStatus();}return;}const ui=makeDialog(action==='publish'?'Publish roster':'Copy previous week'),description=node('p',action==='publish'?'Users at this location will see their shifts from this roster.':'Copy the previous week into this empty draft.'),allow=input('checkbox','allowUnavailable');ui.form.append(description);if(action==='copy-previous')ui.form.append(field('Allow shifts outside submitted availability',allow));ui.save.textContent=action==='publish'?'Publish roster':'Copy shifts';ui.form.onsubmit=async event=>{event.preventDefault();ui.busy(true);try{await api(action,'POST',{weekStart:week,revision:data.roster.revision,allowUnavailable:allow.checked});ui.dialog.close();await load();status(action==='publish'?'Roster published.':'Previous week copied to draft.',true);}catch(error){ui.error.textContent=error.message;ui.busy(false);}};ui.finish();}
  function renderClock(){const host=$('clock-panel'),key=JSON.stringify([clockDisplayKey(data.clock),can('rostering.clock'),session.locationId,session.locationName]);if(key===clockRenderKey&&host.children.length){for(const control of host.querySelectorAll('.clock-actions button'))control.disabled=clockBusy;updateClockElapsed();return;}const entry=data.clock,draftNotes=$('clock-notes')?.value||'';host.replaceChildren();host.append(badge(entry?(entry.onBreak?'On break':'Clocked in'):'Clocked out',entry?'positive':'muted'),node('h3',entry?'Your shift is running':'Ready to start?'));if(entry){host.append(user(node('p','Clocked in '+date(M.localParts(entry.startAt).date)+' at '+time(entry.startAt)+' · '+entry.locationName,'small')),node('strong','00:00:00','clock-elapsed'));host.querySelector('.clock-elapsed').id='clock-elapsed';if(entry.locationId!==session.locationId)host.append(user(node('p','This shift belongs to '+entry.locationName+'. Clocking out keeps its time there.','roster-help')));}else host.append(user(node('p','Your next clock-in will be recorded at '+session.locationName+'.','roster-help')));const actions=node('div',undefined,'clock-actions');if(can('rostering.clock')){if(!entry)actions.append(button('Clock in',()=>clockAction('in'),'rostering-primary clock-main-action'));else{actions.append(button(entry.onBreak?'End break':'Start unpaid break',()=>clockAction(entry.onBreak?'break-end':'break-start')),button('Clock out',()=>clockAction('out'),'rostering-primary clock-main-action'));const notes=node('textarea');notes.id='clock-notes';notes.rows=2;notes.maxLength=500;notes.placeholder='Optional note for this shift';notes.value=draftNotes;host.append(field('Shift note',notes));}}host.append(actions,node('p','Clock times are recorded by the server. Timesheets require manager approval.','roster-help'));for(const control of actions.querySelectorAll('button'))control.disabled=clockBusy;clockRenderKey=key;updateClockElapsed();}
  function updateClockElapsed(){const target=$('clock-elapsed');if(!target||!data?.clock)return;const entry=data.clock,at=Date.now()+clockOffset,end=entry.endAt?Date.parse(entry.endAt):at,breakMs=entry.breaks.reduce((sum,item)=>sum+Math.max(0,(item.endAt?Date.parse(item.endAt):at)-Date.parse(item.startAt)),0),seconds=Math.max(0,Math.floor((end-Date.parse(entry.startAt)-breakMs)/1000));target.textContent=[Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(value=>String(value).padStart(2,'0')).join(':');}
  async function clockAction(action){if(clockBusy)return;const notes=$('clock-notes')?.value||'';if(clockRequest?.action!==action||clockRequest.entryId!==(data.clock?.id||undefined))clockRequest={action,entryId:data.clock?.id,requestId:uid(),notes};clockBusy=true;for(const control of $('clock-panel').querySelectorAll('button'))control.disabled=true;try{await api('clock','POST',clockRequest);clockRequest=null;await load();status(action==='out'?'Clocked out. Your timesheet is ready for review.':action==='in'?'Clocked in.':action==='break-start'?'Unpaid break started.':'Break ended.',true);}catch(error){status(error.message);await load(true);}finally{clockBusy=false;renderClock();}}
@@ -187,10 +316,10 @@
  async function saveBudget(event){event.preventDefault();const item=data.summary.budgets.find(item=>item.scope===$('budget-scope').value);try{const payload={scope:item.scope,revision:item.revision,mode:$('budget-mode').value,value:cents($('budget-value').value)};await formAction($('budget-form'),()=>api('budget','PUT',payload),'Labour budget saved.');}catch(error){status(error.message);}}
  async function formAction(form,action,message){const controls=[...form.querySelectorAll('input,select,textarea,button')];for(const control of controls)control.disabled=true;try{await action();await load();status(message,true);}catch(error){status(error.message);}finally{for(const control of controls)if(control.isConnected)control.disabled=false;}}
  function exportTimesheets(){const headers=['User','Location','Clock in','Clock out','Unpaid break (minutes)','Paid hours','Status',...(data.timesheets.some(item=>'costCents'in item)?['Estimated cost']:[])],rows=data.timesheets.map(item=>[item.username,item.locationName,localInput(item.startAt),item.endAt?localInput(item.endAt):'',(item.breakSeconds/60).toFixed(2),(item.paidSeconds/3600).toFixed(2),item.status,...(headers.includes('Estimated cost')?[item.costCents===null||item.costCents===undefined?'':(item.costCents/100).toFixed(2)]:[])]),escape=value=>'"'+String(/^[=+\-@\t\r]/.test(String(value))?"'"+value:value).replaceAll('"','""')+'"',content=[headers,...rows].map(row=>row.map(escape).join(',')).join('\r\n'),url=URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'})),link=node('a');link.href=url;link.download='timesheets-'+week+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- function selectWeek(value){if(rosterSaving||rosterDirty()){$('roster-week').value=week;status('Save or cancel your shift edits before changing weeks.');return;}try{week=M.monday(value);$('roster-week').value=week;load();}catch(error){status(error.message);}}
- $('roster-previous').onclick=()=>selectWeek(M.shiftDate(week,-7));$('roster-next').onclick=()=>selectWeek(M.shiftDate(week,7));$('roster-this-week').onclick=()=>selectWeek(M.today());$('roster-week').onchange=event=>selectWeek(event.target.value);$('roster-refresh').onclick=()=>{if(rosterDirty())status('Save or cancel your shift edits before refreshing.');else load();};$('roster-view-staff').onclick=()=>changeRosterView('staff');$('roster-view-stacked').onclick=()=>changeRosterView('stacked');$('roster-add').onclick=()=>addBoardShift();$('roster-copy').onclick=()=>rosterAction('copy-previous');$('roster-publish').onclick=()=>rosterAction('publish');$('timesheet-filter').onchange=renderTimesheets;$('timesheet-manual').onclick=()=>timeDialog();$('timesheet-export').onclick=exportTimesheets;
+ async function selectWeek(value){if(!await flushRosterEdits()){$('roster-week').value=week;return;}try{week=M.monday(value);$('roster-week').value=week;load();}catch(error){status(error.message);}}
+ $('roster-previous').onclick=()=>selectWeek(M.shiftDate(week,-7));$('roster-next').onclick=()=>selectWeek(M.shiftDate(week,7));$('roster-this-week').onclick=()=>selectWeek(M.today());$('roster-week').onchange=event=>selectWeek(event.target.value);$('roster-refresh').onclick=async()=>{if(await flushRosterEdits())load();};$('roster-view-staff').onclick=()=>changeRosterView('staff');$('roster-view-stacked').onclick=()=>changeRosterView('stacked');$('roster-view-day').onclick=()=>changeRosterView('day');$('roster-day').onchange=event=>selectRosterDay(event.target.value);$('roster-copy').onclick=()=>rosterAction('copy-previous');$('roster-publish').onclick=()=>rosterAction('publish');$('timesheet-filter').onchange=renderTimesheets;$('timesheet-manual').onclick=()=>timeDialog();$('timesheet-export').onclick=exportTimesheets;
  $('availability-kind').onchange=renderAvailability;$('availability-form').onsubmit=saveAvailability;$('availability-fill').onclick=()=>{for(const card of $('availability-days').children){const select=card.querySelector('[name=status]');select.value='available';select.dispatchEvent(new Event('change',{bubbles:true}));}};$('availability-reset').onclick=()=>{const record=data.availability.week;formAction($('availability-form'),()=>api('availability','DELETE',{kind:'week',weekStart:week,revision:record.revision}),'Weekly override removed. Recurring availability applies.');};
  $('budget-scope').onchange=renderBudgetForm;$('budget-mode').onchange=updateBudgetMode;$('budget-form').onsubmit=saveBudget;$('budget-inherit').onclick=()=>{const item=data.summary.budgets.find(item=>item.scope===$('budget-scope').value);formAction($('budget-form'),()=>api('budget','DELETE',{scope:item.scope,revision:item.revision}),'Budget override removed.');};$('rates-date').onchange=renderRates;$('rates-form').onsubmit=event=>{event.preventDefault();try{const payload={effectiveDate:$('rates-date').value,revision:data.rates.revision,rates:[...$('rate-people').querySelectorAll('input')].map(input=>({userId:input.dataset.userId,rateCents:input.value===''?null:cents(input.value)}))};formAction($('rates-form'),()=>api('rates','PUT',payload),'Hourly rates saved.');}catch(error){status(error.message);}};
- window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked&&session)load();});setInterval(updateClockElapsed,1000);setInterval(()=>{if(session&&!document.hidden&&!appRequiredReading.blocked)load(true);},15000);window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets','clock'].includes(section))load(false,true);});$('logout').onclick=async()=>{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
- (async()=>{try{const response=await fetch('/api/session');session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}appAccess.apply(session);$('rostering-location').textContent=session.locationName+' · '+session.companyName;try{const saved=localStorage.getItem('opstack-roster-view:'+session.id+':'+session.companyId);if(['staff','stacked'].includes(saved))rosterView=saved;}catch{}renderSidebar();await appRequiredReading.ready;view();}catch(error){status(error.message);}})();
+ window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked&&session)load();});setInterval(updateClockElapsed,1000);setInterval(()=>{if(session&&!document.hidden&&!appRequiredReading.blocked)load(true);},15000);window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets','clock'].includes(section))load(false,true);});$('logout').onclick=async()=>{if(!await flushRosterEdits())return;const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
+ (async()=>{try{const response=await fetch('/api/session');session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}appAccess.apply(session);$('rostering-location').textContent=session.locationName+' · '+session.companyName;try{const saved=localStorage.getItem('opstack-roster-view:'+session.id+':'+session.companyId);if(['staff','stacked','day'].includes(saved))rosterView=saved;}catch{}renderSidebar();await appRequiredReading.ready;view();}catch(error){status(error.message);}})();
 })();

@@ -6891,5 +6891,83 @@
     "locations": [
       "rostering"
     ]
+  },
+  {
+    "text": "Day view",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "All changes saved",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Saving changes…",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Changes need attention",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter valid start and end times.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Complete the shift details before continuing.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Wait for shift changes to save before dragging.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "The roster changed. Undo this edit and refresh before continuing.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Discard new shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Hours from midnight to midnight",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Daily roster hourly timeline",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Resolve the other shift changes before deleting.",
+    "locations": [
+      "rostering"
+    ]
   }
 ]

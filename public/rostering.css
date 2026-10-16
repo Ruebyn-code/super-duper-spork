@@ -52,9 +52,9 @@
 .roster-inline-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:4px;padding:3px 5px 5px}
 .roster-inline-actions button{font:600 10px Arial,sans-serif;padding:4px 7px;border-radius:5px;min-height:25px}
 .roster-shift-tools{position:absolute;right:1px;top:2px;bottom:2px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;width:17px}
-.roster-cell .roster-edit-button,.roster-shift-grip{display:grid;place-items:center;width:17px;height:23px;min-height:0;flex-shrink:0;padding:0;border:0;border-radius:4px;background:transparent;color:#748da1;font:17px Arial,sans-serif}
+.roster-cell .roster-delete-button,.roster-shift-grip{display:grid;place-items:center;width:17px;height:23px;min-height:0;flex-shrink:0;padding:0;border:0;border-radius:4px;background:transparent;color:#748da1;font:17px Arial,sans-serif}
 .roster-shift-grip{cursor:grab;touch-action:none;font-size:15px}
-.roster-cell .roster-edit-button:hover,.roster-shift-grip:hover{background:#ffffff70;color:var(--primary)}
+.roster-cell .roster-delete-button:hover,.roster-shift-grip:hover{background:#ffffff70;color:var(--primary)}
 .roster-shift-state{position:absolute;right:-2px;top:-2px;width:7px;height:7px;border:1px solid white;border-radius:50%;background:#9daab6}
 .roster-shift-state.available{background:#62a536}.roster-shift-state.conflict{background:#db473b}.roster-shift-state.vacant{background:var(--secondary)}
 .roster-cell .roster-readonly-shift{display:grid;grid-template-columns:28px minmax(0,1fr);cursor:default}
@@ -128,7 +128,7 @@
  .rostering-page .roster-inline-form .roster-inline-times input[type=time]{font-size:10px;padding-left:2px;padding-right:2px}
  .roster-shift-state{right:0}
  .roster-shift-tools{right:0;width:14px}
- .roster-cell .roster-edit-button,.roster-shift-grip{width:14px}
+ .roster-cell .roster-delete-button,.roster-shift-grip{width:14px}
  .roster-staff-field{padding-left:2px;padding-right:14px}
  .roster-staff-field .location-select-trigger{font-size:11px}
 }
@@ -143,3 +143,30 @@
  .roster-shift-content .roster-shift-time{white-space:normal;font-size:10px;line-height:16px}
  .roster-staff-field .location-select-trigger{font-size:10px}
 }
+
+/* Saving keeps fields mounted, so typing and open staff menus stay steady. */
+.roster-shift-tools{justify-content:space-between}
+.roster-inline-error{margin:2px 4px;font:9px/1.35 Arial,sans-serif;color:#b42318;overflow-wrap:anywhere}
+.roster-inline-undo{display:block;margin:2px 4px 4px auto;padding:2px 5px;border:0;background:transparent;color:var(--primary);font:600 10px Arial,sans-serif}
+.roster-shift.has-save-error{box-shadow:0 0 0 1px #d9584c}
+#roster-save-status.has-error{color:#b42318}
+
+/* Day view shares the same compact toolbar and keeps a true hourly scale. */
+.roster-day-control{width:112px;flex-shrink:0}
+.roster-day-control .location-picker{width:100%;min-width:0}
+.roster-day-control .location-select-trigger{height:30px;min-height:30px;padding:4px 7px;font:600 10px Arial,sans-serif;border-radius:7px}
+.roster-day-board{display:grid;grid-template-columns:clamp(88px,8vw,120px) minmax(0,1fr);gap:5px 6px;min-width:0;width:100%}
+.roster-day-hours{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));align-items:center;background:#f5f8fc;min-height:35px}
+.roster-day-hours span{font:9px Arial,sans-serif;color:#718295;padding-left:3px;white-space:nowrap}
+.roster-day-lane{position:relative;min-width:0;border-bottom:1px solid #e6edf3;background:repeating-linear-gradient(to right,#e6edf3 0,#e6edf3 1px,transparent 1px,transparent calc(100% / 24))}
+.roster-day-shift{position:absolute;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;height:29px;padding:2px 5px;border:0;border-left:3px solid var(--secondary);border-radius:5px;background:color-mix(in srgb,var(--primary) 12%,white);color:#324b60;overflow:hidden;box-sizing:border-box;text-align:left}
+button.roster-day-shift:hover{background:color-mix(in srgb,var(--primary) 20%,white)}
+.roster-day-shift strong,.roster-day-shift small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 10px/13px Arial,sans-serif}
+.roster-day-shift small{font-size:9px;font-weight:400}
+.roster-day-shift.is-continuation{border-left-style:dashed}
+.roster-day-add{position:static;align-self:flex-start;width:20px;height:20px;min-height:0;padding:0;text-align:center;background:transparent;font:15px/20px Arial,sans-serif}
+.roster-day-editor{grid-column:2;width:min(270px,100%);padding:2px 0 7px;border:0}
+.roster-day-board .roster-staff-label{padding-top:9px}
+@media(max-width:1000px){.roster-day-board{min-width:1160px;grid-template-columns:100px minmax(0,1fr)}.roster-day-hours span{font-size:10px}.roster-board-scroll.roster-daily-scroll{overflow-x:auto}}
+
+@media(max-width:1000px){.roster-day-editor{position:sticky;left:100px;width:min(270px,calc(100vw - 190px))}}

@@ -123,3 +123,19 @@ test('position dropdown choices reuse location shift history without exposing ot
   assert.deepEqual((await roster(app,app.office)).data.positions,['Service','Supervisor']);
  }finally{await app.close();}
 });
+
+test('daily rosters include overnight carryovers with published, user and location access rules',async()=>{
+ const app=await fixture();try{
+  const prior={weekStart:'2026-10-12',date:'2026-10-18',start:'22:00',end:'06:00',overnight:true,breakMinutes:30};
+  const created=await roster(app,app.office,'shifts','POST',shift({...prior,userId:app.memberRecord.id}));assert.equal(created.status,201);
+  await roster(app,app.office,'shifts','POST',shift({...prior,revision:1,userId:null}));
+  let dashboard=(await roster(app,app.office)).data;assert.equal(dashboard.roster.shifts.length,0);assert.equal(dashboard.roster.carryoverShifts.length,2);assert.equal(dashboard.roster.carryoverShifts[0].paidSeconds,27000);
+  assert.equal((await roster(app,app.member)).data.roster.carryoverShifts.length,0,'Previous-week drafts stay private');
+  await roster(app,app.office,'publish','POST',{weekStart:'2026-10-12',revision:2});
+  dashboard=(await roster(app,app.member)).data;assert.equal(dashboard.roster.carryoverShifts.length,1);assert.equal(dashboard.roster.carryoverShifts[0].userId,app.memberRecord.id);assert.ok(!('costCents' in dashboard.roster.carryoverShifts[0]));assert.ok(!('rateCents' in dashboard.roster.carryoverShifts[0]));
+  await roster(app,app.office,'shifts/'+created.data.shift.id,'PUT',shift({...prior,revision:3,userId:app.memberRecord.id,end:'07:00'}));
+  assert.equal((await roster(app,app.office)).data.roster.carryoverShifts.find(item=>item.id===created.data.shift.id).end,'07:00');assert.equal((await roster(app,app.member)).data.roster.carryoverShifts[0].end,'06:00','Unpublished carryover edits stay private');
+  assert.equal((await roster(app,app.franchisee)).data.roster.carryoverShifts.length,2);assert.equal((await roster(app,app.outside)).data.roster.carryoverShifts.length,0);
+  const other=(await roster(app,app.office,'dashboard?week=2026-10-26')).data;assert.equal(other.roster.carryoverShifts.length,0);
+ }finally{await app.close();}
+});
