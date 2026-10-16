@@ -6,6 +6,8 @@
 
 - Keep all new in-page sidebars consistent with the shared `page-sidebar-layout`, `page-sidebar`, `page-sidebar-link` and `page-sidebar-label` classes in `public/style.css`. Sidebars start as a collapsed icon rail, expand smoothly over content on hover or keyboard focus, and collapse on leaving. Keep touch menus compact; do not add a pinned-open setting. Use primary icon outlines, secondary details, and matching tinted hover/selected backgrounds.
 
+- The Knowledge Library category sidebar is a one-off exception: it uses an explicit collapse/expand button and remembers the choice per user/company. It must not expand on hover or keyboard focus. Other in-page sidebars keep the shared hover behavior.
+
 - Keep App edit in the shared bar account dropdown (More on phones). Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
 
 - Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.

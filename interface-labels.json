@@ -5851,5 +5851,29 @@
     "locations": [
       "knowledge-library"
     ]
+  },
+  {
+    "text": "Library categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Collapse categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Expand categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Network",
+    "locations": [
+      "knowledge-library"
+    ]
   }
 ]
