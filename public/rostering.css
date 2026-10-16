@@ -72,3 +72,9 @@
 @media(max-width:720px){.roster-board-toolbar{align-items:flex-start;flex-direction:column;gap:8px}.roster-board{grid-template-columns:100px repeat(7,minmax(184px,1fr));min-width:1430px}.roster-stacked-board{grid-template-columns:repeat(7,minmax(184px,1fr));min-width:1324px}.roster-staff-label{padding:8px 3px}.roster-staff-label strong{font-size:11px}.roster-board-scroll{max-height:65vh}.roster-board-day{padding:8px 3px}.roster-board-day strong{font-size:11px}.roster-board-hint{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.roster-shift,.roster-cell,.roster-view-switch button{transition:none!important}}
 @media(max-width:380px){.rostering-week-arrows{flex:1 0 100%}.rostering-week-arrows strong{white-space:nowrap}.rostering-week-tools{width:100%;justify-content:flex-end}.roster-board{grid-template-columns:84px repeat(7,minmax(184px,1fr));min-width:1414px}.roster-stacked-board{grid-template-columns:repeat(7,minmax(184px,1fr));min-width:1324px}}
+
+/* Feedback stays outside document flow so messages cannot push the roster. */
+.rostering-status{position:fixed;right:22px;bottom:22px;z-index:10030;width:max-content;max-width:min(440px,calc(100vw - 36px));margin:0;padding:10px 14px;border:1px solid #edc9c5;border-radius:10px;background:#fff;color:#b42318;box-shadow:0 5px 24px #18364916;font:12px/1.5 Arial,sans-serif;pointer-events:none;overflow-wrap:anywhere}
+.rostering-status.success{border-color:#c8e7d3;color:#28774e}
+.rostering-status:empty{display:none}
+@media(max-width:720px){.rostering-status{right:14px;bottom:calc(88px + env(safe-area-inset-bottom));max-width:calc(100vw - 28px)}}
