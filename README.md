@@ -65,7 +65,17 @@ On desktop, opening a conversation shows it beside the conversation list, with a
 
 Chat and post toolbars support text formatting, safe links and an **Insert emoji** picker. Emoji can also be typed or pasted from your keyboard. Use the reaction icon on a conversation, message or post to add an emoji; selecting your existing reaction removes it. Reaction counts update for other users and survive reloads. Reactions do not add unread messages or change required-post versions. Users with read-only Comms access can pin conversations and react to posts; messaging permission is required for chat/message reactions.
 
-Formatting includes bold, italic, underline, strikethrough, bulleted and numbered lists, quotes, undo/redo and clear formatting. Posts also support headings and subheadings. Enter sends a message; Shift+Enter adds a line. Inside lists, Enter adds an item and Ctrl/⌘+Enter sends. Pasted formatting is reduced to supported styles and safe links. Existing plain-text content is retained.
+Use **Insert** in a chat or post editor for a grouped menu:
+
+- **Formatting**: three heading sizes, normal text, tables, accordions, bullet/ordered lists, quotes and dividers. Tables support up to 20 rows and 8 columns, with editable cells and Add row/Add column controls. Accordion titles and contents can be edited directly.
+- **Media**: images, galleries of up to 10 images, uploaded video/audio, documents, and YouTube/Vimeo video embeds. Captions are editable. Uploaded videos can be up to 25 MB; other files up to 10 MB each. Supported files include PNG, JPG, GIF, WebP, MP4, WebM, MP3, M4A, WAV, OGG, PDF, Office documents, text, CSV and ZIP. Embeds load only after pressing Play.
+- **Callouts**: Info, Warning, Danger and Success, each with its own colour.
+
+Bold, italic, underline, strikethrough, links, emoji and clear formatting remain on the compact toolbar. Undo/redo covers text and structured block changes. Block controls let you remove media, tables, accordions and callouts while editing. Existing plain-text content is retained. Pasted formatting is validated and reduced to supported content and safe links.
+
+Enter sends a chat message; Shift+Enter adds a line. Within lists, tables, accordions and callouts, Enter edits the block and Ctrl/⌘+Enter sends. Structured content is preserved in chat history, saved posts, post editing and required-reading prompts.
+
+Files are stored in **data/communication-media/**. Pending uploads are private to their uploader. Once attached, only people allowed to read the corresponding chat or post can retrieve them; Head Office cannot view other people’s private chat files. Documents download as attachments. Keep this folder with **data/communications.json** when backing up or updating the app.
 
 Head Office can create company and network posts by default. **Settings → Permission levels → Comms** controls reading, messaging, company posting, network posting and required acknowledgement separately. Network posting is a network-level permission. Existing default roles gain reading and messaging, and full network access levels retain full access. Other customised roles keep their existing explicit access until you add these permissions.
 

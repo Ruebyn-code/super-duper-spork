@@ -5332,5 +5332,203 @@
     "locations": [
       "Comms"
     ]
+  },
+  {
+    "text": "Insert",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Insert content",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Formatting",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Media",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Callouts",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Heading",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Heading 1",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Heading 2",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Heading 3",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Normal text",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Table",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Accordion",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Bullet List",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Ordered List",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Quote",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Divider",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Image",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Gallery",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Upload Video",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Embed Video",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Insert Audio",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Document",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Info Callout",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Warning Callout",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Danger Callout",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Success Callout",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Insert table",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Rows",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Columns",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "First row is a heading",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "YouTube or Vimeo link",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Add row",
+    "locations": [
+      "Comms editor"
+    ]
+  },
+  {
+    "text": "Add column",
+    "locations": [
+      "Comms editor"
+    ]
   }
 ]
