@@ -215,8 +215,8 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .roster-board .roster-cell-add{min-height:18px;padding:2px 4px;font-size:9px;line-height:14px}
 .roster-cell .roster-shift{min-height:41px}
 .roster-inline-form{grid-template-rows:21px 20px}
-.roster-inline-times{padding-top:0}
-.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{flex:0 1 62px;width:62px;max-width:62px;height:20px;max-height:20px;padding-top:0;padding-bottom:0;line-height:18px}
+.roster-inline-times{padding-top:0;padding-right:28px;justify-content:space-between}
+.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{flex:0 1 52px;width:52px;max-width:52px;height:20px;max-height:20px;padding-top:0;padding-bottom:0;line-height:18px}
 .roster-staff-field{padding-left:3px;padding-bottom:0}
 .roster-staff-field .location-select-trigger{margin:0;height:19px;max-height:19px;line-height:16px;align-items:flex-start;padding:0 3px 0 0}
 .roster-staff-field .location-picker-arrow{align-self:center}
@@ -226,6 +226,9 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .roster-shift-content{padding-top:4px;padding-bottom:4px}
 .roster-shift-content .roster-shift-time,.roster-shift-content strong{line-height:19px}
 @media(min-width:1001px) and (max-width:1279px){.roster-staff-field{padding-left:2px}.roster-board-day>strong{font-size:10px}.roster-board-day>small{font-size:9px}}
+/* Fit time text to the smaller rectangles without changing the staff selector. */
+@media(min-width:1001px) and (max-width:1279px){.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{font-size:clamp(8px,calc(1.8vw - 10px),12px)}}
+@media(min-width:1280px) and (max-width:1360px){.rostering-page .roster-inline-form .roster-inline-times input.roster-time-input{font-size:13px}}
 @media(max-width:720px){.roster-board .roster-cell-add{min-height:22px;padding-top:4px;padding-bottom:4px}}
 
 /* One compact scheduling row, including a tinted financial outlook. */
