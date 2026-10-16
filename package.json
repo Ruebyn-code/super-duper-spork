@@ -1,1 +1,1 @@
-{"name":"souvlaki-gr-ordering","version":"1.0.0","private":true,"scripts":{"start":"node server.js","test":"node --test","admin:set":"node setup-admin.js","user:add":"node setup-admin.js --user"},"engines":{"node":">=22"}}
+{"name":"opstack","version":"1.0.0","private":true,"scripts":{"start":"node server.js","test":"node --test","admin:set":"node setup-admin.js","user:add":"node setup-admin.js --user"},"engines":{"node":">=22"}}

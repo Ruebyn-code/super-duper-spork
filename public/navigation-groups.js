@@ -23,6 +23,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  const adminMenu=menuFor('admin','Admin');adminMenu.setAttribute('data-user-manager-only','');moveMenu(adminMenu,menus.get('accounts'));
  // Settings retain their own options, separate from the Admin category.
  menus.get('settings')?.removeAttribute('data-head-office-only');
+ for(const link of menus.get('settings')?.querySelectorAll('a')||[]){if(link.hash==='#sign-in')link.dataset.permission='network.access';if(window.appPlatformAppearance)link.href=companyAssetUrl(link.getAttribute('href'));}
  for(const [link,group,text] of [[ordering,'ordering','Ordering'],[sales,'sales','Sales'],[accounts,'admin','Admin']])if(link){link.dataset.sidebarGroup=group;link.setAttribute('aria-controls','app-subsidebar');link.setAttribute('aria-expanded','false');label(link,text);}
  if(accounts)accounts.setAttribute('data-user-manager-only','');
  const nav=document.createElement('nav');nav.className='main-sidebar-nav grouped-main-navigation';nav.dataset.editId=prefix+'-main';nav.setAttribute('aria-label','Main navigation');

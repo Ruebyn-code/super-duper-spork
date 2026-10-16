@@ -27,7 +27,7 @@ test('uploaded fonts work in shared and scoped appearance, survive restart and d
  const otherAdmin=await login(other.url);assert.equal((await fetch(other.url+'/api/settings',{method:'PATCH',headers:otherAdmin,body:JSON.stringify({fonts:{headings:font.id}})})).status,400);assert.equal((await fetch(other.url+font.url)).status,404);
  assert.equal((await fetch(context.url+'/api/element-overrides',{method:'PATCH',headers:admin,body:JSON.stringify({id:'index-7',changes:{font:'custom_'+'0'.repeat(64)}})})).status,400);
  await new Promise(r=>context.server.close(r));context.server=createServer(context.dir);await new Promise(r=>context.server.listen(0,'127.0.0.1',r));context.url='http://127.0.0.1:'+context.server.address().port;
- assert.deepEqual(Buffer.from(await(await fetch(context.url+font.url)).arrayBuffer()),bytes);const loginHtml=await(await fetch(context.url+'/login')).text();assert.ok(loginHtml.includes(font.url));assert.ok(loginHtml.includes('Uploaded_'+font.id.slice(7)));assert.equal((await fonts.list(context.dir))[0].name,name);
+ assert.deepEqual(Buffer.from(await(await fetch(context.url+font.url)).arrayBuffer()),bytes);const loginHtml=await(await fetch(context.url+'/login')).text();assert.ok(!loginHtml.includes(font.url));assert.ok(!loginHtml.includes('Uploaded_'+font.id.slice(7)));assert.equal((await fonts.list(context.dir))[0].name,name);
  }finally{await cleanup(context);await cleanup(other);}
 });
 test('font validation rejects wrong extensions, oversized and truncated files, malformed tables and directory traversal',async()=>{

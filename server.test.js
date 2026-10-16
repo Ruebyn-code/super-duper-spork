@@ -125,7 +125,7 @@ test('only administrators can upload a logo and sign-in uses blue background',as
  const logo=await fetch(url+'/logo');assert.equal(logo.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await logo.arrayBuffer()),png);
  assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:Buffer.from('<svg/>').toString('base64')})})).status,400);
  const saved=JSON.parse(await fs.readFile(path.join(dir,'logo.json'),'utf8'));assert.equal(saved.data,png.toString('base64'));
- const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo\?company=default" alt="Souvlaki GR" class="app-logo"[^>]*>/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
+ const before=await(await fetch(url+'/login')).text();assert.ok(!before.includes('src="/logo?company='));assert.equal((await fetch(url+'/api/logo?platform=1',{method:'POST',headers:admin,body:JSON.stringify({data:png.toString('base64')})})).status,200);const loginPage=await(await fetch(url+'/login')).text();assert.match(loginPage,/class="authentication-page"/);assert.match(loginPage,/<img src="\/logo\?platform=1" alt="Opstack" class="app-logo"[^>]*>/);assert.equal(JSON.parse(loginPage.match(/<script id="app-bootstrap" type="application\/json">([^<]*)<\/script>/)[1]).hasLogo,true);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 test('sidebar logo has separate admin-only upload, persists and falls back to the app logo',async()=>{
@@ -142,13 +142,13 @@ test('sidebar logo has separate admin-only upload, persists and falls back to th
  assert.equal((await upload(admin)).status,200);
  assert.equal((await fetch(url+'/logo')).status,404);
  assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
- const html=await(await fetch(url+'/',{headers:admin})).text();assert.match(html,/<img src="\/sidebar-logo\?company=default" alt="Souvlaki GR" class="app-logo"[^>]*>/);
+ const html=await(await fetch(url+'/',{headers:admin})).text();assert.match(html,/<img src="\/sidebar-logo\?company=default" alt="Opstack" class="app-logo"[^>]*>/);
  await new Promise(r=>server.close(r));url=await start();admin=await login(url);staff=await login(url,'staff','test-password-for-staff');
  assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
  assert.equal((await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:jpg.toString('base64')})})).status,200);
  assert.deepEqual(Buffer.from(await (await fetch(url+'/sidebar-logo')).arrayBuffer()),png);
  assert.deepEqual(Buffer.from(await (await fetch(url+'/logo')).arrayBuffer()),jpg);
- const loginHtml=await(await fetch(url+'/login')).text();assert.match(loginHtml,/src="\/logo\?company=default"/);assert.ok(!loginHtml.includes('src="/sidebar-logo"'));
+ const loginHtml=await(await fetch(url+'/login')).text();assert.ok(!loginHtml.includes('src="/logo?company='));assert.ok(loginHtml.includes('Sign in — Opstack'));assert.ok(!loginHtml.includes('src="/sidebar-logo"'));
  assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:staff})).status,403);
  assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:{Cookie:admin.Cookie}})).status,403);
  assert.equal((await fetch(url+'/api/sidebar-logo',{method:'DELETE',headers:admin})).status,200);
@@ -339,15 +339,15 @@ test('sign-in backgrounds and palette-linked appearance are admin-only, validate
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-auth-theme-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{
  const admin=await login(url),staff=await login(url,'staff','test-password-for-staff');const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1kAAAAASUVORK5CYII=';
- const patch=(headers,body)=>fetch(url+'/api/settings',{method:'PATCH',headers,body:JSON.stringify(body)});
+ const patch=(headers,body)=>fetch(url+'/api/settings?platform=1',{method:'PATCH',headers,body:JSON.stringify(body)});
  const change={backgrounds:{signin:'secondary',cards:'primary'},backgroundImages:{signin:image},fontColours:{headings:'primary'}};
  assert.equal((await patch(staff,change)).status,403);assert.equal((await patch(admin,change)).status,200);
  assert.equal((await patch(admin,{backgrounds:{signin:'var(--bad)'}})).status,400);assert.equal((await patch(admin,{backgroundImages:{signin:'data:image/png;base64,YmFk'}})).status,400);
- const local={id:'login-7',changes:{fontColour:'secondary',background:'primary'}};assert.equal((await fetch(url+'/api/element-overrides',{method:'PATCH',headers:admin,body:JSON.stringify(local)})).status,200);
- const logo=await fetch(url+'/api/logo',{method:'POST',headers:admin,body:JSON.stringify({data:image.split(',')[1]})});assert.equal(logo.status,200);
- const html=await(await fetch(url+'/login')).text();assert.match(html,/:where\(\.authentication-page\)\{background-color:var\(--secondary\)!important/);assert.ok(html.includes(image));assert.ok(!html.slice(html.indexOf('<header>'),html.indexOf('</header>')).includes('app-logo'));assert.ok(html.slice(html.indexOf('<section class="management"')).includes('src="/logo?company=default"'));assert.match(html,/\[data-edit-id="login-7"\]\{color:var\(--secondary\)!important;background-color:var\(--primary\)!important/);
- const saved=await(await fetch(url+'/appearance')).json();assert.equal(saved.backgrounds.signin,'secondary');assert.equal(saved.fontColours.headings,'primary');assert.equal(saved.backgroundImages.signin,image);
- assert.equal((await patch(admin,{backgroundImages:{signin:null},backgrounds:{signin:null}})).status,200);const reset=await(await fetch(url+'/appearance')).json();assert.equal(reset.backgroundImages.signin,undefined);assert.equal(reset.backgrounds.signin,undefined);assert.equal(reset.backgrounds.cards,'primary');
+ const local={id:'login-7',changes:{fontColour:'secondary',background:'primary'}};assert.equal((await fetch(url+'/api/element-overrides?platform=1',{method:'PATCH',headers:admin,body:JSON.stringify(local)})).status,200);
+ const logo=await fetch(url+'/api/logo?platform=1',{method:'POST',headers:admin,body:JSON.stringify({data:image.split(',')[1]})});assert.equal(logo.status,200);
+ const html=await(await fetch(url+'/login')).text();assert.match(html,/:where\(\.authentication-page\)\{background-color:var\(--secondary\)!important/);assert.ok(html.includes(image));assert.ok(!html.slice(html.indexOf('<header>'),html.indexOf('</header>')).includes('app-logo'));assert.ok(html.slice(html.indexOf('<section class="management"')).includes('src="/logo?platform=1"'));assert.match(html,/\[data-edit-id="login-7"\]\{color:var\(--secondary\)!important;background-color:var\(--primary\)!important/);
+ const saved=await(await fetch(url+'/appearance?platform=1')).json();assert.equal(saved.backgrounds.signin,'secondary');assert.equal(saved.fontColours.headings,'primary');assert.equal(saved.backgroundImages.signin,image);
+ assert.equal((await patch(admin,{backgroundImages:{signin:null},backgrounds:{signin:null}})).status,200);const reset=await(await fetch(url+'/appearance?platform=1')).json();assert.equal(reset.backgroundImages.signin,undefined);assert.equal(reset.backgrounds.signin,undefined);assert.equal(reset.backgrounds.cards,'primary');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 

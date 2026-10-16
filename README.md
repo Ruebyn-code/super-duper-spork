@@ -1,4 +1,4 @@
-# Souvlaki Gr ordering
+# Opstack
 
 A stock ordering application with a searchable catalogue, supplier filters, editable quantities, and saved purchase requests. Prices are in AUD. The app starts with sample stock; submitting a request does not change inventory or place an order with a supplier.
 
@@ -250,3 +250,9 @@ Overview averages include only completed calendar weeks with all seven sales day
 Sales, ordering, and the cart show the weekly budget, orders placed by all users at this location during the current Monday–Sunday week, and the remaining budget. Ordering and cart pages subtract the current cart as well. Budget warnings do not prevent ordering. Orders with pending prices leave the remaining amount unavailable, rather than treating unknown prices as zero. Saved requests count toward committed spending regardless of the supplier email sending result. Retries of the same saved request are counted once.
 
 Shared sales persist in **data/location-sales/** under the location's ID and survive restarts, location renames and user reassignments. Previous **data/sales/** files are retained as historical data for their original locations. Keep the entire **data** folder when updating. Labels, fonts, and colours use the existing App edit controls and app theme.
+
+## Shared sign-in
+
+Everyone signs in at **/login** using the same Opstack branding. Older company sign-in links redirect to this page and do not select a company. Users enter their assigned company and location after sign-in, and can switch only to companies and locations they can access. Company names, logos, stock, permissions and saved data remain separate in the signed-in app.
+
+Head Office with network access and appearance permission can open **Settings → App appearance → Opstack platform branding & shared sign-in**. Platform logos, fonts, colours, background and interface text are saved separately in **data/platform-appearance/**. Company appearance edits cannot change the shared sign-in. The main platform logo is the fallback for sign-in; its navigation wordmark is the default for companies without their own logos. Uploaded company logos take priority inside that company. Keep the entire **data** folder when updating.

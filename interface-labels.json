@@ -5096,5 +5096,121 @@
     "locations": [
       "sales"
     ]
+  },
+  {
+    "text": "Accounts & permissions — Opstack",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "App settings — Opstack",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "First-time setup — Opstack",
+    "locations": [
+      "setup"
+    ]
+  },
+  {
+    "text": "Sign in — Opstack",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Opstack",
+    "locations": [
+      "accounts",
+      "admin",
+      "cart",
+      "email-settings",
+      "index",
+      "login",
+      "settings",
+      "setup"
+    ]
+  },
+  {
+    "text": "Opstack — Account email settings",
+    "locations": [
+      "email-settings"
+    ]
+  },
+  {
+    "text": "Opstack — Cart",
+    "locations": [
+      "cart"
+    ]
+  },
+  {
+    "text": "Opstack — Stock ordering",
+    "locations": [
+      "index"
+    ]
+  },
+  {
+    "text": "Opstack ↗",
+    "locations": [
+      "cart",
+      "index"
+    ]
+  },
+  {
+    "text": "Suppliers & stock — Opstack",
+    "locations": [
+      "admin"
+    ]
+  },
+  {
+    "text": "Choose company logos for the signed-in app. The shared sign-in uses Opstack platform branding.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "These platform logos appear on the shared sign-in and in companies that have not uploaded their own logos.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Opstack platform branding & shared sign-in",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Open Opstack sign-in",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "This background is shared across the Opstack sign-in and first-time setup pages. Company appearance settings do not change it.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Opstack appearance",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Opstack platform appearance. These settings apply to the shared sign-in and default logos across the network.",
+    "locations": [
+      "settings"
+    ]
+  },
+  {
+    "text": "Company appearance stays separate. Sign-in settings apply across Opstack.",
+    "locations": [
+      "settings"
+    ]
   }
 ]

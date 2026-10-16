@@ -64,10 +64,13 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
-  const assets=new Map();
+  const assets=new Map(),platformDir=path.join(dataDir,'platform-appearance');
   async function readLogo(dir,sidebar=false){
-    if(sidebar){try{return JSON.parse(await fs.readFile(path.join(dir,'sidebar-logo.json'),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}}
-    return JSON.parse(await fs.readFile(path.join(dir,'logo.json'),'utf8'));
+    for(const scope of [...new Set([dir,platformDir])])for(const file of sidebar?['sidebar-logo.json','logo.json']:['logo.json']){
+      try{return {...JSON.parse(await fs.readFile(path.join(scope,file),'utf8')),scope:scope===platformDir?'platform':'company'};}catch(error){if(error.code!=='ENOENT')throw error;}
+    }
+    const bytes=await fs.readFile(path.join(__dirname,'public/assets/branding',sidebar?'opstack-wordmark.png':'opstack-symbol.png'));
+    return {type:'image/png',data:bytes.toString('base64'),scope:'platform'};
   }
   async function asset(file){
     const target=path.join(__dirname,'public',file),stat=await fs.stat(target),stamp=stat.mtimeMs+':'+stat.size;
@@ -87,19 +90,24 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
         if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`))fail('Invalid setup request.',403);
         const account=await auth.setup(await body(req));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));
       }
+      if(req.method==='GET'&&req.url==='/admin/login'){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/login','/setup','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&requestUrl.searchParams.has('company')){res.writeHead(303,{Location:req.url});return res.end();}
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
-      if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'+(requestUrl.searchParams.has('company')?'?company='+encodeURIComponent(requestUrl.searchParams.get('company')):'')});return res.end();}
+      if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
       let session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
       const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout'];
       const authPage=['/login','/setup','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
-      const requestedCompany=(customisationRoutes.includes(req.url)||authPage||fontAsset||settingsPage)?(req.headers['x-company-id']||requestUrl.searchParams.get('company')):undefined;
+      const platformAppearance=authPage||((customisationRoutes.includes(req.url)||fontAsset||settingsPage)&&(req.headers['x-app-appearance']==='platform'||requestUrl.searchParams.get('platform')==='1'));
+      const platformWrite=platformAppearance&&((req.url.startsWith('/api/')&&customisationRoutes.includes(req.url))||settingsPage||req.url.startsWith('/admin/appearance/'));
+      if(platformWrite){if(!session){if(req.url.startsWith('/api/'))fail('Sign-in required.',401);res.writeHead(303,{Location:'/login'});return res.end();}if(!can(session,'network.access')||!can(session,'appearance.manage')){if(req.url.startsWith('/api/'))fail('Head Office platform appearance permission required.',403);res.writeHead(303,{Location:'/'});return res.end();}}
+      const requestedCompany=!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset||settingsPage)?(req.headers['x-company-id']||requestUrl.searchParams.get('company')):undefined;
       const appearanceCompany=await companyStore.get(requestedCompany||session?.companyId||companies.defaultCompanyId);
       if(session&&requestedCompany&&!can(session,'network.access')&&!(await companyStore.accessible(session)).some(company=>company.id===appearanceCompany.id))fail('You do not have access to this company.',403);
       if(session&&requestedCompany&&(settingsPage||req.url.startsWith('/admin/appearance/')||(req.url.startsWith('/api/')&&customisationRoutes.includes(req.url)))&&session.companyId!==appearanceCompany.id){const target=await companyStore.switchLocation(session,appearanceCompany.id);session=await companyStore.context(await locationStore.sessionContext(session,target.id));}
-      const customisationDir=customisations.folder(dataDir,appearanceCompany.id),scopedAsset=url=>customisations.assetUrl(url,appearanceCompany.id),readFontLibrary=async()=>customisations.fontLibrary(await uploadedFonts.list(customisationDir),appearanceCompany.id);
+      const customisationDir=platformAppearance?platformDir:customisations.folder(dataDir,appearanceCompany.id),scopedAsset=url=>platformAppearance?url+(url.includes('?')?'&':'?')+'platform=1':customisations.assetUrl(url,appearanceCompany.id),fontEntry=font=>({...font,url:scopedAsset('/uploaded-fonts/'+font.id.slice(7)+'.'+font.extension)}),readFontLibrary=async()=>(await uploadedFonts.list(customisationDir)).map(fontEntry);
       if(req.method==='GET'&&['/logo','/sidebar-logo'].includes(req.url)){
-        try{const logo=await readLogo(customisationDir,req.url==='/sidebar-logo');res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff'});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
+        try{const logo=await readLogo(customisationDir,req.url==='/sidebar-logo');res.writeHead(200,{'Content-Type':logo.type,'X-Content-Type-Options':'nosniff','X-Branding-Scope':logo.scope});return res.end(Buffer.from(logo.data,'base64'));}catch(error){if(error.code==='ENOENT')return json(404,{error:'No logo uploaded.'});throw error;}
       }
       if(req.method==='GET'&&req.url==='/appearance'){
         try{return json(200,JSON.parse(await fs.readFile(path.join(customisationDir,'appearance.json'),'utf8')));}catch(error){if(error.code==='ENOENT')return json(200,defaults);throw error;}
@@ -119,7 +127,6 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
-        if(input.companyId!==undefined)try{const target=await companyStore.switchLocation(loggedIn,input.companyId);await auth.selectLocation(loggedIn,target.id,id=>locationStore.get(id,{active:true}));}catch(error){auth.logout(loggedIn.token);throw error;}
         res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
@@ -261,7 +268,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       const supplierEdit=req.url.match(/^\/api\/suppliers\/([a-zA-Z0-9-]+)$/);
       if(req.method==='PUT'&&supplierEdit){const input=await body(req);let delivery;try{delivery=validateDelivery(input.delivery);}catch(error){fail(error.message);}return json(200,await mutate(c=>{const supplier=c.suppliers.find(s=>s.id===supplierEdit[1]);if(!supplier)fail('Supplier not found.',404);supplier.delivery=delivery;return supplier;}));}
       if(req.url==='/api/fonts'&&req.method==='GET')return json(200,await readFontLibrary());
-      if(req.url==='/api/fonts'&&req.method==='POST'){try{const result=await uploadedFonts.save(customisationDir,await body(req,2900000));return json(result.alreadyExists?200:201,{...result,font:customisations.fontLibrary([result.font],appearanceCompany.id)[0]});}catch(error){if(error.code)throw error;fail(error.message,error.status||400);}}
+      if(req.url==='/api/fonts'&&req.method==='POST'){try{const result=await uploadedFonts.save(customisationDir,await body(req,2900000));return json(result.alreadyExists?200:201,{...result,font:fontEntry(result.font)});}catch(error){if(error.code)throw error;fail(error.message,error.status||400);}}
       if(req.url==='/api/settings'&&['PUT','PATCH'].includes(req.method)){try{return json(200,await saveAppearance(customisationDir,await body(req,2900000),req.method==='PATCH'));}catch(error){fail(error.message);}}
       if(req.url==='/api/sidebar-logo'&&req.method==='DELETE'){await fs.rm(path.join(customisationDir,'sidebar-logo.json'),{force:true});return json(200,{saved:true});}
       if(['/api/logo','/api/sidebar-logo'].includes(req.url)&&req.method==='POST'){
@@ -338,10 +345,10 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       const file=files[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':file.endsWith('.svg')?'image/svg+xml':/\.(?:gz|pfb)$/.test(file)?'application/octet-stream':file.endsWith('.txt')||file.endsWith('.md')?'text/plain; charset=utf-8':'text/javascript';
       if(file.endsWith('.html')){
-        const layoutPage=file.replace(/\.html$/,''),[rawMarkup,appearance,text,overrides,font,hasLogo,hasSidebarLogo,fontLibrary,layout]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(customisationDir),interfaceText.read(customisationDir),elementOverrides.read(customisationDir),asset('fonts/Opsilon-xRj8m.ttf'),fs.access(path.join(customisationDir,'logo.json')).then(()=>true,()=>false),readLogo(customisationDir,true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readFontLibrary(),layouts.page(customisationDir,layoutPage)]);
+        const layoutPage=file.replace(/\.html$/,''),[rawMarkup,appearance,text,overrides,font,hasLogo,hasSidebarLogo,fontLibrary,layout]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(customisationDir),interfaceText.read(customisationDir),elementOverrides.read(customisationDir),asset('fonts/Opsilon-xRj8m.ttf'),readLogo(customisationDir).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readLogo(customisationDir,true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readFontLibrary(),layouts.page(customisationDir,layoutPage)]);
         const authPreview=req.url.startsWith('/admin/appearance/');const previewToolbar='<div id="admin-edit-controls" class="auth-preview-toolbar" data-copy-editor><strong>Page preview</strong><a href="'+scopedAsset('/admin/settings')+'#sign-in">Back to settings</a><button id="app-edit-toggle" type="button" aria-pressed="false"><span class="sidebar-edit-label">App edit</span></button><p id="app-edit-status" role="status" class="visually-hidden"></p></div>';
         const pageMarkup=authPreview?rawMarkup.replace(/<script src="\/(?:login|setup)\.js" defer><\/script>/,'<script src="/auth-preview.js" defer></script>').replace('</head>','<script src="/app-editor.js" defer></script></head>').replace('</body>',previewToolbar+'</body>'):rawMarkup;
-        const sidebarPage=pageMarkup.includes('id="app-sidebar"'),source=scopedAsset(sidebarPage?'/sidebar-logo':'/logo'),branded=(sidebarPage?hasSidebarLogo:hasLogo)?pageMarkup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Souvlaki GR" class="app-logo"></a>'):pageMarkup;
+        const sidebarPage=pageMarkup.includes('id="app-sidebar"'),source=scopedAsset(sidebarPage?'/sidebar-logo':'/logo'),branded=(sidebarPage?hasSidebarLogo:hasLogo)?pageMarkup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Opstack" class="app-logo"></a>'):pageMarkup;
         const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css"><script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script>');
         const markup=layoutModel.renderMarkup(editParts.renderImages(editParts.renderIcons(editParts.annotate(arrangedScripts,file),overrides),overrides),layout.groups);
         const bootstrap=JSON.stringify({requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
@@ -349,7 +356,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix)||id.startsWith('type:'))).map(([,entry])=>entry.font)]);
         const uploadedPreloads=fontLibrary.filter(entry=>usedFonts.has(entry.id)).map(entry=>'<link rel="preload" href="'+entry.url+'" as="font" type="font/'+entry.extension+'" crossorigin>').join('');
-        const contextScript='<script>window.appCompanyId='+JSON.stringify(appearanceCompany.id).replace(/</g,'\\u003c')+';window.appCompanyName='+JSON.stringify(appearanceCompany.name).replace(/</g,'\\u003c')+';window.appLoginCompanyId='+JSON.stringify(req.url==='/login'?requestUrl.searchParams.get('company'):null).replace(/</g,'\\u003c')+';</script>';
+        const contextScript='<script>window.appCompanyId='+JSON.stringify(appearanceCompany.id).replace(/</g,'\\u003c')+';window.appCompanyName='+JSON.stringify(platformAppearance?'Opstack':appearanceCompany.name).replace(/</g,'\\u003c')+';window.appPlatformAppearance='+JSON.stringify(platformAppearance)+';</script>';
         const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';document.documentElement.dataset.accountRole='+JSON.stringify(session?.role||'')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary,appearanceCompany.id)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});return res.end(markup.replace('<head>','<head>'+contextScript).replace('</head>',initial+'</head>'));
       }
@@ -360,5 +367,5 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
 }
-if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Souvlaki Gr ordering running on port '+(process.env.PORT || 3000)));
+if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Opstack running on port '+(process.env.PORT || 3000)));
 module.exports={createServer,validateOrder};
