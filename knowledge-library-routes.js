@@ -2,6 +2,8 @@ async function route({req,url,params,session,store,body,json,fail}){
  if(url!=='/api/knowledge-library'&&!url.startsWith('/api/knowledge-library/'))return false;
  if(!session)fail('Sign-in required.',401);
  if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+ if(url==='/api/knowledge-library/categories'){if(req.method==='GET')json(200,await store.categories(session));else if(req.method==='POST')json(201,await store.saveCategory(session,await body(req)));else fail('Unsupported category action.',405);return true;}
+ const category=url.match(/^\/api\/knowledge-library\/categories\/([a-f0-9-]{36})$/i);if(category){if(req.method==='PUT')json(200,await store.saveCategory(session,await body(req),category[1]));else if(req.method==='DELETE')json(200,await store.removeCategory(session,category[1],await body(req)));else fail('Unsupported category action.',405);return true;}
  if(url==='/api/knowledge-library'){
   if(req.method==='GET')json(200,await store.list(session,Object.fromEntries(params)));
   else if(req.method==='POST')json(201,await store.save(session,await body(req,512000)));

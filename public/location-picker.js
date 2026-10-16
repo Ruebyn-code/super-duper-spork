@@ -46,7 +46,7 @@
   function activate(index){
    if(!shown.length||index<0){active=-1;button.removeAttribute('aria-activedescendant');search.removeAttribute('aria-activedescendant');return;}
    active=Math.max(0,Math.min(index,shown.length-1));for(const option of list.querySelectorAll('[role=option]'))option.classList.toggle('is-active',Number(option.dataset.selectIndex)===active);
-   const option=list.querySelector('[data-select-index="'+active+'"]');if(option){button.setAttribute('aria-activedescendant',option.id);search.setAttribute('aria-activedescendant',option.id);option.scrollIntoView({block:'nearest'});}
+   const option=list.querySelector('[data-select-index="'+active+'"]');if(option){button.setAttribute('aria-activedescendant',option.id);search.setAttribute('aria-activedescendant',option.id);const row=option.getBoundingClientRect(),bounds=list.getBoundingClientRect();/* Scroll the options only; scrollIntoView can move the page and close the popover on phones. */if(row.top<bounds.top)list.scrollTop-=bounds.top-row.top;else if(row.bottom>bounds.bottom)list.scrollTop+=row.bottom-bounds.bottom;}
   }
   function render(){
    const query=search.value.trim().toLocaleLowerCase();shown=entries.filter(entry=>!entry.hidden&&(entry.name+' '+entry.group).toLocaleLowerCase().includes(query));list.replaceChildren();let previousGroup;
@@ -70,6 +70,8 @@
   function close(focus=true){open=false;button.setAttribute('aria-expanded','false');button.removeAttribute('aria-activedescendant');search.removeAttribute('aria-activedescendant');if(menu.matches(':popover-open'))menu.hidePopover();if(focus&&button.isConnected&&!button.disabled)button.focus({preventScroll:true});}
   function show(){
    sync();if(button.disabled)return;for(const other of widgets.values())if(other.select!==select)other.close(false);setSearchOpen(false,false);const parent=menuHost();if(menu.parentElement!==parent)parent.append(menu);
+   // Finish pending focus/anchor scrolling before measuring the popover on phones.
+   window.scrollTo({left:scrollX,top:scrollY,behavior:'instant'});for(let part=button.parentElement;part&&part!==document.body;part=part.parentElement)if(part.scrollHeight>part.clientHeight||part.scrollWidth>part.clientWidth)part.scrollTo({left:part.scrollLeft,top:part.scrollTop,behavior:'instant'});
    menu.showPopover({source:button});open=true;button.setAttribute('aria-expanded','true');position();render();button.focus({preventScroll:true});
   }
   function choose(index){

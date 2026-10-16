@@ -183,7 +183,8 @@
   {
     "text": "Category",
     "locations": [
-      "admin"
+      "admin",
+      "knowledge-library"
     ]
   },
   {
@@ -1272,7 +1273,8 @@
   {
     "text": "List",
     "locations": [
-      "index"
+      "index",
+      "knowledge-library"
     ]
   },
   {
@@ -5732,6 +5734,120 @@
   },
   {
     "text": "＋ Create article",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Manage categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "All categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Uncategorised",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Library view",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Cards",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Grid",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Cards view",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "List view",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Grid view",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article category",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Close categories",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Category name",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Add category",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Rename category",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Delete category",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "New category name",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Articles will stay in the library without a category.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "No categories yet. Add one above.",
     "locations": [
       "knowledge-library"
     ]

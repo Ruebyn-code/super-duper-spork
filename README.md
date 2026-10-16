@@ -59,6 +59,10 @@ In-use levels cannot be deleted. At least one full network access account must r
 
 Open **Knowledge Library** from the main bar (bottom navigation on phones) to find policies and company information. Search titles and article content, filter by **Policies** or **Information**, and choose company or network articles. Each company has its own library; articles published to **Entire network** appear in every company.
 
+Use **Categories** beside Create article to add, rename or remove company and network categories. Assign one when creating or editing an article, then use the category filter to browse it. Network articles can use network categories; company articles can use their company’s categories or network categories. Removing a category keeps every article and makes it **Uncategorised**. Existing articles also start as Uncategorised.
+
+Choose **Cards**, **List** or **Grid** beside the article count. Cards show article previews, List uses compact rows, and Grid shows compact tiles. Your chosen view is remembered in this browser separately for each user and company. Search, filters, article reading and App edit layouts continue to work in every view.
+
 Head Office can publish, edit and delete articles by default. The article editor uses the same formatting and Insert menu as Comms, including headings, tables, accordions, lists, media and callouts. Choose the article type and audience when creating it; authorised publishers can change the audience later. Changes are saved with revision checks to prevent overwriting another editor’s work.
 
 **Settings → Permission levels → Knowledge Library** has separate controls for reading, company publishing and network publishing. Default Ordering manager and Franchisee levels can read; network publishing requires a network permission level. Existing customised roles retain their grants. Attachments stay private to their uploader and authorised article/message/post audiences. Keep **data/knowledge-library.json** and **data/communication-media/** with the rest of your data when updating the app.
