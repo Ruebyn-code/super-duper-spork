@@ -20,7 +20,7 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Comms**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings**, **App edit** (with appearance permission) and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
+The main bar contains **Home**, **Ordering**, **Sales**, **Comms**, **Knowledge Library**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings**, **App edit** (with appearance permission) and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
@@ -54,6 +54,14 @@ Choose **This company only** to customise a role in the selected company. Other 
 Assign a permission level under **Admin → Users → pencil** or **Create user**. The permission assignment can apply to the selected company, or network-wide when authorised. Network-wide assignment replaces that user’s company assignments. Users can have different levels in different companies. Each user manager must have access to all of the target user’s locations and enough authority in each company to manage the account, including password resets. They cannot assign a higher hierarchy level or any permission they do not hold. Server checks apply even if a screen or request is modified. Role changes take effect on the next request; user account changes still require that user to sign in again.
 
 In-use levels cannot be deleted. At least one full network access account must remain. Concurrent permission edits require reloading before overwriting another change. Permission definitions persist in **data/permission-levels.json**, and company assignments in **data/accounts.json**. Keep the entire **data** folder when updating.
+
+## Knowledge Library
+
+Open **Knowledge Library** from the main bar (bottom navigation on phones) to find policies and company information. Search titles and article content, filter by **Policies** or **Information**, and choose company or network articles. Each company has its own library; articles published to **Entire network** appear in every company.
+
+Head Office can publish, edit and delete articles by default. The article editor uses the same formatting and Insert menu as Comms, including headings, tables, accordions, lists, media and callouts. Choose the article type and audience when creating it; authorised publishers can change the audience later. Changes are saved with revision checks to prevent overwriting another editor’s work.
+
+**Settings → Permission levels → Knowledge Library** has separate controls for reading, company publishing and network publishing. Default Ordering manager and Franchisee levels can read; network publishing requires a network permission level. Existing customised roles retain their grants. Attachments stay private to their uploader and authorised article/message/post audiences. Keep **data/knowledge-library.json** and **data/communication-media/** with the rest of your data when updating the app.
 
 ## Comms
 

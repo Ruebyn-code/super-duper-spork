@@ -10,4 +10,4 @@
 
 - Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.
 
-- Comms editors share the grouped Insert menu for formatting, media and callouts. Preserve structured content when sending, saving, editing and displaying required posts. Media files remain private to their uploader and the audience of the messages/posts that reference them.
+- Comms and Knowledge Library editors share the grouped Insert menu for formatting, media and callouts. Preserve structured content when sending, saving, editing and displaying required posts. Media files remain private to their uploader and the audience of the messages/posts/articles that reference them.

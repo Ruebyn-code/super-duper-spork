@@ -13,6 +13,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  const moveMenu=(parent,menu)=>{if(!menu)return;menu.removeAttribute('data-subsidebar-group');menu.removeAttribute('data-head-office-only');menu.removeAttribute('data-user-manager-only');menu.classList.add('navigation-segment-links');menu.hidden=false;parent.append(menu);};
  const communication=document.createElement('a');communication.href='/communications';communication.dataset.sidebarName='Comms';communication.dataset.editId=prefix+'-communications';communication.dataset.permission='comms.view';communication.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H7l-5 3 2-6a8 8 0 0 1-1-5 9 9 0 0 1 18 0Z"/><g class="icon-detail"><path d="M7 10h10M7 14h6"/></g></svg><span class="sidebar-label">Comms</span>';
  const unreadBadge=document.createElement('span');unreadBadge.id='communications-unread-badge';unreadBadge.className='communications-unread-badge';unreadBadge.dataset.userText='';unreadBadge.setAttribute('aria-hidden','true');unreadBadge.hidden=true;communication.classList.add('communication-navigation-link');communication.append(unreadBadge);
+ const library=document.createElement('a');library.href='/knowledge-library';library.dataset.sidebarName='Knowledge Library';library.dataset.editId=prefix+'-knowledge-library';library.dataset.permission='knowledge.view';library.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5C9 3 5 3 2 4v16c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v16"/><g class="icon-detail"><path d="M5 8h4M5 12h4M15 8h4M15 12h4"/></g></svg><span class="sidebar-label">Knowledge Library</span>';
  const ordersMenu=menuFor('ordering','Ordering');
  ordersMenu.append(fresh(ordering,'/','Catalogue','catalogue'));
  if(cart){cart.classList.add('navigation-cart-link');cart.querySelector('.sidebar-label')?.classList.replace('sidebar-label','submenu-label');cart.removeAttribute('aria-current');ordersMenu.append(cart);}
@@ -28,7 +29,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  if(accounts)accounts.setAttribute('data-user-manager-only','');
  const nav=document.createElement('nav');nav.className='main-sidebar-nav grouped-main-navigation';nav.dataset.editId=prefix+'-main';nav.setAttribute('aria-label','Main navigation');
  const original=sidebar.querySelector('.sidebar-scroll > .main-sidebar-nav');if(original)original.before(nav);else sidebar.querySelector('.sidebar-scroll')?.append(nav);
- for(const link of [home,ordering,sales,communication,reporting])if(link)nav.append(link);
+ for(const link of [home,ordering,sales,communication,library,reporting])if(link)nav.append(link);
  if(oldAdmin){const adminNav=document.createElement('nav');adminNav.className='main-sidebar-nav';adminNav.setAttribute('aria-label','Admin navigation');if(accounts)adminNav.append(accounts);oldAdmin.replaceChildren(adminNav);}
  for(const link of [stock,count,settings])link?.remove();
  for(const empty of sidebar.querySelectorAll('.sidebar-scroll > .main-sidebar-nav'))if(empty!==nav)empty.remove();

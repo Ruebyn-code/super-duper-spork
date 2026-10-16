@@ -634,7 +634,8 @@
   {
     "text": "Save changes",
     "locations": [
-      "Common controls"
+      "Common controls",
+      "knowledge-library"
     ]
   },
   {
@@ -5529,6 +5530,210 @@
     "text": "Add column",
     "locations": [
       "Comms editor"
+    ]
+  },
+  {
+    "text": "All articles",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "All audiences",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article content",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article deleted.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article title",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article type",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Article unavailable",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Audience",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Close article editor",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Confirm delete",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Content",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Create article",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Delete article",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Delete this article for everyone in its audience? Press Confirm delete to continue.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Edit article",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Information",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Knowledge Library",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Loading articles…",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Loading article…",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "No articles yet",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Policies",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Policy",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Publish article",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Read article →",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Search library",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Search policies and information…",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "This article will be available to users in every company.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "This company",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Try another search or filter.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Type",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Write your policy or company information…",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "Your company policies and useful information will appear here.",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "‹ Back to library",
+    "locations": [
+      "knowledge-library"
+    ]
+  },
+  {
+    "text": "＋ Create article",
+    "locations": [
+      "knowledge-library"
     ]
   }
 ]
