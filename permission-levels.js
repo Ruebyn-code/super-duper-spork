@@ -5,25 +5,23 @@ function createStore(dir){
  const file=path.join(dir,'permission-levels.json');
  async function read(){
   try{
-   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key));
-   if(!data.communicationsVersion){
+   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key)),features=[['communicationsVersion',model.communicationKeys],['knowledgeVersion',model.knowledgeKeys],['rosteringVersion',model.rosteringKeys]];
+   // Only exact historical defaults and full network roles gain new default grants.
+   // Customised roles keep their existing access, including company overrides.
+   for(let index=0;index<features.length;index++){
+    const [version,added]=features[index];if(data[version])continue;const later=features.slice(index+1).map(([,keys])=>keys);
     for(const role of data.levels){
-     const legacyFull=model.keys.filter(key=>!model.communicationKeys.includes(key)),original=model.defaults.find(item=>item.id===role.id),previous=original?.permissions.filter(key=>!model.communicationKeys.includes(key));
-     if(role.scope==='network'&&(same(role,legacyFull)||same(role,legacyFull.filter(key=>!model.knowledgeKeys.includes(key)))))role.permissions=[...model.keys];
-     else if(previous&&(same(role,previous)||same(role,previous.filter(key=>!model.knowledgeKeys.includes(key)))))role.permissions=[...original.permissions].filter(key=>role.scope==='network'||!model.networkKeys.includes(key));
+     const original=model.defaults.find(item=>item.id===role.id);let upgrade=false;
+     for(let mask=0;mask<2**later.length&&!upgrade;mask++){
+      const omitted=new Set([...added,...later.flatMap((keys,offset)=>mask&(1<<offset)?keys:[])]),previous=model.keys.filter(key=>!omitted.has(key));
+      if(role.scope==='network'&&same(role,previous)){role.permissions=[...model.keys];upgrade=true;}
+      else if(original&&same(role,original.permissions.filter(key=>!omitted.has(key)&&(role.scope==='network'||!model.networkKeys.includes(key))))){role.permissions=[...original.permissions].filter(key=>role.scope==='network'||!model.networkKeys.includes(key));upgrade=true;}
+     }
     }
-    data.communicationsVersion=1;
-   }
-   if(!data.knowledgeVersion){
-    for(const role of data.levels){
-     const oldKeys=model.keys.filter(key=>!model.knowledgeKeys.includes(key)),original=model.defaults.find(item=>item.id===role.id),previous=original?.permissions.filter(key=>!model.knowledgeKeys.includes(key));
-     if(role.scope==='network'&&same(role,oldKeys))role.permissions=[...model.keys];
-     else if(previous&&same(role,previous))role.permissions=[...original.permissions].filter(key=>role.scope==='network'||!model.networkKeys.includes(key));
-    }
-    data.knowledgeVersion=1;
+    data[version]=1;
    }
    return data;
-  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,levels:structuredClone(model.defaults)};}
+  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,levels:structuredClone(model.defaults)};}
  }
  async function locations(){try{return JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return[];throw error;}}
  function decorate(account,companyId,data,stores=[]){if(!account)return null;const baseId=account.baseRole||account.role,network=data.levels.find(role=>role.id===baseId&&role.scope==='network'),id=account.companyRoles?.[companyId]||baseId,role=data.levels.find(role=>role.id===id&&role.scope===companyId)||data.levels.find(role=>role.id===id&&role.scope==='network')||{id,name:'No assigned permission level',level:0,permissions:['home.view']};return{...account,baseRole:baseId,role:id,roleName:role.name,roleLevel:role.level,permissions:role.permissions,networkPermissions:network?.permissions||[],companyId,companyIds:[...new Set(stores.filter(store=>model.locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))],permissionRevision:data.revision};}

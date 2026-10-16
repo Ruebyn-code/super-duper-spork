@@ -135,4 +135,4 @@ function createStore(){
  async function totals(dir,session,{orders=[],now=new Date()}={}){return homeTotals(await history(dir,session),orders,session,{now});}
  return {save,report,totals,history};
 }
-module.exports={calculate,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
+module.exports={read,calculate,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

@@ -56,7 +56,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -92,7 +93,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -127,7 +129,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -177,7 +180,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -201,7 +205,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -339,7 +344,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -356,7 +362,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -398,7 +405,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -421,7 +429,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -451,7 +460,8 @@
   {
     "text": "Notes",
     "locations": [
-      "cart"
+      "cart",
+      "rostering"
     ]
   },
   {
@@ -474,7 +484,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -702,7 +713,8 @@
   {
     "text": "Show",
     "locations": [
-      "Common controls"
+      "Common controls",
+      "rostering"
     ]
   },
   {
@@ -732,7 +744,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -788,7 +801,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -837,7 +851,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -848,7 +863,8 @@
       "cart",
       "email-settings",
       "index",
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -973,7 +989,8 @@
   {
     "text": "App edit",
     "locations": [
-      "accounts"
+      "accounts",
+      "rostering"
     ]
   },
   {
@@ -1063,19 +1080,22 @@
   {
     "text": "Stock count",
     "locations": [
-      "Stock count"
+      "Stock count",
+      "rostering"
     ]
   },
   {
     "text": "New count",
     "locations": [
-      "Stock count"
+      "Stock count",
+      "rostering"
     ]
   },
   {
     "text": "Count history",
     "locations": [
-      "Stock count"
+      "Stock count",
+      "rostering"
     ]
   },
   {
@@ -1249,7 +1269,8 @@
   {
     "text": "Collapse sidebar",
     "locations": [
-      "Sidebar"
+      "Sidebar",
+      "rostering"
     ]
   },
   {
@@ -1286,7 +1307,8 @@
   {
     "text": "Sign-in background",
     "locations": [
-      "settings"
+      "settings",
+      "rostering"
     ]
   },
   {
@@ -1370,7 +1392,8 @@
   {
     "text": "Weekly usage",
     "locations": [
-      "Stock count · weekly usage"
+      "Stock count · weekly usage",
+      "rostering"
     ]
   },
   {
@@ -1804,19 +1827,22 @@
   {
     "text": "Sales",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "rostering"
     ]
   },
   {
     "text": "Daily sales",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "rostering"
     ]
   },
   {
     "text": "Projection & budget",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "rostering"
     ]
   },
   {
@@ -1868,7 +1894,8 @@
     "locations": [
       "Sales and ordering budget",
       "sales · weekly report",
-      "sales"
+      "sales",
+      "rostering"
     ]
   },
   {
@@ -1905,7 +1932,8 @@
   {
     "text": "Budget remaining",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "rostering"
     ]
   },
   {
@@ -1977,7 +2005,8 @@
   {
     "text": "Projected sales",
     "locations": [
-      "Sales and ordering budget"
+      "Sales and ordering budget",
+      "rostering"
     ]
   },
   {
@@ -2152,7 +2181,8 @@
   {
     "text": "Locations",
     "locations": [
-      "Locations and shared ordering"
+      "Locations and shared ordering",
+      "rostering"
     ]
   },
   {
@@ -2164,7 +2194,8 @@
   {
     "text": "Location",
     "locations": [
-      "Locations and shared ordering"
+      "Locations and shared ordering",
+      "rostering"
     ]
   },
   {
@@ -2524,7 +2555,8 @@
   {
     "text": "Close submenu",
     "locations": [
-      "Sidebar"
+      "Sidebar",
+      "rostering"
     ]
   },
   {
@@ -3068,7 +3100,8 @@
   {
     "text": "Home",
     "locations": [
-      "Home"
+      "Home",
+      "rostering"
     ]
   },
   {
@@ -3508,14 +3541,16 @@
     "text": "Companies",
     "locations": [
       "Companies",
-      "Navigation"
+      "Navigation",
+      "rostering"
     ]
   },
   {
     "text": "Company",
     "locations": [
       "Companies",
-      "Navigation"
+      "Navigation",
+      "rostering"
     ]
   },
   {
@@ -3786,7 +3821,8 @@
   {
     "text": "Reporting",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "rostering"
     ]
   },
   {
@@ -3828,13 +3864,15 @@
   {
     "text": "From",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "rostering"
     ]
   },
   {
     "text": "To",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "rostering"
     ]
   },
   {
@@ -3846,7 +3884,8 @@
   {
     "text": "Export CSV",
     "locations": [
-      "Reporting"
+      "Reporting",
+      "rostering"
     ]
   },
   {
@@ -4191,7 +4230,8 @@
     "text": "Weekly report",
     "locations": [
       "Reporting",
-      "sales · weekly report"
+      "sales · weekly report",
+      "rostering"
     ]
   },
   {
@@ -4779,7 +4819,8 @@
   {
     "text": "Hourly rate",
     "locations": [
-      "sales"
+      "sales",
+      "rostering"
     ]
   },
   {
@@ -5134,7 +5175,8 @@
       "index",
       "login",
       "settings",
-      "setup"
+      "setup",
+      "rostering"
     ]
   },
   {
@@ -5591,7 +5633,8 @@
   {
     "text": "Confirm delete",
     "locations": [
-      "knowledge-library"
+      "knowledge-library",
+      "rostering"
     ]
   },
   {
@@ -5873,7 +5916,824 @@
   {
     "text": "Network",
     "locations": [
-      "knowledge-library"
+      "knowledge-library",
+      "rostering"
+    ]
+  },
+  {
+    "text": "Opstack — Rostering",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cart navigation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Main navigation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reporting navigation",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Admin pages",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Stock count options",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Sales options",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "App settings options",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Accounts & permissions options",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Suppliers & stock options",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Rostering",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock in / out",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Previous week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Monday – Sunday",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Next week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Edit roster week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Refresh rostering",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Refresh",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Rostering pages",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Weekly roster",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Copy previous week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "＋ Add shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Publish roster",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Weeks and overnight shifts use Australia/Melbourne time. An overnight shift belongs to its starting day.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Timesheets",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clocked and submitted time, with corrections and approval history.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "＋ Add timesheet",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "All timesheets",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pending approval",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approved",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Rejected",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clocked in",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock in & out",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Record your work and unpaid breaks. Closed shifts appear in your timesheets.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "My availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set your usual week or override it for the selected week.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Apply to",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Recurring weekly availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Selected week only",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Available all week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Anything your roster manager should know…",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Use recurring for this week",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Team availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Labour settings",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set hourly rates and a labour budget for planning.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Labour budget",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set budget for",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Budget type",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Percentage of projected sales",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Fixed weekly amount",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Amount",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Labour budget value",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Location overrides company; company overrides network. A default applies to each location without an override. The 28% stock budget stays separate.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Use inherited budget",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save labour budget",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Hourly rates",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Effective from",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Estimated costs use the hourly rates entered here. Approved timesheets keep their saved rates when rates change.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save hourly rates",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No shifts",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clocked in ",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "This shift belongs to ",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Your next clock-in will be recorded at ",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock times are recorded by the server. Timesheets require manager approval.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No timesheets match this week and filter.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Before: ",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cancel",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Delete shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock in",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock out",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approve",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reject",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reopen",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Correct",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "History",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster cost",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Worked hours",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approved hours",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Worked labour",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Approved labour",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Labour budget remaining",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "User",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Date",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Starts",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Ends",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unpaid break (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Position / area",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Ends the next day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Allow outside availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift notes",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Allow shifts outside submitted availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift note",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reason",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock in (Melbourne time)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clock out (Melbourne time)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Ends next day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reject timesheet",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Timesheet history",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Loading rostering…",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift saved to draft. Publish when the roster is ready.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster published.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Availability saved.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Availability",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "My published shifts",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Add shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Edit shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Add to draft",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Copy shifts",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clocked out",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "On break",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Your shift is running",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Ready to start?",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Start unpaid break",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "End break",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Close",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Correct timesheet",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Add timesheet",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reason for correction",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reason for manual timesheet",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save correction",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Submit for approval",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Not entered",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Available all day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unavailable",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Available between",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Draft",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pending",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Availability conflict",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Availability not entered",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Paid hours",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clear network default",
+    "locations": [
+      "rostering"
     ]
   }
 ]

@@ -20,7 +20,7 @@ Requests are saved as individual JSON files in `data/` (ignored by Git). Totals 
 
 ## Navigation groups
 
-The main bar contains **Home**, **Ordering**, **Sales**, **Comms**, **Knowledge Library**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings**, **App edit** (with appearance permission) and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
+The main bar contains **Home**, **Ordering**, **Sales**, **Rostering**, **Comms**, **Knowledge Library**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings**, **App edit** (with appearance permission) and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
 
 - **Ordering**: Catalogue, Cart, stock count entry/history, stock usage, and (Head Office only) stock item and supplier management. The Ordering icon shows the current cart quantity.
 - **Sales**: Daily sales, Weekly report and Projections & budget. Overview, Cost of goods, Labour, Op Ex and R&O remain in the weekly report's expense sidebar, without duplicate links in the second navigation bar.
@@ -54,6 +54,24 @@ Choose **This company only** to customise a role in the selected company. Other 
 Assign a permission level under **Admin → Users → pencil** or **Create user**. The permission assignment can apply to the selected company, or network-wide when authorised. Network-wide assignment replaces that user’s company assignments. Users can have different levels in different companies. Each user manager must have access to all of the target user’s locations and enough authority in each company to manage the account, including password resets. They cannot assign a higher hierarchy level or any permission they do not hold. Server checks apply even if a screen or request is modified. Role changes take effect on the next request; user account changes still require that user to sign in again.
 
 In-use levels cannot be deleted. At least one full network access account must remain. Concurrent permission edits require reloading before overwriting another change. Permission definitions persist in **data/permission-levels.json**, and company assignments in **data/accounts.json**. Keep the entire **data** folder when updating.
+
+## Rostering
+
+Open **Rostering** from the main bar or bottom navigation. Its icon sidebar opens **Roster**, **Timesheets**, **Clock in / out**, **Availability** and **Labour settings**. Select a Monday–Sunday week using the arrows, calendar button or This week.
+
+Start in **Labour settings**: enter each user’s hourly rate and its effective date, then set a labour budget. Head Office can set **network**, **company** and **location** defaults; Franchisees can set location overrides by default. Location takes precedence over company, then network. Each scope supports a percentage of projected sales or a fixed weekly dollar amount, applied separately to each inheriting location. Removing an override restores inheritance. Labour budgets have their own settings; the stock-ordering budget remains 28%.
+
+Forecasts use the location’s existing daily sales entries for the four completed Monday–Sunday weeks before the selected week. Future weeks use the latest four completed weeks available as of the current week; historical rosters use their preceding weeks. All four weeks must be fully recorded, including real zero-sales days. Missing forecasts or rates show as unknown. Fixed dollar budgets can be used before sales history is complete. Costs use the hourly rates entered in the app; award and overtime calculations belong in the payroll calculation.
+
+Managers add and edit **draft shifts**, check estimated costs and remaining budget, and **Publish roster** when ready. Users see their own last-published shifts; subsequent draft changes stay private until republished. Copy previous week starts another empty draft. Overlapping shifts are rejected across locations and weeks. Overnight shifts belong to their starting day, with Melbourne daylight-saving changes included in elapsed hours. Known availability conflicts require the manager’s explicit override.
+
+Users enter **recurring weekly availability** or override it for one selected week at the current location. Availability can be all day, unavailable, a time window (including overnight), or not yet entered. Managers can review team availability and notes. Clearing a weekly override restores recurring availability.
+
+**Clock in / out** records server timestamps for the signed-in user, with Start unpaid break and End break. Only one shift can run per user across locations. A shift retains its original location when clocked out after switching locations. Clock-outs create pending timesheets. Users can also submit a manual timesheet with a reason; submitted and clocked hours remain subject to review.
+
+**Timesheets** shows worked time and unpaid breaks. Managers can approve, reject, reopen or correct entries; a correction requires a reason and returns the timesheet to pending approval. Original clock events and the correction/approval history remain recorded. Effective-dated rates cost the roster, and approved timesheets retain their saved rates after later rate changes. Missing rates must be configured before approval. Worked and approved labour costs are shown against the labour budget. Use Export CSV for the visible location/week and the user’s permitted timesheets.
+
+**Settings → Permission levels → Rostering** controls viewing, clocking, availability, roster management, timesheet review, hourly rates, and each budget scope. All standard users can see their own published shifts/timesheets, enter availability and clock themselves. Franchisees and Head Office manage rosters, review timesheets and configure location rates/budgets by default. Head Office also manages company/network budgets. Existing customised roles retain their grants. Keep **data/rostering.json** with the rest of your private app data when updating or backing up.
 
 ## Knowledge Library
 
