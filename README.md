@@ -57,7 +57,7 @@ In-use levels cannot be deleted. At least one full network access account must r
 
 ## Rostering
 
-Open **Rostering** from the main bar or bottom navigation. Its icon sidebar opens **Roster**, **Timesheets**, **Clock in / out**, **Availability** and **Labour settings**. Select a Monday–Sunday week using the arrows, calendar button or This week.
+Open **Rostering** from the main bar or bottom navigation. Its icon sidebar opens **Roster**, **Timesheets**, **Clock in / out**, **Availability** and **Labour settings**. Select a Monday–Sunday week using the arrows, calendar button or This week. The week picker, Staff/Stacked view switch, copy/add/publish actions and clock shortcut share one compact toolbar. On computers the seven-day board fills the available screen width; narrower screens keep the controls on a horizontally scrollable row and the board readable.
 
 Start in **Labour settings**: enter each user’s hourly rate and its effective date, then set a labour budget. Head Office can set **network**, **company** and **location** defaults; Franchisees can set location overrides by default. Location takes precedence over company, then network. Each scope supports a percentage of projected sales or a fixed weekly dollar amount, applied separately to each inheriting location. Removing an override restores inheritance. Labour budgets have their own settings; the stock-ordering budget remains 28%.
 
