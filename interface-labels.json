@@ -7826,5 +7826,965 @@
     "locations": [
       "Award compliance"
     ]
+  },
+  {
+    "text": "Add public holiday",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Adult base hourly rates: Level 1 $27.81 · Level 2 $29.45 · Level 3 (one/no person) $29.91 · Level 3 (two or more) $30.27. Junior rates are 40%, 50%, 60%, 70%, 80% and 90% through ages under 16 to 20.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "After rostered labour",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "After worked labour",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Agreed at (Melbourne time)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Agreed base rate + award percentages",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Agreed finish",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Agreed hourly base ($, before casual loading)",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Agreed start",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Agreed unpaid break (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "All day",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "App appearance",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Approved timesheets only",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Award arrangement",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Award checks · Configured checks clear",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Award checks · No recorded shifts to check",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Award minimum (automatic)",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Award updates",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Backspace Delete",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Break ended.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Choose supervisory band",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Clocked in.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Clocked out. Your timesheet is ready for review.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Close dialog",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cold work minutes (above/equal 0°C)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Cold work minutes (below 0°C)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Colours, fonts, logos, backgrounds and interface text.",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Company settings override the network default. Choose Entire network when saving to apply a level across all companies.",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Complete the required employment fields.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Completed work, including pending approval · Gross wages & allowances",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Copy the previous week into this empty draft.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Correction saved. The timesheet needs approval.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Create permission level",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Create roles and choose what each level can access.",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Create the user, then edit them to add their company employment details.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Draft — publish to make shifts visible to users.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Eligible overtime after ordinary finish (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Employee launders required uniform",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Employer coverage, native wage rules, public holidays and award checks.",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Employer supplied the first overtime meal",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Employment & award",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Employment details saved.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Employment history",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Enter a non-negative amount with up to two decimal places.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter a valid amount.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter only work conditions that actually apply. Cold work must be the principal duties for that day; the two cold minute fields are separate, non-overlapping time. Travel is additional to normal travel. See clause 17 for the full conditions.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Enter the written agreed hours. A change to a single shift is recorded in that shift’s Pay details. Meal breaks here are unpaid.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Enter the written agreement reference (at least 8 characters).",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Enter the written part-time pattern.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Estimated cost",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Extra travel first leg starts (Melbourne time)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Extra travel return leg starts (Melbourne time)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Extra travel — first leg (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Extra travel — return leg (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "First day of a known pay period",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "First Monday of averaging cycle",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Four weeks · 152 hours",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Holiday / substitute name",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Hours / rate",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "I have checked the full year’s national, state, regional, part-day and substitute public holidays for this location.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "I have confirmed this award covers this employer and the employees assigned to it. Company locations are grouped as one employer.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "In charge of one or no person",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "In charge of two or more people",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Included rates & calculation scope",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Includes pending time and active shifts",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Includes the uploaded edition consolidated to 1 July 2026. Native calculations use this edition without a payroll provider. Rates apply from the first full pay period starting on or after 1 July 2026.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Labour budget saved.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Level 1 — food preparation, service and delivery",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Level 2 — supervision, training or trade skills",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Level 3 supervisory band",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Level 3 — in charge of an outlet",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Loading employment details…",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Location holiday calendar saved.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Long shift — review times",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "MA000003 · July 2026 native wage calculations. Totals include wages and recorded allowances. Super and on-cost estimates are shown separately. Review missing details and exceptions before payroll.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "MA000003 · Only reviewed rules within their effective dates are checked. Labour estimates use entered hourly rates.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Manage employment details in Users",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Meal (min)",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Meal starts",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "More than one hour after ordinary finish, under 24h notice, cannot reasonably return home for a meal",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Needs a budget, forecast and hourly rates",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "New dated record",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Next day",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "No availability entered yet.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No override",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No reviewed rule version",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "No roster has been published for this week.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "None for this selection",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Not eligible",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "One week · 38 hours",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Opstack — Settings",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Optional note for this shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Ordinary-hours cycle",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Other employer on-cost estimate (%)",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Overtime meal conditions reviewed (clause 17.4)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Own vehicle delivery km",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Own vehicle other duties km",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Paid 10-minute rest breaks taken",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Paid rest break started.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pay arrangement",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Pay details",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pay details saved.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Pay frequency",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Permission levels",
+    "locations": [
+      "settings-hub"
+    ]
+  },
+  {
+    "text": "Previous week copied to draft.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Public holiday calendars",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Public holidays",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Public holidays vary by state, region and substitute-day agreements. Enter the applicable dates and part-day periods for each location, then confirm the year has been reviewed. The award does not provide a holiday calendar. Missing calendars prevent complete cost calculations.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Read uploaded award",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Reason for pay detail change",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Recorded written part-time variation for this shift",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reimbursement ($)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Reimbursement reason",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Required details are missing. Complete the blocking warnings before approval.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Requires separate review",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Review eligibility",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Review these warnings against the award and any applicable agreement before continuing. A review note records your decision; it does not certify compliance.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Roster and timesheet totals show gross wages plus recorded allowances. Super is estimated separately on ordinary-time wages, excluding allowances and overtime. Other on-costs use gross wages and allowances. These percentages and eligibility need employer review; the PDF does not set statutory super rates.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Roster is over budget",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save employment details",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Save location calendar",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Save pay details",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Save the current roster changes first.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Saved approval calculation. Saving changed pay details reopens this timesheet.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set a labour budget in Labour settings",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set rate",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Set the employer pay-period start.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Shift end time",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Shift start time",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Special agreement / traineeship / supported wage / TOIL — review",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Standard award conditions",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Start paid rest break",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Start unpaid meal break",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Sunday overtime is immediately before/after ordinary work (clause 20.5)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Super estimate (%)",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Super estimate eligibility",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "The July 2026 edition is included. No external update feed is connected. Review a newer award edition before July 2027 or whenever a variation takes effect.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "The native calculator replaces flat hourly estimates only when enabled for this employer. Above-award arrangements here apply award percentages to the agreed base; individual flexibility, traineeships and supported wages need separate review.",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "The roster changed",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "The uploaded edition is bundled locally. A newer PDF or verified rule update is needed when the award changes. Generic imported checks supplement the native engine; they do not replace its pay tables. A payroll provider is optional.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "This location/year has not been reviewed.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Three weeks · 114 hours",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Timesheet approved.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Timesheet reopened for review.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Timesheet submitted for approval.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Two weeks · 76 hours",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Unable to load rostering.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unpaid meal break (minutes)",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unpaid meal break start",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Unpaid meal break started.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Until (24:00 = midnight)",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Use the included July 2026 award for wage calculations. I have reviewed the edition, supported scope and employment arrangements.",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Users at this location will see their shifts from this roster.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Using recurring availability until you save a weekly override.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Wage estimate from the included July 2026 award edition.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Weekly roster. Scroll to see all days.",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Workplace is in the County of Yancowinna (Broken Hill allowance)",
+    "locations": [
+      "award-settings"
+    ]
+  },
+  {
+    "text": "Written agreement reference",
+    "locations": [
+      "rostering"
+    ]
+  },
+  {
+    "text": "Written part-time work pattern",
+    "locations": [
+      "accounts"
+    ]
+  },
+  {
+    "text": "Written pattern agreement reference",
+    "locations": [
+      "accounts"
+    ]
   }
 ]
