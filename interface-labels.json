@@ -5212,5 +5212,125 @@
     "locations": [
       "settings"
     ]
+  },
+  {
+    "text": "Comms",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Create group",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search people…",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search conversations",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search conversations…",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search people or conversations",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Pinned",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Recent",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "People",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Use search to find a person and open a direct message.",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Create a group to bring your team together.",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Send a direct message",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Insert emoji",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Add reaction",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Choose emoji",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "React with emoji",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Close emoji picker",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search emoji",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "Search emoji…",
+    "locations": [
+      "Comms"
+    ]
+  },
+  {
+    "text": "No matching emoji. Try another name or paste an emoji.",
+    "locations": [
+      "Comms"
+    ]
   }
 ]

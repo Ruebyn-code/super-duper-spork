@@ -20,6 +20,10 @@ async function route({req,url,params,session,store,body,json,fail}){
  if(url==='/api/communications/threads'){
   if(req.method==='GET')json(200,await store.threads(session));else if(req.method==='POST'){need('comms.chat');json(201,await store.createThread(session,await body(req,24000)));}else fail('Unsupported chat action.',405);return true;
  }
+ const pin=url.match(/^\/api\/communications\/threads\/([a-f0-9-]+)\/pin$/i);
+ if(pin){if(req.method!=='PUT')fail('Unsupported pin action.',405);json(200,await store.pinThread(session,pin[1],await body(req)));return true;}
+ const reaction=url.match(/^\/api\/communications\/(posts|threads)\/([a-f0-9-]+)(?:\/messages\/([a-f0-9-]+))?\/reactions$/i);
+ if(reaction){if(req.method!=='PUT'||reaction[1]==='posts'&&reaction[3])fail('Unsupported reaction action.',405);if(reaction[1]==='threads')need('comms.chat');json(200,await store.react(session,reaction[1]==='posts'?'post':'thread',reaction[2],reaction[3],await body(req)));return true;}
  const thread=url.match(/^\/api\/communications\/threads\/([a-f0-9-]+)\/(messages|read)$/i);
  if(thread){if(thread[2]==='messages'&&req.method==='GET')json(200,await store.messages(session,thread[1],Object.fromEntries(params)));else if(thread[2]==='messages'&&req.method==='POST'){need('comms.chat');json(201,await store.send(session,thread[1],await body(req,128000)));}else if(thread[2]==='read'&&req.method==='POST')json(200,await store.readThread(session,thread[1],await body(req)));else fail('Unsupported chat action.',405);return true;}
  fail('Communication not found.',404);

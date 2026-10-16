@@ -69,7 +69,7 @@
  }
  function accessibleName(element,original){return element.querySelector('.sidebar-label,.submenu-label')?.textContent.trim()||wording(original)||original;}
  function updateNavigationLabels(){
-  sidebar.querySelectorAll('[data-sidebar-name]').forEach(link=>{let name=accessibleName(link,link.dataset.sidebarName);if(['Cart','Ordering'].includes(link.dataset.sidebarName)){const count=document.getElementById('cart-badge')?.textContent||'0';name+=' · '+wording('{count} units',{count});}if(link.dataset.sidebarName==='Communications'&&window.appMessageBadge?.count){name+=' · '+wording(appMessageBadge.count===1?'{count} unread message':'{count} unread messages',{count:appMessageBadge.count});}link.setAttribute('aria-label',name);link.title=name;});
+  sidebar.querySelectorAll('[data-sidebar-name]').forEach(link=>{let name=accessibleName(link,link.dataset.sidebarName);if(['Cart','Ordering'].includes(link.dataset.sidebarName)){const count=document.getElementById('cart-badge')?.textContent||'0';name+=' · '+wording('{count} units',{count});}if(link.dataset.sidebarName==='Comms'&&window.appMessageBadge?.count){name+=' · '+wording(appMessageBadge.count===1?'{count} unread message':'{count} unread messages',{count:appMessageBadge.count});}link.setAttribute('aria-label',name);link.title=name;});
   if(logout){const name=accessibleName(logout,'Sign out');logout.setAttribute('aria-label',name);logout.title=name;}
  }
  function renderNavigation(){const preview=!mobile.matches&&(pointerInside||keyboardInside||touchOpen);root.classList.toggle('navigation-compact',!preview);root.classList.toggle('navigation-preview',preview);updateToggle();}
