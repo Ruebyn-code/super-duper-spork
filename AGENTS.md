@@ -8,4 +8,4 @@
 
 - Keep App edit in the shared bar account dropdown (More on phones). Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
 
-- Opened Comms conversations take over the entire viewport on desktop and phones, hiding all app navigation and the mobile brand/location header. Back restores the conversation list and normal navigation.
+- Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.
