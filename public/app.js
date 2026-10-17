@@ -121,7 +121,7 @@ function render(refreshMenu=true){
     for(const p of items){
       const qty=cart[p.id],row=el('div',undefined,'cart-row');row.dataset.productId=p.id;const title=el('strong',p.name);if(p.unitAmount)title.append(el('span',p.unitAmount,'stock-unit-amount'));if(stockOrderRules.describe(p))title.append(el('span',stockOrderRules.describe(p),'small stock-order-rule'));row.append(title);
       const controls=el('div',undefined,'quantity'),minus=el('button','−');
-      minus.type='button';minus.disabled=busy;minus.setAttribute('aria-label',(stockOrderRules.multiples(p)?'Decrease quantity for ':'Remove one ')+p.name);
+      minus.type='button';minus.disabled=busy;minus.setAttribute('aria-label',(stockOrderRules.multiples(p)||p.orderRule==='separate'?'Decrease quantity for ':'Remove one ')+p.name);
       minus.onclick=()=>{refreshStoredCart();cart[p.id]=stockOrderRules.decrease(p,cart[p.id]||0);render();};
       const input=el('input');input.type='number';input.min=1;input.max=stockOrderRules.maximum(p);input.step=1;input.value=qty;input.disabled=busy;input.setAttribute('aria-label',p.name+' quantity');
       input.onchange=()=>{refreshStoredCart();const n=Number(input.value);const rounded=stockOrderRules.round(p,n);if(Number.isInteger(n)&&n>=1&&rounded<=999){cart[p.id]=rounded;if(rounded!==n)cartRuleNotice='Cart quantity adjusted from '+n+' to '+rounded+' for '+p.name+'.';}else cartRuleNotice='Enter a whole quantity that rounds to no more than '+stockOrderRules.maximum(p)+' for '+p.name+'.';render();};
@@ -166,7 +166,7 @@ if($('menu')){
   if(!force&&date.toISOString().slice(0,10)===parWindow.currentWeekStart)return;
   parRefreshPending=true;try{
    const data=await api('/api/catalogue','GET');parWindow=data.parWindow;latestStockTake=data.stockTake;const refreshed=new Map(data.products.map(product=>[product.id,product]));
-   let rulesChanged=false;for(const product of products){const latest=refreshed.get(product.id);product.par=latest?.par;product.ordering=latest?.ordering;if(latest){for(const key of ['minimumOrder','orderRule','roundingCutoff']){if(product[key]!==latest[key]){product[key]=latest[key];rulesChanged=true;}}}}renderParPeriod();if(rulesChanged){refreshStoredCart();render();}
+   let rulesChanged=false;for(const product of products){const latest=refreshed.get(product.id);product.par=latest?.par;product.ordering=latest?.ordering;if(latest){for(const key of ['minimumOrder','orderRule','roundingCutoff','roundDownThreshold','roundUpThreshold']){if(product[key]!==latest[key]){product[key]=latest[key];rulesChanged=true;}}}}renderParPeriod();if(rulesChanged){refreshStoredCart();render();}
    for(const card of $('menu').querySelectorAll('[data-product-id]')){const product=products.find(product=>product.id===card.dataset.productId);if(product)card.querySelector('.product-par')?.replaceWith(renderProductPar(product));}
    $('load-status').textContent='';
   }catch(error){$('load-status').textContent=error.message;}finally{parRefreshPending=false;}

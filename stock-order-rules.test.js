@@ -35,6 +35,27 @@ test('custom cutoffs round below down and at the cutoff up, while preserving min
  }
 });
 
+test('separate round-down and round-up cutoffs keep the gap exact and can be changed or disabled independently',()=>{
+ const product={id:'lamb',minimumOrder:15,orderRule:'separate',roundDownThreshold:3,roundUpThreshold:5};
+ for(const [quantity,expected]of [[0,0],[1,15],[11,15],[15,15],[16,15],[18,15],[19,19],[20,30],[29,30],[30,30],[33,30],[34,34],[35,45]])assert.equal(rules.round(product,quantity),expected);
+ assert.equal(rules.round({...product,roundDownThreshold:2},18),18);assert.equal(rules.round({...product,roundDownThreshold:2},20),30);
+ assert.equal(rules.round({...product,roundUpThreshold:6},20),20);assert.equal(rules.round({...product,roundUpThreshold:6},18),15);
+ assert.equal(rules.round({...product,roundDownThreshold:null},18),18);assert.equal(rules.round({...product,roundDownThreshold:null},20),30);
+ assert.equal(rules.round({...product,roundUpThreshold:null},20),20);assert.equal(rules.round({...product,roundUpThreshold:null},18),15);
+ assert.equal(rules.round({...product,roundDownThreshold:null,roundUpThreshold:null},11),15);assert.equal(rules.round({...product,roundDownThreshold:null,roundUpThreshold:null},19),19);
+ assert.equal(rules.recommendation(product,30,12),15);assert.equal(rules.recommendation(product,30,11),19);assert.equal(rules.recommendation(product,30,10),30);
+ assert.equal(rules.recommendation(product,30,11.5),19);assert.equal(rules.recommendation(product,30,10.5),30);assert.equal(rules.recommendation(product,30,null),null);assert.equal(rules.recommendation(product,30,31),0);
+ assert.equal(rules.maximum(product),994);assert.equal(rules.decrease(product,30),19);assert.equal(rules.decrease(product,19),15);assert.equal(rules.decrease(product,15),0);
+ for(const down of [null,0,3,15])for(const up of [null,0,5,15]){
+  if(down!==null&&up!==null&&down>=up)continue;
+  const rule={...product,roundDownThreshold:down,roundUpThreshold:up};
+  for(const quantity of [0,0.001,1,11,15,18,18.999,19,19.001,20,29.999,30,999,999.999]){
+   const rounded=rules.round(rule,quantity);assert.equal(rules.round(rule,rounded),rounded);assert.equal(Number.isInteger(rounded),true);assert.ok(quantity===0?rounded===0:rounded>=15);
+  }
+  assert.equal(rules.valid(rule,rules.maximum(rule)),true);for(let q=rules.maximum(rule)+1;q<=999;q++)assert.equal(rules.valid(rule,q),false);
+ }
+});
+
 test('order rules persist per company, require stock-management permission and enforce saved quantities on checkout',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'stock-order-rules-'));await saveAdmin(dir,'Office','office-test-password');await saveUser(dir,'Member','member-test-password');let server,base;
  async function start(){server=createServer(dir,{fetchImpl:()=>{throw Error('No external order sending in tests.');}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base='http://127.0.0.1:'+server.address().port;}
@@ -46,6 +67,8 @@ test('order rules persist per company, require stock-management permission and e
   for(const invalid of [0,-1,1.5,1000,'15',null,{}])assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,minimumOrder:invalid})).status,400);
   for(const invalid of ['',null,{},'nearest'])assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,orderRule:invalid})).status,400);
   for(const invalid of [-1,1.5,1000,'5',null,{}])assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,roundingCutoff:invalid})).status,400);
+  for(const key of ['roundDownThreshold','roundUpThreshold'])for(const invalid of [-1,1.5,1000,'5',{},true])assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,[key]:invalid})).status,400);
+  for(const invalid of [{roundDownThreshold:16,roundUpThreshold:null},{roundDownThreshold:null,roundUpThreshold:16},{roundDownThreshold:5,roundUpThreshold:5},{roundDownThreshold:6,roundUpThreshold:5}])assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,orderRule:'separate',...invalid})).status,400);
   assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,orderRule:'cutoff',roundingCutoff:16})).status,400);
   for(const method of ['POST','PUT'])assert.equal((await api(member,'/api/products'+(method==='PUT'?'/'+id:''),method,input)).status,403);
   const order=quantity=>({items:[{id,quantity,minimumOrder:1,orderRule:'minimum'}]});
@@ -57,6 +80,12 @@ test('order rules persist per company, require stock-management permission and e
   const count=await api(member,'/api/stock-counts','POST',{countDate:'2026-10-11',items:[{id,quantity:11}]});assert.equal(count.status,201);assert.equal((await api(office,'/api/products/'+id+'/par','PUT',{level:30})).status,200);product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.par.level,30);assert.equal(product.ordering.stockCount,11);assert.equal(product.ordering.recommended,15);
   const company=(await api(office,'/api/companies','POST',{name:'Another company',locationName:'Another store'})).data;const other={...input,minimumOrder:4,orderRule:'multiples'},otherHeaders={'X-Location-Id':company.locationId};assert.equal((await api(office,'/api/products/'+id,'PUT',other,otherHeaders)).status,400);const supplier=(await api(office,'/api/suppliers','POST',{name:'Other supplier'},otherHeaders)).data,otherProduct=await api(office,'/api/products','POST',{...other,supplierId:supplier.id},otherHeaders);assert.equal(otherProduct.status,201);assert.equal(otherProduct.data.minimumOrder,4);assert.equal((await api(member,'/api/orders/'+saved.id)).data.items[0].quantity,16);
   await new Promise(resolve=>server.close(resolve));await start();office=await login('Office');member=await login('Member');product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.minimumOrder,15);assert.equal(product.orderRule,'cutoff');assert.equal(product.roundingCutoff,5);assert.equal((await api(office,'/api/catalogue','GET',undefined,otherHeaders)).data.products.find(item=>item.id===otherProduct.data.id).minimumOrder,4);
+  const separate={...input,orderRule:'separate',roundDownThreshold:3,roundUpThreshold:5};assert.equal((await api(office,'/api/products/'+id,'PUT',separate)).status,200);
+  product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.ordering.recommended,19);assert.equal(product.par.level,30);
+  assert.equal((await api(member,'/api/orders','POST',order(18))).status,400);const exact=await api(member,'/api/orders','POST',order(19));assert.equal(exact.status,201);assert.equal(exact.data.total,23750);assert.equal((await api(member,'/api/orders','POST',order(20))).status,400);
+  assert.equal((await api(office,'/api/products/'+id,'PUT',{...oldClient,roundUpThreshold:6})).status,200);product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.roundDownThreshold,3);assert.equal(product.roundUpThreshold,6);assert.equal(product.orderRule,'separate');assert.equal((await api(member,'/api/orders','POST',order(20))).status,201);
+  await new Promise(resolve=>server.close(resolve));await start();office=await login('Office');member=await login('Member');product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.roundDownThreshold,3);assert.equal(product.roundUpThreshold,6);
+  assert.equal((await api(office,'/api/products/'+id,'PUT',{...oldClient,roundDownThreshold:null})).status,200);product=(await api(member,'/api/catalogue')).data.products.find(item=>item.id===id);assert.equal(product.roundDownThreshold,null);assert.equal(product.roundUpThreshold,6);assert.equal((await api(member,'/api/orders','POST',order(18))).status,201);assert.equal((await api(member,'/api/orders/'+exact.data.id)).data.items[0].quantity,19);
   assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,minimumOrder:1,orderRule:'minimum'})).status,200);assert.equal((await api(member,'/api/orders','POST',order(1))).status,201);
  }finally{if(server?.listening)await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
 });

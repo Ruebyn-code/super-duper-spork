@@ -398,7 +398,7 @@ test('storage groups migrate safely, accept only Head Office edits and preserve 
   await start();let catalogue=await(await request('/api/catalogue')).json();
   assert.deepEqual(catalogue.products.map(product=>product.stockCountGroup),['cool-room','freezer','packaging','chemical','cool-room']);
   const stored=JSON.parse(await fs.readFile(path.join(dir,'catalogue.json'),'utf8'));
-  assert.deepEqual(stored.products.map(({stockCountGroup,unitAmount,minimumOrder,orderRule,roundingCutoff,...product})=>product),original.products.map(({stockCountGroup,...product})=>product));assert.ok(stored.products.every(product=>product.unitAmount===''&&product.minimumOrder===1&&product.orderRule==='minimum'&&product.roundingCutoff===1));assert.deepEqual(stored.suppliers,original.suppliers);
+  assert.deepEqual(stored.products.map(({stockCountGroup,unitAmount,minimumOrder,orderRule,roundingCutoff,roundDownThreshold,roundUpThreshold,...product})=>product),original.products.map(({stockCountGroup,...product})=>product));assert.ok(stored.products.every(product=>product.unitAmount===''&&product.minimumOrder===1&&product.orderRule==='minimum'&&product.roundingCutoff===1&&product.roundDownThreshold===null&&product.roundUpThreshold===null));assert.deepEqual(stored.suppliers,original.suppliers);
   assert.equal((await request('/stock-count-groups.js')).status,200);
   const record=await(await request('/api/stock-counts','POST',{countDate:'2026-10-11',items:[{id:'fresh',quantity:0},{id:'frozen',quantity:1.25}]},staff)).json();
   assert.equal(record.items.find(item=>item.id==='fresh').stockCountGroup,'cool-room');assert.equal(record.items.find(item=>item.id==='frozen').stockCountGroup,'freezer');

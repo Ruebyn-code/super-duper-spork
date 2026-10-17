@@ -10,7 +10,7 @@ function createStore(dir,menu){
    if(companyId==='default'&&!catalogue.imports?.includes('book2-v1')){mergeSpreadsheet(catalogue);changed=true;}
    for(const product of catalogue.products)if(!groups.valid(product.stockCountGroup)){product.stockCountGroup=groups.resolve(product);changed=true;}
    for(const product of catalogue.products)if(product.unitAmount===undefined){product.unitAmount='';changed=true;}
-   for(const product of catalogue.products){if(product.roundingCutoff===undefined){product.roundingCutoff=1;changed=true;}if(product.minimumOrder===undefined){product.minimumOrder=1;changed=true;}if(product.orderRule===undefined){product.orderRule='minimum';changed=true;}}
+   for(const product of catalogue.products){for(const key of ['roundDownThreshold','roundUpThreshold'])if(product[key]===undefined){product[key]=null;changed=true;}if(product.roundingCutoff===undefined){product.roundingCutoff=1;changed=true;}if(product.minimumOrder===undefined){product.minimumOrder=1;changed=true;}if(product.orderRule===undefined){product.orderRule='minimum';changed=true;}}
    if(changed)await write(target,catalogue);
   })().catch(error=>{initializations.delete(target);throw error;}));
   await initializations.get(target);return JSON.parse(await fs.readFile(target,'utf8'));
