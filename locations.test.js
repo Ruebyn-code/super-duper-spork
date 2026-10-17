@@ -130,6 +130,34 @@ test('location directory exposes only sender summaries and account-addressed ema
  }finally{await app.close();}
 });
 
+test('one company email template serves every location, stays isolated and respects email permissions',async()=>{
+ const sent=[],app=await fixture({fetchImpl:async(url,options)=>{sent.push(JSON.parse(options.body));return {ok:true};}});
+ try{
+  const admin=await app.login('admin'),first=await app.login('first'),second=await app.login('second'),route='/api/order-email-template',defaults=require('./public/order-email-template').defaults;
+  assert.equal((await app.request(null,route)).status,401);assert.deepEqual((await app.request(admin,route)).data,{template:defaults,revision:0});
+  const template={subject:'{{location}} / {{supplier}}',body:'Hello {{supplier}},\n\n{{items}}\n\n{{notes}}\nThank you, {{requested_by}}\nReference: {{order_reference}}'};
+  const saved=await app.request(admin,route,'PUT',{template,revision:0});assert.equal(saved.status,200);assert.deepEqual(saved.data.template,template);assert.equal(saved.data.revision,1);
+  for(const actor of [first,second]){assert.equal((await app.request(actor,route)).status,403);assert.equal((await app.request(actor,route,'PUT',{template,revision:1})).status,403);}
+  assert.equal((await app.request(admin,route,'PUT',{template,revision:1},{'X-CSRF-Token':''})).status,403);
+  assert.equal((await app.request(admin,route,'PUT',{template:{subject:'Order',body:'No item list'},revision:1})).status,400);assert.deepEqual((await app.request(admin,route)).data.template,template);
+  const other=await app.request(admin,'/api/companies','POST',{name:'Other company',locationName:'Other store'});assert.equal(other.status,201);const otherHeader={'X-Location-Id':other.data.locationId};
+  assert.deepEqual((await app.request(admin,route,'GET',undefined,otherHeader)).data,{template:defaults,revision:0});
+  const otherTemplate={subject:'Other company: {{location}}',body:'Company B\n{{items}}'};assert.equal((await app.request(admin,route,'PUT',{template:otherTemplate,revision:0},otherHeader)).status,200);assert.deepEqual((await app.request(admin,route)).data.template,template);
+  assert.equal((await app.request(first,route,'GET',undefined,otherHeader)).status,403);
+  for(const actor of [first,second]){
+   const settings={ORDER_FROM_EMAIL:actor.session.username+'@example.com',RESEND_API_KEY:'private-'+actor.session.username+'-key',DELIVERY_EMAIL_ENABLED:true};
+   assert.equal((await app.request(admin,'/api/locations/'+actor.session.locationId+'/email','PUT',settings)).status,200);
+   const summary=await app.request(admin,'/api/locations/'+actor.session.locationId+'/email');assert.ok(!JSON.stringify(summary).includes(settings.RESEND_API_KEY));assert.ok(!Object.hasOwn(summary.data,'template'));
+  }
+  await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
+  for(const actor of [first,second]){const order=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:2}],notes:'Please deliver Monday.'});assert.equal(order.status,201);}
+  assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),['first / Office Supplies','second / Office Supplies']);
+  for(const [index,email] of sent.entries()){assert.match(email.text,/2 × A4 copy paper/);assert.match(email.text,new RegExp('Thank you, '+['first','second'][index]));assert.ok(!email.text.includes('650'));}
+  const competing=await Promise.all([app.request(admin,route,'PUT',{template:defaults,revision:1}),app.request(admin,route,'PUT',{template:defaults,revision:1})]);assert.deepEqual(competing.map(reply=>reply.status).sort(),[200,409]);
+  await app.restart();const after=await app.login('admin');const record=(await app.request(after,route)).data;assert.deepEqual(record.template,defaults);assert.equal(record.revision,2);assert.deepEqual((await app.request(after,route,'GET',undefined,otherHeader)).data.template,otherTemplate);
+ }finally{await app.close();}
+});
+
 test('home totals share quarter sales and expense with all-time placed orders within the selected location and reject unauthorized locations',async()=>{
  const app=await fixture();try{const admin=await app.login('admin'),shop=(await app.request(admin,'/api/locations','POST',{name:'Shop'})).data,other=(await app.request(admin,'/api/locations','POST',{name:'Other'})).data;
  for(const name of ['first','second'])await app.assign(admin,name,shop.id);await app.assign(admin,'third',other.id);const first=await app.login('first'),second=await app.login('second'),third=await app.login('third');
