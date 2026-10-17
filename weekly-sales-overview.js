@@ -1,5 +1,6 @@
 const sales=require('./sales'),weekly=require('./public/weekly-sales-report');
 const {calendar,defaultTimeZone,dayNumber,dateLabel}=require('./par-levels'),{shift}=require('./stock-usage');
+const orderCosts=require('./order-cost-period');
 const schedules=require('./operating-expense-schedule'),types=require('./operating-expense-types');
 const fields=['salesCents','costOfGoodsPercent','labourPercent','opExPercent','roPercent','profitCents','profitPercent'];
 function invalid(){const error=Error('Choose Quarter or Year to date and a valid quarter (for example 2026-Q4).');error.status=400;throw error;}
@@ -39,7 +40,7 @@ function average(rows){
 }
 async function build(dir,session,params={}, {orders=[],store=salesReportStore(),now=new Date()}={}){
  const selected=period(params,now),currentWeek=sales.currentWeek(now),formatter=calendar(defaultTimeZone),groups=new Map();
- for(const order of orders){const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))continue;const day=dayNumber(created,formatter),start=dateLabel(day-(new Date(day*86400000).getUTCDay()+6)%7);if(!groups.has(start))groups.set(start,[]);groups.get(start).push({...order,_overviewDate:dateLabel(day)});}
+ for(const order of orders){const period=orderCosts.dates(order,formatter);if(!period)continue;const start=period.costWeekStart;if(!groups.has(start))groups.set(start,[]);groups.get(start).push({...order,_overviewDate:period.costDate});}
  const [schedule,catalogue]=await Promise.all([schedules.read(dir,session),types.read(dir,session)]);
  async function collect(range){const starts=weeks(range,{includePartial:selected.mode==='ytd'}),result=[];for(let offset=0;offset<starts.length;offset+=8)result.push(...await Promise.all(starts.slice(offset,offset+8).map(async start=>{
   const relevant=(groups.get(start)||[]).filter(order=>selected.mode!=='ytd'||order._overviewDate>=range.startDate&&order._overviewDate<=range.endDate),report=await store.report(dir,session,start,{orders:relevant,now,operatingScheduleSnapshot:schedule,expenseTypesSnapshot:catalogue});return row(report,currentWeek,selected.mode==='ytd'?range.endDate:null,range.startDate);

@@ -3,6 +3,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {defaultTimeZone,calendar,dayNumber,dateLabel}=require('./par-levels');
 const {shift}=require('./stock-usage');
 const {compare}=require('./public/sales-performance');
+const orderCosts=require('./order-cost-period');
 const maximumDailyCents=1000000000;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
@@ -55,13 +56,12 @@ function calculate(records,orders,session,{now=new Date()}={}){
  const formatter=calendar(defaultTimeZone),seen=new Set();let spentCents=0,pricePending=false,orderCount=0;
  for(const order of orders){
   if(!order||!belongs(order,session,'requestOwnerId')||seen.has(order.id)||!Array.isArray(order.items)||!Number.isSafeInteger(order.total)||order.total<0)continue;
-  const date=new Date(order.createdAt);if(!Number.isFinite(date.valueOf()))continue;
-  const day=dateLabel(dayNumber(date,formatter));if(day<weekStart||day>shift(weekStart,6))continue;
+  const period=orderCosts.dates(order,formatter);if(period?.costWeekStart!==weekStart)continue;
   seen.add(order.id);spentCents+=order.total;orderCount++;if(order.pricePending)pricePending=true;
  }
  const currentRecord=records.find(record=>belongs(record,session)&&record.weekStart===weekStart);
  const performance=compare(currentRecord?.days||Array(7).fill(null),{dailyProjections,today});
- return {weekStart,weekEnd:shift(weekStart,6),today,performance,timeZone:defaultTimeZone,history,weeksRecorded,dailyProjections,projectedSalesCents,budgetPercent:28,budgetCents,spentCents,orderCount,pricePending,remainingCents:budgetCents===null||pricePending?null:budgetCents-spentCents};
+ return {weekStart,weekEnd:shift(weekStart,6),orderCostWeekStart:orderCosts.dates({createdAt:now},formatter).costWeekStart,today,performance,timeZone:defaultTimeZone,history,weeksRecorded,dailyProjections,projectedSalesCents,budgetPercent:28,budgetCents,spentCents,orderCount,pricePending,remainingCents:budgetCents===null||pricePending?null:budgetCents-spentCents};
 }
 function allTimeTotals(records,orders,session){
  let salesCents=0,recordedDays=0,placedOrdersCents=0,orderCount=0,pricePending=false;
@@ -80,9 +80,7 @@ function completedWeekAverages(records,orders,session,quarter,now){
  const included=completed.map(start=>records.find(record=>belongs(record,session)&&record.weekStart===start)).filter(record=>Array.isArray(record?.days)&&record.days.length===7&&record.days.every(value=>Number.isSafeInteger(value)&&value>=0));
  const starts=new Set(included.map(record=>record.weekStart)),formatter=calendar(defaultTimeZone);
  const placed=allTimeTotals([],orders.filter(order=>{
-  const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
-  const date=dateLabel(dayNumber(created,formatter)),offset=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7;
-  return starts.has(shift(date,-offset));
+  return starts.has(orderCosts.dates(order,formatter)?.costWeekStart);
  }),session),salesCents=included.reduce((total,record)=>total+record.days.reduce((sum,value)=>sum+value,0),0),weeksRecorded=included.length;
  return {fromDate:included[0]?.weekStart||null,throughDate:weeksRecorded?shift(included.at(-1).weekStart,6):null,completedWeeks:completed.length,weeksRecorded,skippedWeeks:completed.length-weeksRecorded,recordedDays:weeksRecorded*7,weeklySalesCents:weeksRecorded?Math.round(salesCents/weeksRecorded):null,weeklyCostCents:weeksRecorded&&!placed.pricePending?Math.round(placed.placedOrdersCents/weeksRecorded):null,pricePending:placed.pricePending,expensePercent:salesCents>0&&!placed.pricePending?placed.placedOrdersCents/salesCents*100:null};
 }
@@ -96,8 +94,7 @@ function homeTotals(records,orders,session,{now=new Date()}={}){
   }
  }
  const withinQuarter=orders.filter(order=>{
-  const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;
-  const date=dateLabel(dayNumber(created,formatter));return date>=quarter.startDate&&date<=quarter.endDate;
+  const period=orderCosts.dates(order,formatter);return period&&period.costDate>=quarter.startDate&&period.costDate<=quarter.endDate;
  }),quarterOrders=allTimeTotals([],withinQuarter,session),averages=completedWeekAverages(records,withinQuarter,session,quarter,now);
  return {...allOrders,salesCents,recordedDays,quarter,averages,quarterPlacedOrdersCents:quarterOrders.placedOrdersCents,quarterOrderCount:quarterOrders.orderCount,quarterPricePending:quarterOrders.pricePending,expensePercent:salesCents>0&&!quarterOrders.pricePending?quarterOrders.placedOrdersCents/salesCents*100:null};
 }

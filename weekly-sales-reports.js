@@ -1,7 +1,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {currentWeek,allTimeTotals,maximumDailyCents}=require('./sales');
-const {calendar,defaultTimeZone,dayNumber,dateLabel}=require('./par-levels');
-const {shift}=require('./stock-usage');
+const {calendar,defaultTimeZone}=require('./par-levels');
+const orderCosts=require('./order-cost-period');
 const weeklyReport=require('./public/weekly-sales-report'),expenseTypes=require('./operating-expense-types'),operatingSchedule=require('./operating-expense-schedule');
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))invalid('Choose a valid Monday-starting report week.');const date=new Date(value+'T00:00:00Z');if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value||date.getUTCDay()!==1)invalid('Choose a valid Monday-starting report week.');}
@@ -57,8 +57,8 @@ function createStore(){
   record.operatingAdditionalCents=record.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents):Object.hasOwn(record,'operatingAdditionalCents')?record.operatingAdditionalCents:record.operatingExpensesCents;
   record.operatingSchedule=schedule;record.operatingAllocations=operatingSchedule.legacyRows(schedule.bills,start);
   record.operatingExpensesCents=incomplete?null:record.operatingAdditionalCents===null&&!schedule.bills.some(bill=>bill.startWeek<=start)?null:(record.operatingAdditionalCents??0)+operatingSchedule.cost(schedule.bills,start);
-  const weeklyOrders=orders.filter(order=>{const created=new Date(order?.createdAt);if(!Number.isFinite(created.valueOf()))return false;const date=dateLabel(dayNumber(created,formatter));return date>=start&&date<=shift(start,6);});
-  const seen=new Set(),stockOrders=[];for(const order of weeklyOrders){const own=allTimeTotals([],[order],session);if(!own.orderCount||seen.has(order.id))continue;seen.add(order.id);stockOrders.push({id:order.id,createdAt:order.createdAt,totalCents:own.placedOrdersCents,pricePending:own.pricePending,items:order.items.map(item=>({id:item.id||'',name:item.name||'',supplierId:item.supplierId||'',supplier:item.supplier||'',quantity:item.quantity??0,unitCostCents:item.price??null}))});}
+  const weeklyOrders=orders.filter(order=>orderCosts.dates(order,formatter)?.costWeekStart===start);
+  const seen=new Set(),stockOrders=[];for(const order of weeklyOrders){const own=allTimeTotals([],[order],session);if(!own.orderCount||seen.has(order.id))continue;seen.add(order.id);stockOrders.push({id:order.id,createdAt:order.createdAt,...orderCosts.dates(order,formatter),totalCents:own.placedOrdersCents,pricePending:own.pricePending,items:order.items.map(item=>({id:item.id||'',name:item.name||'',supplierId:item.supplierId||'',supplier:item.supplier||'',quantity:item.quantity??0,unitCostCents:item.price??null}))});}
   const costs=allTimeTotals([],weeklyOrders,session);
   const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:costs.placedOrdersCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
   return {record,summary,profit,platformSettlements,stockOrders,operatingExpenseTypes,weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};

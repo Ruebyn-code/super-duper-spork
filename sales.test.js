@@ -100,11 +100,11 @@ test('quarter averages use only full completed Monday–Sunday weeks in the quar
  const actor={id:'member',locationId:'shop'},record=(weekStart,days,locationId='shop')=>({weekStart,days,locationId});
  const records=[record('2026-09-28',Array(7).fill(900000)),record('2026-10-05',Array(7).fill(10000)),record('2026-10-12',Array(7).fill(999999)),record('2026-10-19',Array(7).fill(999999)),record('2026-10-05',Array(7).fill(999999),'other')];
  const order=(id,total,createdAt,extra={})=>({id,total,createdAt,locationId:'shop',requestOwnerId:'teammate',status:'requested',items:[{price:100}],...extra});
- const orders=[order('partial',99999,'2026-10-04T12:59:59Z',{pricePending:true}),order('opening',5000,'2026-10-04T13:00:00Z'),order('opening',5000,'2026-10-04T13:00:00Z'),order('closing',9000,'2026-10-11T12:59:59Z'),order('current',99999,'2026-10-11T13:00:00Z',{pricePending:true}),order('future',99999,'2026-10-19T00:00:00Z',{pricePending:true}),order('other',99999,'2026-10-07T00:00:00Z',{locationId:'other'}),order('draft',99999,'2026-10-07T00:00:00Z',{status:'draft'})];
+ const orders=[order('partial',99999,'2026-10-03T13:59:59Z',{pricePending:true}),order('opening',5000,'2026-10-04T13:00:00Z'),order('opening',5000,'2026-10-04T13:00:00Z'),order('closing',9000,'2026-10-11T12:59:59Z'),order('current',99999,'2026-10-11T13:00:00Z',{pricePending:true}),order('future',99999,'2026-10-19T00:00:00Z',{pricePending:true}),order('other',99999,'2026-10-07T00:00:00Z',{locationId:'other'}),order('draft',99999,'2026-10-07T00:00:00Z',{status:'draft'})];
  const options={now:new Date('2026-10-14T00:00:00Z')};
- assert.deepEqual(sales.homeTotals(records,orders,actor,options).averages,{fromDate:'2026-10-05',throughDate:'2026-10-11',completedWeeks:1,weeksRecorded:1,skippedWeeks:0,recordedDays:7,weeklySalesCents:70000,weeklyCostCents:14000,pricePending:false,expensePercent:20});
+ assert.deepEqual(sales.homeTotals(records,orders,actor,options).averages,{fromDate:'2026-10-05',throughDate:'2026-10-11',completedWeeks:1,weeksRecorded:1,skippedWeeks:0,recordedDays:7,weeklySalesCents:70000,weeklyCostCents:5000,pricePending:false,expensePercent:5000/70000*100});
  records[1].days[0]=20000;const corrected=sales.homeTotals(records,orders,{id:'teammate',locationId:'shop'},options).averages;
- assert.equal(corrected.weeklySalesCents,80000);assert.equal(corrected.weeklyCostCents,14000);assert.equal(corrected.expensePercent,17.5);
+ assert.equal(corrected.weeklySalesCents,80000);assert.equal(corrected.weeklyCostCents,5000);assert.equal(corrected.expensePercent,6.25);
  assert.equal(sales.homeTotals(records,orders,{id:'member',locationId:'empty'},options).averages.weeklySalesCents,null);
 });
 test('completed-week averages distinguish missing sales, recorded zero and unknown prices, and keep percentages unrounded',()=>{
