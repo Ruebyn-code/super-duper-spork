@@ -111,6 +111,27 @@ test('malformed roster requests fail validation without writing records',async()
  assert.equal((await roster(app,app.office,'rates','PUT',{effectiveDate:'2026-10-19',revision:0,rates:[null]})).status,400);assert.equal((await roster(app,app.office)).data.roster.shifts.length,0);assert.equal((await roster(app,app.office)).data.timesheets.length,0);
  }finally{await app.close();}});
 
+test('published team schedules expose only location-scoped names and shift times, retaining private drafts, wages and staff details',async()=>{
+ const app=await fixture();try{
+  const own=await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id,notes:'Private scheduling note'}));assert.equal(own.status,201);
+  const teammate=await roster(app,app.office,'shifts','POST',shift({revision:1,userId:app.franchiseeRecord.id,position:'Supervisor',notes:'Private coworker note'}));assert.equal(teammate.status,201);
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({revision:2,userId:null,date:'2026-10-25'}))).status,201);
+  assert.deepEqual((await roster(app,app.member)).data.teamRoster,{shifts:[],carryoverShifts:[]});
+  assert.equal((await roster(app,app.office,'rates','PUT',{effectiveDate:'2026-10-01',revision:0,rates:[{userId:app.memberRecord.id,rateCents:3100},{userId:app.franchiseeRecord.id,rateCents:4200}]})).status,200);
+  assert.equal((await roster(app,app.office,'publish','POST',{weekStart:'2026-10-19',revision:3})).status,200);
+  const overnight=await roster(app,app.office,'shifts','POST',shift({weekStart:'2026-10-12',date:'2026-10-18',userId:app.franchiseeRecord.id,start:'22:00',end:'06:00',overnight:true}));assert.equal(overnight.status,201);
+  assert.equal((await roster(app,app.office,'publish','POST',{weekStart:'2026-10-12',revision:1})).status,200);
+  assert.equal((await roster(app,app.office,'shifts/'+teammate.data.shift.id,'PUT',shift({revision:4,userId:app.franchiseeRecord.id,start:'10:00',position:'Unpublished position',notes:'Changed private note'}))).status,200);
+  const data=(await roster(app,app.member)).data,team=data.teamRoster;
+  assert.equal(data.roster.shifts.length,1,'The existing personal roster stays personal');assert.equal(data.people.length,1);assert.equal(data.summary,null);assert.equal(data.rates,null);
+  assert.equal(team.shifts.length,3);assert.equal(team.shifts.find(item=>item.userId===app.franchiseeRecord.id).start,'09:00');assert.equal(team.shifts.find(item=>item.userId===app.franchiseeRecord.id).position,'Supervisor');assert.equal(team.shifts.find(item=>item.userId===null).username,'Vacant');
+  assert.equal(team.carryoverShifts.length,1);assert.equal(team.carryoverShifts[0].id,overnight.data.shift.id);
+  const allowed=['id','userId','username','date','start','end','overnight','position','breakMinutes'].sort();for(const item of [...team.shifts,...team.carryoverShifts])assert.deepEqual(Object.keys(item).sort(),allowed);
+  assert.ok(!JSON.stringify(team).includes('Private'));assert.ok(!JSON.stringify(team).includes('Unpublished'));assert.ok(!JSON.stringify(team).includes('rateCents'));
+  assert.deepEqual((await roster(app,app.outside)).data.teamRoster,{shifts:[],carryoverShifts:[]});assert.equal((await roster(app,app.outside,'dashboard?week=2026-10-19','GET',undefined,{'X-Location-Id':app.office.session.locationId})).status,403);
+  assert.equal((await roster(app,null)).status,401);
+ }finally{await app.close();}
+});
 test('vacant roster shifts can overlap, be assigned and moved while published shifts stay private',async()=>{
  const app=await fixture();try{
   const vacant=await roster(app,app.office,'shifts','POST',shift({userId:null}));assert.equal(vacant.status,201);const id=vacant.data.shift.id;
