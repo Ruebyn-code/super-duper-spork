@@ -431,3 +431,39 @@ button.roster-day-shift{cursor:grab;touch-action:none}
  .phone-roster-tabs button:focus-visible{outline:2px solid white;outline-offset:-3px}
 }
 @media(max-width:360px){.phone-roster-header{padding:12px 10px 8px}.phone-roster-location h2{font-size:18px}.phone-roster-datebar{margin-left:10px;margin-right:10px}.phone-roster-shifts{padding-left:10px;padding-right:10px}.phone-roster-person>strong{font-size:12px}.phone-roster-time>span{font-size:11px}.phone-roster-tabs button{font-size:12px}}
+
+/* The phone reader opens as a bottom sheet; only actual shifts get personal cards. */
+.phone-roster-launch,.phone-roster:not([open]){display:none}
+html:has(.phone-roster[open]){overflow:hidden;overscroll-behavior:none}
+@keyframes phone-roster-rise{from{transform:translateY(100%);opacity:.7}to{transform:translateY(0);opacity:1}}
+@media(max-width:720px){
+ .phone-roster-launch{display:block;padding:15px;border:1px solid color-mix(in srgb,var(--primary) 18%,white);border-radius:12px;background:color-mix(in srgb,var(--primary) 7%,white)}
+ .phone-roster-launch button{width:100%;min-height:42px;margin:0;border-radius:8px;font-size:14px}
+ .phone-roster-launch p{margin:10px 0 0;line-height:1.6}
+ .phone-roster{position:fixed;inset:auto 0 0;width:min(100%,520px);max-width:100%;height:auto;min-height:0;max-height:calc(100dvh - 52px);box-sizing:border-box;margin:0 auto;padding:0;border-radius:20px 20px 0 0;color:#182b3a;box-shadow:0 -8px 38px #18364926;overscroll-behavior:contain}
+ .phone-roster[open]{animation:phone-roster-rise .28s cubic-bezier(.2,.7,.2,1)}
+ .phone-roster::backdrop{background:#10273580;backdrop-filter:blur(3px)}
+ .phone-roster-sheet-top{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 38px;min-height:38px}
+ .phone-roster-handle{display:grid;place-items:center;width:90px;height:32px;min-height:32px;padding:10px;margin:0;border:0;background:transparent;touch-action:none}
+ .phone-roster-handle>span{width:38px;height:4px;border-radius:4px;background:color-mix(in srgb,var(--primary) 35%,#8294a0)}
+ .phone-roster-handle:hover{background:#ffffff30}
+ .phone-roster .phone-roster-close{position:absolute;right:10px;top:5px;width:28px;height:28px;min-height:28px;border:0;background:transparent;font-size:24px}
+ .phone-roster-header{flex-shrink:0;padding-top:2px}
+ .phone-roster-datebar{flex-shrink:0}
+ .phone-roster-shifts{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;padding-bottom:16px}
+ .phone-roster-tabs{flex-shrink:0;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
+ .phone-roster-card-wrap{min-width:0;margin:9px 0 12px}
+ .phone-roster-card-wrap:last-child{margin-bottom:0}
+ .phone-roster-card-date{margin:0 0 5px;font:600 11px/1.4 Arial,sans-serif;color:#526679}
+ .phone-roster .phone-roster-card{display:grid;grid-template-columns:28px minmax(0,1fr);min-width:0;margin:0;padding:0;gap:0;border:0;border-radius:7px;background:color-mix(in srgb,var(--secondary) 14%,white);box-shadow:0 1px 3px #18364910;overflow:hidden}
+ .phone-roster-card .roster-position-static{border-radius:7px 0 0 7px;font-size:13px}
+ .phone-roster-card-content{min-width:0;padding:4px}
+ .phone-roster-card-times{display:flex;align-items:center;gap:4px;min-width:0}
+ .phone-roster-card-times>span{flex:1;min-width:0;padding:4px 6px;border-radius:4px;background:#ffffffdf;color:#324b60;text-align:center;font:600 15px/1.3 Arial,sans-serif;font-variant-numeric:tabular-nums}
+ .phone-roster-card-times>small{flex-shrink:0;font:600 10px Arial,sans-serif;color:#627383}
+ .phone-roster-card-person{display:flex;align-items:baseline;gap:7px;min-width:0;padding:5px 3px 2px}
+ .phone-roster-card-person>strong{min-width:0;overflow-wrap:anywhere;font:600 12px/1.4 Arial,sans-serif;color:#344f66}
+ .phone-roster-card-person>small{margin-left:auto;min-width:0;text-align:right;overflow-wrap:anywhere;font:10px/1.4 Arial,sans-serif;color:#627383}
+ .phone-roster-card-overnight{display:block;padding:1px 3px 2px;font:10px/1.4 Arial,sans-serif;color:#627383}
+}
+@media(prefers-reduced-motion:reduce){.phone-roster[open]{animation:none}}

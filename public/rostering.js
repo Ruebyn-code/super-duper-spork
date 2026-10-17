@@ -3,7 +3,7 @@
  const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;},user=element=>{element.dataset.userText='';return element;},can=key=>appAccess.can(key),money=value=>value===null||value===undefined?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),hours=value=>(value/3600).toFixed(2)+' h',date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',timeZone:M.timeZone}).format(new Date(value+'T12:00:00Z')),time=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:M.timeZone}).format(new Date(value)),uid=()=>crypto.randomUUID?.()||'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(Number(c)^crypto.getRandomValues(new Uint8Array(1))[0]&15>>Number(c)/4).toString(16));
  let session,data,week=M.monday(M.today()),section='',loading=0;
  const phoneViewport=matchMedia('(max-width:720px)');
- let phoneRosterScope='mine',phoneRosterDay=M.today(),phoneRosterMaker=false,phoneRosterKey='';
+ let phoneRosterScope='mine',phoneRosterDay=M.today(),phoneRosterMaker=false,phoneRosterKey='',phoneRosterDismissed=false,phoneRosterClosing=false;
  const status=(message,good=false)=>{const target=$('rostering-status');target.textContent=message;target.classList.toggle('success',good);};
  async function api(route,method='GET',body){const response=await fetch('/api/rostering/'+route,{method,cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||'',...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});const result=await response.json();if(!response.ok){if(response.status===401)location.href=companyLoginUrl();if(response.status===428)window.appRequiredReading?.check();throw Error(result.error||'Unable to load rostering.');}return result;}
  const field=(caption,input)=>{const label=node('label',caption);label.append(input);return label;};
@@ -42,9 +42,16 @@
  }
  setupPanelControls();
  function syncPhoneRosterMode(){
-  const reading=phoneViewport.matches&&section==='roster'&&!phoneRosterMaker;
-  document.body.classList.toggle('phone-roster-reading',reading);$('phone-roster').hidden=!reading;
+  const reading=phoneViewport.matches&&section==='roster'&&!phoneRosterMaker,dialog=$('phone-roster'),open=reading&&data&&!phoneRosterDismissed&&!appRequiredReading.blocked;
+  document.body.classList.toggle('phone-roster-reading',reading);$('phone-roster-launch').hidden=!reading;
+  if(open){dialog.hidden=false;if(!dialog.open)dialog.showModal();}
+  else if(!phoneRosterClosing){if(dialog.open)dialog.close();dialog.hidden=true;}
   $('phone-roster-return').hidden=!(phoneViewport.matches&&phoneRosterMaker);
+ }
+ async function dismissPhoneRoster(){
+  if(phoneRosterClosing)return;phoneRosterDismissed=true;phoneRosterClosing=true;const dialog=$('phone-roster');
+  try{if(dialog.open&&!matchMedia('(prefers-reduced-motion:reduce)').matches)await dialog.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(100%)',opacity:0}],{duration:180,easing:'ease-in'}).finished;}catch{}
+  finally{phoneRosterClosing=false;syncPhoneRosterMode();if(phoneViewport.matches&&section==='roster'&&!phoneRosterMaker)$('phone-roster-open').focus({preventScroll:true});}
  }
  function phoneShiftsOnDay(shifts,day){return shifts.filter(shift=>shift.date===day||shift.overnight&&M.shiftDate(shift.date,1)===day&&shift.end!=='00:00').sort((a,b)=>(a.date===day?M.minutes(a.start):0)-(b.date===day?M.minutes(b.start):0)||a.username.localeCompare(b.username));}
  function phoneShiftRow(shift,day){
@@ -55,21 +62,28 @@
   if(carry)schedule.append(user(node('small','From '+date(shift.date))));else if(shift.overnight)schedule.append(node('small','Ends next day'));
   row.append(person,schedule);return row;
  }
+ function phoneShiftCard(shift){
+  const wrap=node('div',undefined,'phone-roster-card-wrap'),day=user(node('p',dayNames[(new Date(shift.date+'T12:00:00Z').getUTCDay()+6)%7].slice(0,3)+' '+date(shift.date),'phone-roster-card-date')),card=node('article',undefined,'roster-shift phone-roster-card'),position=user(node('span',shift.position?shift.position.split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase():'–','roster-position-static')),content=node('div',undefined,'phone-roster-card-content'),times=node('div',undefined,'phone-roster-card-times'),person=node('div',undefined,'phone-roster-card-person');
+  card.dataset.phoneShift=shift.id;card.setAttribute('aria-label',day.textContent+' · '+(shift.position||'No position')+' · '+M.formatTimeInput(shift.start)+' – '+M.formatTimeInput(shift.end)+(shift.overnight?' · ends next day':''));
+  position.title=shift.position||'No position';position.setAttribute('aria-label',position.title);times.append(user(node('span',M.formatTimeInput(shift.start))),user(node('span',M.formatTimeInput(shift.end))));if(shift.overnight)times.append(node('small','+1'));
+  person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);return wrap;
+ }
  function renderPhoneRoster(){
   syncPhoneRosterMode();if(!data||!phoneViewport.matches||phoneRosterMaker)return;
   if(M.monday(phoneRosterDay)!==week)phoneRosterDay=week;
   const key=JSON.stringify([week,phoneRosterDay,phoneRosterScope,data.teamRoster,data.roster.publishedAt,session.locationName]);if(key===phoneRosterKey)return;phoneRosterKey=key;
-  const mine=phoneRosterScope==='mine',host=$('phone-roster-shifts'),team=data.teamRoster||{shifts:[],carryoverShifts:[]},shifts=[...team.shifts,...team.carryoverShifts].filter(shift=>!mine||shift.userId===session.id);
+  const mine=phoneRosterScope==='mine',host=$('phone-roster-shifts'),team=data.teamRoster||{shifts:[],carryoverShifts:[]},shifts=(mine?team.shifts:[...team.shifts,...team.carryoverShifts]).filter(shift=>!mine||shift.userId===session.id);
   $('phone-roster-location').textContent=session.locationName;$('phone-roster-caption').textContent=mine?'My shifts · Monday–Sunday':'Team shifts · By position';
   $('phone-roster-date-label').textContent=mine?date(week)+' – '+date(data.weekEnd):dayNames[(new Date(phoneRosterDay+'T12:00:00Z').getUTCDay()+6)%7].slice(0,3)+' '+date(phoneRosterDay);
   $('phone-roster-date').value=mine?week:phoneRosterDay;
   for(const id of ['previous','next'])$('phone-roster-'+id).setAttribute('aria-label',(id==='previous'?'Previous':'Next')+(mine?' week':' day'));
   for(const id of ['mine','team'])$('phone-roster-'+id).setAttribute('aria-pressed',String(id===phoneRosterScope));
   host.replaceChildren();
-  const group=(title,rows,day)=>{const block=node('section',undefined,'phone-roster-group');block.dataset.rosterGroup=title;block.append(user(node('h3',title)));for(const shift of rows)block.append(phoneShiftRow(shift,day));if(!rows.length)block.append(node('p','No shift','phone-roster-day-off'));host.append(block);};
+  const group=(title,rows,day)=>{const block=node('section',undefined,'phone-roster-group');block.dataset.rosterGroup=title;block.append(user(node('h3',title)));for(const shift of rows)block.append(phoneShiftRow(shift,day));host.append(block);};
   if(!data.roster.publishedAt&&!shifts.length){host.append(node('p','No roster has been published for this week.','phone-roster-empty'));return;}
   if(mine){
-   for(let index=0;index<7;index++){const day=M.shiftDate(week,index);group(dayNames[index].slice(0,3)+' '+date(day),phoneShiftsOnDay(shifts,day).filter(shift=>shift.date===day||day===week&&shift.date<week),day);}
+   for(const shift of shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start)))host.append(phoneShiftCard(shift));
+   if(!shifts.length)host.append(node('p','You have no rostered shifts this week.','phone-roster-empty'));
   }else{
    const visible=phoneShiftsOnDay(shifts,phoneRosterDay),groups=new Map();for(const shift of visible){const position=shift.position||'Unassigned position';if(!groups.has(position))groups.set(position,[]);groups.get(position).push(shift);}
    const priority=position=>/supervisor|manager|shift leader|team leader/i.test(position)?0:position==='Unassigned position'?2:1;
@@ -96,7 +110,7 @@
    if(!quiet){renderSection();if(!background)status('');}
   }catch(error){if(version===loading)status(error.message);}
  }
- async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(next==='clock'){next='roster';history.replaceState(null,'','#roster');}if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','availability','leave','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';section=next;syncPhoneRosterMode();$('roster-toolbar-controls').hidden=section!=='roster';for(const tools of document.querySelectorAll('[data-roster-tools]'))tools.hidden=tools.dataset.rosterTools!==section;for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
+ async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(next==='clock'){next='roster';history.replaceState(null,'','#roster');}if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','availability','leave','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';if(next==='roster'&&section!=='roster')phoneRosterDismissed=false;section=next;syncPhoneRosterMode();$('roster-toolbar-controls').hidden=section!=='roster';for(const tools of document.querySelectorAll('[data-roster-tools]'))tools.hidden=tools.dataset.rosterTools!==section;for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
  function renderSection(){if(!data)return;const render={roster:renderRoster,timesheets:renderTimesheets,availability:renderAvailability,leave:renderLeave,settings:renderSettings};render[section||'roster']();appAccess.apply(session);}
  function renderRoster(preserveBoard=false){renderPhoneRoster();const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,data.awardChecks,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+(summary.nativePay?' shifts need employment or award details':' shifts need staff or hourly rates'):hours(summary.plannedSeconds)+(summary.nativePay?' · Gross wages & allowances':'')+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
   for(const card of metrics.children)card.title=[...card.children].map(part=>part.textContent).join(' · ');
@@ -529,13 +543,23 @@
  $('availability-reset').onclick=()=>{const kind=$('availability-kind').value,record=availabilityRecord();formAction($('availability-form'),()=>api('availability','DELETE',{kind,id:record.id,weekStart:week,revision:record.revision}),'Availability override removed.');};
  $('leave-request').onclick=requestLeave;$('leave-owner-filter').onchange=$('leave-status-filter').onchange=renderLeave;
  $('budget-scope').onchange=renderBudgetForm;$('budget-mode').onchange=updateBudgetMode;$('budget-form').onsubmit=saveBudget;$('budget-inherit').onclick=()=>{const item=data.summary.budgets.find(item=>item.scope===$('budget-scope').value);formAction($('budget-form'),()=>api('budget','DELETE',{scope:item.scope,revision:item.revision}),'Budget override removed.');};$('rates-date').onchange=renderRates;$('rates-form').onsubmit=event=>{event.preventDefault();try{const payload={effectiveDate:$('rates-date').value,revision:data.rates.revision,rates:[...$('rate-people').querySelectorAll('input')].map(input=>({userId:input.dataset.userId,rateCents:input.value===''?null:cents(input.value)}))};formAction($('rates-form'),()=>api('rates','PUT',payload),'Hourly rates saved.');}catch(error){status(error.message);}};
+ $('phone-roster-open').onclick=()=>{if(phoneRosterClosing)return;phoneRosterDismissed=false;renderPhoneRoster();};
+ $('phone-roster-close').onclick=$('phone-roster-handle').onclick=dismissPhoneRoster;
+ $('phone-roster').addEventListener('cancel',event=>{event.preventDefault();dismissPhoneRoster();});
+ let phoneBackdropPress=false;
+ $('phone-roster').addEventListener('pointerdown',event=>{const rect=event.currentTarget.getBoundingClientRect();phoneBackdropPress=event.target===event.currentTarget&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom);});
+ $('phone-roster').addEventListener('click',event=>{if(phoneBackdropPress&&event.target===event.currentTarget)dismissPhoneRoster();phoneBackdropPress=false;});
+ let phoneSheetDrag=null;
+ $('phone-roster-handle').addEventListener('pointerdown',event=>{if(!event.isPrimary||event.button!==0)return;phoneSheetDrag={id:event.pointerId,y:event.clientY};event.currentTarget.setPointerCapture(event.pointerId);});
+ $('phone-roster-handle').addEventListener('pointermove',event=>{if(phoneSheetDrag?.id===event.pointerId&&event.clientY-phoneSheetDrag.y>60){phoneSheetDrag=null;dismissPhoneRoster();}});
+ $('phone-roster-handle').addEventListener('pointerup',()=>{phoneSheetDrag=null;});$('phone-roster-handle').addEventListener('pointercancel',()=>{phoneSheetDrag=null;});
  $('phone-roster-mine').onclick=$('phone-roster-team').onclick=event=>{phoneRosterScope=event.currentTarget.id.endsWith('mine')?'mine':'team';renderPhoneRoster();};
  $('phone-roster-previous').onclick=()=>selectPhoneRosterDate(M.shiftDate(phoneRosterScope==='mine'?week:phoneRosterDay,phoneRosterScope==='mine'?-7:-1));
  $('phone-roster-next').onclick=()=>selectPhoneRosterDate(M.shiftDate(phoneRosterScope==='mine'?week:phoneRosterDay,phoneRosterScope==='mine'?7:1));
  $('phone-roster-date').onchange=event=>selectPhoneRosterDate(event.target.value);
  $('phone-roster-edit').onclick=()=>{if(!can('rostering.manage'))return;phoneRosterMaker=true;syncPhoneRosterMode();renderRoster();};
- $('phone-roster-return').onclick=async()=>{if(!await flushRosterEdits())return;phoneRosterMaker=false;renderPhoneRoster();};
+ $('phone-roster-return').onclick=async()=>{if(!await flushRosterEdits())return;phoneRosterMaker=false;phoneRosterDismissed=false;renderPhoneRoster();};
  phoneViewport.addEventListener('change',async()=>{if(!session)return;if(!await flushRosterEdits())phoneRosterMaker=true;syncPhoneRosterMode();if(data&&section==='roster')renderRoster();});
- window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked&&session)load();});window.addEventListener('shift-clock-updated',()=>{if(session&&section==='timesheets')load(false,true);});window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets'].includes(section))load(false,true);});$('logout').onclick=async()=>{if(!await flushRosterEdits())return;const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
+ window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{syncPhoneRosterMode();if(!event.detail.blocked&&session)load();});window.addEventListener('shift-clock-updated',()=>{if(session&&section==='timesheets')load(false,true);});window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets'].includes(section))load(false,true);});$('logout').onclick=async()=>{if(!await flushRosterEdits())return;const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
  (async()=>{try{const response=await fetch('/api/session');session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}appAccess.apply(session);$('rostering-location').textContent=session.locationName+' · '+session.companyName;try{const saved=localStorage.getItem('opstack-roster-view:'+session.id+':'+session.companyId);if(['staff','stacked','day'].includes(saved))rosterView=saved;}catch{}renderSidebar();await appRequiredReading.ready;view();}catch(error){status(error.message);}})();
 })();
