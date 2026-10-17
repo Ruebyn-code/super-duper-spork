@@ -4,7 +4,7 @@ button,input,select,textarea,summary,.header-link,.admin-sidebar a,.secondary-si
 button:not(:disabled):active{transform:scale(.98)}button:disabled{transform:none}
 input:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 12%,transparent)}
 .product{transition:box-shadow var(--motion-medium),border-color var(--motion-medium),transform var(--motion-medium) var(--motion-ease)}
-@media(hover:hover){.product:hover{border-color:color-mix(in srgb,var(--primary) 35%,#dce5ed);box-shadow:0 8px 22px #182b3a0c;transform:translateY(-2px)}}
+@media(hover:hover){.product:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--theme-line,#dce5ed));box-shadow:0 8px 22px #182b3a0c;transform:translateY(-2px)}}
 .admin-dropdown[open] nav,.stock-edit-panel:not([hidden]),.admin-edit-panel:not([hidden]){animation:panel-enter var(--motion-medium) var(--motion-ease)}
 @keyframes panel-enter{from{opacity:.85;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .app-page main,.authentication-page .management{animation:surface-enter var(--motion-enter) var(--motion-ease)}

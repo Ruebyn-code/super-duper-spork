@@ -1,6 +1,7 @@
 // One style builder for the initial HTML and later edits in the browser.
 (function(root){
  const parts=typeof module==='object'&&module.exports?require('./edit-parts'):root.appEditParts;
+ const themeColours=typeof module==='object'&&module.exports?require('./theme-colours'):root.themeColours;
  const baseFonts={opsilon:"'Opsilon',sans-serif",arial:'Arial,Helvetica,sans-serif',verdana:'Verdana,sans-serif',georgia:'Georgia,serif',trebuchet:"'Trebuchet MS',sans-serif",monospace:'monospace'};
  const fonts={...baseFonts};let library=[];
  const baseLabels={opsilon:'Opsilon (your font)',arial:'Arial',verdana:'Verdana',georgia:'Georgia',trebuchet:'Trebuchet MS',monospace:'Monospace'};
@@ -23,6 +24,8 @@
  }
  const colour=value=>Boolean(parseColour(value));
  function colourValue(value){const parsed=parseColour(value);if(!parsed)return '';const base=['primary','secondary'].includes(parsed.colour)?'var(--'+parsed.colour+')':parsed.colour;return parsed.opacity===1?base:'color-mix(in srgb, '+base+' '+Number((parsed.opacity*100).toFixed(4))+'%, transparent)';}
+ function themedColourValue(value,role){const parsed=parseColour(value);if(!parsed||!themeColours)return colourValue(value);let base=['primary','secondary'].includes(parsed.colour)?(role==='text'?'var(--theme-'+parsed.colour+'-text,var(--'+parsed.colour+'))':'var(--'+parsed.colour+')'):themeColours.adapt(parsed.colour,role);return parsed.opacity===1?base:'color-mix(in srgb, '+base+' '+Number((parsed.opacity*100).toFixed(4))+'%, transparent)';}
+ function themedImageValue(value){return 'linear-gradient(var(--theme-image-shade,transparent),var(--theme-image-shade,transparent)),url("'+value+'")';}
  const resolveColour=(value,settings)=>{const parsed=parseColour(value);return parsed?(['primary','secondary'].includes(parsed.colour)?settings[parsed.colour]:parsed.colour):'';};
  const image=value=>/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(value||'');
  function rule(selector,properties){return ':where('+selector+'){'+properties+'}';}
@@ -36,17 +39,17 @@
    css+=rule(selectors[part],'font-family:'+families[font]+'!important;'+weight);
   }
   const colourSelectors={...selectors,body:'body,p,.description,.small,.info,.empty',greeting:'#user-greeting,#user-greeting *'};
-  for(const part of ['body','headings','appName','greeting','stockNames','buttons','labels','inputs','navigation'])if(colour(settings.fontColours?.[part]))css+=rule(colourSelectors[part],'color:'+colourValue(settings.fontColours[part])+'!important');
+  for(const part of ['body','headings','appName','greeting','stockNames','buttons','labels','inputs','navigation'])if(colour(settings.fontColours?.[part]))css+=rule(colourSelectors[part],'color:'+themedColourValue(settings.fontColours[part],'text')+'!important');
   for(const [part,selector] of Object.entries(backgrounds)){
-   if(colour(settings.backgrounds?.[part]))css+=rule(selector,'background-color:'+colourValue(settings.backgrounds[part])+'!important');
-   if(image(settings.backgroundImages?.[part]))css+=rule(selector,'background-image:url("'+settings.backgroundImages[part]+'")!important;background-size:cover;background-position:center;background-repeat:no-repeat');
+   if(colour(settings.backgrounds?.[part]))css+=rule(selector,'background-color:'+themedColourValue(settings.backgrounds[part],'background')+'!important');
+   if(image(settings.backgroundImages?.[part]))css+=rule(selector,'background-image:'+themedImageValue(settings.backgroundImages[part])+'!important;background-size:cover;background-position:center;background-repeat:no-repeat');
   }
   return css;
  }
  function styleProperties(settings,families){
   let properties='';if(Object.hasOwn(families,settings.font))properties+='font-family:'+families[settings.font]+'!important;font-weight:'+((settings.font==='opsilon'||isUploadedFont(settings.font))?400:600)+'!important;';
-  if(colour(settings.fontColour))properties+='color:'+colourValue(settings.fontColour)+'!important;';if(colour(settings.background))properties+='background-color:'+colourValue(settings.background)+'!important;';
-  if(settings.backgroundImage==='')properties+='background-image:none!important;';if(image(settings.backgroundImage))properties+='background-image:url("'+settings.backgroundImage+'")!important;background-size:cover;background-position:center;background-repeat:no-repeat;';
+  if(colour(settings.fontColour))properties+='color:'+themedColourValue(settings.fontColour,'text')+'!important;';if(colour(settings.background))properties+='background-color:'+themedColourValue(settings.background,'background')+'!important;';
+  if(settings.backgroundImage==='')properties+='background-image:none!important;';if(image(settings.backgroundImage))properties+='background-image:'+themedImageValue(settings.backgroundImage)+'!important;background-size:cover;background-position:center;background-repeat:no-repeat;';
   if(colour(settings.iconColour))properties+='color:'+colourValue(settings.iconColour)+'!important;stroke:'+colourValue(settings.iconColour)+'!important;';
   if(Number.isInteger(settings.iconSize)&&settings.iconSize>=8&&settings.iconSize<=96)properties+='width:'+settings.iconSize+'px!important;height:'+settings.iconSize+'px!important;';
   if(typeof settings.iconStroke==='number'&&settings.iconStroke>=0.5&&settings.iconStroke<=4)properties+='stroke-width:'+settings.iconStroke+'!important;';return properties;
@@ -61,7 +64,7 @@
    if(colour(settings.iconDetailColour))css+=selector+' .icon-detail,'+selector+' .icon-detail *{stroke:'+colourValue(settings.iconDetailColour)+'!important;}';
   }return css;
  }
- const helpers={fonts,build,buildElements,colourValue,resolveColour,parseColour,colour,fontLabels,fontFaces,registerFonts,isUploadedFont};
+ const helpers={fonts,build,buildElements,colourValue,themedColourValue,themedImageValue,resolveColour,parseColour,colour,fontLabels,fontFaces,registerFonts,isUploadedFont};
  if(typeof module==='object'&&module.exports)module.exports=helpers;
  else{root.appearanceStyles=helpers;try{root.appBootstrap=JSON.parse(document.getElementById('app-bootstrap')?.textContent||'{}');}catch{root.appBootstrap={};}registerFonts(root.appBootstrap.fontLibrary||[]);}
 })(globalThis);

@@ -137,6 +137,10 @@ Select **Require everyone to mark this post as read** when publishing an importa
 
 Post authors can edit or delete their posts and view **Read receipts**. Editing creates a new version that users must acknowledge again when reading is required. Acknowledgements and snoozes are private to each user, saved across restarts and synchronised across tabs. The prompt rechecks when the app is focused and while it is open. Keep **data/communications.json** with the rest of the **data** folder when updating to retain conversations, posts and acknowledgements. Comms stays inside the app and does not send emails or supplier orders.
 
+## Dark mode
+
+Open the blue account dropdown and select **Dark mode**. It is available to every signed-in user, including on phones. Each account’s choice is remembered in that browser across pages and companies, and synchronises between open tabs. Until you choose, the app follows your device’s light/dark preference. The sign-in screen has its own sun/moon button and separate guest preference. Company logos, uploaded images, brand colours and stored appearance settings remain unchanged; surfaces and text adapt for dark mode. Printouts use the light palette.
+
 ## Suppliers and stock
 
 Sign in with a Head Office account, then open **Suppliers & stock → Suppliers** and select **Add supplier**. Enter a supplier name and select **Save supplier**. Open **Stock items → Add new stock**, choose that supplier in the stock form, enter the item name, price in AUD, then select **Save stock**. Supplier SKU, unit amount and category help organise your items. Unit amount is an optional pack-size label such as `5 kg`, `2 L` or `box of 12`; quantities and prices remain per unit/pack. The description field is removed from stock screens. Existing catalogue items start with a blank unit amount until you set one. Use the supplier buttons above the catalogue to view their stock.
