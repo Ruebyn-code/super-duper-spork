@@ -20,3 +20,14 @@ test('break timing warnings flag short rests, meal limits, first/last hours and 
  for(const minutes of [29,61])assert.ok(M.warnings(entry([{startAt:at(90),endAt:null}]),shift,'break-end',false,start+(90+minutes)*60000).length);for(const minutes of [30,60])assert.equal(M.warnings(entry([{startAt:at(90),endAt:null}]),shift,'break-end',false,start+(90+minutes)*60000).length,0);
  assert.ok(M.warnings(entry([{startAt:at(90),endAt:at(100),paid:true}]),shift,'break-start',false,start+100*60000).some(message=>message.includes('combined')));
 });
+test('a fresh PIN unlock reveals only the actions and qualifying breaks remaining in this stage',()=>{
+ const unlocked={clockUnlocked:true,unlockExpiresAt:at(1000)},current=entry(),short={...shift,endAt:at(180),breakMinutes:0},restOnly={...shift,endAt:at(270),breakMinutes:0};
+ assert.deepEqual(M.actions({entry:null,shift},start),[]);assert.deepEqual(M.actions({entry:null,shift,...unlocked},start),[{action:'in'}]);assert.deepEqual(M.actions({entry:current,shift},start),[]);
+ assert.deepEqual(M.actions({entry:current,shift:short,...unlocked},start),[{action:'out'}]);assert.deepEqual(M.actions({entry:current,shift:restOnly,...unlocked},start),[{action:'break-start',breakType:'paid'},{action:'out'}]);
+ assert.deepEqual(M.actions({entry:current,shift,...unlocked},start),[{action:'break-start',breakType:'paid'},{action:'out'},{action:'break-start',breakType:'unpaid'}]);
+ const afterRest=entry([{startAt:at(60),endAt:at(70),paid:true}]);assert.deepEqual(M.actions({entry:afterRest,shift,...unlocked},start+70*60000),[{action:'out'},{action:'break-start',breakType:'unpaid'}]);
+ const done=entry([{startAt:at(60),endAt:at(70),paid:true},{startAt:at(240),endAt:at(270)}]);assert.deepEqual(M.actions({entry:done,shift,...unlocked},start+300*60000),[{action:'out'}]);
+ assert.deepEqual(M.actions({entry:done,shift,...unlocked},start+1000*60000),[]);assert.deepEqual(M.actions({entry:entry([{startAt:at(100),endAt:null}]),shift,...unlocked},start+110*60000),[{action:'break-end'},{action:'out'}]);
+ const twoMeals={...shift,endAt:at(660),breakMinutes:60},guide=M.guidance(current,twoMeals,start);assert.equal(guide.restCount,1);assert.equal(guide.mealCount,2);assert.equal(guide.remainingMeals,2);
+ assert.ok(M.actions({entry:done,shift,...unlocked},start+600*60000).some(action=>action.breakType==='unpaid'),'another meal remains available after another five hours of work');
+});

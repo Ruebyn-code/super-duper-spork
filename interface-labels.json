@@ -9310,5 +9310,149 @@
     "locations": [
       "Rostering · shift clock"
     ]
+  },
+  {
+    "text": "Phone number",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Clock PIN uses the last four digits. Every user needs a different ending.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Clock PIN: {pin}",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Enter your four-digit PIN",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Enter your PIN to continue",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Use the keypad or your keyboard.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Ask a manager to add your phone number in Users. Your PIN is its last four digits.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Start shift",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "10 min break",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "30 min break",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Manager approval",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Cancel manager approval",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Clear PIN",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Delete last PIN digit",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Ready to start early",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Ready to start",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Worked · {time}",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Break · {time}",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Paid rest · 10 minutes",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Unpaid meal · 30–60 minutes",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Arrange a meal break now.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Starting early needs a manager’s PIN.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Shift details",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Paid rest counts as work. Meals are unpaid and must be 30–60 minutes. Arrange breaks outside the first and last hour, do not combine rest and meals, and do not work more than five hours without a meal.",
+    "locations": [
+      "Users & shift clock"
+    ]
   }
 ]

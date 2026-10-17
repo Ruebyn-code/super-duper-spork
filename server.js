@@ -65,7 +65,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
   const usageHistory=stockUsage.createReader();
   const salesStore=sales.createStore();
   const awardStore=awardCompliance.createStore(dataDir,{people:()=>auth.directory(),locations:()=>auth.levels.locations(),now:rosteringNow,fetchImpl});
-  const rosteringStore=rostering.createStore(dataDir,{clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:actor=>locationStore.accessible(actor),awards:awardStore,people:()=>auth.directory(),forecast:(actor,weekStart)=>{const current=sales.currentWeek(new Date(rosteringNow())),anchor=weekStart<current?weekStart:current;return Promise.all([1,2,3,4].map(index=>sales.read(dataDir,actor,stockUsage.shift(anchor,-7*index))));},now:rosteringNow});
+  const rosteringStore=rostering.createStore(dataDir,{unlockClockPin:(actor,input)=>auth.unlockClock(actor,input),authorizeClock:(actor,input)=>auth.authorizeClock(actor,input),clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:actor=>locationStore.accessible(actor),awards:awardStore,people:()=>auth.directory(),forecast:(actor,weekStart)=>{const current=sales.currentWeek(new Date(rosteringNow())),anchor=weekStart<current?weekStart:current;return Promise.all([1,2,3,4].map(index=>sales.read(dataDir,actor,stockUsage.shift(anchor,-7*index))));},now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const manualParStore=manualPar.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
