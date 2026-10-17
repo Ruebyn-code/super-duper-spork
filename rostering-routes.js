@@ -10,6 +10,7 @@ async function route({req,url,params,session,store,body,json,fail}){
  if(url==='/api/rostering/availability'&&['PUT','DELETE'].includes(req.method)){json(200,await store.saveAvailability(session,await input(),req.method==='DELETE'));return true;}
  if(url==='/api/rostering/leave'&&req.method==='POST'){json(201,await store.saveLeave(session,await input()));return true;}
  const leave=url.match(/^\/api\/rostering\/leave\/([a-f0-9-]{36})$/i);if(leave&&req.method==='PUT'){json(200,await store.changeLeave(session,leave[1],await input()));return true;}
+ if(url==='/api/rostering/positions'&&req.method==='PUT'){json(200,await store.savePositions(session,await input()));return true;}
  if(url==='/api/rostering/rates'&&req.method==='PUT'){json(200,await store.saveRates(session,await input()));return true;}
  if(url==='/api/rostering/budget'&&['PUT','DELETE'].includes(req.method)){json(200,await store.saveBudget(session,await input(),req.method==='DELETE'));return true;}
  const time=url.match(/^\/api\/rostering\/timesheets\/([a-f0-9-]{36})$/i);if(time&&req.method==='PUT'){json(200,await store.reviewTime(session,time[1],await input()));return true;}

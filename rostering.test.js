@@ -167,6 +167,39 @@ test('moving a draft shift checks destination availability, overlaps and roster 
  }finally{await app.close();}
 });
 
+test('position settings import history, persist colours and rename displayed shifts without rewriting published schedules',async()=>{
+ const app=await fixture();try{
+  const made=await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id,position:'Kitchen'}));assert.equal(made.status,201);
+  assert.equal((await roster(app,app.office,'shifts','POST',shift({revision:1,date:'2026-10-20',userId:app.franchiseeRecord.id,position:'Supervisor'}))).status,201);
+  await roster(app,app.office,'publish','POST',{weekStart:'2026-10-19',revision:2});const before=JSON.parse(await fs.readFile(path.join(app.dir,'rostering.json'),'utf8')).weeks;
+  let settings=(await roster(app,app.office)).data.positionSettings;assert.equal(settings.revision,0);assert.deepEqual(settings.positions.map(p=>p.name),['Kitchen','Supervisor']);assert.ok(settings.positions.every(p=>p.used&&p.color===null));
+  const unused={id:crypto.randomUUID(),name:'Front counter',color:'#ab12cd'},positions=settings.positions.map(p=>({...p,name:p.name==='Kitchen'?'Kitchen crew':p.name,color:p.name==='Kitchen'?'#24853B':'#102030'}));positions.push(unused);
+  let saved=await roster(app,app.franchisee,'positions','PUT',{revision:0,positions});assert.equal(saved.status,200,JSON.stringify(saved.data));assert.equal(saved.data.revision,1);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(app.dir,'rostering.json'),'utf8')).weeks,before,'Position metadata never rewrites draft/published times, approvals or revisions');
+  let dashboard=(await roster(app,app.office)).data;assert.equal(dashboard.roster.revision,3);assert.equal(dashboard.roster.hasChanges,false);assert.equal(dashboard.roster.shifts[0].position,'Kitchen crew');assert.equal(dashboard.roster.shifts[0].positionColor,'#24853b');assert.ok(dashboard.positions.includes('Front counter'));
+  const second=(await app.request(app.office,'/api/locations','POST',{name:'Company second location'})).data,secondHeaders={'X-Location-Id':second.id};
+  assert.deepEqual((await roster(app,app.office,'dashboard?week=2026-10-19','GET',undefined,secondHeaders)).data.positionSettings,dashboard.positionSettings,'New locations immediately share the company position catalogue and colours');
+  const secondShift=await roster(app,app.office,'shifts','POST',shift({userId:null,position:'Kitchen'}),secondHeaders);assert.equal(secondShift.status,201);assert.equal(secondShift.data.shift.position,'Kitchen crew');assert.equal((await roster(app,app.office,'dashboard?week=2026-10-19','GET',undefined,secondHeaders)).data.roster.shifts[0].positionColor,'#24853b');
+  const staff=(await roster(app,app.member)).data;assert.equal(staff.positionSettings,null);assert.deepEqual(staff.positions,[]);assert.equal(staff.roster.shifts[0].positionColor,'#24853b');assert.equal(staff.teamRoster.shifts[0].position,'Kitchen crew');assert.ok(!JSON.stringify(staff.teamRoster).includes('rateCents'));assert.ok(!JSON.stringify(saved.data).includes('aliases'));
+  const otherHeaders={'X-Location-Id':app.other.id};assert.equal((await roster(app,app.office,'positions','PUT',{revision:0,positions:[{id:crypto.randomUUID(),name:'Kitchen crew',color:'#1122ff'}]},otherHeaders)).status,200);assert.equal((await roster(app,app.office)).data.positionSettings.positions.find(p=>p.name==='Kitchen crew').color,'#24853b');assert.equal((await roster(app,app.office,'dashboard?week=2026-10-19','GET',undefined,otherHeaders)).data.positionSettings.positions[0].color,'#1122ff');
+  const changed=await roster(app,app.office,'shifts/'+made.data.shift.id,'PUT',shift({revision:3,userId:app.memberRecord.id,position:'Kitchen',start:'10:00'}));assert.equal(changed.status,200);assert.equal(changed.data.shift.position,'Kitchen crew','Older clients using a previous position name resolve to its renamed position');assert.equal((await roster(app,app.member)).data.roster.shifts[0].start,'09:00','Unpublished time edits remain private');
+  settings=(await roster(app,app.office)).data.positionSettings;saved=await roster(app,app.office,'positions','PUT',{revision:settings.revision,positions:settings.positions.filter(p=>p.id!==unused.id)});assert.equal(saved.status,200);assert.ok(!saved.data.positions.some(p=>p.id===unused.id));
+  assert.equal((await roster(app,app.office,'positions','PUT',{revision:2,positions:[]})).status,409,'Used positions cannot disappear from existing rosters');
+  await app.restart();const again=await app.login('Office','office-test-password');dashboard=(await roster(app,again)).data;assert.equal(dashboard.positionSettings.revision,2);assert.equal(dashboard.roster.shifts[0].positionColor,'#24853b');assert.equal((await roster(app,await app.login('Member'))).data.teamRoster.shifts[0].position,'Kitchen crew');
+ }finally{await app.close();}
+});
+test('position settings require roster management and CSRF, reject invalid names and colours, and protect concurrent edits',async()=>{
+ const app=await fixture();try{
+  const first={id:crypto.randomUUID(),name:'Supervisor',color:'#112233'},payload={revision:0,positions:[first]};
+  assert.equal((await roster(app,app.member,'positions','PUT',payload)).status,403);assert.equal((await roster(app,null,'positions','PUT',payload)).status,401);assert.equal((await roster(app,app.office,'positions','PUT',payload,{'X-CSRF-Token':''})).status,403);assert.equal((await roster(app,app.outside,'positions','PUT',payload,{'X-Location-Id':app.office.session.locationId})).status,403);
+  for(const input of [null,[],42,{revision:0,positions:null},{revision:0,positions:[{...first,name:' '}]},{revision:0,positions:[{...first,name:'x'.repeat(81)}]},{revision:0,positions:[{...first,id:'wrong'}]},{revision:0,positions:[first,first]},{revision:0,positions:[first,{...first,id:crypto.randomUUID(),name:'supervisor'}]},...["#fff","red","url(javascript:alert(1))",42].map(color=>({revision:0,positions:[{...first,color}]}))])assert.equal((await roster(app,app.office,'positions','PUT',input)).status,400,JSON.stringify(input));
+  assert.equal((await roster(app,app.office)).data.positionSettings.revision,0);
+  const role=await app.role('Roster manager only',['home.view','rostering.view','rostering.manage']),manager=await app.assign(app.franchiseeRecord,role);const results=await Promise.all([roster(app,manager,'positions','PUT',payload),roster(app,app.office,'positions','PUT',payload)]);assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);
+  let current=(await roster(app,app.office)).data.positionSettings;assert.equal(current.revision,1);assert.equal((await roster(app,app.office,'positions','PUT',{revision:1,positions:[{...first,name:'Shift leader'}]})).status,200);
+  assert.equal((await roster(app,app.office,'positions','PUT',{revision:2,positions:[{...first,name:'Shift leader'},{id:crypto.randomUUID(),name:'Supervisor',color:null}]})).status,400,'An alias cannot be assigned to a different position');
+  current=(await roster(app,app.office)).data.positionSettings;assert.equal((await roster(app,app.office,'positions','PUT',{revision:current.revision,positions:current.positions.map(p=>({...p,color:null}))})).status,200);assert.equal((await roster(app,app.office)).data.positionSettings.positions[0].color,null);
+ }finally{await app.close();}
+});
 test('position dropdown choices reuse location shift history without exposing other locations or staff catalogues',async()=>{
  const app=await fixture();try{
   assert.equal((await roster(app,app.office,'shifts','POST',shift({userId:app.memberRecord.id,position:'Kitchen'}))).status,201);

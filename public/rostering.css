@@ -467,3 +467,30 @@ html:has(.phone-roster[open]){overflow:hidden;overscroll-behavior:none}
  .phone-roster-card-overnight{display:block;padding:1px 3px 2px;font:10px/1.4 Arial,sans-serif;color:#627383}
 }
 @media(prefers-reduced-motion:reduce){.phone-roster[open]{animation:none}}
+
+/* Position colours are shared by the maker, daily timeline and published phone cards. */
+.roster-cell .roster-shift,.phone-roster .phone-roster-card{background:color-mix(in srgb,var(--shift-colour,var(--secondary)) 14%,white)}
+.roster-position-field,.roster-position-static{background:var(--shift-colour,var(--secondary))}
+.roster-position-code,.roster-position-static,.roster-position-field .location-select-trigger{color:var(--shift-ink,#24445b)}
+.roster-day-shift{border-left-color:var(--shift-colour,var(--secondary));background:color-mix(in srgb,var(--shift-colour,var(--primary)) 14%,white)}
+button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,var(--primary)) 22%,white)}
+.phone-roster-shift{padding-left:7px;border-left:3px solid var(--shift-colour,transparent);border-radius:5px;background:color-mix(in srgb,var(--shift-colour,transparent) 8%,transparent)}
+.roster-position-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.roster-position-editor{position:relative;min-width:0;padding:9px;border:1px solid color-mix(in srgb,var(--primary) 15%,white);border-radius:8px;background:color-mix(in srgb,var(--primary) 3%,white)}
+.roster-position-editor>label{margin:0 0 7px;font:600 10px/1.5 Arial,sans-serif}
+.roster-position-editor>label:first-child{padding-right:29px}
+.rostering-page .roster-position-editor input[type=text]{min-height:28px;height:28px;box-sizing:border-box;margin:3px 0 0;padding:4px 6px;border-radius:5px;font:11px Arial,sans-serif}
+.roster-position-colour{display:flex;align-items:center;gap:5px;margin-top:3px}
+.roster-position-colour input[type=color]{flex:0 0 30px;width:30px;min-width:30px;height:28px;margin:0;padding:2px;border-radius:5px;background:white}
+.rostering-page .roster-position-colour input[type=text]{flex:1;width:0;min-width:0;margin:0}
+.roster-position-colour button,.roster-position-remove{flex-shrink:0;width:26px;height:28px;min-height:28px;margin:0;padding:4px;border-radius:5px;color:var(--primary)}
+.roster-position-remove{position:absolute;right:7px;top:24px;border:0;background:transparent}
+.roster-position-remove svg{width:17px;height:17px}
+.roster-position-preview{display:grid;grid-template-columns:24px minmax(0,1fr);min-width:0;overflow:hidden;border-radius:6px;background:color-mix(in srgb,var(--shift-colour,var(--secondary)) 14%,white)}
+.roster-position-preview>div{min-width:0;padding:4px}
+.roster-position-preview-times{display:flex;gap:3px}
+.roster-position-preview-times>span{flex:1;min-width:0;padding:4px 3px;border-radius:3px;background:#ffffffdf;text-align:center;font:600 11px Arial,sans-serif;color:#324b60}
+.roster-position-preview strong{display:block;min-width:0;overflow-wrap:anywhere;margin-top:4px;font:600 10px/1.5 Arial,sans-serif;color:#344f66}
+#positions-form>.roster-help{margin:5px 0 9px;font-size:10px}
+@media(max-width:1100px){.roster-position-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.roster-position-list{grid-template-columns:minmax(0,1fr)}.rostering-page .roster-position-editor input[type=text]{height:34px;min-height:34px;font-size:12px}.roster-position-colour input[type=color],.roster-position-colour button,.roster-position-remove{height:34px;min-height:34px}.roster-position-remove{top:24px}.roster-position-preview-times>span{font-size:12px;padding:5px}.roster-position-preview strong{font-size:11px}}
