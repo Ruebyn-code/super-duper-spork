@@ -2,6 +2,7 @@ async function route({req,url,params,session,store,body,json,fail}){
  if(!url.startsWith('/api/rostering/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  const input=()=>body(req,512000);
  if(url==='/api/rostering/award-check'&&req.method==='GET'){json(200,await store.checkTime(session,params.get('entryId')));return true;}
+ if(url==='/api/rostering/clock-status'&&req.method==='GET'){json(200,await store.clockStatus(session));return true;}
  if(url==='/api/rostering/dashboard'&&req.method==='GET'){json(200,await store.dashboard(session,params.get('week')));return true;}
  if(url==='/api/rostering/shifts'&&req.method==='POST'){json(201,await store.saveShift(session,await input()));return true;}
  const shift=url.match(/^\/api\/rostering\/shifts\/([a-f0-9-]{36})$/i);if(shift){if(req.method==='PUT')json(200,await store.saveShift(session,await input(),shift[1]));else if(req.method==='DELETE')json(200,await store.removeShift(session,shift[1],await input()));else fail('Unsupported shift action.',405);return true;}

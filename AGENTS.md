@@ -13,3 +13,5 @@
 - Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.
 
 - Comms and Knowledge Library editors share the grouped Insert menu for formatting, media and callouts. Preserve structured content when sending, saving, editing and displaying required posts. Media files remain private to their uploader and the audience of the messages/posts/articles that reference them.
+
+- Shift clock is a shared signed-in-page popup, not a navigation page. Keep staff PIN checks on the server for every clock/break action, and require a different eligible manager’s PIN for early starts on the shift’s scheduled Melbourne day. Preserve actual timestamps and approval history; never store raw PINs in API responses, browser storage or audit records. Never auto-create clock punches or end breaks from timers.

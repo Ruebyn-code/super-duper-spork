@@ -9040,5 +9040,275 @@
     "locations": [
       "rostering"
     ]
+  },
+  {
+    "text": "Clock PIN",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Four digits, required to clock in, clock out and record breaks.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "PIN is set. Leave blank to keep it, or enter four digits to reset it.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "No clock PIN set. Enter four digits to enable clocking.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Your four-digit PIN",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Approving manager",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Manager’s four-digit PIN",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Starting before your rostered time needs another manager’s approval.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Choose a manager",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Enter your PIN for every clock or break action.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Ask a manager to set your four-digit clock PIN in Users.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "No eligible manager has a PIN set for this location.",
+    "locations": [
+      "Users & shift clock"
+    ]
+  },
+  {
+    "text": "Time to clock in",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Your rostered shift has finished",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "You’re clocked in",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "You’re on a break",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Your break time is up",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Meal break exceeds 60 minutes",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "A meal break is due",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Request an early start",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Start early",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Approve & clock in",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Published shift",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Paid rest break",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Unpaid meal break",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Paid rest · 10 min",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Unpaid meal · 30–60 min",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Shift clock",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Close clock popup",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Reason for the timing exception",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Record actual time",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Go back",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Actual times are recorded when you press a button. Timesheets go to your manager for review.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Clause 14: breaks must not be required in the first or last hour, rest and meal breaks must not be combined, and no more than 5 hours may be worked without a meal break.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Paid rest counts as work. Aim for 10 minutes.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Meal breaks are unpaid. Take at least 30 minutes and no more than 60 minutes.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Five hours have passed since starting work or the last meal break. Arrange a meal break now.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Record what actually happened and add a reason for manager review.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Enter a reason for the timing exception.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "{restTaken} / {restCount} paid rest breaks · {mealsTaken} / {mealCount} unpaid meals",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": " · two meal breaks may replace the second rest",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "Under 4 hours: no minimum rest or meal break under Table 2.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "4–under 5 hours: one paid 10-minute rest break.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "5–under 9 hours: one paid 10-minute rest break and one unpaid 30–60 minute meal break.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
+  },
+  {
+    "text": "9+ hours: two paid 10-minute rests (one in each half) and one unpaid 30–60 minute meal, OR one paid rest and two unpaid meals.",
+    "locations": [
+      "Rostering · shift clock"
+    ]
   }
 ]
