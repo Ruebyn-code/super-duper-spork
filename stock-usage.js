@@ -1,3 +1,4 @@
+const stockOrderRules=require('./public/stock-order-rules');
 const {belongs}=require('./location-scope');
 const fs=require('node:fs/promises'),path=require('node:path');
 const par=require('./par-levels');
@@ -65,7 +66,7 @@ function orderingSuggestions(counts,products,session,levels){
  const quantities=new Map((latest?.items||[]).filter(item=>item&&validQuantity(item.quantity)).map(item=>[item.id,item.quantity]));
  return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
   const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
-  const recommendation=counted!==null&&level!==null?Math.max(0,Math.ceil((level*1000-Math.round(counted*1000))/1000)):null;
+  const recommendation=stockOrderRules.recommendation(product,level,counted);
   return [product.id,{stockCount:counted,recommended:recommendation}];
  }))};
 }
