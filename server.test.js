@@ -51,13 +51,13 @@ test('stock edits persist, validate input, and preserve previously saved orders'
  try{
  const added=await request('/api/products','POST',{name:'Original',supplierId:'office',price:5,stock:1});assert.equal(added.status,201);const id=added.data.id;
  const order=await request('/api/orders','POST',{name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id,quantity:2}]});assert.equal(order.status,201);
- const changes={name:'Updated stock',supplierId:'safety',sku:'NEW-SKU',category:'Equipment',price:7.95,stock:22,description:'Updated description'};
+ const changes={name:'Updated stock',supplierId:'safety',sku:'NEW-SKU',category:'Equipment',price:7.95,stock:22,unitAmount:'Box of 12'};
  assert.equal((await request('/api/products/'+id,'PUT',{...changes,price:-1})).status,400);
  assert.equal((await request('/api/products/'+id,'PUT',{...changes,supplierId:'missing'})).status,400);
  assert.equal((await request('/api/products/missing','PUT',changes)).status,404);
  const result=await request('/api/products/'+id,'PUT',changes);assert.equal(result.status,200);assert.equal(result.data.id,id);
  await new Promise(r=>server.close(r));url=await start();
- const catalogue=(await request('/api/catalogue')).data;const product=catalogue.products.find(p=>p.id===id);assert.equal(catalogue.products.filter(p=>p.id===id).length,1);assert.equal(product.name,'Updated stock');assert.equal(product.price,795);assert.equal(product.stock,22);assert.equal(product.supplier,'Safety Supplies');assert.equal(product.description,'Updated description');assert.equal(product.sku,'NEW-SKU');assert.equal(product.category,'Equipment');
+ const catalogue=(await request('/api/catalogue')).data;const product=catalogue.products.find(p=>p.id===id);assert.equal(catalogue.products.filter(p=>p.id===id).length,1);assert.equal(product.name,'Updated stock');assert.equal(product.price,795);assert.equal(product.stock,22);assert.equal(product.supplier,'Safety Supplies');assert.equal(product.unitAmount,'Box of 12');assert.ok(!Object.hasOwn(product,'description'));assert.equal(product.sku,'NEW-SKU');assert.equal(product.category,'Equipment');
  const next=await request('/api/orders','POST',{name:'Buyer',phone:'0400 123 456',location:'Office',items:[{id,quantity:2}]});assert.equal(next.data.total,1590);
  const historical=JSON.parse(await fs.readFile(path.join(dir,order.data.id+'.json'),'utf8'));assert.equal(historical.total,1000);assert.equal(historical.items[0].name,'Original');assert.equal(historical.items[0].supplier,'Office Supplies');
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
@@ -398,7 +398,7 @@ test('storage groups migrate safely, accept only Head Office edits and preserve 
   await start();let catalogue=await(await request('/api/catalogue')).json();
   assert.deepEqual(catalogue.products.map(product=>product.stockCountGroup),['cool-room','freezer','packaging','chemical','cool-room']);
   const stored=JSON.parse(await fs.readFile(path.join(dir,'catalogue.json'),'utf8'));
-  assert.deepEqual(stored.products.map(({stockCountGroup,...product})=>product),original.products.map(({stockCountGroup,...product})=>product));assert.deepEqual(stored.suppliers,original.suppliers);
+  assert.deepEqual(stored.products.map(({stockCountGroup,unitAmount,...product})=>product),original.products.map(({stockCountGroup,...product})=>product));assert.ok(stored.products.every(product=>product.unitAmount===''));assert.deepEqual(stored.suppliers,original.suppliers);
   assert.equal((await request('/stock-count-groups.js')).status,200);
   const record=await(await request('/api/stock-counts','POST',{countDate:'2026-10-11',items:[{id:'fresh',quantity:0},{id:'frozen',quantity:1.25}]},staff)).json();
   assert.equal(record.items.find(item=>item.id==='fresh').stockCountGroup,'cool-room');assert.equal(record.items.find(item=>item.id==='frozen').stockCountGroup,'freezer');

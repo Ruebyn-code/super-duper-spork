@@ -11,7 +11,7 @@ function validateDelivery(input){
  return {method,contact:method==='none'?'':contact};
 }
 function providerStatus(env={}){return {email:Boolean(env.DELIVERY_EMAIL_ENABLED==='true'&&env.RESEND_API_KEY&&env.ORDER_FROM_EMAIL),sms:Boolean(env.DELIVERY_SMS_ENABLED==='true'&&/^AC[0-9a-f]{32}$/i.test(env.TWILIO_ACCOUNT_SID||'')&&env.TWILIO_AUTH_TOKEN&&/^\+[1-9]\d{7,14}$/.test(env.ORDER_SMS_FROM||''))};}
-function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(i=>`${i.quantity} × ${i.name}`).join('\n')}\n\nNotes: ${order.notes||'None'}`;}
+function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(emailTemplate.itemLine).join('\n')}\n\nNotes: ${order.notes||'None'}`;}
 async function deliverSupplier(order,delivery,{env={},fetchImpl=fetch}={}){
  try{delivery=validateDelivery(delivery);}catch{return {status:'not_configured',message:'The supplier delivery details are invalid. Ask an administrator to update them.'};}
  if(delivery.method==='platform'){
