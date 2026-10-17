@@ -2,6 +2,7 @@
  const form=document.getElementById('email-form'),editor=document.getElementById('location-email-editor'),home=document.getElementById('location-email-form-home');if(!form||!editor||!home)return;
  const message=document.getElementById('email-message'),keyStatus=document.getElementById('email-key-status'),keyInput=form.elements.RESEND_API_KEY;
  const savedMask='••••••••••••';
+ const smsToken=form.elements.TWILIO_AUTH_TOKEN,smsStatus=document.getElementById('sms-key-status');let smsSaved=false;
  let csrf='',locationId='',generation=0,saving=false,ready=false,archived=false,locationSaving=false,keySaved=false;
  const wording=text=>typeof interfaceLabel==='function'?interfaceLabel(text):text;
  function disable(value){for(const control of form.elements)control.disabled=value;}
@@ -17,12 +18,18 @@
   keySaved=settings.secrets.RESEND_API_KEY;
   keyInput.value=keySaved?savedMask:'';
   keyFeedback();
+  form.elements.TWILIO_ACCOUNT_SID.value=settings.values.TWILIO_ACCOUNT_SID;
+  form.elements.ORDER_SMS_FROM.value=settings.values.ORDER_SMS_FROM;
+  form.elements.DELIVERY_SMS_ENABLED.checked=settings.enabled.DELIVERY_SMS_ENABLED;
+  smsSaved=settings.secrets.TWILIO_AUTH_TOKEN;smsToken.value=smsSaved?savedMask:'';smsFeedback();
  }
- function reset(){form.reset();keySaved=false;keyStatus.textContent='';keyStatus.dataset.state='';feedback();disable(true);}
+ function smsFeedback(){const draft=smsToken.value!==savedMask&&Boolean(smsToken.value.trim());smsStatus.dataset.state=draft?'unsaved':smsSaved?'saved':'empty';smsStatus.textContent=wording(draft?'New Auth Token: not saved yet':smsSaved?'Auth Token saved':'No Auth Token configured');}
+ function reset(){form.reset();keySaved=false;keyStatus.textContent='';keyStatus.dataset.state='';smsSaved=false;smsStatus.textContent='';smsStatus.dataset.state='';feedback();disable(true);}
  // Select the whole mask so typing or pasting replaces it rather than appending to it.
  const selectMask=()=>{if(keyInput.value===savedMask)keyInput.select();};
  keyInput.addEventListener('focus',selectMask);
  keyInput.addEventListener('click',selectMask);
+ const selectSmsMask=()=>{if(smsToken.value===savedMask)smsToken.select();};smsToken.addEventListener('focus',selectSmsMask);smsToken.addEventListener('click',selectSmsMask);smsToken.addEventListener('input',()=>{smsToken.value=smsToken.value.replaceAll('•','');smsFeedback();});
  keyInput.addEventListener('input',()=>{
   // A mask is only a display value; never let fragments become a replacement credential.
   keyInput.value=keyInput.value.replaceAll('•','');
@@ -39,8 +46,10 @@
  form.onsubmit=async event=>{event.preventDefault();if(saving||locationSaving||!ready||archived)return;
   const id=locationId,body={ORDER_FROM_EMAIL:form.elements.ORDER_FROM_EMAIL.value,DELIVERY_EMAIL_ENABLED:form.elements.DELIVERY_EMAIL_ENABLED.checked};
   if(keyInput.value!==savedMask&&keyInput.value.trim())body.RESEND_API_KEY=keyInput.value.trim();
+  body.TWILIO_ACCOUNT_SID=form.elements.TWILIO_ACCOUNT_SID.value;body.ORDER_SMS_FROM=form.elements.ORDER_SMS_FROM.value;body.DELIVERY_SMS_ENABLED=form.elements.DELIVERY_SMS_ENABLED.checked;
+  if(smsToken.value!==savedMask&&smsToken.value.trim())body.TWILIO_AUTH_TOKEN=smsToken.value.trim();
   saving=true;disable(true);feedback('Saving email settings…');window.dispatchEvent(new CustomEvent('location-email-saving',{detail:true}));
-  try{const summary=await request(id,'PUT',body);window.updateLocationEmailSummary?.(id,summary);if(locationId===id){showSettings(summary);feedback(keySaved?'Email settings saved successfully. Your API key is saved; it has not been verified with Resend.':'Email settings saved successfully. No API key is configured.','success');}}
+  try{const summary=await request(id,'PUT',body);window.updateLocationEmailSummary?.(id,summary);if(locationId===id){showSettings(summary);feedback('Location sending settings saved successfully.'+(keySaved?' Your API key is saved; it has not been verified with Resend.':'')+(smsSaved?' Your Auth Token is saved; it has not been verified with Twilio.':'')+(!keySaved&&!smsSaved?' No sending credentials are configured.':''),'success');}}
   catch(error){if(locationId===id)feedback(error.message,'error');}
   finally{saving=false;disable(locationSaving||!ready||archived);window.dispatchEvent(new CustomEvent('location-email-saving',{detail:false}));}
  };

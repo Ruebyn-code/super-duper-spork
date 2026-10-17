@@ -158,6 +158,23 @@ test('one company email template serves every location, stays isolated and respe
  }finally{await app.close();}
 });
 
+test('location SMS setup stays private, sends once and restores only the owner’s location-scoped platform handoff',async()=>{
+ const calls=[],app=await fixture({fetchImpl:async(url,options)=>{calls.push({url,...options});return {ok:true};}});try{
+  const admin=await app.login('admin'),first=await app.login('first'),second=await app.login('second'),id=first.session.locationId,route='/api/locations/'+id+'/email',settings={ORDER_FROM_EMAIL:'first@example.com',RESEND_API_KEY:'fake-email-secret',DELIVERY_EMAIL_ENABLED:true,DELIVERY_SMS_ENABLED:true,TWILIO_ACCOUNT_SID:'AC'+'a'.repeat(32),TWILIO_AUTH_TOKEN:'fake-sms-private-token',ORDER_SMS_FROM:'0400 111 222'};
+  const response=await app.request(admin,route,'PUT',settings);assert.equal(response.status,200);assert.equal(response.data.secrets.TWILIO_AUTH_TOKEN,true);assert.equal(response.data.values.ORDER_SMS_FROM,'+61400111222');assert.ok(!JSON.stringify(response).includes(settings.TWILIO_AUTH_TOKEN));assert.ok(!JSON.stringify(response).includes(settings.RESEND_API_KEY));
+  for(const method of ['GET','PUT'])assert.equal((await app.request(first,route,method,method==='PUT'?settings:undefined)).status,403);
+  const before=await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8');assert.equal((await app.request(admin,route,'PUT',{...settings,TWILIO_ACCOUNT_SID:'invalid'})).status,400);assert.equal(await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8'),before);
+  assert.equal((await app.request(admin,route,'PUT',{ORDER_FROM_EMAIL:'changed@example.com',DELIVERY_EMAIL_ENABLED:true})).status,200);const kept=(await app.request(admin,route)).data;assert.equal(kept.secrets.TWILIO_AUTH_TOKEN,true);assert.equal(kept.enabled.DELIVERY_SMS_ENABLED,true);
+  assert.equal((await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'sms',contact:'0400 123 456'}})).status,200);assert.equal((await app.request(admin,'/api/suppliers/packaging','PUT',{delivery:{method:'platform',platform:'albconnect',contact:'https://albconnect.com.au/storefront/'}})).status,200);
+  const body={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:2},{id:'boxes',quantity:1}]},saved=await app.request(first,'/api/orders','POST',body);assert.equal(saved.status,201);assert.deepEqual(saved.data.delivery.map(delivery=>delivery.status),['submitted','action_required']);assert.equal(calls.length,1);assert.equal(new URLSearchParams(calls[0].body).get('From'),'+61400111222');assert.ok(!JSON.stringify(saved).includes(settings.TWILIO_AUTH_TOKEN));
+  const handoff=saved.data.delivery[1].handoff;assert.match(handoff.text,/1 × Shipping boxes/);assert.ok(!handoff.text.includes('copy paper'));assert.ok(!handoff.text.includes('2800'));assert.equal((await app.request(first,'/api/orders','POST',body)).status,200);assert.equal(calls.length,1);
+  assert.equal((await app.request(first,'/api/orders/'+saved.data.id)).status,200);assert.equal((await app.request(second,'/api/orders/'+saved.data.id)).status,404);await app.assign(admin,'second',id);const teammate=await app.login('second');assert.equal((await app.request(teammate,'/api/orders/'+saved.data.id)).status,404);
+  const elsewhere=(await app.request(admin,'/api/locations','POST',{name:'Another branch'})).data;assert.equal((await app.request(admin,'/api/orders/'+saved.data.id,'GET',undefined,{'X-Location-Id':elsewhere.id})).status,404);
+  await app.restart();const after=await app.login('first');const restored=(await app.request(after,'/api/orders/'+saved.data.id)).data;assert.deepEqual(restored.delivery[1].handoff,handoff);assert.equal(calls.length,1);
+  const office=await app.login('admin');assert.equal((await app.request(office,route)).data.secrets.TWILIO_AUTH_TOKEN,true);assert.equal((await app.request(office,'/api/locations/'+second.session.locationId+'/email')).data.secrets.TWILIO_AUTH_TOKEN,false);
+ }finally{await app.close();}
+});
+
 test('home totals share quarter sales and expense with all-time placed orders within the selected location and reject unauthorized locations',async()=>{
  const app=await fixture();try{const admin=await app.login('admin'),shop=(await app.request(admin,'/api/locations','POST',{name:'Shop'})).data,other=(await app.request(admin,'/api/locations','POST',{name:'Other'})).data;
  for(const name of ['first','second'])await app.assign(admin,name,shop.id);await app.assign(admin,'third',other.id);const first=await app.login('first'),second=await app.login('second'),third=await app.login('third');

@@ -1,0 +1,6 @@
+(function(root){
+ const platforms=[{id:'albconnect',name:'ALB Connect',url:'https://albconnect.com.au/storefront/',hosts:['albconnect.com.au','www.albconnect.com.au']},{id:'fresho',name:'Fresho',url:'https://app.fresho.com/',hosts:['app.fresho.com','fresho.com','www.fresho.com']}];
+ function phone(input){if(typeof input!=='string')throw Error('Enter the supplier mobile number.');let value=input.trim().replace(/[ ().-]/g,'');if(/^04\d{8}$/.test(value))value='+61'+value.slice(1);if(!/^\+[1-9]\d{7,14}$/.test(value))throw Error('Enter a mobile number with its country code, for example +61400123456.');return value;}
+ function platform(id,input){const entry=platforms.find(item=>item.id===id);if(!entry)throw Error('Choose ALB Connect or Fresho.');let url;try{url=new URL(input||entry.url);}catch{throw Error('Enter a valid platform website address.');}if(url.protocol!=='https:'||url.username||url.password||url.port||!entry.hosts.includes(url.hostname))throw Error('Use an HTTPS address on the selected platform’s official website.');return {platform:entry.id,contact:url.href};}
+ const api={platforms,phone,platform};if(typeof module==='object'&&module.exports)module.exports=api;else root.orderDestinations=api;
+})(typeof globalThis==='object'?globalThis:this);
