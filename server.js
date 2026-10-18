@@ -3,6 +3,7 @@ const stockOrderRules=require('./public/stock-order-rules');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
 const {createAuth}=require('./auth');
 const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation}=require('./permissions');
 const {apiPermission,pagePermission}=require('./access-routes');
@@ -57,7 +58,10 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now}={}) {
+function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,publicOrigin='',migrationMode=false}={}) {
+  publicOrigin=appOrigin(publicOrigin);
+  const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
+  const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
   const auth=createAuth(dataDir,{clockNow:rosteringNow});
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore);
@@ -97,9 +101,11 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
     try {
       const requestUrl=new URL(req.url,'http://localhost');req.url=requestUrl.pathname;
       res.setHeader('Cache-Control','no-store');
+      if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
+      if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
       if(req.url==='/api/setup'&&req.method==='POST'){
         if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))fail('First-time setup must be opened on the computer running the app.',403);
-        if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`))fail('Invalid setup request.',403);
+        if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==requestOrigin(req)))fail('Invalid setup request.',403);
         const account=await auth.setup(await body(req));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));
       }
       if(req.method==='GET'&&req.url==='/admin/login'){res.writeHead(303,{Location:'/login'});return res.end();}
@@ -137,9 +143,9 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change);
       if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
-        if(req.headers.origin&&req.headers.origin!==`http${req.socket.encrypted?'s':''}://${req.headers.host}`)fail('Invalid request origin.',403);
+        if(req.headers.origin&&req.headers.origin!==requestOrigin(req))fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
-        res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${req.socket.encrypted?'; Secure':''}`);
+        res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`);
         return json(200,{role:loggedIn.role});
       }
       const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/rostering','/communications','/knowledge-library','/admin/appearance/signin','/admin/appearance/setup'];
@@ -155,7 +161,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       if(required){if(!session)fail('Sign-in required.',401);if(!canAny(session,required))fail('Your permission level does not allow this action.',403);}
       const management=required&&!['/api/menu','/api/catalogue'].includes(req.url)&&(required.some(key=>key.endsWith('.manage'))||req.url.startsWith('/api/permission-levels')||req.url.startsWith('/api/companies'));
       if(management&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
-      if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie','admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(200,{signedOut:true});}
+      if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie',`admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(req)?'; Secure':''}`);return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
       const permissionLevelRoute=req.url.match(/^\/api\/permission-levels\/([a-zA-Z0-9-]+)$/);
@@ -398,5 +404,16 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
 }
-if(require.main===module) createServer().listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Opstack running on port '+(process.env.PORT || 3000)));
+if(require.main===module)(async()=>{
+  const config=runtimeConfig();
+  await prepareDataDirectory(config.dataDir);
+  if(process.env.RAILWAY_ENVIRONMENT_ID&&!config.migrationMode&&!await createAuth(config.dataDir).configured())throw Error('No accounts found in DATA_DIR. Keep MIGRATION_MODE=1 and import your existing data before opening the app.');
+  const server=createServer(config.dataDir,config);
+  server.on('error',error=>{console.error('Opstack could not start:',error.message);process.exitCode=1;});
+  server.listen(config.port,'0.0.0.0',()=>console.log(`Opstack running on port ${config.port}${config.migrationMode?' (migration mode; app access paused)':''}`));
+  for(const signal of ['SIGTERM','SIGINT'])process.once(signal,()=>{
+    const timeout=setTimeout(()=>process.exit(1),30000);timeout.unref();
+    server.close(()=>{clearTimeout(timeout);process.exit(0);});
+  });
+})().catch(error=>{console.error('Opstack could not start:',error.message);process.exitCode=1;});
 module.exports={createServer,validateOrder};

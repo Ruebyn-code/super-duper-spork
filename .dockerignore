@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.aws
+.railway
+node_modules
+**/data
+**/.env
+**/.env.*
+**/*.zip
+**/*.tar
+**/*.tar.gz
+**/*.tgz
+**/*.log
+.DS_Store

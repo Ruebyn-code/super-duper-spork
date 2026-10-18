@@ -18,6 +18,10 @@ npm test
 
 Requests are saved as individual JSON files in `data/` (ignored by Git). Totals are calculated by the server from catalogue prices. This is a local prototype with Head Office and ordering accounts. Supplier orders use configured email sending; saved stock counts provide ordering guidance. Request files contain contact details; keep the data directory private.
 
+## Railway hosting
+
+Follow [Move Opstack to Railway and keep your Mac data](docs/RAILWAY.md). The included Dockerfile runs the app with persistent storage at `/data`. Configure a Railway volume, `APP_ORIGIN` for HTTPS sign-in, and `/healthz` as the healthcheck. Start in `MIGRATION_MODE=1` while privately importing the whole existing data folder; turn it off after checking the import. Existing accounts and records are retained. Use one service replica. Local `npm start` continues to use `data/` unless `DATA_DIR` is set; the account recovery commands use the same directory.
+
 ## Navigation groups
 
 The main bar contains **Home**, **Ordering**, **Sales**, **Rostering**, **Comms**, **Knowledge Library**, **Reporting** and **Admin**. Click the blue account button to open a dropdown with **User profile**, **Settings**, **App edit** (with appearance permission) and **Sign out**. **Settings** opens a dedicated page containing **App appearance** and **Permission levels**. Access follows the signed-in user’s permissions; Head Office has both by default. On phones the same navigation options stay at the bottom, and **More** opens the same dropdown above the bar.
@@ -163,7 +167,7 @@ Account data is stored privately in ignored `data/accounts.json`, with salted sc
 
 For forgotten Head Office passwords, stop the server, run `npm run admin:set` in the app folder, then restart with `npm start`. This local recovery command resets the named account to Head Office access. `npm run user:add` remains available for creating or resetting ordering accounts. Normal account management happens within the app. Existing stored `admin` and `user` roles keep their IDs for compatibility and now display as Head Office and Ordering manager; the new `franchisee` role sits between them. Passwords, memberships and historical data are retained.
 
-Use locally on your Mac; an Internet deployment requires HTTPS and appropriate hosting configuration.
+For an Internet deployment, use HTTPS and the persistent storage and backup steps in the [Railway guide](docs/RAILWAY.md).
 
 Head Office lists use compact rows with a pencil to reveal edit controls. Removal actions stay inside the editor. User creation is a button at the top of Users rather than a separate submenu. Suppliers, stock, locations, sender email, colours, fonts, logos, sign-in backgrounds and interface text use the same inline editing style. Add buttons reveal their forms; existing supplier stock remains grouped in collapsible supplier sections. Earlier custom menu wording and saved appearance edits are retained.
 
