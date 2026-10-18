@@ -80,15 +80,17 @@ test('stock usage still counts Sunday orders on their actual Sunday, once, indep
  assert.deepEqual(cycles.map(cycle=>cycle.items[0].ordered),[2,3]);assert.deepEqual(cycles.map(cycle=>cycle.items[0].quantity),[2,3]);assert.equal(JSON.stringify(orders),before);
 });
 
-test('Sunday cart preview leaves this week’s remaining budget unchanged and explains its following-week cost',async()=>{
+test('Sunday cart preview uses the upcoming ordering budget and preserves the current-week sales comparison',async()=>{
  const script=await fs.readFile(path.join(__dirname,'public/sales-budget.js'),'utf8');
- async function render(orderCostWeekStart,cart){
-  const nodes=new Map(),listeners={};function node(id){if(!nodes.has(id))nodes.set(id,{dataset:{},textContent:'',classList:{add(){},toggle(){}},previousElementSibling:{dataset:{},textContent:''}});return nodes.get(id);}
-  const context={appAccess:{can:()=>true},document:{hidden:false,getElementById:node,addEventListener(){}},window:{addEventListener:(key,handler)=>listeners[key]=handler},Intl,Date,setInterval(){},fetch:async url=>({ok:true,json:async()=>url==='/api/session'?{id:'office'}:{projection:{weekStart:'2026-10-12',orderCostWeekStart,weeksRecorded:4,projectedSalesCents:100000,budgetCents:28000,spentCents:10000,remainingCents:18000,pricePending:false}}})};
-  vm.runInNewContext(script,context);await new Promise(resolve=>setImmediate(resolve));listeners['ordering-cart-updated']({detail:cart});return nodes;
+ async function render(upcoming,cart){
+  const nodes=new Map(),listeners={},comparisons=[];function node(id){if(!nodes.has(id))nodes.set(id,{dataset:{},textContent:'',classList:{add(){},toggle(){}},previousElementSibling:{dataset:{},textContent:''}});return nodes.get(id);}
+  const projection={weekStart:'2026-10-12',weekEnd:'2026-10-18',orderCostWeekStart:upcoming?'2026-10-19':'2026-10-12',weeksRecorded:4,projectedSalesCents:100000,budgetCents:28000,spentCents:10000,remainingCents:18000,pricePending:false},orderingProjection={...projection,weekStart:upcoming?'2026-10-19':'2026-10-12',weekEnd:upcoming?'2026-10-25':'2026-10-18',isUpcoming:upcoming,spentCents:upcoming?2000:10000,remainingCents:upcoming?26000:18000};
+  const context={appAccess:{can:()=>true},document:{hidden:false,getElementById:node,addEventListener(){}},window:{salesPerformanceView:{render:value=>comparisons.push(value)},addEventListener:(key,handler)=>listeners[key]=handler},Intl,Date,setInterval(){},fetch:async url=>({ok:true,json:async()=>url==='/api/session'?{id:'office'}:{projection,orderingProjection}})};
+  vm.runInNewContext(script,context);await new Promise(resolve=>setImmediate(resolve));listeners['ordering-cart-updated']({detail:cart});assert.equal(comparisons.at(-1).weekStart,'2026-10-12');return nodes;
  }
- const sunday=await render('2026-10-19',{total:20000,pricePending:true});assert.equal(sunday.get('ordering-budget-remaining').textContent,'$180.00');assert.equal(sunday.get('ordering-budget-remaining').previousElementSibling.textContent,'Remaining this week');assert.match(sunday.get('ordering-budget-status').textContent,/week of 19 Oct 2026/);
- const saturday=await render('2026-10-12',{total:20000,pricePending:false});assert.equal(saturday.get('ordering-budget-remaining').textContent,'-$20.00');assert.match(saturday.get('ordering-budget-status').textContent,/over this week/);
+ const sunday=await render(true,{total:20000,pricePending:false});assert.equal(sunday.get('ordering-budget-remaining').textContent,'$60.00');assert.equal(sunday.get('ordering-budget-remaining').previousElementSibling.textContent,'Budget after this cart');assert.equal(sunday.get('ordering-budget-spent').textContent,'$20.00');assert.equal(sunday.get('ordering-budget-spent').previousElementSibling.textContent,'Order costs next week');assert.match(sunday.get('ordering-budget-period').textContent,/Upcoming week · 19 Oct 2026 – 25 Oct 2026/);
+ const pending=await render(true,{total:20000,pricePending:true});assert.equal(pending.get('ordering-budget-remaining').textContent,'—');assert.match(pending.get('ordering-budget-status').textContent,/prices pending/);
+ const saturday=await render(false,{total:20000,pricePending:false});assert.equal(saturday.get('ordering-budget-remaining').textContent,'-$20.00');assert.match(saturday.get('ordering-budget-status').textContent,/over this week/);
 });
 
 test('existing order files recalculate through APIs and restarts without rewriting timestamps or sending to suppliers',async()=>{

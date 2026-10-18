@@ -53,6 +53,12 @@ function calculate(records,orders,session,{now=new Date(),transfers=[]}={}){
  const projectedSalesCents=weeksRecorded===4?Math.round(history.reduce((sum,record)=>sum+record.totalCents,0)/4):null;
  const dailyProjections=Array.from({length:7},(_,index)=>({date:shift(weekStart,index),amountCents:weeksRecorded===4?Math.round(history.reduce((sum,record)=>sum+record.days[index],0)/4):null}));
  const budgetCents=projectedSalesCents===null?null:Math.round(projectedSalesCents*28/100);
+ const formatter=calendar(defaultTimeZone),{spentCents,pricePending,orderCount,transferCostCents}=committedSpend(orders,session,weekStart,transfers);
+ const currentRecord=records.find(record=>belongs(record,session)&&record.weekStart===weekStart);
+ const performance=compare(currentRecord?.days||Array(7).fill(null),{dailyProjections,today});
+ return {weekStart,weekEnd:shift(weekStart,6),orderCostWeekStart:orderCosts.dates({createdAt:now},formatter).costWeekStart,today,performance,timeZone:defaultTimeZone,history,weeksRecorded,dailyProjections,projectedSalesCents,budgetPercent:28,budgetCents,spentCents,transferCostCents,orderCount,pricePending,remainingCents:budgetCents===null||pricePending?null:budgetCents-spentCents};
+}
+function committedSpend(orders,session,weekStart,transfers=[]){
  const formatter=calendar(defaultTimeZone),seen=new Set();let spentCents=0,pricePending=false,orderCount=0;
  for(const order of orders){
   if(!order||!belongs(order,session,'requestOwnerId')||seen.has(order.id)||!Array.isArray(order.items)||!Number.isSafeInteger(order.total)||order.total<0)continue;
@@ -60,9 +66,14 @@ function calculate(records,orders,session,{now=new Date(),transfers=[]}={}){
   seen.add(order.id);spentCents+=order.total;orderCount++;if(order.pricePending)pricePending=true;
  }
  const transferCosts=transferEffects.costs(transfers,session,{weeks:new Set([weekStart])});spentCents+=transferCosts.totalCents;
- const currentRecord=records.find(record=>belongs(record,session)&&record.weekStart===weekStart);
- const performance=compare(currentRecord?.days||Array(7).fill(null),{dailyProjections,today});
- return {weekStart,weekEnd:shift(weekStart,6),orderCostWeekStart:orderCosts.dates({createdAt:now},formatter).costWeekStart,today,performance,timeZone:defaultTimeZone,history,weeksRecorded,dailyProjections,projectedSalesCents,budgetPercent:28,budgetCents,spentCents,transferCostCents:transferCosts.totalCents,orderCount,pricePending,remainingCents:budgetCents===null||pricePending?null:budgetCents-spentCents};
+ return {spentCents,pricePending,orderCount,transferCostCents:transferCosts.totalCents};
+}
+function orderingProjection(projection,orders,session,{transfers=[]}={}){
+ // The ordering week follows cost allocation: Sunday plans for next Monday.
+ // Its history still uses the four weeks completed as of today.
+ const {performance,...forecast}=projection,weekStart=projection.orderCostWeekStart,isUpcoming=weekStart!==projection.weekStart;
+ const committed=isUpcoming?committedSpend(orders,session,weekStart,transfers):{spentCents:projection.spentCents,pricePending:projection.pricePending,orderCount:projection.orderCount,transferCostCents:projection.transferCostCents};
+ return {...forecast,...committed,weekStart,weekEnd:shift(weekStart,6),isUpcoming,dailyProjections:projection.dailyProjections.map((day,index)=>({...day,date:shift(weekStart,index)})),remainingCents:projection.budgetCents===null||committed.pricePending?null:projection.budgetCents-committed.spentCents};
 }
 function allTimeTotals(records,orders,session){
  let salesCents=0,recordedDays=0,placedOrdersCents=0,orderCount=0,pricePending=false;
@@ -120,7 +131,8 @@ function createStore(){
   const current=currentWeek(now);if(selectedWeek)week(selectedWeek);
   const starts=[...new Set([selectedWeek||current,current,...[1,2,3,4].map(index=>shift(current,-7*index))])];
   const records=await Promise.all(starts.map(start=>read(dir,session,start)));
-  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:calculate(records,orders,session,{now,transfers})};
+  const projection=calculate(records,orders,session,{now,transfers});
+  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection,orderingProjection:orderingProjection(projection,orders,session,{transfers})};
  }
  async function history(dir,session){
   const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];
@@ -133,4 +145,4 @@ function createStore(){
  async function totals(dir,session,{orders=[],now=new Date(),transfers=[]}={}){return homeTotals(await history(dir,session),orders,session,{now,transfers});}
  return {save,report,totals,history};
 }
-module.exports={read,calculate,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
+module.exports={read,calculate,orderingProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

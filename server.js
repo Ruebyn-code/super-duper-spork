@@ -57,7 +57,7 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now}={}) {
+function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now}={}) {
   const auth=createAuth(dataDir,{clockNow:rosteringNow});
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore);
@@ -234,7 +234,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       }
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
-        return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers}));
+        return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers,now:new Date(salesNow())}));
       }
       if(req.url==='/api/operating-expense-schedule'){
         if(req.method==='GET')return json(200,await operatingExpenseSchedule.read(dataDir,session));
