@@ -22,7 +22,7 @@
    for(const product of stock){const item=items.get(product.id);if(!item)continue;const row=el('div',undefined,'usage-item automatic-usage-item');row.dataset.productId=product.id;row.dataset.editId='usage-item-'+product.id;
     const details=el('div',undefined,'usage-stock-info'),name=el('h3',product.name,'stock-name');name.dataset.userText='';name.dataset.editId='usage-item-'+product.id+'-name';details.append(name);
     if(product.sku){const sku=el('p',product.sku,'small');sku.dataset.userText='';details.append(sku);}row.append(details);
-    for(const [key,label] of [['opening','Sunday stock'],['ordered','Orders Sunday–Saturday'],['closing','Next Sunday stock']]){
+    for(const [key,label] of [['opening','Sunday stock'],['ordered','Orders Sunday–Saturday'],['transferredIn','Transfers in'],['transferredOut','Transfers out'],['closing','Next Sunday stock']]){
      const stat=el('div',undefined,'usage-quantity'),caption=el('span',wording(label),'usage-stat-label'),value=el('strong',number(item[key]));stat.dataset.editId='usage-item-'+product.id+'-'+key;value.id='usage-'+key+'-'+product.id;value.dataset.userText='';stat.append(caption,value);row.append(stat);
     }
     const totals=el('div',undefined,'usage-totals'),available=el('span',undefined,'small'),used=el('strong',undefined,'usage-used');available.id='usage-available-'+product.id;template(available,'Total stock: {quantity}',{quantity:number(item.available)});used.id='usage-used-'+product.id;used.dataset.editId='usage-item-'+product.id+'-used';

@@ -1,7 +1,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {currentWeek,allTimeTotals,maximumDailyCents}=require('./sales');
 const {calendar,defaultTimeZone}=require('./par-levels');
-const orderCosts=require('./order-cost-period');
+const orderCosts=require('./order-cost-period'),transferEffects=require('./stock-transfer-effects');
 const weeklyReport=require('./public/weekly-sales-report'),expenseTypes=require('./operating-expense-types'),operatingSchedule=require('./operating-expense-schedule');
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))invalid('Choose a valid Monday-starting report week.');const date=new Date(value+'T00:00:00Z');if(!Number.isFinite(date.valueOf())||date.toISOString().slice(0,10)!==value||date.getUTCDay()!==1)invalid('Choose a valid Monday-starting report week.');}
@@ -51,7 +51,7 @@ function createStore(){
    await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}return {...record,operatingSchedule:schedule};
   });const settled=operation.catch(()=>{});pending.set(target,settled);try{return await operation;}finally{if(pending.get(target)===settled)pending.delete(target);}
  }
- async function report(dir,session,selectedWeek,{orders=[],now=new Date(),operatingScheduleSnapshot,expenseTypesSnapshot}={}){
+ async function report(dir,session,selectedWeek,{orders=[],transfers=[],now=new Date(),operatingScheduleSnapshot,expenseTypesSnapshot}={}){
   const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone),operatingExpenseTypes=expenseTypesSnapshot||await expenseTypes.read(dir,session);
   const schedule=operatingScheduleSnapshot||await operatingSchedule.read(dir,session),incomplete=record.expenseEntries.operatingExpensesCents!==null&&weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents)===null;
   record.operatingAdditionalCents=record.expenseEntries.operatingExpensesCents!==null?weeklyReport.expenseTotal(record.expenseEntries.operatingExpensesCents):Object.hasOwn(record,'operatingAdditionalCents')?record.operatingAdditionalCents:record.operatingExpensesCents;
@@ -59,9 +59,9 @@ function createStore(){
   record.operatingExpensesCents=incomplete?null:record.operatingAdditionalCents===null&&!schedule.bills.some(bill=>bill.startWeek<=start)?null:(record.operatingAdditionalCents??0)+operatingSchedule.cost(schedule.bills,start);
   const weeklyOrders=orders.filter(order=>orderCosts.dates(order,formatter)?.costWeekStart===start);
   const seen=new Set(),stockOrders=[];for(const order of weeklyOrders){const own=allTimeTotals([],[order],session);if(!own.orderCount||seen.has(order.id))continue;seen.add(order.id);stockOrders.push({id:order.id,createdAt:order.createdAt,...orderCosts.dates(order,formatter),totalCents:own.placedOrdersCents,pricePending:own.pricePending,items:order.items.map(item=>({id:item.id||'',name:item.name||'',supplierId:item.supplierId||'',supplier:item.supplier||'',quantity:item.quantity??0,unitCostCents:item.price??null}))});}
-  const costs=allTimeTotals([],weeklyOrders,session);
-  const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:costs.placedOrdersCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
-  return {record,summary,profit,platformSettlements,stockOrders,operatingExpenseTypes,weeklyOrders:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
+  const supplierCosts=allTimeTotals([],weeklyOrders,session),transferCosts=transferEffects.costs(transfers,session,{weeks:new Set([start])}),costs={...supplierCosts,placedOrdersCents:supplierCosts.placedOrdersCents+transferCosts.totalCents};
+  const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:supplierCosts.placedOrdersCents,stockTransferCents:transferCosts.totalCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
+  return {record,summary,profit,platformSettlements,stockOrders,stockTransfers:transferCosts.lines,stockCosts:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount,supplierOrdersCents:supplierCosts.placedOrdersCents,transferCents:transferCosts.totalCents,transferCount:transferCosts.transferCount},operatingExpenseTypes,weeklyOrders:{totalCents:supplierCosts.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
  }
  return {save,report};
 }

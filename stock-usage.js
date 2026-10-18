@@ -1,7 +1,7 @@
 const stockOrderRules=require('./public/stock-order-rules');
 const {belongs}=require('./location-scope');
 const fs=require('node:fs/promises'),path=require('node:path');
-const par=require('./par-levels');
+const par=require('./par-levels'),transferEffects=require('./stock-transfer-effects');
 const dayMs=86400000,uuidFile=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/i;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
@@ -14,7 +14,7 @@ const shift=(date,days)=>new Date(Date.parse(date+'T00:00:00Z')+days*dayMs).toIS
 const validQuantity=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1000000&&Math.abs(value*1000-Math.round(value*1000))<0.000001;
 
 // Counts are snapshots, not transactions. The latest Sunday count for each item wins.
-function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTimeZone){
+function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTimeZone,transfers=[]){
  const wanted=new Set(weekStarts.flatMap(start=>[start,shift(start,7)])),snapshots=new Map();
  const sorted=counts.filter(record=>belongs(record,session)&&wanted.has(record.countDate)&&Array.isArray(record.items)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||String(a.id).localeCompare(String(b.id)));
  for(const record of sorted){if(!snapshots.has(record.countDate))snapshots.set(record.countDate,new Map());const snapshot=snapshots.get(record.countDate);for(const item of record.items)if(item&&validQuantity(item.quantity))snapshot.set(item.id,{quantity:Math.round(item.quantity*1000),countId:record.id});}
@@ -25,13 +25,19 @@ function derive(counts,orders,products,session,weekStarts,timeZone=par.defaultTi
   const day=par.dayNumber(created,formatter),start=par.dateLabel(day-new Date(day*dayMs).getUTCDay()),weekTotals=totals.get(start);if(!weekTotals)continue;seen.add(order.id);
   for(const item of order.items){if(!item||!Number.isInteger(item.quantity)||item.quantity<1||item.quantity>999)continue;const total=weekTotals.get(item.id)||{quantity:0,orders:0};total.quantity+=item.quantity*1000;total.orders++;if(!Number.isSafeInteger(total.quantity))throw Error('Ordered stock exceeds the supported range.');weekTotals.set(item.id,total);}
  }
+ const transferred=new Map(weekStarts.map(start=>[start,new Map()]));
+ for(const movement of transferEffects.movements(transfers,session)){
+  const day=par.dayNumber(new Date(movement.createdAt),formatter),start=par.dateLabel(day-new Date(day*dayMs).getUTCDay()),totals=transferred.get(start);if(!totals)continue;
+  const total=totals.get(movement.product.id)||{incoming:0,outgoing:0},quantity=Math.round(Math.abs(movement.quantity)*1000);if(movement.quantity>0)total.incoming+=quantity;else total.outgoing+=quantity;totals.set(movement.product.id,total);
+ }
  return weekStarts.map(weekStart=>{
   const nextSunday=shift(weekStart,7),opening=snapshots.get(weekStart),closing=snapshots.get(nextSunday),weekTotals=totals.get(weekStart);
   const items=products.map(product=>{
    const first=opening?.get(product.id),last=closing?.get(product.id),ordered=weekTotals.get(product.id)||{quantity:0,orders:0};
-   const available=first?first.quantity+ordered.quantity:null,used=first&&last?available-last.quantity:null;
+   const transfer=transferred.get(weekStart).get(product.id)||{incoming:0,outgoing:0};
+   const available=first?first.quantity+ordered.quantity+transfer.incoming-transfer.outgoing:null,used=first&&last?available-last.quantity:null;
    const status=!first&&!last?'missing_both_counts':!first?'missing_opening_count':!last?'missing_closing_count':used<0?'negative_usage':'complete';
-   return {id:product.id,name:product.name,sku:product.sku||'',supplierId:product.supplierId,supplier:product.supplier||'',opening:first?first.quantity/1000:null,ordered:ordered.quantity/1000,available:available===null?null:available/1000,closing:last?last.quantity/1000:null,quantity:status==='complete'?used/1000:null,calculatedUsage:used===null?null:used/1000,status,orderCount:ordered.orders,openingCountId:first?.countId||null,closingCountId:last?.countId||null};
+   return {id:product.id,name:product.name,sku:product.sku||'',supplierId:product.supplierId,supplier:product.supplier||'',opening:first?first.quantity/1000:null,ordered:ordered.quantity/1000,transferredIn:transfer.incoming/1000,transferredOut:transfer.outgoing/1000,available:available===null?null:available/1000,closing:last?last.quantity/1000:null,quantity:status==='complete'?used/1000:null,calculatedUsage:used===null?null:used/1000,status,orderCount:ordered.orders,openingCountId:first?.countId||null,closingCountId:last?.countId||null};
   });
   return {weekStart,weekEnd:shift(weekStart,6),nextSunday,accountId:session.id,...(session.locationId?{locationId:session.locationId}:{}),source:'sunday_counts_and_orders',items};
  });
@@ -54,27 +60,29 @@ function createReader(){
   }));result.push(...batch.filter(Boolean));}
   return result;
  }
- return async dir=>{const [counts,orders]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir)]);return {counts,orders};};
+ return async dir=>{const [counts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);return {counts,orders,transfers};};
 }
 const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){
- week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart])[0],window:par.windowFor(now)};
+ week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart],par.defaultTimeZone,history.transfers)[0],window:par.windowFor(now)};
 }
-function orderingSuggestions(counts,products,session,levels){
+function orderingSuggestions(counts,products,session,levels,transfers=[]){
  // A new stock take is a snapshot. Omitted items remain unknown in that take.
  const latest=counts.filter(record=>belongs(record,session)&&typeof record.createdAt==='string'&&Number.isFinite(Date.parse(record.createdAt))&&Array.isArray(record.items)).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(b.id).localeCompare(String(a.id)))[0];
+ const adjustments=new Map();for(const movement of transferEffects.movements(transfers,session)){if(!latest||movement.createdAt<=latest.createdAt)continue;adjustments.set(movement.product.id,(adjustments.get(movement.product.id)||0)+movement.quantity);}
  const quantities=new Map((latest?.items||[]).filter(item=>item&&validQuantity(item.quantity)).map(item=>[item.id,item.quantity]));
  return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
   const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
-  const recommendation=stockOrderRules.recommendation(product,level,counted);
-  return [product.id,{stockCount:counted,recommended:recommendation}];
+  const adjustment=Math.round((adjustments.get(product.id)||0)*1000)/1000,available=counted===null?null:Math.max(0,Math.round((counted+adjustment)*1000)/1000);
+  const recommendation=stockOrderRules.recommendation(product,level,available);
+  return [product.id,{stockCount:counted,recommended:recommendation,...(adjustment?{transferAdjustment:adjustment,availableStock:available}:{})}];
  }))};
 }
 async function parLevels(dir,session,products,{reader=readHistory,now=new Date(),manualLevels={}}={}){
  const window=par.windowFor(now),history=await reader(dir);
- const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)));
+ const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)),par.defaultTimeZone,history.transfers);
  const result=par.calculate(records,products,session,{now,manualLevels});
- const suggestions=orderingSuggestions(history.counts,products,session,result.levels);
+ const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers);
  return {...result,stockTake:suggestions.stockTake,suggestions:suggestions.items};
 }
 module.exports={week,shift,derive,createReader,report,parLevels,orderingSuggestions};

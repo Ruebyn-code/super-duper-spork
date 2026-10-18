@@ -20,6 +20,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  ordersMenu.append(fresh(ordering,'/','Catalogue','catalogue'));
  if(cart){cart.classList.add('navigation-cart-link');cart.querySelector('.sidebar-label')?.classList.replace('sidebar-label','submenu-label');cart.removeAttribute('aria-current');ordersMenu.append(cart);}
  moveMenu(segment(ordersMenu,'Stock','count-pages'),menus.get('count'));
+ const transfers=fresh(count,'/stock-transfers','Stock transfers','stock-transfers');transfers.dataset.permission='transfers.view';transfers.querySelector('svg')?.replaceChildren();transfers.querySelector('svg').innerHTML='<path d="M3 7h16l-4-4M21 17H5l4 4"/><g class="icon-detail"><path d="M19 7l-4 4M5 17l4-4"/></g>';ordersMenu.append(transfers);
  const management=segment(ordersMenu,'Manage stock','stock-management');management.setAttribute('data-head-office-only','');moveMenu(management,menus.get('stock'));
  const salesMenu=menuFor('sales','Sales');moveMenu(salesMenu,menus.get('sales'));
  if(reporting)reporting.setAttribute('data-user-manager-only','');

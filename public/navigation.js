@@ -8,7 +8,7 @@
  };
  let selectedGroup='',isAdmin=false,isUserManager=false;
  const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
- const currentGroup=()=>({'/':'ordering','/cart':'ordering','/stock-count':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
+ const currentGroup=()=>({'/':'ordering','/cart':'ordering','/stock-count':'ordering','/stock-transfers':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
  const groupFocus=group=>group==='settings'?document.getElementById('toolbar-toggle'):mobile.matches?more:groupLink(group);
  // Keep the original elements and edit identities when arranging the common header.

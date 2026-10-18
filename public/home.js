@@ -24,8 +24,8 @@
   $('home-total-orders').textContent=money(totals.placedOrdersCents)+(totals.pricePending?' + '+wording('prices pending'):'');
   $('home-total-expense').textContent=totals.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(totals.expensePercent)+'%';
   const quarter=totals.quarter,label=wording('Q{quarter} {year}',{quarter:quarter.number,year:quarter.year});
-  template($('home-sales-period'),'Current quarter · {quarter}',{quarter:label});template($('home-expense-period'),'Quarter orders · {quarter}: {total}',{quarter:label,total:money(totals.quarterPlacedOrdersCents)+(totals.quarterPricePending?' + '+wording('prices pending'):'')});
-  const hint=totals.quarterPricePending?'Some quarter order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales for this quarter to calculate your expense percentage.':'Expense = quarter placed orders ÷ quarter sales × 100.';
+  template($('home-sales-period'),'Current quarter · {quarter}',{quarter:label});template($('home-expense-period'),'Quarter stock costs · {quarter}: {total}',{quarter:label,total:money(totals.quarterStockCostCents??totals.quarterPlacedOrdersCents)+(totals.quarterPricePending?' + '+wording('prices pending'):'')});
+  const hint=totals.quarterPricePending?'Some quarter order prices are pending. Expense percentage is unavailable.':totals.salesCents===0?'Add sales for this quarter to calculate your expense percentage.':'Expense = quarter order costs plus net cost transfers ÷ quarter sales × 100.';
   template($('home-totals-status'),hint);
   const averages=totals.averages;
   if(!averages)return;

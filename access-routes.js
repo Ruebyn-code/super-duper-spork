@@ -4,6 +4,7 @@ function apiPermission(url,method){
  if(url==='/api/permission-levels'||url.startsWith('/api/permission-levels/'))return read?['roles.manage','users.manage']:['roles.manage'];
  if(['/api/menu','/api/catalogue'].includes(url))return['orders.view','counts.view','stock.manage','suppliers.manage'];
  if(url==='/api/home-totals')return['home.view'];
+ if(url.startsWith('/api/stock-transfers'))return ['transfers.view'];
  if(url.startsWith('/api/reporting'))return['reporting.view'];
  if(url.startsWith('/api/invoices'))return[read?'invoices.view':'invoices.edit'];
  if(url.startsWith('/api/stock-counts')||url==='/api/stock-usage')return[read?'counts.view':'counts.edit'];
@@ -21,6 +22,6 @@ function apiPermission(url,method){
  return null;
 }
 function pagePermission(url){
- return({'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['appearance.manage','roles.manage','awards.manage','email.manage']})[url]||null;
+ return({'/stock-transfers':['transfers.view'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['appearance.manage','roles.manage','awards.manage','email.manage']})[url]||null;
 }
 module.exports={apiPermission,pagePermission};
