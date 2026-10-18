@@ -4,3 +4,5 @@
 #create-permission-level,.permission-dialog button[type=submit]{background:var(--primary);border-color:var(--primary);color:white}.settings-option-icon .icon-detail{stroke:var(--theme-secondary-text,var(--secondary))}.permission-dialog fieldset[hidden]{display:none}
 
 .permission-checkbox[hidden]{display:none}
+
+.account-email-form{max-width:620px}.account-email-form label{font-size:13px}.account-email-form .account-email-enabled{display:flex;align-items:center;gap:9px}.account-email-enabled input{width:18px;height:18px;margin:0}.account-email-form .small{font:12px/1.5 Arial,sans-serif;color:var(--theme-muted,#627383)}

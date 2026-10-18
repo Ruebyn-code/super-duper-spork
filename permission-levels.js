@@ -5,7 +5,7 @@ function createStore(dir){
  const file=path.join(dir,'permission-levels.json');
  async function read(){
   try{
-   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key)),features=[['communicationsVersion',model.communicationKeys],['knowledgeVersion',model.knowledgeKeys],['rosteringVersion',model.rosteringKeys],['awardsVersion',model.awardKeys],['leaveVersion',model.leaveKeys],['transfersVersion',model.transferKeys]];
+   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key)),features=[['communicationsVersion',model.communicationKeys],['knowledgeVersion',model.knowledgeKeys],['rosteringVersion',model.rosteringKeys],['awardsVersion',model.awardKeys],['leaveVersion',model.leaveKeys],['transfersVersion',model.transferKeys],['userEmailsVersion',model.userEmailKeys]];
    // Only exact historical defaults and full network roles gain new default grants.
    // Customised roles keep their existing access, including company overrides.
    for(let index=0;index<features.length;index++){
@@ -21,14 +21,14 @@ function createStore(dir){
     data[version]=1;
    }
    return data;
-  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,awardsVersion:1,leaveVersion:1,transfersVersion:1,levels:structuredClone(model.defaults)};}
+  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,awardsVersion:1,leaveVersion:1,transfersVersion:1,userEmailsVersion:1,levels:structuredClone(model.defaults)};}
  }
  async function locations(){try{return JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return[];throw error;}}
  function decorate(account,companyId,data,stores=[]){if(!account)return null;const baseId=account.baseRole||account.role,network=data.levels.find(role=>role.id===baseId&&role.scope==='network'),id=account.companyRoles?.[companyId]||baseId,role=data.levels.find(role=>role.id===id&&role.scope===companyId)||data.levels.find(role=>role.id===id&&role.scope==='network')||{id,name:'No assigned permission level',level:0,permissions:['home.view']};return{...account,baseRole:baseId,role:id,roleName:role.name,roleLevel:role.level,permissions:role.permissions,networkPermissions:network?.permissions||[],companyId,companyIds:[...new Set(stores.filter(store=>model.locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))],permissionRevision:data.revision};}
  async function context(account,companyId){return decorate(account,companyId,await read(),await locations());}
  function authority(actor,data){const network=data.levels.find(role=>role.id===(actor.baseRole||actor.role)&&role.scope==='network');return model.can(actor,'roles.network')&&network?{...actor,roleLevel:Math.max(model.level(actor),network.level),permissions:[...new Set([...actor.permissions,...network.permissions])]}:actor;}
  function complete(role){return role&&model.keys.every(key=>role.permissions.includes(key));}
- function preserve(accounts,before,after){const was=accounts.some(account=>complete(before.levels.find(role=>role.id===account.role&&role.scope==='network'))),still=accounts.some(account=>complete(after.levels.find(role=>role.id===account.role&&role.scope==='network')));if(was&&!still)fail('Keep at least one account with full network access and permission management.');}
+ function preserve(accounts,before,after){const was=accounts.some(account=>!account.invitation&&complete(before.levels.find(role=>role.id===account.role&&role.scope==='network'))),still=accounts.some(account=>!account.invitation&&complete(after.levels.find(role=>role.id===account.role&&role.scope==='network')));if(was&&!still)fail('Keep at least one account with full network access and permission management.');}
  async function change(actor,accounts,input,method,id){
   const data=await read();if(!model.can(actor,'roles.manage'))fail('Permission-level management access required.',403);
   if(input?.revision!==data.revision)fail('Permission levels changed. Reload before saving.',409);
@@ -58,7 +58,7 @@ function createStore(dir){
   }
   preserve(accounts,data,next);next.revision++;await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(next,null,2),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return next;
  }
- function assertRecovery(accounts,nextAccounts,data){preserve(accounts,data,{...data,levels:data.levels});const before=accounts.some(account=>complete(data.levels.find(role=>role.id===account.role&&role.scope==='network'))),after=nextAccounts.some(account=>complete(data.levels.find(role=>role.id===account.role&&role.scope==='network')));if(before&&!after)fail('Keep at least one Head Office account with full network access.');}
+ function assertRecovery(accounts,nextAccounts,data){preserve(accounts,data,{...data,levels:data.levels});const before=accounts.some(account=>!account.invitation&&complete(data.levels.find(role=>role.id===account.role&&role.scope==='network'))),after=nextAccounts.some(account=>!account.invitation&&complete(data.levels.find(role=>role.id===account.role&&role.scope==='network')));if(before&&!after)fail('Keep at least one Head Office account with full network access.');}
  return{read,locations,decorate,context,change,assertRecovery,authority};
 }
 module.exports={createStore};

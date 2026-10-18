@@ -5,6 +5,8 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
 const persistentShell=require('./persistent-shell');
+const accountInvitations=require('./account-invitations');
+const accountEmailSettings=require('./account-email-settings');
 const {createPublicAssets}=require('./public-assets');
 const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
 const {createAuth}=require('./auth');
@@ -61,11 +63,11 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,publicOrigin='',migrationMode=false}={}) {
+function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,publicOrigin='',migrationMode=false}={}) {
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
-  const auth=createAuth(dataDir,{clockNow:rosteringNow});
+  const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow}),invitationAttempts=new Map();
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore);
   async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory(),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];return accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});}
@@ -100,19 +102,25 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
       if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
       if(await publicAssets.serve(req,res,requestUrl))return;
+      if(req.url==='/accept-invite'){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','DENY');}
+      if(req.method==='POST'&&['/api/invitations/inspect','/api/invitations/accept'].includes(req.url)){
+        if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==requestOrigin(req)))fail('Invalid account setup request.',403);
+        const key=req.socket.remoteAddress,now=Date.now();let rate=invitationAttempts.get(key);if(!rate||rate.until<=now){rate={count:0,until:now+15*60000};invitationAttempts.set(key,rate);}if(rate.count>=40)fail('Too many setup attempts. Try again in 15 minutes.',429);
+        try{const input=await body(req,9000),result=req.url.endsWith('/inspect')?await auth.invitationInfo(input?.token):await auth.acceptInvitation(input);invitationAttempts.delete(key);return json(200,result);}catch(error){if(error.status>=400&&error.status<500)rate.count++;throw error;}
+      }
       if(req.url==='/api/setup'&&req.method==='POST'){
         if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress))fail('First-time setup must be opened on the computer running the app.',403);
         if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==requestOrigin(req)))fail('Invalid setup request.',403);
         const account=await auth.setup(await body(req));await locationStore.ensure(true);return json(201,(await auth.list()).find(saved=>saved.id===account.id));
       }
       if(req.method==='GET'&&req.url==='/admin/login'){res.writeHead(303,{Location:'/login'});return res.end();}
-      if(req.method==='GET'&&['/login','/setup','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&requestUrl.searchParams.has('company')){res.writeHead(303,{Location:req.url});return res.end();}
+      if(req.method==='GET'&&['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&requestUrl.searchParams.has('company')){res.writeHead(303,{Location:req.url});return res.end();}
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
       let session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
       const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout'];
-      const authPage=['/login','/setup','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
+      const authPage=['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
       const platformAppearance=authPage||((customisationRoutes.includes(req.url)||fontAsset||settingsPage)&&(req.headers['x-app-appearance']==='platform'||requestUrl.searchParams.get('platform')==='1'));
       const platformWrite=platformAppearance&&((req.url.startsWith('/api/')&&customisationRoutes.includes(req.url))||settingsPage||req.url.startsWith('/admin/appearance/'));
       if(platformWrite){if(!session){if(req.url.startsWith('/api/'))fail('Sign-in required.',401);res.writeHead(303,{Location:'/login'});return res.end();}if(!can(session,'network.access')||!can(session,'appearance.manage')){if(req.url.startsWith('/api/'))fail('Head Office platform appearance permission required.',403);res.writeHead(303,{Location:'/'});return res.end();}}
@@ -198,6 +206,20 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
       if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);return json(200,await locationStore.update(locationRoute[1],await body(req)));}
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
+      if(req.url==='/api/account-email-settings'){
+        if(!can(session,'account-email.manage'))fail('Network account email settings permission required.',403);
+        if(req.method==='GET')return json(200,accountEmailSettings.summary(await accountEmailSettings.read(dataDir)));
+        if(req.method==='PUT')return json(200,await accountEmailSettings.save(dataDir,await body(req)));
+      }
+      const resendInvitation=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)\/invitation$/);
+      if(req.method==='POST'&&(req.url==='/api/account-invitations'||resendInvitation)){
+        const env=await accountEmailSettings.read(dataDir);accountInvitations.sender(env);
+        const origin=publicOrigin||requestOrigin(req);if(!publicOrigin&&!['localhost','127.0.0.1','[::1]'].includes(new URL(origin).hostname))fail('Set APP_ORIGIN to your public app URL before sending invitations.',503);
+        const invitation=resendInvitation?await auth.resendInvitation(session,resendInvitation[1]):await auth.invite(session,await body(req),id=>locationStore.get(id,{active:true}));
+        const delivery=await accountInvitations.send({...invitation,origin,company:session.companyName,inviter:session.username},{env,fetchImpl});
+        await auth.invitationDelivered(invitation.account.id,invitation.invitationId,delivery);
+        return json(resendInvitation?200:201,{account:(await auth.list(session)).find(account=>account.id===invitation.account.id),delivery});
+      }
       if(req.url==='/api/order-email-template'){
         if(!can(session,'email.manage'))fail('Email settings permission required.',403);
         if(req.method==='GET')return json(200,await orderEmailTemplates.read(dataDir,session.companyId));

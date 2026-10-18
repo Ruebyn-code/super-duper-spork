@@ -1,5 +1,7 @@
 // Explicit public routes. HTML pages continue through authentication and permission checks.
 module.exports={'/persistent-navigation.js':'persistent-navigation.js',
+  '/accept-invite':'accept-invite.html',
+  '/accept-invite.js':'accept-invite.js',
   '/page-bridge.js':'page-bridge.js',
   '/persistent-navigation.css':'persistent-navigation.css',
   '/favicon.png':'assets/branding/opstack-icon.png',
