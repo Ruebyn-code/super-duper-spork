@@ -76,7 +76,7 @@ Then run these commands one at a time, stopping if any fails:
 ```sh
 tar --no-same-owner -xzf /data/opstack-migration.tar.gz -C /data
 cd /app
-node -e "require('./auth').createAuth('/data').configured().then(ok=>{if(!ok)throw Error('No accounts found. Leave migration mode on.');console.log('Existing accounts found.');})"
+node -e "require('./auth').createAuth('/data').configured().then(ok=>{if(ok===false)throw Error('No accounts found. Leave migration mode on.');console.log('Existing accounts found.');})"
 ```
 
 You should see **Existing accounts found.** The contents must be directly inside `/data`, for example `/data/accounts.json`, rather than `/data/data/accounts.json`. Legacy `admin.json`/`users.json` accounts are also supported. Do not run account setup or reset existing passwords as part of the move.
