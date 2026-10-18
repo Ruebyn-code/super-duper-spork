@@ -1,0 +1,22 @@
+html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
+.persistent-shell body>.app-shell{display:flex;flex-direction:column;width:100%;max-width:none;height:100dvh;min-height:0;overflow:hidden}
+.persistent-shell #app-sidebar{flex:0 0 auto}
+.persistent-shell .app-shell>.app-page{display:flex;flex-direction:column;flex:1;min-height:0;max-width:none;width:100%;padding:0;margin:0}
+.persistent-shell .app-page>.mobile-brand-header{flex:0 0 auto}
+.shell-page-area{position:relative;flex:1;min-height:0;width:100%;isolation:isolate}
+.shell-page-frame{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--theme-canvas,#f5f8fc)}
+.shell-page-frame[data-pending]{visibility:hidden;pointer-events:none}
+.shell-page-placeholder{position:absolute;inset:0;overflow:auto;pointer-events:none}
+.shell-loading-bar{position:fixed;inset:0 0 auto;height:2px;background:var(--secondary);z-index:150;transform-origin:left;animation:shell-progress 1.3s ease-in-out infinite}
+.shell-loading-bar[hidden],.shell-navigation-error[hidden]{display:none}
+.shell-navigation-error{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:160;max-width:calc(100vw - 24px);display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:var(--theme-surface,white);color:var(--theme-text,#182b3a);box-shadow:0 8px 28px #0002;font:13px Arial,sans-serif}
+.shell-navigation-error button{margin:0;padding:6px 10px;font:inherit;color:var(--theme-primary-text,var(--primary))}
+.embedded-page #app-sidebar,.embedded-page #app-subsidebar,.embedded-page .mobile-brand-header,.embedded-page .mobile-nav-backdrop,.embedded-page #mobile-tabbar{display:none!important}
+.embedded-page .app-shell{display:block!important;min-height:100dvh;padding:0!important}
+.embedded-page .app-shell>.app-page{min-height:100dvh;padding-bottom:20px}
+.embedded-page .app-edit-indicator,.embedded-page body::before{display:none!important}
+.shell-conversation-fullscreen #app-sidebar,.shell-conversation-fullscreen .mobile-brand-header{display:none!important}
+.shell-conversation-fullscreen .app-shell{padding:0!important}
+@keyframes shell-progress{0%{transform:scaleX(.08);opacity:.65}60%{transform:scaleX(.8);opacity:1}100%{transform:scaleX(1);opacity:.5}}
+@media(max-width:720px){.shell-navigation-error{bottom:calc(86px + env(safe-area-inset-bottom,0px))}}
+@media(prefers-reduced-motion:reduce){.shell-loading-bar{animation:none}}

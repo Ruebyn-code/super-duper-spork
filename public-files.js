@@ -1,5 +1,8 @@
 // Explicit public routes. HTML pages continue through authentication and permission checks.
-module.exports={'/favicon.png':'assets/branding/opstack-icon.png',
+module.exports={'/persistent-navigation.js':'persistent-navigation.js',
+  '/page-bridge.js':'page-bridge.js',
+  '/persistent-navigation.css':'persistent-navigation.css',
+  '/favicon.png':'assets/branding/opstack-icon.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',
   '/stock-transfers':'stock-transfers.html',
   '/stock-transfers.js':'stock-transfers.js',

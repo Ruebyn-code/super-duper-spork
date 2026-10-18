@@ -20,7 +20,7 @@ function applyFontLibrary(library){
 }
 function applyAppearance(settings){
  const css=appearanceStyles.build(settings);if(!css)return;
- let style=document.getElementById('appearance-style');if(!style){style=document.createElement('style');style.id='appearance-style';document.head.append(style);}if(style.textContent!==css)style.textContent=css;
+ let style=document.getElementById('appearance-style');if(!style){style=document.createElement('style');style.id='appearance-style';document.head.append(style);}if(style.textContent!==css){style.textContent=css;window.dispatchEvent(new Event('app-appearance-updated'));}
 }
 async function refreshAppearance(){try{const response=await fetch('/appearance',{headers:companyHeaders()});if(response.ok)applyAppearance(await response.json());}catch{}}
 if(!document.getElementById('appearance-style'))refreshAppearance();

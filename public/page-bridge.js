@@ -1,0 +1,30 @@
+(()=>{
+ if(parent===window){const url=new URL(location.href);if(url.searchParams.has('__opstack_content')){url.searchParams.delete('__opstack_content');location.replace(url.href);}return;}
+ if(!parent.appShell)return;
+ document.documentElement.classList.add('embedded-page');
+ window.appEmbedded=true;
+ window.appRequiredReading=parent.appRequiredReading;
+ window.appShiftClock=parent.appShiftClock;
+ window.appMessageBadge=parent.appMessageBadge;
+ // Entering the content frame is still the same app tab. Refreshing lists on
+ // this focus event can replace a button between pointer-down and click.
+ window.addEventListener('focus',event=>{if(event.target===window&&event.isTrusted)event.stopImmediatePropagation();},true);
+ const originalFetch=window.fetch.bind(window);
+ window.fetch=async(...args)=>{const response=await originalFetch(...args);if(response.status===428)parent.appRequiredReading?.check();return response;};
+ document.addEventListener('pointerdown',()=>parent.appNavigation?.dismissTransient());
+ document.addEventListener('click',event=>{
+  if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  const link=event.target.closest('a[href]');if(!link||link.hasAttribute('download')||(link.target&&link.target!=='_self'))return;
+  const url=new URL(link.href);if(!parent.appShell.accepts(url))return;
+  event.preventDefault();parent.appShell.navigate(url.href);
+ });
+ window.addEventListener('hashchange',()=>parent.appShell.childRouteChanged(window));
+ window.addEventListener('app-theme-changed',event=>{if(parent.appTheme?.mode!==event.detail.mode)parent.appTheme?.set(event.detail.mode);});
+ window.addEventListener('app-edit-mode-changed',event=>parent.appShell.childEditChanged(window,event.detail.enabled));
+ for(const name of ['interface-text-updated','app-logo-updated','font-library-updated','app-design-saved','app-appearance-updated'])window.addEventListener(name,()=>parent.appShell.appearanceChanged());
+ document.addEventListener('DOMContentLoaded',()=>{
+  new MutationObserver(()=>parent.appShell.childPresentationChanged(window)).observe(document.body,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(()=>parent.appShell.childPresentationChanged(window)).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+  parent.appShell.childPresentationChanged(window);
+ });
+})();

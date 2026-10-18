@@ -4,6 +4,8 @@
 - For interface or navigation changes, also check the affected interactions in desktop and phone browsers, including relevant permission levels.
 - Use isolated temporary data for tests so existing accounts, settings and orders are preserved.
 
+- Signed-in pages use a persistent navigation shell with isolated same-origin content documents. Keep navigation, required reading and the shared shift clock in the parent; page scripts run in the content document. Register new page destinations in `public/persistent-navigation.js` and shared parent scripts in `persistent-shell.js`. Content rendering must retain all server authentication and permission checks. Check Back/Forward, first-tap focus, App edit synchronisation and mobile Comms fullscreen when changing this integration.
+
 - Keep all new in-page sidebars consistent with the shared `page-sidebar-layout`, `page-sidebar`, `page-sidebar-link` and `page-sidebar-label` classes in `public/style.css`. Sidebars start as a collapsed icon rail, expand smoothly over content on hover or keyboard focus, and collapse on leaving. Keep touch menus compact; do not add a pinned-open setting. Use primary icon outlines, secondary details, and matching tinted hover/selected backgrounds.
 
 - The Knowledge Library category sidebar is a one-off exception: it uses an explicit collapse/expand button and remembers the choice per user/company. It must not expand on hover or keyboard focus. Other in-page sidebars keep the shared hover behavior.

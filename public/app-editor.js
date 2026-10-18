@@ -53,6 +53,9 @@
   syncEditMode();
  });
  toggle.onclick=async()=>{if(phone.matches)return;try{if(enabled&&window.appLayout?.preventExit())return;if(!enabled){const session=await(await fetch('/api/session',{headers:{...companyHeaders(),...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}})).json();if(!appAccess.can('appearance.manage',session))throw Error('Head Office permission required.');csrf=session.csrf;const response=await fetch('/api/interface-text',{headers:{...companyHeaders(),'X-CSRF-Token':csrf}});const data=await response.json();if(!response.ok)throw Error(data.error);known=new Set(data.labels.map(l=>l.text));appearance=await(await fetch('/appearance',{headers:companyHeaders()})).json();}enabled=!enabled;try{sessionStorage.setItem(companyPreferenceKey('souvlaki-app-edit'),String(enabled));}catch{}syncEditMode();const label=enabled?'Finish editing':'App edit';toggle.querySelector('.sidebar-edit-label').textContent=label;toggle.setAttribute('aria-label',label);toggle.title=label;status.textContent=enabled?'Editing '+window.appCompanyName+'. Click a part to edit its appearance. Hold a section or card to move it.':'Editing is off.';}catch(error){status.textContent=error.message;}};
+ const toggleMode=toggle.onclick;let modeQueue=Promise.resolve();
+ window.appEditor={get enabled(){return editActive();},setEnabled(value){modeQueue=modeQueue.catch(()=>{}).then(async()=>{if(enabled!==Boolean(value))await toggleMode();});return modeQueue;}};
+ toggle.onclick=()=>window.appEditor.setEnabled(!enabled);
  const sameColour=(a,b)=>JSON.stringify(appearanceStyles.parseColour(a))===JSON.stringify(appearanceStyles.parseColour(b));
  function colourChoice(picker){const source=$(picker+'-source').value,colour=source==='custom'?$(picker).value:source,opacity=1-Number($(picker+'-transparency').value)/100;return opacity===1?colour:{colour,opacity:Number(opacity.toFixed(2))};}
  function updateColourControls(picker,hex,reset){const original=$(reset).checked,disabled=original||$(picker+'-source').value!=='custom';$(picker).disabled=disabled;$(hex).disabled=disabled;$(picker+'-source').disabled=original;$(picker+'-transparency').disabled=original;$(picker+'-transparency-value').textContent=$(picker+'-transparency').value+'%';$(picker+'-transparency').setAttribute('aria-valuetext',$(picker+'-transparency').value+'% transparent');}
@@ -111,7 +114,7 @@
   $(picker+'-transparency').oninput=()=>updateColourControls(picker,hex,reset);
   $(picker).oninput=()=>{$(hex).value=$(picker).value;};$(hex).oninput=()=>{if(/^#[0-9a-f]{6}$/i.test($(hex).value))$(picker).value=$(hex).value;};
  }
- async function patch(url,body){const response=await fetch(url,{method:'PATCH',headers:{...companyHeaders(),'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error);return result;}
+ async function patch(url,body){const response=await fetch(url,{method:'PATCH',headers:{...companyHeaders(),'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error);window.dispatchEvent(new Event('app-design-saved'));return result;}
  dialog.querySelector('form').onsubmit=async event=>{event.preventDefault();if(!editActive()||saving||readingImage)return;const button=event.target.querySelector('button[type=submit]');saving=true;button.disabled=true;button.textContent='Saving…';$('app-edit-scope').disabled=true;$('app-editor-close').disabled=true;$('app-edit-cancel').disabled=true;let saved='';try{
   const scope=$('app-edit-scope').value,textChanged=activeKey&&($('app-edit-value').value!==initialText||$('app-edit-blank').checked!==Boolean(initialBlank)),local={};
   if(!isIcon){if(!sameColour(colourChoice('app-font-colour'),initialFontColour)||$('app-font-colour-reset').checked)local.fontColour=$('app-font-colour-reset').checked?null:colourChoice('app-font-colour');if($('app-style-font').value!==initialFont)local.font=$('app-style-font').value==='inherit'?null:$('app-style-font').value;}
@@ -136,5 +139,5 @@
   dialog.close();updateEditIndicator();status.textContent=saved||'No changes made.';mark();
  }catch(error){$('app-edit-error').textContent=saved+error.message;}finally{saving=false;button.disabled=false;button.textContent='Save changes';$('app-edit-scope').disabled=false;$('app-editor-close').disabled=false;$('app-edit-cancel').disabled=false;}};
  let scheduled=false;new MutationObserver(records=>{if(!editActive()||scheduled||!records.some(record=>!record.target.parentElement?.closest('[data-copy-editor],script,style')))return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;if(editActive())mark();});}).observe(document.body,{childList:true,characterData:true,subtree:true});
- try{if(sessionStorage.getItem(companyPreferenceKey('souvlaki-app-edit'))==='true'&&appAccess.can('appearance.manage'))toggle.click();}catch{}
+ try{if(!window.appEmbedded&&sessionStorage.getItem(companyPreferenceKey('souvlaki-app-edit'))==='true'&&appAccess.can('appearance.manage'))toggle.click();}catch{}
 })();

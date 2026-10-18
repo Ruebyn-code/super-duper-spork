@@ -4,6 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
+const persistentShell=require('./persistent-shell');
 const {createPublicAssets}=require('./public-assets');
 const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
 const {createAuth}=require('./auth');
@@ -94,7 +95,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
   return http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
-      const requestUrl=new URL(req.url,'http://localhost');req.url=requestUrl.pathname;
+      const requestUrl=new URL(req.url,'http://localhost'),embeddedContent=req.headers['sec-fetch-dest']==='iframe'||requestUrl.searchParams.get('__opstack_content')==='1';requestUrl.searchParams.delete('__opstack_content');req.url=requestUrl.pathname;
       res.setHeader('Cache-Control','no-store');
       if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
       if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
@@ -393,7 +394,7 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
         const siteIcons='<link rel="icon" type="image/png" href="/favicon.png?v='+iconVersion+'"><link rel="apple-touch-icon" href="/apple-touch-icon.png?v='+iconVersion+'">';
         const contextScript='<script>window.appThemeAccount='+JSON.stringify(session?.id||'guest')+';window.appCompanyId='+JSON.stringify(appearanceCompany.id).replace(/</g,'\\u003c')+';window.appCompanyName='+JSON.stringify(platformAppearance?'Opstack':appearanceCompany.name).replace(/</g,'\\u003c')+';window.appPlatformAppearance='+JSON.stringify(platformAppearance)+';</script>';
         const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';document.documentElement.dataset.accountRole='+JSON.stringify(session?.role||'')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary,appearanceCompany.id)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
-        res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});return res.end(await publicAssets.versionMarkup(markup.replace('<head>','<head>'+siteIcons+contextScript+'<script src="/theme-colours.js"></script><script src="/theme.js"></script>').replace('</head>',initial+'<link rel="stylesheet" href="/dark-mode.css"></head>')));
+        res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const rendered=markup.replace('<head>','<head>'+siteIcons+contextScript+'<script src="/theme-colours.js"></script><script src="/theme.js"></script>').replace('</head>',initial+'<link rel="stylesheet" href="/dark-mode.css"></head>');return res.end(await publicAssets.versionMarkup(((sidebarPage&&!authPreview)||(authPreview&&embeddedContent))?persistentShell.render(rendered,embeddedContent):rendered));
       }
       return json(404,{error:'Not found'});
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
