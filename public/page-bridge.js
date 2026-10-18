@@ -3,9 +3,14 @@
  if(!parent.appShell)return;
  document.documentElement.classList.add('embedded-page');
  window.appEmbedded=true;
+ if(frameElement?.hasAttribute('data-phone-roster-popup')){window.appPhoneRosterPopup=true;document.documentElement.classList.add('phone-roster-popup');}
  window.appRequiredReading=parent.appRequiredReading;
  window.appShiftClock=parent.appShiftClock;
  window.appMessageBadge=parent.appMessageBadge;
+ for(const name of ['required-reading-changed','shift-clock-updated']){
+  const relay=event=>window.dispatchEvent(new CustomEvent(name,{detail:event.detail}));parent.addEventListener(name,relay);
+  window.addEventListener('pagehide',()=>parent.removeEventListener(name,relay),{once:true});
+ }
  // Entering the content frame is still the same app tab. Refreshing lists on
  // this focus event can replace a button between pointer-down and click.
  window.addEventListener('focus',event=>{if(event.target===window&&event.isTrusted)event.stopImmediatePropagation();},true);

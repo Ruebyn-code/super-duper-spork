@@ -3,8 +3,8 @@
  const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;},user=element=>{element.dataset.userText='';return element;},can=key=>appAccess.can(key),money=value=>value===null||value===undefined?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),hours=value=>(value/3600).toFixed(2)+' h',date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',timeZone:M.timeZone}).format(new Date(value+'T12:00:00Z')),time=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:M.timeZone}).format(new Date(value)),uid=()=>crypto.randomUUID?.()||'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(Number(c)^crypto.getRandomValues(new Uint8Array(1))[0]&15>>Number(c)/4).toString(16));
  let session,data,week=M.monday(M.today()),section='',loading=0;
  let requiredReadingWasBlocked=false;
- const phoneViewport=matchMedia('(max-width:720px)');
- let phoneRosterScope='mine',phoneRosterDay=M.today(),phoneRosterMaker=false,phoneRosterKey='',phoneRosterDismissed=false,phoneRosterClosing=false;
+ const phoneViewport=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)');
+ let phoneRosterScope='mine',phoneRosterDay=M.today(),phoneRosterKey='',phoneRosterDismissed=false,phoneRosterClosing=false;
  const status=(message,good=false)=>{const target=$('rostering-status');target.textContent=message;target.classList.toggle('success',good);};
  async function api(route,method='GET',body){const response=await fetch('/api/rostering/'+route,{method,cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||'',...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});const result=await response.json();if(!response.ok){if(response.status===401)location.href=companyLoginUrl();if(response.status===428)window.appRequiredReading?.check();throw Error(result.error||'Unable to load rostering.');}return result;}
  const field=(caption,input)=>{const label=node('label',caption);label.append(input);return label;};
@@ -42,22 +42,45 @@
   }
  }
  setupPanelControls();
+ const phonePanelSlots=[],phonePanelHost=node('div',undefined,'phone-roster-panels'),phoneSection=select('phoneSection',[['roster','Roster'],['timesheets','Timesheets'],['availability','Availability'],['leave','Leave']],'roster');
+ phoneSection.id='phone-roster-section';phoneSection.setAttribute('aria-label','Rostering section');
+ const phoneSectionControl=node('div',undefined,'phone-roster-section');phoneSectionControl.append(phoneSection);$('phone-roster').querySelector('.phone-roster-header').after(phoneSectionControl);
+ phonePanelHost.id='phone-roster-panels';$('phone-roster').querySelector('.phone-roster-tabs').before(phonePanelHost);
+ document.querySelector('.rostering-page').append($('phone-roster'));
+ for(const id of ['timesheets','availability','leave'])for(const element of [document.querySelector('[data-roster-tools="'+id+'"]'),$('rostering-'+id)]){const marker=document.createComment('Roster panel position');element.before(marker);phonePanelSlots.push({element,marker});}
+ const phoneStatusSlot=document.createComment('Roster status position');$('rostering-status').before(phoneStatusSlot);
+ function placePhonePanels(){
+  if(phoneViewport.matches){
+   for(const {element} of phonePanelSlots)phonePanelHost.append(element);$('phone-roster').querySelector('.phone-roster-datebar').after($('rostering-status'));
+  }else{
+   for(const {element,marker} of phonePanelSlots)marker.after(element);phoneStatusSlot.after($('rostering-status'));
+  }
+ }
+ placePhonePanels();
+ function showPhoneSection(value){
+  const next=['roster','timesheets','availability','leave'].includes(value)?value:'roster';phoneRosterDismissed=false;
+  history.replaceState(null,'','#'+next);view();
+ }
+ phoneSection.onchange=()=>showPhoneSection(phoneSection.value);
+ window.appPhoneRoster={show:showPhoneSection};
  $('roster-position-add').disabled=$('roster-position-save').disabled=true;
  function positionColour(element,position,color){
   if(!element)return;const value=color===undefined?data?.positionSettings?.positions.find(item=>item.name===position)?.color:color;
   if(/^#[a-f0-9]{6}$/i.test(value||'')){element.style.setProperty('--shift-colour',value);const rgb=[1,3,5].map(index=>parseInt(value.slice(index,index+2),16));element.style.setProperty('--shift-ink',rgb[0]*.299+rgb[1]*.587+rgb[2]*.114<145?'#ffffff':'#24445b');}else{element.style.removeProperty('--shift-colour');element.style.removeProperty('--shift-ink');}
  }
  function syncPhoneRosterMode(){
-  const reading=phoneViewport.matches&&section==='roster'&&!phoneRosterMaker,dialog=$('phone-roster'),open=reading&&data&&!phoneRosterDismissed&&!appRequiredReading.blocked;
-  document.body.classList.toggle('phone-roster-reading',reading);$('phone-roster-launch').hidden=!reading;
+  const reading=phoneViewport.matches,dialog=$('phone-roster'),open=reading&&!phoneRosterDismissed&&!appRequiredReading.blocked,roster=section==='roster';
+  document.body.classList.toggle('phone-roster-reading',reading);
+  phoneSection.value=section||'roster';$('phone-roster-shifts').hidden=!roster;phonePanelHost.hidden=roster;
+  dialog.querySelector('.phone-roster-tabs').hidden=!roster;$('phone-roster-location').textContent=session?.locationName||'';
+  if(!roster){$('phone-roster-caption').textContent={timesheets:'Timesheets',availability:'Your availability',leave:'Leave requests'}[section]||'';if(data){$('phone-roster-date-label').textContent=date(week)+' – '+date(data.weekEnd);$('phone-roster-date').value=week;for(const id of ['previous','next'])$('phone-roster-'+id).setAttribute('aria-label',(id==='previous'?'Previous':'Next')+' week');}}
   if(open){dialog.hidden=false;if(!dialog.open)dialog.showModal();}
   else if(!phoneRosterClosing){if(dialog.open)dialog.close();dialog.hidden=true;}
-  $('phone-roster-return').hidden=!(phoneViewport.matches&&phoneRosterMaker);
  }
  async function dismissPhoneRoster(){
   if(phoneRosterClosing)return;phoneRosterDismissed=true;phoneRosterClosing=true;const dialog=$('phone-roster');
   try{if(dialog.open&&!matchMedia('(prefers-reduced-motion:reduce)').matches)await dialog.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(100%)',opacity:0}],{duration:180,easing:'ease-in'}).finished;}catch{}
-  finally{phoneRosterClosing=false;syncPhoneRosterMode();if(phoneViewport.matches&&section==='roster'&&!phoneRosterMaker)$('phone-roster-open').focus({preventScroll:true});}
+  finally{phoneRosterClosing=false;syncPhoneRosterMode();if(window.appPhoneRosterPopup)parent.appShell.closePhoneRoster(true);else if(phoneViewport.matches)location.href='/home';}
  }
  function phoneShiftsOnDay(shifts,day){return shifts.filter(shift=>shift.date===day||shift.overnight&&M.shiftDate(shift.date,1)===day&&shift.end!=='00:00').sort((a,b)=>(a.date===day?M.minutes(a.start):0)-(b.date===day?M.minutes(b.start):0)||a.username.localeCompare(b.username));}
  function phoneShiftRow(shift,day){
@@ -75,7 +98,7 @@
   person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);return wrap;
  }
  function renderPhoneRoster(){
-  syncPhoneRosterMode();if(!data||!phoneViewport.matches||phoneRosterMaker)return;
+  syncPhoneRosterMode();if(!data||!phoneViewport.matches)return;
   if(M.monday(phoneRosterDay)!==week)phoneRosterDay=week;
   const key=JSON.stringify([week,phoneRosterDay,phoneRosterScope,data.teamRoster,data.roster.publishedAt,session.locationName]);if(key===phoneRosterKey)return;phoneRosterKey=key;
   const mine=phoneRosterScope==='mine',host=$('phone-roster-shifts'),team=data.teamRoster||{shifts:[],carryoverShifts:[]},shifts=(mine?team.shifts:[...team.shifts,...team.carryoverShifts]).filter(shift=>!mine||shift.userId===session.id);
@@ -98,9 +121,9 @@
   }
  }
  async function selectPhoneRosterDate(day){
-  try{M.date(day);if(!await flushRosterEdits())return;phoneRosterDay=day;if(M.monday(day)!==week)await selectWeek(day);else renderPhoneRoster();}catch(error){status(error.message);}
+  try{M.date(day);if(!await flushRosterEdits())return;phoneRosterDay=day;if(M.monday(day)!==week)await selectWeek(day);else if(section==='roster')renderPhoneRoster();else syncPhoneRosterMode();}catch(error){status(error.message);}
  }
- const settingsAccess=()=>['rostering.manage','rostering.costs','rostering.budget.location','rostering.budget.company','rostering.budget.network'].some(can);
+ const settingsAccess=()=>!phoneViewport.matches&&['rostering.manage','rostering.costs','rostering.budget.location','rostering.budget.company','rostering.budget.network'].some(can);
  function renderSidebar(){const nav=document.querySelector('.rostering-sidebar'),items=[['roster','Roster','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4"/><path class="icon-detail" d="M3 11h18M7 15h3M14 15h3"/>'],['timesheets','Timesheets','<path d="M5 3h14v18H5Z"/><path class="icon-detail" d="M8 7h8M8 11h8M8 15h5"/>'],['leave','Leave','<path d="M5 3h14v18H5Z"/><path class="icon-detail" d="M8 7h8M8 11h5m-4 5 2 2 4-4"/>'],['availability','Availability','<rect x="3" y="4" width="18" height="17" rx="2"/><path class="icon-detail" d="m7 13 3 3 7-7"/>'],...(settingsAccess()?[['settings','Labour settings','<path d="M4 5h16v14H4Z"/><path class="icon-detail" d="M7 9h10M7 15h10M10 7v4M15 13v4"/>']]:[])];nav.replaceChildren();for(const [id,name,path]of items){const link=node('a',undefined,'page-sidebar-link');link.href='#'+id;link.title=name;link.setAttribute('aria-label',name);link.dataset.rosterView=id;link.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+path+'</svg>';link.append(node('span',name,'page-sidebar-label'));nav.append(link);}}
  // Background refreshes must not replace active editors or announce loading in the layout.
  function rosterInteractionActive(){
@@ -116,9 +139,9 @@
    if(!quiet){renderSection();if(!background)status('');}
   }catch(error){if(version===loading)status(error.message);}
  }
- async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(next==='clock'){next='roster';history.replaceState(null,'','#roster');}if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','availability','leave','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';if(next==='roster'&&section!=='roster')phoneRosterDismissed=false;section=next;syncPhoneRosterMode();$('roster-toolbar-controls').hidden=section!=='roster';for(const tools of document.querySelectorAll('[data-roster-tools]'))tools.hidden=tools.dataset.rosterTools!==section;for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
- function renderSection(){if(!data)return;const render={roster:renderRoster,timesheets:renderTimesheets,availability:renderAvailability,leave:renderLeave,settings:renderSettings};render[section||'roster']();appAccess.apply(session);}
- function renderRoster(preserveBoard=false){renderPhoneRoster();const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,data.awardChecks,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+(summary.nativePay?' shifts need employment or award details':' shifts need staff or hourly rates'):hours(summary.plannedSeconds)+(summary.nativePay?' · Gross wages & allowances':'')+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
+ async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(next==='clock'){next='roster';history.replaceState(null,'','#roster');}if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','availability','leave','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';if(phoneViewport.matches&&location.hash==='#settings')history.replaceState(null,'','#roster');if(next!==section)phoneRosterKey='';if(next==='roster'&&section!=='roster')phoneRosterDismissed=false;section=next;syncPhoneRosterMode();$('roster-toolbar-controls').hidden=phoneViewport.matches||section!=='roster';for(const tools of document.querySelectorAll('[data-roster-tools]'))tools.hidden=tools.dataset.rosterTools!==section;for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
+ function renderSection(){if(!data)return;const render={roster:renderRoster,timesheets:renderTimesheets,availability:renderAvailability,leave:renderLeave,settings:renderSettings};render[section||'roster']();syncPhoneRosterMode();appAccess.apply(session);}
+ function renderRoster(preserveBoard=false){renderPhoneRoster();if(phoneViewport.matches)return;const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,data.awardChecks,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+(summary.nativePay?' shifts need employment or award details':' shifts need staff or hourly rates'):hours(summary.plannedSeconds)+(summary.nativePay?' · Gross wages & allowances':'')+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
   for(const card of metrics.children)card.title=[...card.children].map(part=>part.textContent).join(' · ');
   renderAwardPanel($('roster-award-checks'),data.awardChecks?.roster);for(const card of $('roster-days').querySelectorAll('[data-shift-id]'))markAwardCard(card);
   syncRosterViewControls();const manage=can('rostering.manage');$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
@@ -570,7 +593,6 @@
  $('roster-position-add').onclick=()=>{const row=positionEditor({id:uid(),name:'',color:null,used:false});$('roster-position-list').append(row);row.querySelector('[name=positionName]').focus();};
  $('positions-form').onsubmit=event=>{event.preventDefault();const payload={revision:positionSettingsRevision,positions:positionSettingsValues()};formAction($('positions-form'),async()=>{await api('positions','PUT',payload);positionSettingsRevision=null;positionSettingsKey='';},'Positions saved.');};
  $('budget-scope').onchange=renderBudgetForm;$('budget-mode').onchange=updateBudgetMode;$('budget-form').onsubmit=saveBudget;$('budget-inherit').onclick=()=>{const item=data.summary.budgets.find(item=>item.scope===$('budget-scope').value);formAction($('budget-form'),()=>api('budget','DELETE',{scope:item.scope,revision:item.revision}),'Budget override removed.');};$('rates-date').onchange=renderRates;$('rates-form').onsubmit=event=>{event.preventDefault();try{const payload={effectiveDate:$('rates-date').value,revision:data.rates.revision,rates:[...$('rate-people').querySelectorAll('input')].map(input=>({userId:input.dataset.userId,rateCents:input.value===''?null:cents(input.value)}))};formAction($('rates-form'),()=>api('rates','PUT',payload),'Hourly rates saved.');}catch(error){status(error.message);}};
- $('phone-roster-open').onclick=()=>{if(phoneRosterClosing)return;phoneRosterDismissed=false;renderPhoneRoster();};
  $('phone-roster-close').onclick=$('phone-roster-handle').onclick=dismissPhoneRoster;
  $('phone-roster').addEventListener('cancel',event=>{event.preventDefault();dismissPhoneRoster();});
  let phoneBackdropPress=false;
@@ -581,12 +603,10 @@
  $('phone-roster-handle').addEventListener('pointermove',event=>{if(phoneSheetDrag?.id===event.pointerId&&event.clientY-phoneSheetDrag.y>60){phoneSheetDrag=null;dismissPhoneRoster();}});
  $('phone-roster-handle').addEventListener('pointerup',()=>{phoneSheetDrag=null;});$('phone-roster-handle').addEventListener('pointercancel',()=>{phoneSheetDrag=null;});
  $('phone-roster-mine').onclick=$('phone-roster-team').onclick=event=>{phoneRosterScope=event.currentTarget.id.endsWith('mine')?'mine':'team';renderPhoneRoster();};
- $('phone-roster-previous').onclick=()=>selectPhoneRosterDate(M.shiftDate(phoneRosterScope==='mine'?week:phoneRosterDay,phoneRosterScope==='mine'?-7:-1));
- $('phone-roster-next').onclick=()=>selectPhoneRosterDate(M.shiftDate(phoneRosterScope==='mine'?week:phoneRosterDay,phoneRosterScope==='mine'?7:1));
+ $('phone-roster-previous').onclick=()=>selectPhoneRosterDate(M.shiftDate(section!=='roster'||phoneRosterScope==='mine'?week:phoneRosterDay,section!=='roster'||phoneRosterScope==='mine'?-7:-1));
+ $('phone-roster-next').onclick=()=>selectPhoneRosterDate(M.shiftDate(section!=='roster'||phoneRosterScope==='mine'?week:phoneRosterDay,section!=='roster'||phoneRosterScope==='mine'?7:1));
  $('phone-roster-date').onchange=event=>selectPhoneRosterDate(event.target.value);
- $('phone-roster-edit').onclick=()=>{if(!can('rostering.manage'))return;phoneRosterMaker=true;syncPhoneRosterMode();renderRoster();};
- $('phone-roster-return').onclick=async()=>{if(!await flushRosterEdits())return;phoneRosterMaker=false;phoneRosterDismissed=false;renderPhoneRoster();};
- phoneViewport.addEventListener('change',async()=>{if(!session)return;if(!await flushRosterEdits())phoneRosterMaker=true;syncPhoneRosterMode();if(data&&section==='roster')renderRoster();});
+ phoneViewport.addEventListener('change',async()=>{if(!session)return;await flushRosterEdits();placePhonePanels();renderSidebar();if(phoneViewport.matches&&section==='settings')showPhoneSection('roster');else{syncPhoneRosterMode();if(data)renderSection();}});
  window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{const restored=requiredReadingWasBlocked&&!event.detail.blocked;requiredReadingWasBlocked=event.detail.blocked;syncPhoneRosterMode();if(restored&&session){if(section)load(false,true);else view();}});window.addEventListener('shift-clock-updated',()=>{if(session&&section==='timesheets')load(false,true);});window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets'].includes(section))load(false,true);});$('logout').onclick=async()=>{if(!await flushRosterEdits())return;const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
  (async()=>{try{const response=await fetch('/api/session');session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}appAccess.apply(session);$('rostering-location').textContent=session.locationName+' · '+session.companyName;try{const saved=localStorage.getItem('opstack-roster-view:'+session.id+':'+session.companyId);if(['staff','stacked','day'].includes(saved))rosterView=saved;}catch{}renderSidebar();await appRequiredReading.ready;requiredReadingWasBlocked=appRequiredReading.blocked;view();}catch(error){status(error.message);}})();
 })();

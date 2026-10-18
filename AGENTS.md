@@ -12,6 +12,8 @@
 
 - Keep App edit in the shared bar account dropdown on larger screens; hide it and suspend editing on phones. Phone bottom navigation contains Home, Rostering, Comms and More; More holds the other pages. Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
 
+- On phones, Rostering opens as a popup above the current page. Keep My roster, Team roster, timesheets, availability and leave inside it; closing restores the underlying page and its state. Do not expose roster creation, editing or labour settings on phones. Keep the shared navigation usable while this sheet is open.
+
 - Opened Comms conversations appear beside the conversation list on desktop, keeping navigation visible. On tablets and phones they take over the viewport, hiding navigation and the mobile brand/location header until Back. Preserve the conversation and draft when resizing or rotating.
 
 - Comms and Knowledge Library editors share the grouped Insert menu for formatting, media and callouts. Preserve structured content when sending, saving, editing and displaying required posts. Media files remain private to their uploader and the audience of the messages/posts/articles that reference them.

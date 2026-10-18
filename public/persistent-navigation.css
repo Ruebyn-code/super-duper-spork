@@ -6,6 +6,11 @@ html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
 .shell-page-area{position:relative;flex:1;min-height:0;width:100%;isolation:isolate}
 .shell-page-frame{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--theme-canvas,#f5f8fc)}
 .shell-page-frame[data-pending]{visibility:hidden;pointer-events:none}
+.shell-roster-popup{z-index:2;background:transparent}
+.phone-roster-popup-open #shift-clock-dock{visibility:hidden}
+.phone-roster-popup,.phone-roster-popup body{background:transparent!important}
+.phone-roster-popup .rostering-page{padding:0!important}
+.phone-roster-popup .rostering-page>:not(#phone-roster){display:none!important}
 .shell-page-placeholder{position:absolute;inset:0;overflow:auto;pointer-events:none}
 .shell-loading-bar{position:fixed;inset:0 0 auto;height:2px;background:var(--secondary);z-index:150;transform-origin:left;animation:shell-progress 1.3s ease-in-out infinite}
 .shell-loading-bar[hidden],.shell-navigation-error[hidden]{display:none}

@@ -152,7 +152,7 @@ test('one company email template serves every location, stays isolated and respe
   await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
   for(const actor of [first,second]){const order=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:2}],notes:'Please deliver Monday.'});assert.equal(order.status,201);}
   assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),['first / Office Supplies','second / Office Supplies']);
-  for(const [index,email] of sent.entries()){assert.match(email.text,/2 × A4 copy paper/);assert.match(email.text,new RegExp('Thank you, '+['first','second'][index]));assert.ok(!email.text.includes('650'));}
+  for(const [index,email] of sent.entries()){assert.match(email.text,/2 × A4 copy paper/);assert.match(email.text,new RegExp('Thank you, '+['first','second'][index]));assert.doesNotMatch(email.text.replace(/^Reference:.*$/m,''),/\$(?:6\.50|13\.00)\b|\b650\b/);}
   const competing=await Promise.all([app.request(admin,route,'PUT',{template:defaults,revision:1}),app.request(admin,route,'PUT',{template:defaults,revision:1})]);assert.deepEqual(competing.map(reply=>reply.status).sort(),[200,409]);
   await app.restart();const after=await app.login('admin');const record=(await app.request(after,route)).data;assert.deepEqual(record.template,defaults);assert.equal(record.revision,2);assert.deepEqual((await app.request(after,route,'GET',undefined,otherHeader)).data.template,otherTemplate);
  }finally{await app.close();}
