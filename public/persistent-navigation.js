@@ -41,7 +41,9 @@
  function presentation(child){
   if(child!==current?.contentWindow)return;
   root.classList.toggle('shell-conversation-fullscreen',child.document.body.classList.contains('comms-conversation-open'));
-  const modal=Boolean(child.document.querySelector('dialog[open]'));
+  // The phone roster is a page reader. Its sheet covers only the content
+  // document, so users must still be able to leave through the shared bar.
+  const modal=Boolean(child.document.querySelector('dialog[open]:not(#phone-roster)'));
   for(const control of document.querySelectorAll('#app-sidebar,.mobile-brand-header,#app-edit-indicator,#shift-clock-dock'))control.inert=modal;
  }
  async function loaded(frame,version,mode){

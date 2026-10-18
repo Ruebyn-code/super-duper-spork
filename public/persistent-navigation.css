@@ -17,6 +17,9 @@ html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
 .embedded-page .app-edit-indicator,.embedded-page body::before{display:none!important}
 .shell-conversation-fullscreen #app-sidebar,.shell-conversation-fullscreen .mobile-brand-header{display:none!important}
 .shell-conversation-fullscreen .app-shell{padding:0!important}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
+ .persistent-shell body>.app-shell{box-sizing:border-box;padding-bottom:var(--mobile-nav-space)}
+}
 @keyframes shell-progress{0%{transform:scaleX(.08);opacity:.65}60%{transform:scaleX(.8);opacity:1}100%{transform:scaleX(1);opacity:.5}}
 @media(max-width:720px){.shell-navigation-error{bottom:calc(86px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.shell-loading-bar{animation:none}}
