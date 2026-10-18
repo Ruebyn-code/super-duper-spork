@@ -31,5 +31,5 @@
  window.addEventListener('sales-budget-updated',refresh);window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('interface-text-updated',render);
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id))refresh();});
  setInterval(refresh,60000);
- (async()=>{try{session=await(await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}})).json();await refresh();}catch{}})();
+ (async()=>{try{session=await appAccess.initialSession();await refresh();}catch{}})();
 })();

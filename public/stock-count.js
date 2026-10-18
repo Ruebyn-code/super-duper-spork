@@ -10,6 +10,7 @@
  const el=(tag,text,className)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(className)element.className=className;return element;};
  function today(){const parts=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const value=type=>parts.find(part=>part.type===type).value;return value('year')+'-'+value('month')+'-'+value('day');}
  async function api(url,method='GET',body){
+  if(url==='/api/session'&&method==='GET')return appAccess.initialSession();
   const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});
   if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}
   const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;

@@ -24,7 +24,7 @@ test('one Opstack sign-in ignores company branding and legacy company selection 
    const redirect=await app.fetch(route,{redirect:'manual'});assert.equal(redirect.status,303);assert.equal(redirect.headers.get('location'),'/login');
   }
   const html=await(await app.fetch('/login',{headers:b})).text();assert.ok(html.includes('Sign in — Opstack'));assert.ok(html.includes('window.appPlatformAppearance=true'));assert.ok(!html.includes('appLoginCompanyId'));assert.ok(!html.includes('#224466'));assert.ok(!html.includes('Welcome to Other'));assert.ok(!html.includes('/logo?company='));
-  const preview=await(await app.fetch('/admin/appearance/signin?company='+other.id,{headers:{Cookie:office.cookie}})).text();assert.ok(preview.includes('auth-preview.js'));assert.ok(preview.includes('/admin/settings?platform=1#sign-in'));assert.ok(!preview.includes('#224466'));assert.ok(!preview.includes('src="/login.js"'));
+  const preview=await(await app.fetch('/admin/appearance/signin?company='+other.id,{headers:{Cookie:office.cookie}})).text();assert.ok(preview.includes('auth-preview.js'));assert.ok(preview.includes('/admin/settings?platform=1#sign-in'));assert.ok(!preview.includes('#224466'));assert.ok(!preview.includes('src="/login.js?v='));
   await app.request(office,'/api/accounts','POST',{username:'Only A',password:'test-member-password',role:'user',locationIds:[office.session.locationId]});
   await app.request(office,'/api/accounts','POST',{username:'Only B',password:'test-member-password',role:'user',locationIds:[other.locationId]});
   const onlyA=await app.login('Only A','test-member-password',other.id);assert.equal(onlyA.session.companyId,'default');assert.equal((await app.request(onlyA,'/api/session/company','PUT',{companyId:other.id})).status,403);

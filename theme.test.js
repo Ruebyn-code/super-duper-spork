@@ -26,7 +26,7 @@ test('all user roles receive early theme loading while public sign-in uses its s
  try{
   for(const name of ['Office','Member']){
    const login=await fetch(base+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:name,password:name==='Office'?'office-test-password':'member-test-password'})});assert.equal(login.status,200);const Cookie=login.headers.get('set-cookie').split(';')[0],session=await(await fetch(base+'/api/session',{headers:{Cookie}})).json();
-   for(const route of ['/home','/','/cart','/sales','/communications','/rostering']){const html=await(await fetch(base+route,{headers:{Cookie}})).text();assert.ok(html.includes('window.appThemeAccount='+JSON.stringify(session.id)));assert.ok(html.indexOf('src="/theme.js"')<html.indexOf('href="/style.css"'));assert.ok(html.includes('href="/dark-mode.css"'));assert.ok(!html.includes('admin_session='));}
+   for(const route of ['/home','/','/cart','/sales','/communications','/rostering']){const html=await(await fetch(base+route,{headers:{Cookie}})).text();assert.ok(html.includes('window.appThemeAccount='+JSON.stringify(session.id)));assert.ok(html.indexOf('src="/theme.js?v=')<html.indexOf('href="/style.css?v='));assert.ok(html.includes('href="/dark-mode.css?v='));assert.ok(!html.includes('admin_session='));}
   }
   const login=await(await fetch(base+'/login')).text();assert.ok(login.includes('window.appThemeAccount="guest"'));for(const asset of ['/theme.js','/theme-colours.js','/dark-mode.css'])assert.equal((await fetch(base+asset)).status,200);
  }finally{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}

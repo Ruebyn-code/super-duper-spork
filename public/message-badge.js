@@ -11,5 +11,5 @@
  }
  function changed(){try{localStorage.setItem('souvlaki-messages-updated',String(Date.now())+Math.random());}catch{}refresh(true);}
  window.appMessageBadge={setCount,refresh,changed,get count(){return count;}};
- document.addEventListener('DOMContentLoaded',()=>{render();refresh();});window.addEventListener('pageshow',()=>refresh());window.addEventListener('focus',()=>refresh());document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('storage',event=>{if(event.key==='souvlaki-messages-updated')refresh(true);});window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked)refresh();});setInterval(()=>refresh(),5000);
+ document.addEventListener('DOMContentLoaded',()=>{render();refresh();});window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});window.addEventListener('focus',()=>refresh());document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('storage',event=>{if(event.key==='souvlaki-messages-updated')refresh(true);});window.addEventListener('required-reading-changed',event=>{if(!event.detail.blocked)refresh();});setInterval(()=>refresh(),5000);
 })();

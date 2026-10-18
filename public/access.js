@@ -2,6 +2,14 @@
  let account=window.appBootstrap?.access||{role:document.documentElement.dataset.accountRole};
  const can=(key,session=account)=>permissionModel.can(session,key),any=(keys,session=account)=>keys.some(key=>can(key,session));
  const admin=['users.manage','locations.manage','companies.manage','email.manage'];
+ let initialSession;
+ async function loadInitialSession(){
+  if(!initialSession){
+   initialSession=(async()=>{const response=await fetch('/api/session',{cache:'no-store',headers:window.appLocationId?{'X-Location-Id':window.appLocationId}:{}});if(!response.ok)throw Error('Unable to load your session.');return response.json();})();
+   initialSession.catch(()=>{initialSession=null;});
+  }
+  return structuredClone(await initialSession);
+ }
  function policy(node){
   if(node.dataset.permission)return[node.dataset.permission];if(node.dataset.permissionAny)return node.dataset.permissionAny.split(' ');
   const views=(node.dataset.adminViews||'').split(' ');if(views.includes('locations'))return['locations.manage','email.manage'];if(views.includes('companies'))return['companies.manage'];if(views.includes('accounts'))return['users.manage'];if(views.includes('stock'))return['stock.manage'];if(views.includes('suppliers'))return['suppliers.manage'];
@@ -22,7 +30,7 @@
  }
  document.addEventListener('submit',event=>{if(event.target.dataset.accessReadonly){event.preventDefault();event.stopImmediatePropagation();}},true);
  let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;readonly();});}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled']});
- window.appAccess={can,any,apply,policy,admin,roleName:session=>session?.roleName||permissionModel.defaults.find(role=>role.id===(session?.role||account.role))?.name||account.roleName||account.role};
+ window.appAccess={can,any,apply,policy,admin,initialSession:loadInitialSession,roleName:session=>session?.roleName||permissionModel.defaults.find(role=>role.id===(session?.role||account.role))?.name||account.roleName||account.role};
  if(location.pathname==='/sales'){if(!can('sales.view')&&can('finances.view')&&!location.hash)location.hash='report';else if(!can('finances.view')&&can('sales.view')&&(location.hash==='#report'||location.hash==='#overview'||location.hash.startsWith('#expense-')))location.hash='entry';}
  apply();document.addEventListener('DOMContentLoaded',()=>apply());window.addEventListener('hashchange',()=>apply());
 })();
