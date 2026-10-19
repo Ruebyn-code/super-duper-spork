@@ -1,10 +1,12 @@
 const uploadedFonts=require('./uploaded-fonts');const parts=require('./public/edit-parts');
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {defaults,fontOptions,validateSettings,isColour}=require('./appearance');const labels=new Set(require('./interface-labels.json').map(l=>l.text));
-async function read(dir){try{return JSON.parse(await fs.readFile(path.join(dir,'element-overrides.json'),'utf8'));}catch(e){if(e.code==='ENOENT')return {};throw e;}}
+const {canonical}=require('./interface-text');
+async function read(dir){try{const saved=JSON.parse(await fs.readFile(path.join(dir,'element-overrides.json'),'utf8'));for(const entry of Object.values(saved)){if(entry.text)entry.text.original=canonical(entry.text.original);if(entry.texts){entry.texts=Object.fromEntries(Object.entries(entry.texts).map(([key,spec])=>[canonical(key),{...spec,original:canonical(spec.original)}]));}}return saved;}catch(e){if(e.code==='ENOENT')return {};throw e;}}
 let pending=Promise.resolve();
 function patch(dir,input){const task=pending.then(async()=>{
  if(typeof input?.id!=='string'||!/^[a-zA-Z0-9_.:-]{1,240}$/.test(input.id)||!input.changes||typeof input.changes!=='object'||Array.isArray(input.changes))throw Error('Invalid element change.');
+ input={...input,original:canonical(input.original),changes:{...input.changes,...(input.changes.text?{text:{...input.changes.text,original:canonical(input.changes.text.original)}}:{})}};
  const allowed=['font','fontColour','background','backgroundImage','image','text','restoreText','linked','icon','iconColour','iconDetailColour','iconSize','iconStroke'];if(Object.keys(input.changes).some(k=>!allowed.includes(k)))throw Error('Unknown element setting.');
  if(input.scope!==undefined&&input.scope!=='type')throw Error('Invalid edit scope.');
  const shared=input.scope==='type',type=shared?input.type:input.id.startsWith('type:')?input.id.slice(5):'';if((shared||input.id.startsWith('type:'))&&!Object.hasOwn(parts.typeLabels,type))throw Error('Choose a valid matching type.');

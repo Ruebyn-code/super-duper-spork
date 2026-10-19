@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);let csrf='';
 const defaults=window.appNetworkAppearanceDefaults||{primary:'#0d74c0',secondary:'#e27925',fonts:{body:'arial',appName:'opsilon',greeting:'opsilon',headings:'opsilon',stockNames:'opsilon',buttons:'opsilon',labels:'arial',inputs:'arial',navigation:'arial'}};
-const parts={body:'Body text & descriptions',appName:'App name',greeting:'Yassou & username',headings:'Page & section headings',stockNames:'Stock names',buttons:'Buttons & dropdown control',labels:'Form labels & captions',inputs:'Input fields',navigation:'Navigation links'};
+const parts={body:'Body text & descriptions',appName:'App name',greeting:'Greeting & username',headings:'Page & section headings',stockNames:'Stock names',buttons:'Buttons & dropdown control',labels:'Form labels & captions',inputs:'Input fields',navigation:'Navigation links'};
 const fonts=appearanceStyles.fontLabels();
 for(const [part,title] of Object.entries(parts)){const label=document.createElement('label');label.textContent=title;const select=document.createElement('select');select.name=part;select.id='font-'+part;for(const [value,name] of Object.entries(fonts)){const option=document.createElement('option');option.value=value;option.textContent=name;select.append(option);}label.append(select);$('font-settings').append(label);}
 function fill(settings){$('primary-colour').value=settings.primary;$('secondary-colour').value=settings.secondary;for(const part of Object.keys(parts))$('font-'+part).value=settings.fonts[part];updateColourLabels();}

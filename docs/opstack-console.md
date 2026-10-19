@@ -18,9 +18,11 @@ The command creates only the first Opstack owner. It does not promote a network 
 
 Subject, heading, welcome message and password button text can be edited. `{{name}}`, `{{inviter}}` and `{{company}}` fill in automatically. Opstack always includes a single-use password link, the sign-in email and 48-hour expiry information. Account setup is separate from supplier order email templates and location sender credentials.
 
-**New network defaults** sets the starting primary/secondary colours, built-in font, personalised home greeting and sign-in welcome. The initial defaults are primary **#008CFF**, secondary **#45EFC3**, Arial, **Hello {user}**, and **Welcome to Opstack**. Keep `{user}` exactly once in the greeting; the app fills in the signed-in person's name. New networks take a snapshot of these values, and companies subsequently created within those networks start from that same snapshot. Saving new defaults affects future networks, preserving existing networks and company customisations. The company appearance reset button uses that network's starting theme.
+**New network defaults** sets the starting primary/secondary colours, built-in font, personalised home greeting and sign-in welcome. The initial defaults are primary **#008CFF**, secondary **#45EFC3**, Arial, **Hello {user}**, and **Welcome to Opstack**. Keep `{user}` exactly once in the greeting; the app fills in the signed-in person's name. New networks take a snapshot of these values, and companies subsequently created within those networks start from that same snapshot. New companies in older networks without a snapshot also receive these defaults, independently of the existing company's custom formatting. Saving new defaults affects future networks, preserving existing networks and company customisations. The company appearance reset button uses its saved starting theme. The default greeting is Hello followed by the person's name; the old Yassou label is no longer shown in Home or the appearance editor. Existing custom greeting wording remains supported.
 
 **Platform appearance** opens the existing editor for shared sign-in branding, backgrounds and default logos. Only Opstack owners can edit these settings after the first owner is created. New networks with a defaults snapshot use their own starting colours, normal font and welcome text on sign-in while retaining the shared Opstack logo and background images. Networks without a snapshot keep the existing shared sign-in appearance. Each company retains its own in-app appearance. Shared platform appearance and account emails are no longer editable by network Head Office accounts.
+
+On the first network request after this update, a one-time migration checks all existing companies. It applies the new defaults only when all existing styling still matches the old or current defaults. Any custom colours, fonts, text, blank labels, backgrounds, images, logos, uploaded fonts, App edit overrides or rearranged layouts preserve the entire network's existing formatting. Business records and accounts are never changed. The result is recorded in `defaults-migration-v2.json`, so later edits are not overwritten on restart.
 
 ## Networks
 
@@ -35,7 +37,7 @@ Each network card shows its sign-in URL. All URLs use the same Opstack sign-in b
 - Existing network files remain at the original `DATA_DIR` location. No old data is moved or deleted.
 - Additional networks live under `DATA_DIR/networks/<network-id>/`, each with separate accounts, companies, locations, catalogue, records and company customisations.
 - Opstack accounts, network registry and the latest 5,000 activity events live in `DATA_DIR/opstack/platform.json`.
-- Future-network defaults live in `DATA_DIR/opstack/new-network-defaults.json`; each new network's initial snapshot is in its own `network-defaults.json`.
+- Future-network defaults live in `DATA_DIR/opstack/new-network-defaults.json`; each new network's initial snapshot is in its own `network-defaults.json`. New companies also retain `company-defaults.json` in their customisation folder.
 - The shared account sender remains in `DATA_DIR/account-email-settings.json`; platform appearance remains in `DATA_DIR/platform-appearance/`.
 - Back up the **entire** persistent data directory, including those folders. Keep a single application replica with the existing file storage design.
 
