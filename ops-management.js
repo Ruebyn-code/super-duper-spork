@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions'),files=require('./communication-media');
-const stepModel=require('./public/ops-step-model');
+const stepModel=require('./public/ops-step-model'),plannerModel=require('./public/ops-planner-model');
 const queues=new Map(),types=[...Object.keys(stepModel.kinds),'yesno','choice','multiple','photo','date','time'];
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/i.test(value);
@@ -8,7 +8,7 @@ const text=(value,max,label,empty=false)=>{if(typeof value!=='string'||value.len
 function date(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value+'T00:00:00Z'))||new Date(value+'T00:00:00Z').toISOString().slice(0,10)!==value)fail('Choose a valid date.');return value;}
 const shift=(day,offset)=>new Date(Date.parse(day+'T00:00:00Z')+offset*86400000).toISOString().slice(0,10);
 const monday=day=>shift(day,-((new Date(day+'T00:00:00Z').getUTCDay()+6)%7));
-function period(template,day){const s=template.schedule;if(day<s.startDate||(s.endDate&&day>s.endDate)||!template.active)return null;if(s.kind==='manual')return{key:null,dueDate:null};if(s.kind==='once')return{key:'once',dueDate:s.startDate};if(s.kind==='daily')return{key:day,dueDate:day};const start=monday(day);return{key:start,dueDate:s.endDate&&s.endDate<shift(start,s.weekday-1)?s.endDate:shift(start,s.weekday-1)};}
+const period=plannerModel.period;
 function normalize(input){
  const title=text(input.title,160,'a checklist name'),description=text(input.description??'',2000,'checklist instructions',true);
  if(!Array.isArray(input.locationIds)||!input.locationIds.length||input.locationIds.length>500||input.locationIds.some(id=>typeof id!=='string')||new Set(input.locationIds).size!==input.locationIds.length)fail('Choose at least one location.');
@@ -62,15 +62,43 @@ function normalize(input){
  });
  return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps};
 }
+function normalizeContent(input){
+ const value=normalize({...input,locationIds:['content'],active:true,schedule:{kind:'manual',startDate:'2026-01-01'}});
+ return{title:value.title,description:value.description,steps:value.steps};
+}
+function normalizePlanner(input){
+ const title=text(input.title,160,'a planner name'),instructions=text(input.instructions??'',2000,'planner instructions',true);
+ if(!uuid(input.templateId))fail('Choose a checklist from Checklist builder.');
+ if(!Array.isArray(input.locationIds)||!input.locationIds.length||input.locationIds.length>500||input.locationIds.some(id=>typeof id!=='string')||new Set(input.locationIds).size!==input.locationIds.length)fail('Choose at least one location.');
+ if(typeof input.active!=='boolean')fail('Choose whether the planner is active.');
+ const s=input.schedule;if(!s||!['manual','once','daily','weekly'].includes(s.kind))fail('Choose a planner schedule.');
+ const startDate=date(s.startDate),endDate=s.endDate?date(s.endDate):null;if(endDate&&endDate<startDate)fail('The end date must follow the start date.');
+ const weekday=s.kind==='weekly'?s.weekday:null;if(s.kind==='weekly'&&(!Number.isInteger(weekday)||weekday<1||weekday>7))fail('Choose the weekly due day.');
+ const days=s.kind==='daily'?(s.days??[1,2,3,4,5,6,7]):null;if(days&&(!Array.isArray(days)||!days.length||days.some(day=>!Number.isInteger(day)||day<1||day>7)||new Set(days).size!==days.length))fail('Choose at least one valid repeat day.');
+ const dueTime=input.dueTime||null;if(dueTime!==null&&(typeof dueTime!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(dueTime)))fail('Choose a valid due time.');
+ const reminderMinutes=input.reminderMinutes??0;if(!Number.isInteger(reminderMinutes)||reminderMinutes<0||reminderMinutes>1440||reminderMinutes&&!dueTime)fail('Choose a due time and a reminder of up to 24 hours.');
+ if(s.kind==='manual'&&(dueTime||reminderMinutes))fail('Manual planners do not have a due time or reminder.');
+ const priority=input.priority||'normal';if(!['normal','high','urgent'].includes(priority))fail('Choose a valid priority.');
+ return{title,templateId:input.templateId,locationIds:[...input.locationIds],active:input.active,schedule:{kind:s.kind,startDate,endDate,weekday,...(days?{days:[...days].sort()}: {})},dueTime,reminderMinutes,priority,instructions};
+}
+function upgrade(state){
+ state.planners||=[];
+ if(!state.plannersVersion){for(const item of state.templates)if(item.locationIds?.length&&!state.planners.some(plan=>plan.id===item.id))state.planners.push({id:item.id,legacy:true,templateId:item.id,title:item.title,companyId:item.companyId,locationIds:[...item.locationIds],active:item.active,schedule:structuredClone(item.schedule),dueTime:null,reminderMinutes:0,priority:'normal',instructions:'',revision:1,requestId:'migrated:'+item.id,createdAt:item.createdAt,createdById:item.createdById,createdBy:item.createdBy,updatedAt:item.updatedAt,updatedBy:item.updatedBy});state.plannersVersion=1;}
+ return state;
+}
 function createStore(dir,{locations,people=async()=>[],now=Date.now}={}){
  const file=path.join(dir,'ops-management.json'),media=files.createStore(path.join(dir,'ops-management')),stamp=()=>new Date(now()).toISOString(),today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()));
- async function read(){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;return{templates:[],runs:[],assets:[]};}}
+ async function read(){try{return upgrade(JSON.parse(await fs.readFile(file,'utf8')));}catch(error){if(error.code!=='ENOENT')throw error;return{templates:[],planners:[],plannersVersion:1,runs:[],assets:[]};}}
  function mutate(change){const task=(queues.get(file)||Promise.resolve()).then(async()=>{const state=await read(),result=await change(state);await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(state),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return result;});queues.set(file,task.catch(()=>{}));return task;}
  function need(actor,key='ops.view'){if(!can(actor,'ops.view')||!can(actor,key))fail('Your permission level does not allow this checklist action.',403);}
  async function access(actor){need(actor);return(await locations(actor)).filter(item=>(item.companyId||'default')===actor.companyId);}
  const company=(item,actor)=>item.companyId===actor.companyId;
  const allowed=(run,actor,stores)=>company(run,actor)&&stores.some(item=>item.id===run.locationId);
- const editable=(template,actor,stores)=>can(actor,'ops.manage')&&company(template,actor)&&template.locationIds.every(id=>stores.some(item=>item.id===id));
+ const assignments=(state,template)=>[...new Set(state.planners.filter(plan=>plan.templateId===template.id&&plan.companyId===template.companyId).flatMap(plan=>plan.locationIds))];
+ const editable=(template,actor,stores,state)=>can(actor,'ops.manage')&&company(template,actor)&&assignments(state,template).every(id=>stores.some(item=>item.id===id));
+ const visibleTemplate=(state,item,actor,stores)=>company(item,actor)&&(assignments(state,item).some(id=>stores.some(store=>store.id===id))||can(actor,'ops.manage')&&!assignments(state,item).length);
+ const editablePlan=(plan,actor,stores)=>can(actor,'ops.manage')&&company(plan,actor)&&plan.locationIds.every(id=>stores.some(store=>store.id===id));
+ const runPlanner=run=>run.plannerId||run.templateId;
  function findRun(state,actor,stores,id){const run=state.runs.find(item=>item.id===id&&allowed(item,actor,stores));if(!run)fail('Checklist record not found.',404);return run;}
  async function selectionOptions(actor,stores,run){
   const options={};let directory;
@@ -94,13 +122,56 @@ function createStore(dir,{locations,people=async()=>[],now=Date.now}={}){
  const summary=run=>{const{answers,snapshot,requestId,...result}=run;return{...result,title:snapshot.title,stepCount:snapshot.steps.filter(stepModel.responseStep).length,answered:snapshot.steps.filter(step=>stepModel.responseStep(step)&&answers[step.id]!==undefined&&answers[step.id]!==''&&answers[step.id]!==null&&answers[step.id]!==false&&(!Array.isArray(answers[step.id])||answers[step.id].length)).length};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=params.location||'all';if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
-  const templates=state.templates.filter(item=>company(item,actor)&&item.locationIds.some(id=>stores.some(store=>store.id===id))).map(item=>({...item,locationIds:item.locationIds.filter(id=>stores.some(store=>store.id===id)),locationCount:item.locationIds.length,canManage:editable(item,actor,stores)}));
-  const tasks=[];for(const template of templates){if(query&&!template.title.toLowerCase().includes(query))continue;const slot=period(template,day);if(!slot)continue;for(const store of selected.filter(store=>template.locationIds.includes(store.id))){const run=state.runs.findLast(run=>run.templateId===template.id&&run.locationId===store.id&&(slot.key===null?run.status==='draft':run.periodKey===slot.key));tasks.push({templateId:template.id,title:template.title,locationId:store.id,locationName:store.name,schedule:template.schedule.kind,dueDate:slot.dueDate,stepCount:template.steps.length,run:run?summary(run):null});}}
-  const history=state.runs.filter(run=>allowed(run,actor,selected)&&(!query||run.snapshot.title.toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
-  return{companyName:actor.companyName,today:today(),date:day,locations:stores,templates,tasks,runs:history.slice((page-1)*25,page*25).map(summary),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
+  const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
+  const planners=state.planners.filter(plan=>company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).map(plan=>({...plan,templateTitle:state.templates.find(item=>item.id===plan.templateId&&company(item,actor))?.title||'',locationCount:plan.locationIds.length,locationIds:plan.locationIds.filter(id=>stores.some(store=>store.id===id)),canManage:editablePlan(plan,actor,stores)}));
+  const tasks=[];for(const plan of planners){const template=state.templates.find(item=>item.id===plan.templateId&&company(item,actor));if(!template||query&&!(template.title+' '+plan.title).toLowerCase().includes(query))continue;const slot=period(plan,day);if(!slot)continue;for(const store of selected.filter(store=>plan.locationIds.includes(store.id))){const run=state.runs.findLast(run=>runPlanner(run)===plan.id&&run.locationId===store.id&&(slot.key===null?run.status==='draft':run.periodKey===slot.key)),dueDate=run?run.dueDate:slot.dueDate,dueAt=run?(run.dueAt??plannerModel.deadline(dueDate,run.snapshot.planner?.dueTime)):plannerModel.deadline(dueDate,plan.dueTime),reminderMinutes=run?(run.snapshot.planner?.reminderMinutes||0):plan.reminderMinutes;tasks.push({plannerId:plan.id,plannerName:run?.plannerName||plan.title,templateId:template.id,title:run?.snapshot.title||template.title,locationId:store.id,locationName:store.name,schedule:plan.schedule.kind,dueDate,dueAt,dueTime:run?(run.snapshot.planner?.dueTime||null):plan.dueTime,reminderMinutes,priority:run?(run.snapshot.planner?.priority||'normal'):plan.priority,timing:run?.status==='completed'?null:plannerModel.timing(dueAt,reminderMinutes,now()),stepCount:run?run.snapshot.steps.length:template.steps.length,run:run?summary(run):null});}}
+  const priority={urgent:0,high:1,normal:2};tasks.sort((a,b)=>(priority[a.priority]-priority[b.priority])||(a.dueAt||'z').localeCompare(b.dueAt||'z')||a.title.localeCompare(b.title));
+  const history=state.runs.filter(run=>allowed(run,actor,selected)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
+  return{companyName:actor.companyName,today:today(),date:day,now:stamp(),locations:stores,templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(summary),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
- async function saveTemplate(actor,input,id){need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)):null;if(id&&!previous)fail('Checklist not found.',404);if(previous&&!editable(previous,actor,stores))fail('You need access to every assigned location to edit this checklist.',403);if(previous&&input?.revision!==previous.revision)fail('This checklist changed. Reload before saving.',409);const value=normalize(input||{});if(value.locationIds.some(id=>!stores.some(store=>store.id===id)))fail('Choose locations you can access in this company.',403);if(!previous&&!uuid(input.requestId))fail('Invalid request reference.');const duplicate=!previous&&state.templates.find(item=>item.requestId===input.requestId);if(duplicate){if(!company(duplicate,actor)||duplicate.createdById!==actor.id||JSON.stringify(normalize(duplicate))!==JSON.stringify(value))fail('This request reference was already used.',409);return{...duplicate,canManage:true};}const saved={...value,id:previous?.id||crypto.randomUUID(),companyId:actor.companyId,requestId:previous?.requestId||input.requestId,revision:(previous?.revision||0)+1,createdAt:previous?.createdAt||stamp(),createdById:previous?.createdById||actor.id,createdBy:previous?.createdBy||actor.username,updatedAt:stamp(),updatedBy:actor.username};if(previous)state.templates.splice(state.templates.indexOf(previous),1,saved);else state.templates.push(saved);return{...saved,canManage:true};});}
- async function start(actor,input){need(actor,'ops.complete');const stores=await access(actor);return mutate(async state=>{const template=state.templates.find(item=>item.id===input?.templateId&&company(item,actor));if(!template||!template.locationIds.includes(input.locationId)||!stores.some(item=>item.id===input.locationId))fail('Checklist not found for this location.',404);const day=date(input.date||today());if(day>today())fail('Future checklists cannot be started yet.');const slot=period(template,day);if(!slot)fail('This checklist is not scheduled for this date.');if(!uuid(input.requestId))fail('Invalid request reference.');const duplicate=state.runs.find(item=>item.requestId===input.requestId);if(duplicate){if(!allowed(duplicate,actor,stores)||duplicate.templateId!==template.id||duplicate.locationId!==input.locationId)fail('This request reference was already used.',409);return presentRun(state,actor,stores,duplicate);}const existing=slot.key!==null&&state.runs.find(item=>item.templateId===template.id&&item.locationId===input.locationId&&item.periodKey===slot.key);if(existing)return presentRun(state,actor,stores,existing);const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,dueDate:slot.dueDate,snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),schedule:template.schedule},answers:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);});}
+ function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
+ async function saveTemplate(actor,input,id){
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
+   const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)):null;if(id&&!previous)fail('Checklist not found.',404);
+   if(previous&&!editable(previous,actor,stores,state))fail('You need access to every assigned location to edit this checklist.',403);
+   if(previous&&input?.revision!==previous.revision)fail('This checklist changed. Reload before saving.',409);
+   const contentOnly=input?.contentOnly===true,value=contentOnly?normalizeContent(input):normalize(input||{});
+   if(!contentOnly&&value.locationIds.some(id=>!stores.some(store=>store.id===id)))fail('Choose locations you can access in this company.',403);
+   if(!previous&&!uuid(input.requestId))fail('Invalid request reference.');
+   const duplicate=!previous&&state.templates.find(item=>item.requestId===input.requestId);
+   if(duplicate){if(!company(duplicate,actor)||duplicate.createdById!==actor.id||JSON.stringify(contentOnly?normalizeContent(duplicate):normalize(duplicate))!==JSON.stringify(value))fail('This request reference was already used.',409);return templateResult(state,duplicate,actor,stores);}
+   const saved={...previous,...value,contentOnly,id:previous?.id||crypto.randomUUID(),companyId:actor.companyId,requestId:previous?.requestId||input.requestId,revision:(previous?.revision||0)+1,createdAt:previous?.createdAt||stamp(),createdById:previous?.createdById||actor.id,createdBy:previous?.createdBy||actor.username,updatedAt:stamp(),updatedBy:actor.username};
+   if(previous)state.templates.splice(state.templates.indexOf(previous),1,saved);else state.templates.push(saved);
+   // Compatibility for older clients. The builder itself never edits location or scheduling data.
+   if(!contentOnly){const old=state.planners.find(plan=>plan.id===saved.id&&plan.legacy);const plan={...old,id:saved.id,legacy:true,templateId:saved.id,companyId:saved.companyId,title:old?.title||saved.title,locationIds:value.locationIds,active:value.active,schedule:value.schedule,dueTime:old?.dueTime||null,reminderMinutes:old?.reminderMinutes||0,priority:old?.priority||'normal',instructions:old?.instructions||'',revision:(old?.revision||0)+1,requestId:old?.requestId||'migrated:'+saved.id,createdAt:old?.createdAt||saved.createdAt,createdById:old?.createdById||saved.createdById,createdBy:old?.createdBy||saved.createdBy,updatedAt:stamp(),updatedBy:actor.username};if(old)state.planners.splice(state.planners.indexOf(old),1,plan);else state.planners.push(plan);}
+   return templateResult(state,saved,actor,stores);
+  });
+ }
+ async function savePlanner(actor,input,id){
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
+   const previous=id?state.planners.find(plan=>plan.id===id&&company(plan,actor)):null;if(id&&!previous)fail('Planner not found.',404);
+   if(previous&&!editablePlan(previous,actor,stores))fail('You need access to every assigned location to edit this planner.',403);
+   if(previous&&input?.revision!==previous.revision)fail('This planner changed. Reload before saving.',409);
+   const value=normalizePlanner(input||{}),template=state.templates.find(item=>item.id===value.templateId&&visibleTemplate(state,item,actor,stores));if(!template)fail('Checklist not found in this company.',404);
+   if(value.locationIds.some(id=>!stores.some(store=>store.id===id)))fail('Choose locations you can access in this company.',403);
+   if(previous&&previous.templateId!==value.templateId&&state.runs.some(run=>runPlanner(run)===id))fail('This planner has checklist records. Create a new planner to use another checklist.');
+   if(!previous&&!uuid(input.requestId))fail('Invalid request reference.');
+   const duplicate=!previous&&state.planners.find(plan=>plan.requestId===input.requestId);if(duplicate){if(!company(duplicate,actor)||duplicate.createdById!==actor.id||JSON.stringify(normalizePlanner(duplicate))!==JSON.stringify(value))fail('This request reference was already used.',409);return{...duplicate,canManage:true};}
+   const saved={...value,id:previous?.id||crypto.randomUUID(),legacy:previous?.legacy||false,companyId:actor.companyId,requestId:previous?.requestId||input.requestId,revision:(previous?.revision||0)+1,createdAt:previous?.createdAt||stamp(),createdById:previous?.createdById||actor.id,createdBy:previous?.createdBy||actor.username,updatedAt:stamp(),updatedBy:actor.username};
+   if(previous)state.planners.splice(state.planners.indexOf(previous),1,saved);else state.planners.push(saved);return{...saved,canManage:true};
+  });
+ }
+ async function start(actor,input){need(actor,'ops.complete');const stores=await access(actor);return mutate(async state=>{
+  const available=state.planners.filter(plan=>plan.templateId===input?.templateId&&company(plan,actor)&&plan.locationIds.includes(input.locationId));
+  const plan=input?.plannerId?state.planners.find(plan=>plan.id===input.plannerId&&company(plan,actor)):available.find(plan=>plan.legacy)||available.length===1&&available[0];
+  const template=plan&&state.templates.find(item=>item.id===plan.templateId&&company(item,actor));
+  if(!plan||!template||input.templateId&&input.templateId!==template.id||!plan.locationIds.includes(input.locationId)||!stores.some(item=>item.id===input.locationId))fail('Checklist not found for this location.',404);
+  const day=date(input.date||today());if(day>today())fail('Future checklists cannot be started yet.');const slot=period(plan,day);if(!slot)fail('This checklist is not scheduled for this date.');if(!uuid(input.requestId))fail('Invalid request reference.');
+  const duplicate=state.runs.find(item=>item.requestId===input.requestId);if(duplicate){if(!allowed(duplicate,actor,stores)||runPlanner(duplicate)!==plan.id||duplicate.templateId!==template.id||duplicate.locationId!==input.locationId)fail('This request reference was already used.',409);return presentRun(state,actor,stores,duplicate);}
+  const existing=slot.key!==null&&state.runs.find(item=>runPlanner(item)===plan.id&&item.locationId===input.locationId&&item.periodKey===slot.key);if(existing)return presentRun(state,actor,stores,existing);
+  const plannerSnapshot={id:plan.id,title:plan.title,schedule:structuredClone(plan.schedule),dueTime:plan.dueTime,reminderMinutes:plan.reminderMinutes,priority:plan.priority,instructions:plan.instructions};
+  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,dueDate:slot.dueDate,dueAt:plannerModel.deadline(slot.dueDate,plan.dueTime),snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
+ });}
  async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!run.snapshot.steps.some(step=>step.id===key&&stepModel.responseStep(step))))fail('Choose valid checklist answers.');
@@ -178,13 +249,15 @@ function createStore(dir,{locations,people=async()=>[],now=Date.now}={}){
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,saveTemplate,start,get,saveRun,upload,download};
+ return{list,saveTemplate,savePlanner,start,get,saveRun,upload,download};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  if(url==='/api/ops-management'&&req.method==='GET'){json(200,await store.list(session,Object.fromEntries(params)));return true;}
  if(url==='/api/ops-management/templates'&&req.method==='POST'){json(201,await store.saveTemplate(session,await body(req,250000)));return true;}
  const template=url.match(/^\/api\/ops-management\/templates\/([a-f0-9-]{36})$/i);if(template&&req.method==='PUT'){json(200,await store.saveTemplate(session,await body(req,250000),template[1]));return true;}
+ if(url==='/api/ops-management/planners'&&req.method==='POST'){json(201,await store.savePlanner(session,await body(req,30000)));return true;}
+ const planner=url.match(/^\/api\/ops-management\/planners\/([a-f0-9-]{36})$/i);if(planner&&req.method==='PUT'){json(200,await store.savePlanner(session,await body(req,30000),planner[1]));return true;}
  if(url==='/api/ops-management/runs'&&req.method==='POST'){json(201,await store.start(session,await body(req)));return true;}
  const run=url.match(/^\/api\/ops-management\/runs\/([a-f0-9-]{36})(\/media)?$/i);if(run){if(run[2]&&req.method==='POST')json(201,await store.upload(session,run[1],await body(req,35000000)));else if(!run[2]&&req.method==='GET')json(200,await store.get(session,run[1]));else if(!run[2]&&req.method==='PUT')json(200,await store.saveRun(session,run[1],await body(req,600000)));else fail('Unsupported checklist action.',405);return true;}
  const media=url.match(/^\/api\/ops-management\/media\/([a-f0-9-]{36})$/i);
@@ -202,4 +275,4 @@ async function route({req,res,url,params,session,store,body,json,fail}){
  }
  fail('Checklist action not found.',404);
 }
-module.exports={createStore,route,normalize,period,types};
+module.exports={createStore,route,normalize,normalizeContent,normalizePlanner,period,types};

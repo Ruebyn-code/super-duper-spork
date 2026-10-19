@@ -1,0 +1,14 @@
+(function(root){
+ const zone='Australia/Melbourne',formatter=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}),deadlines=new Map();
+ const shift=(day,n)=>new Date(Date.parse(day+'T00:00:00Z')+n*86400000).toISOString().slice(0,10),weekday=day=>(new Date(day+'T00:00:00Z').getUTCDay()+6)%7+1,monday=day=>shift(day,1-weekday(day));
+ function period(plan,day){const s=plan.schedule;if(!plan.active||day<s.startDate||s.endDate&&day>s.endDate)return null;if(s.kind==='manual')return{key:null,dueDate:null};if(s.kind==='once')return{key:'once',dueDate:s.startDate};if(s.kind==='daily')return !s.days||s.days.includes(weekday(day))?{key:day,dueDate:day}:null;const start=monday(day),due=shift(start,s.weekday-1);return{key:start,dueDate:[s.startDate,s.endDate&&s.endDate<due?s.endDate:due].sort().at(-1)};}
+ function local(epoch){const parts=Object.fromEntries(formatter.formatToParts(new Date(epoch)).map(part=>[part.type,part.value]));return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute+':'+parts.second;}
+ function deadline(day,time){if(!day)return null;const key=day+'T'+(time||'23:59');if(deadlines.has(key))return deadlines.get(key);const wall=Date.parse(key+':00Z'),offsets=new Set();for(let probe=wall-36*3600000;probe<=wall+36*3600000;probe+=6*3600000)offsets.add(Date.parse(local(probe)+'Z')-Math.floor(probe/1000)*1000);let matches=[...offsets].map(offset=>wall-offset).filter(epoch=>local(epoch).slice(0,16)===key);
+  // A repeated clock hour uses its later occurrence; a skipped time moves to the first real minute after it.
+  if(!matches.length)for(let n=1;n<=120&&!matches.length;n++){const next=new Date(wall+n*60000).toISOString().slice(0,16);matches=[...offsets].map(offset=>wall+n*60000-offset).filter(epoch=>local(epoch).slice(0,16)===next);}
+  const result=matches.length?new Date(Math.max(...matches)+(time?0:59999)).toISOString():null;if(deadlines.size>500)deadlines.clear();deadlines.set(key,result);return result;
+ }
+ function timing(dueAt,reminderMinutes,now=Date.now()){if(!dueAt)return null;const left=Date.parse(dueAt)-now;return left<0?'overdue':reminderMinutes>0&&left<=reminderMinutes*60000?'soon':null;}
+ function upcoming(plan,from,limit=4){const dates=[],s=plan.schedule;if(!plan.active||s.kind==='manual')return dates;let day=from>s.startDate?from:s.startDate;for(let n=0;n<40&&dates.length<limit;n++,day=shift(day,1)){const slot=period(plan,day);if(slot&&!dates.includes(slot.dueDate)&&slot.dueDate>=from)dates.push(slot.dueDate);if(s.endDate&&day>=s.endDate)break;}return dates;}
+ const api={period,deadline,timing,upcoming,shift,monday,weekday,zone};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsPlannerModel=api;
+})(globalThis);

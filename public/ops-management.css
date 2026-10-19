@@ -119,3 +119,27 @@ html.ops-checklist-open,html.ops-checklist-open body{overflow:hidden}
 .ops-panel-heading:has(#ops-template-autosave){flex-wrap:nowrap;min-height:25px}
 #ops-template-autosave{min-width:0;max-width:65%;white-space:nowrap;overflow:hidden;flex-wrap:nowrap}
 #ops-template-autosave>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Reusable content and its location schedules have their own compact editors. */
+.ops-builder-help{font-size:.78rem;color:var(--theme-muted,#64748b);margin:0 0 12px;line-height:1.5}
+.ops-config.ops-builder-config{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:12px;padding:10px}
+.ops-config.ops-builder-config>label:first-child,.ops-config.ops-builder-config>label.ops-wide{grid-column:auto}
+.ops-planner-config{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.ops-config.ops-planner-config>label:first-child{grid-column:auto}
+.ops-planner-config>.ops-plan-notes{grid-column:1/-1!important}
+.ops-planner-config .ops-locations>div{gap:6px;margin-top:5px}
+.ops-planner-config textarea{height:40px;min-height:40px}
+.ops-planner-preview{padding:11px 12px;border:1px solid var(--theme-line,#e2e8f0);border-radius:12px;background:color-mix(in srgb,var(--primary,#008cff) 5%,var(--theme-surface,#fff))}
+.ops-planner-preview .ops-panel-heading{margin-bottom:8px;flex-wrap:nowrap}.ops-planner-preview h3{font-size:.85rem;white-space:nowrap}.ops-planner-preview .ops-autosave{max-width:65%;white-space:nowrap;overflow:hidden;min-width:0}.ops-planner-preview .ops-autosave>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#ops-plan-preview{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:25px}#ops-plan-preview p{margin:0;font-size:.78rem}.ops-planner-preview>p{font-size:.68rem;color:var(--theme-muted,#64748b);margin:7px 0 0}
+.ops-card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:auto}.ops-card-actions button{margin:0;padding:6px 10px;font-size:.78rem}
+.ops-badge.due-soon{background:var(--theme-warning-soft,#fff3cf);color:var(--theme-warning-text,#986000)}.ops-badge.priority-high{background:color-mix(in srgb,var(--secondary,#45efc3) 22%,var(--theme-surface,#fff))}.ops-badge.priority-urgent{background:var(--theme-danger-soft,#fff0ee);color:var(--theme-danger-text,#b42318)}
+#ops-run-planner-notes{padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--primary,#008cff) 7%,var(--theme-surface,#fff));margin-bottom:9px}#ops-run-planner-notes h3{font-size:.72rem;margin:0 0 3px}#ops-run-planner-notes p{font-size:.78rem;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+@media(max-width:800px){.ops-planner-config{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.ops-config.ops-builder-config{grid-template-columns:1fr}.ops-config.ops-builder-config>label{grid-column:1/-1}.ops-planner-config{padding:10px;gap:10px 8px}.ops-planner-config>label:nth-child(2){grid-column:1/-1}.ops-config.ops-planner-config>label:first-child{grid-column:1/-1}.ops-planner-config .ops-location-choice{min-height:30px}.ops-planner-config input:not([type=checkbox]):not([type=color]):not([type=file]),.ops-planner-config .location-select-trigger{min-height:40px;font-size:16px;min-width:0}.ops-planner-config textarea{font-size:16px}.ops-planner-preview .ops-autosave{font-size:.63rem}.ops-planner-preview h3{font-size:.78rem}.ops-card-actions button{min-height:36px}}
+
+.ops-planner-config label,.ops-builder-config label{margin:0}
+.ops-planner-config>label:nth-child(2){grid-column:span 2}
+.ops-planner-config input:not([type=checkbox]):not([type=color]):not([type=file]){min-height:34px;height:34px;padding:6px 9px;margin:0}
+.ops-planner-config .location-select-trigger{margin:0}
+@media(max-width:580px){.ops-planner-config input:not([type=checkbox]):not([type=color]):not([type=file]){min-height:40px;height:40px}.ops-planner-config>.ops-toggle{grid-column:1/-1}}
