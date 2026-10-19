@@ -2,6 +2,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {promisify}=require('node:util');
 const scrypt=promisify(crypto.scrypt),invitations=require('./account-invitations'),{credentials}=require('./auth');
 const newNetworkDefaults=require('./new-network-defaults');
+const networkEmails=require('./network-emails');
 const queues=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const label=(value,description)=>{if(typeof value!=='string'||!value.trim()||value.length>100)fail('Enter a '+description+' of 1–100 characters.');return value.trim();};
@@ -21,7 +22,7 @@ function createStore(root,{now=Date.now}={}){
  async function summary(){const data=await read();return{networks:data.networks,accounts:data.accounts.map(visible),revision:data.revision};}
  async function network(id){return(await read()).networks.find(n=>n.id===id||n.slug===id);}
  function folder(network){return network.id==='default'?root:path.join(root,'networks',network.id);}
- async function createNetwork(actor,input){return change(async data=>{
+ async function createNetwork(actor,input){return networkEmails.run(root,null,async checkEmail=>{await checkEmail(input?.ownerEmail);await checkEmail(input?.ownerName);return change(async data=>{
   const name=label(input?.name,'network name'),companyName=label(input.companyName||name,'company name'),locationName=label(input.locationName||companyName,'location name'),username=label(input.ownerName,'Head Office name'),email=invitations.email(input.ownerEmail);
   const slug=typeof input.slug==='string'?input.slug.trim().toLowerCase():'';
   if(!/^[a-z0-9][a-z0-9-]{1,59}$/.test(slug)||['opstack','default'].includes(slug))fail('Use a unique network code of 2–60 lowercase letters, numbers or hyphens.');
@@ -32,7 +33,7 @@ function createStore(root,{now=Date.now}={}){
   await fs.mkdir(path.dirname(target),{recursive:true});await fs.mkdir(target);
   try{const startingDefaults=await newNetworkDefaults.read(root);for(const [name,value] of Object.entries({...newNetworkDefaults.files(startingDefaults),'accounts.json':[owner],'locations.json':[{id:locationId,name:locationName,companyId:'default',archived:false,legacyAccountIds:[],createdAt:record.createdAt}],'companies.json':[{id:'default',name:companyName,createdAt:record.createdAt}],'catalogue.json':{suppliers:[],products:[],imports:['book2-v1']}}))await fs.writeFile(path.join(target,name),JSON.stringify(value),{mode:0o600});}catch(error){await fs.rm(target,{recursive:true,force:true});throw error;}
   data.networks.push(record);event(data,actor,'network.created',{networkId:record.id});return{network:record,account:owner,token:issued.token,invitationId:issued.record.id};
- });}
+ });});}
  async function updateNetwork(actor,id,input){return change(data=>{const record=data.networks.find(n=>n.id===id);if(!record)fail('Network not found.',404);if(typeof input.active!=='boolean')fail('Choose whether the network is active.');record.name=label(input.name,'network name');if(data.networks.some(n=>n.id!==id&&n.name.toLowerCase()===record.name.toLowerCase()))fail('That network name already exists.',409);record.active=input.active;event(data,actor,'network.updated',{networkId:id,active:record.active});return record;});}
  async function invite(actor,input){return change(data=>{const email=invitations.email(input?.email),username=label(input.username,'name');if(!['owner','support'].includes(input.role))fail('Choose Opstack owner or Opstack support.');if(data.accounts.some(a=>a.email===email))fail('An Opstack account already uses this email.',409);const issued=invitations.issue(now()),account={id:crypto.randomUUID(),username,email,role:input.role,version:crypto.randomUUID(),invitation:issued.record};data.accounts.push(account);event(data,actor,'account.invited',{targetId:account.id,role:account.role});return{account:visible(account),token:issued.token,invitationId:issued.record.id};});}
  async function resend(actor,id){return change(data=>{const account=data.accounts.find(a=>a.id===id&&!a.disabled);if(!account?.invitation)fail('Pending Opstack account not found.',404);if(account.invitation.status!=='failed'&&now()-Date.parse(account.invitation.createdAt)<60000)fail('Wait one minute before resending.',429);const issued=invitations.issue(now());account.invitation=issued.record;event(data,actor,'account.invitation.resent',{targetId:id});return{account:visible(account),token:issued.token,invitationId:issued.record.id};});}

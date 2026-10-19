@@ -70,7 +70,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
-  const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow}),invitationAttempts=new Map();
+  const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow,emailRoot:platformDataDir}),invitationAttempts=new Map();
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore,{defaultsRoot:platformDataDir});
   let defaultsMigration;
@@ -122,7 +122,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       if(req.method==='GET'&&req.url==='/admin/login'){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&requestUrl.searchParams.has('company')){res.writeHead(303,{Location:req.url});return res.end();}
-      if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()){res.writeHead(303,{Location:'/setup'});return res.end();}
+      if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()&&!await platformStore?.enabled()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
       let session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
@@ -415,7 +415,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const authPreview=req.url.startsWith('/admin/appearance/');const previewToolbar='<div id="admin-edit-controls" class="auth-preview-toolbar" data-copy-editor><strong>Page preview</strong><a href="'+scopedAsset('/admin/settings')+'#sign-in">Back to settings</a><button id="app-edit-toggle" type="button" aria-pressed="false"><span class="sidebar-edit-label">App edit</span></button><p id="app-edit-status" role="status" class="visually-hidden"></p></div>';
         const networkSeed=await newNetworkDefaults.snapshot(dataDir),companySeed=await newNetworkDefaults.companySnapshot(dataDir,appearanceCompany.id),networkAppearanceDefaults=companySeed?newNetworkDefaults.files(companySeed)['appearance.json']:null;
         const welcomeMarkup=req.url==='/login'?newNetworkDefaults.welcome(rawMarkup,networkSeed):rawMarkup;
-        const sourceMarkup=req.url==='/login'?welcomeMarkup.replace('name="network"','name="network" value="'+network.slug+'"'):rawMarkup;
+        const sourceMarkup=req.url==='/login'&&requestUrl.searchParams.has('network')?welcomeMarkup.replace('name="network"','name="network" value="'+network.slug+'"'):welcomeMarkup;
         const pageMarkup=authPreview?sourceMarkup.replace(/<script src="\/(?:login|setup)\.js" defer><\/script>/,'<script src="/auth-preview.js" defer></script>').replace('</head>','<script src="/app-editor.js" defer></script></head>').replace('</body>',previewToolbar+'</body>'):sourceMarkup;
         const sidebarPage=pageMarkup.includes('id="app-sidebar"'),source=scopedAsset(sidebarPage?'/sidebar-logo':'/logo'),branded=(sidebarPage?hasSidebarLogo:hasLogo)?pageMarkup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Opstack" class="app-logo"></a>'):pageMarkup;
         const clockScripts=sidebarPage&&session&&!isSupport(session)&&can(session,'rostering.clock')?'<script src="/clock-model.js" defer></script><script src="/shift-clock.js" defer></script><link rel="stylesheet" href="/shift-clock.css">':'';

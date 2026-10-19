@@ -16,6 +16,18 @@ function createPlatformServer(root,options,createNetworkServer){
  async function body(req){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
  function trusted(req){if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==origin(req)))fail('Invalid request origin or content type.',403);}
  function rate(req,kind,max){const key=kind+':'+req.socket.remoteAddress,now=Date.now();let record=attempts.get(key);if(!record||record.until<=now){record={count:0,until:now+15*60000};attempts.set(key,record);}if(record.count>=max)fail('Too many attempts. Try again in 15 minutes.',429);return{failure:()=>record.count++,success:()=>attempts.delete(key)};}
+ async function discoverNetwork(input){
+  const identity=typeof input?.username==='string'?input.username.trim():'',candidates=[];
+  for(const network of (await store.summary()).networks.filter(network=>network.active)){
+   const people=await service(network).networkServices.auth.directory();
+   if(people.some(person=>!person.invitation&&(person.email===identity.toLowerCase()||person.username===identity)))candidates.push(network);
+  }
+  const matches=[];for(const network of candidates)if(await service(network).networkServices.auth.matchesLogin(input))matches.push(network);
+  if(!candidates.length)await primary.networkServices.auth.matchesLogin(input);
+  if(!matches.length)fail('Incorrect username or password.',401);
+  if(matches.length>1)fail('These sign-in details belong to more than one network. Enter your network code to continue.',409);
+  return matches[0];
+ }
  async function deliver(req,issued,company,inviter,network,setupPath){const delivery=await invitations.send({...issued,origin:origin(req),company,inviter,network,setupPath},{env:await accountEmails.read(root),fetchImpl:options.fetchImpl});return delivery;}
  const server=http.createServer(async(req,res)=>{
   const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
@@ -68,21 +80,29 @@ function createPlatformServer(root,options,createNetworkServer){
     if(route==='/api/opstack/activity'&&req.method==='GET')return json(200,{events:await store.activity()});
     fail('Opstack action not found.',404);
    }
-   let network=await store.network(cookies(req).opstack_network||'default');
-   if(req.method==='POST'&&route==='/api/login'){if(req.headers.origin&&req.headers.origin!==origin(req))fail('Invalid request origin.',403);req[parsedBody]=await body(req);if(req[parsedBody]?.network){network=await store.network(req[parsedBody].network);if(!network)fail('Check your network code.',404);addCookie(res,cookie(req,'opstack_network',network.id,365*86400));addCookie(res,cookie(req,'opstack_support','',0));}}
+   const sharedSignIn=req.method==='GET'&&route==='/login'&&!url.searchParams.has('network');
+   let network=await store.network(sharedSignIn?'default':cookies(req).opstack_network||'default');
+   if(sharedSignIn&&cookies(req).opstack_support)addCookie(res,cookie(req,'opstack_support','',0));
+   const normalLogin=req.method==='POST'&&route==='/api/login';
+   if(normalLogin){
+    if(req.headers.origin&&req.headers.origin!==origin(req))fail('Invalid request origin.',403);const limit=rate(req,'network-login',10);res.once('finish',()=>{if(res.statusCode===200)limit.success();else limit.failure();});req[parsedBody]=await body(req);
+    if(req[parsedBody]?.network){if(typeof req[parsedBody].network!=='string')fail('Check your network code.',400);network=await store.network(req[parsedBody].network.trim().toLowerCase());if(!network)fail('Check your network code.',404);}
+    else if(req[parsedBody]?.autoNetwork===true)network=await discoverNetwork(req[parsedBody]);
+    if(network){const selected=network,writeHead=res.writeHead;res.writeHead=function(status,...args){if(status===200){addCookie(res,cookie(req,'opstack_network',selected.id,365*86400));addCookie(res,cookie(req,'opstack_support','',0));}return writeHead.call(this,status,...args);};}
+   }
    if(url.searchParams.has('network')){
     if(!['/login','/accept-invite'].includes(route)||req.method!=='GET')fail('Choose a network from its sign-in link.',400);
     network=await store.network(url.searchParams.get('network'));if(!network)fail('Network not found.',404);
     if(cookies(req).opstack_network!==network.id){addCookie(res,cookie(req,'opstack_network',network.id,365*86400));addCookie(res,cookie(req,'admin_session','',0));}
     addCookie(res,cookie(req,'opstack_support','',0));
-   }else if(cookies(req).opstack_support&&!(route==='/api/login'&&req[parsedBody]?.network)){
+   }else if(cookies(req).opstack_support&&!normalLogin&&!sharedSignIn){
     if(!entry)fail('Opstack support session expired. Return to the Opstack console.',401);
     network=await store.network(cookies(req).opstack_support);if(!network)fail('Network not found.',404);
     req[supportIdentity]=actor(entry,network);
    }
    if(!network)fail('Network not found.',404);
    if(route!=='/api/login'&&req.headers['x-opstack-network']&&req.headers['x-opstack-network']!==network.id)fail('The selected network changed. Reload this page before continuing.',409);
-   if(!network.active&&!['/api/session','/api/logout'].includes(route))fail('This network is currently suspended. Contact Opstack support.',503);
+   if(!network.active&&!sharedSignIn&&!['/api/session','/api/logout'].includes(route))fail('This network is currently suspended. Contact Opstack support.',503);
    if(req[supportIdentity]&&route==='/api/logout'&&req.method==='POST'){trusted(req);if(req.headers['x-csrf-token']!==entry.csrf)fail('Invalid session token.',403);addCookie(res,cookie(req,'opstack_support','',0));return json(200,{signedOut:true});}
    if(req[supportIdentity]&&route.startsWith('/api/')&&!['GET','HEAD'].includes(req.method)){const requestPath=route;res.on('finish',()=>{store.audit(entry.account,'network.action',{networkId:network.id,method:req.method,path:requestPath,status:res.statusCode}).catch(()=>{});});}
    req.opstackNetwork=network;return service(network).emit('request',req,res);

@@ -9454,5 +9454,29 @@
     "locations": [
       "Users & shift clock"
     ]
+  },
+  {
+    "text": "Network code (optional)",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Network code",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Leave blank to find your network",
+    "locations": [
+      "login"
+    ]
+  },
+  {
+    "text": "Only needed when your sign-in details are used in more than one network.",
+    "locations": [
+      "login"
+    ]
   }
 ]
