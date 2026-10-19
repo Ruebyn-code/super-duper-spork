@@ -168,7 +168,7 @@ test('active card progress counts saved responses from the run snapshot without 
 test('step timestamps are server recorded, survive unchanged saves and update only when answers change',async()=>{const app=await fixture();try{
  const asset=await app.request(null,'/ops-step-timing.js');assert.equal(asset.status,200);assert.match(asset.data,/opsStepTiming/);
  const timed=app.step('timed-section',{startTime:'09:15',endTime:'10:25'}),check=app.step(),number=app.step('number',{format:'integer'}),text=app.step('text',{required:false}),no=app.step('yesno'),template=(await app.template({steps:[timed,check,number,text,no]})).data;
- assert.equal(template.steps[0].required,false);assert.equal(template.steps[0].startTime,'09:15');app.setTime('2026-10-18T22:20:00Z');const run=(await app.start(template.id)).data;assert.equal(run.workDate,'2026-10-19');
+ assert.equal(template.steps[0].required,false);assert.equal(template.steps[0].title,'9:15 am – 10:25 am');assert.equal(template.steps[0].startTime,'09:15');app.setTime('2026-10-18T22:20:00Z');const run=(await app.start(template.id)).data;assert.equal(run.workDate,'2026-10-19');
  const save=(revision,answers,actor=app.member,extra={})=>app.api(actor,'/runs/'+run.id,'PUT',{revision,complete:false,answers,...extra}),values={[check.id]:true,[number.id]:0,[text.id]:' Ready ',[no.id]:'no'};
  let saved=(await save(run.revision,values,app.member,{workDate:'2000-01-01',stepActivity:{[check.id]:{completedAt:'2000-01-01T00:00:00Z'}}})).data;
  for(const step of [check,number,text,no]){assert.equal(saved.stepActivity[step.id].completedAt,'2026-10-18T22:20:00.000Z');assert.equal(saved.stepActivity[step.id].completedBy,'Member');assert.equal(saved.stepActivity[step.id].completedById,app.memberRecord.id);}assert.equal(saved.stepActivity[timed.id],undefined);assert.equal(saved.workDate,'2026-10-19');
@@ -183,11 +183,12 @@ test('step timestamps are server recorded, survive unchanged saves and update on
 
 test('timed section validation and snapshots preserve time windows and fixed checklist dates',async()=>{const app=await fixture();try{
  for(const fields of [{},{startTime:'25:00',endTime:'10:00'},{startTime:'09:15',endTime:'09:15'},{startTime:915,endTime:'10:00'}])assert.equal((await app.template({steps:[app.step('timed-section',fields)]})).status,400);
- const section=app.step('timed-section',{startTime:'23:00',endTime:'02:00'}),check=app.step(),template=(await app.template({steps:[section,check],schedule:{kind:'daily',startDate:'2026-10-19'}})).data;
+ const section=app.step('timed-section',{startTime:'23:00',endTime:'02:00',title:''}),check=app.step(),template=(await app.template({steps:[section,check],schedule:{kind:'daily',startDate:'2026-10-19'}})).data;
+ assert.equal(template.steps[0].title,'11:00 pm – 2:00 am');
  const plan=(await app.api(app.office)).data.planners.find(x=>x.templateId===template.id);assert.equal((await app.api(app.office,'/planners/'+plan.id,'PUT',{...plan,startTime:'22:00',activeFrom:'22:00',activeUntil:'02:00',dueTime:'01:00',dueAfterDays:1})).status,200);
  app.setTime('2026-10-19T14:00:00Z');const started=await app.start(template.id);assert.equal(started.status,201,JSON.stringify(started.data));let run=started.data;assert.equal(run.workDate,'2026-10-19');assert.equal(run.periodKey,'2026-10-19');
  assert.equal((await app.api(app.office,'/templates/'+template.id,'PUT',{...template,steps:[{...section,startTime:'09:00',endTime:'10:00'},check]})).status,200);
- app.setTime('2026-10-20T02:00:00Z');run=(await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,answers:{[check.id]:true},complete:true,workDate:'2026-10-21'})).data;assert.equal(run.workDate,'2026-10-19');assert.equal(run.snapshot.steps[0].startTime,'23:00');assert.equal(run.snapshot.steps[0].endTime,'02:00');assert.equal(require('./public/ops-step-timing').evaluate(run).byStep[check.id].state,'late');
+ app.setTime('2026-10-20T02:00:00Z');run=(await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,answers:{[check.id]:true},complete:true,workDate:'2026-10-21'})).data;assert.equal(run.workDate,'2026-10-19');assert.equal(run.snapshot.steps[0].title,'11:00 pm – 2:00 am');assert.equal((await app.api(app.office)).data.templates.find(x=>x.id===template.id).steps[0].title,'9:00 am – 10:00 am');assert.equal(run.snapshot.steps[0].startTime,'23:00');assert.equal(run.snapshot.steps[0].endTime,'02:00');assert.equal(require('./public/ops-step-timing').evaluate(run).byStep[check.id].state,'late');
  }finally{await app.close();}});
 
 test('legacy answers without step timestamps remain unrecorded until changed',async()=>{const app=await fixture();try{

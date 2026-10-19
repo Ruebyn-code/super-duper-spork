@@ -330,7 +330,6 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-active-header label{margin:0}
 .ops-filter-menu>label{margin:0 0 10px}
 
-.ops-timing-range{display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:.82rem;font-weight:650;color:var(--theme-primary-text,var(--primary))}.ops-timing-range small{font-weight:400;color:var(--theme-muted,#64748b)}
 .ops-timing-summary{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;font-size:.7rem;margin-top:5px;color:var(--theme-muted,#64748b)}.ops-timing-summary small{flex-basis:100%;font-size:.65rem}.ops-timing-summary strong,.ops-timing-badge{font-weight:600;border-radius:5px;padding:2px 5px;background:var(--theme-soft,#f1f5f9)}
 .ops-step-activity{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;gap:3px;min-height:18px;font-size:.65rem;line-height:1.4;color:var(--theme-muted,#64748b);margin-top:6px}.ops-step-stamp{display:flex;align-items:center;gap:3px;min-width:0;min-height:18px;white-space:nowrap}.ops-step-activity time{font-variant-numeric:tabular-nums;flex-shrink:0}.ops-step-author{overflow:hidden;text-overflow:ellipsis}.ops-step-timed{grid-template-columns:minmax(0,1fr) 104px}.ops-timing-badge{justify-self:end}
 .ops-timing-summary[data-timing=within] strong,.ops-timing-badge[data-timing=within]{background:color-mix(in srgb,#22c55e 13%,var(--theme-surface,#fff));color:var(--theme-success-text,#147d43)}

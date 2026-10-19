@@ -22,7 +22,7 @@ function normalize(input){
  const ids=new Set(),steps=input.steps.map(step=>{
   if(!step||!types.includes(step.type)||!uuid(step.id)||ids.has(step.id)||typeof step.required!=='boolean')fail('Choose valid, unique checklist steps.');
   ids.add(step.id);
-  const result={id:step.id,type:step.type,title:text(step.title,200,'a step title'),help:text(step.help??'',2000,'step instructions',true),required:stepModel.responseStep(step)&&step.required};
+  const result={id:step.id,type:step.type,title:step.type==='timed-section'?stepTiming.sectionTitle(step):text(step.title,200,'a step title'),help:text(step.help??'',2000,'step instructions',true),required:stepModel.responseStep(step)&&step.required};
   if(['choice','multiple'].includes(step.type)||step.type==='selection'&&(step.source||'custom')==='custom'){
    const minimum=step.type==='selection'?1:2;
    if(!Array.isArray(step.options)||step.options.length<minimum||step.options.length>100)fail('Add '+minimum+'–100 choices.');
@@ -33,7 +33,7 @@ function normalize(input){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
    if(!['users','locations','custom'].includes(result.source)||typeof result.multiple!=='boolean')fail('Choose a valid selection source.');
   }
-  if(step.type==='timed-section'){if(!stepTiming.clock(step.startTime)||!stepTiming.clock(step.endTime)||step.startTime===step.endTime)fail('Choose different valid start and end times for '+step.title+'.');result.startTime=step.startTime;result.endTime=step.endTime;}
+  if(step.type==='timed-section'){if(!stepTiming.clock(step.startTime)||!stepTiming.clock(step.endTime)||step.startTime===step.endTime)fail('Choose different valid start and end times for the timed section.');result.startTime=step.startTime;result.endTime=step.endTime;}
   if(step.type==='number'){
    if(step.format!==undefined){
     if(!Object.hasOwn(stepModel.formats,step.format))fail('Choose a valid number format.');

@@ -19,3 +19,7 @@ test('legacy missing dates or timestamps stay unrecorded and pending sections ne
 test('both section types carry their children during reordering and never count as responses',()=>{
  const list=[section('timed'),check('child'),{id:'normal',type:'section'},check('other'),section('last'),check('final')];assert.deepEqual(steps.movingIds(list,'timed'),['timed','child']);assert.deepEqual(steps.movingIds(list,'normal'),['normal','other']);assert.deepEqual(steps.move(list,'timed',null).map(x=>x.id),['normal','other','last','final','timed','child']);assert.equal(steps.responseStep(list[0]),false);assert.equal(steps.answered(list[0],true),false);assert.equal(steps.responseStep(list[2]),false);assert.equal(steps.editable(list[0]).startTime,'09:15');
 });
+
+test('timed section titles use the selected period, including midnight, midday and overnight windows',()=>{
+ assert.equal(timing.sectionTitle(section('morning')),'9:15 am – 10:25 am');assert.equal(timing.sectionTitle(section('midday','12:00','13:05')),'12:00 pm – 1:05 pm');assert.equal(timing.sectionTitle(section('night','23:00','00:00')),'11:00 pm – 12:00 am');assert.equal(timing.sectionTitle(section('incomplete','','10:00')),'Timed section');
+});

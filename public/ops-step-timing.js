@@ -28,5 +28,6 @@
   return{byStep,sections};
  }
  const formatTime=value=>clock(value)?new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:'UTC'}).format(new Date('2000-01-01T'+value+':00Z')):'';
- return{clock,windowFor,stateFor,evaluate,formatTime};
+ const sectionTitle=step=>clock(step.startTime)&&clock(step.endTime)?formatTime(step.startTime)+' – '+formatTime(step.endTime):'Timed section';
+ return{clock,windowFor,stateFor,evaluate,formatTime,sectionTitle};
 });
