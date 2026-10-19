@@ -22,5 +22,25 @@
  function inputValues(input){if(input===undefined)return{};if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length>32)throw Error('Enter valid dynamic label values.');return Object.fromEntries(Object.keys(input).sort().map(id=>{const text=input[id];if(!/^[a-zA-Z0-9_-]{1,50}$/.test(id)||typeof text!=='string'||text.length>400||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text))throw Error('Enter valid dynamic label text of up to 400 characters.');return[id,text];}));}
  function fieldValues(layout,input,requireValues=true){const values=inputValues(input),fields=(layout?.blocks||[]).filter(block=>['labelText','printText'].includes(block.source));if(Object.keys(values).some(id=>!fields.some(block=>block.id===id)))throw Error('Choose values for this template’s dynamic fields only.');return Object.fromEntries(fields.map(block=>{const text=Object.hasOwn(values,block.id)?values[block.id]:block.text;if(requireValues&&block.visible&&block.required&&!text.trim())throw Error('Enter a value for '+(block.label||'the required label field')+'.');return[block.id,text];}));}
  function geometry(block,edge,dx,dy){let left=block.x,top=block.y,right=left+block.width,bottom=top+block.height;if(!edge){left=Math.max(0,Math.min(100-block.width,left+dx));top=Math.max(0,Math.min(100-block.height,top+dy));return{x:Math.round(left*100)/100,y:Math.round(top*100)/100,width:block.width,height:block.height};}if(edge.includes('w'))left=Math.max(0,Math.min(right-3,left+dx));if(edge.includes('e'))right=Math.min(100,Math.max(left+3,right+dx));if(edge.includes('n'))top=Math.max(0,Math.min(bottom-3,top+dy));if(edge.includes('s'))bottom=Math.min(100,Math.max(top+3,bottom+dy));return Object.fromEntries(Object.entries({x:left,y:top,width:right-left,height:bottom-top}).map(([key,value])=>[key,Math.round(value*100)/100]));}
- return{sources,fonts,dateFormats,defaultLayout,normalize,value,inputValues,fieldValues,geometry};
+ // Tolerances are percentages derived from screen pixels, so zoomed previews feel the same.
+ function snapGeometry(block,edge,dx,dy,others=[],tolerance={x:1,y:1}){
+  const box=geometry(block,edge,dx,dy),guides={x:null,y:null},round=value=>Math.round(value*100)/100;
+  for(const [axis,size,startEdge,endEdge]of [['x','width','w','e'],['y','height','n','s']]){
+   if(edge&&!edge.includes(startEdge)&&!edge.includes(endEdge))continue;
+   const limit=tolerance[axis];if(!Number.isFinite(limit)||limit<0)continue;
+   const targets=[0,50,100];
+   for(const other of others)if(other.id!==block.id&&other.visible!==false)targets.push(other[axis],other[axis]+other[size]/2,other[axis]+other[size]);
+   const start=box[axis],length=box[size],end=start+length,points=!edge?[start,start+length/2,end]:[edge.includes(startEdge)?start:end];
+   let best=null;
+   for(const point of points)for(const target of targets){
+    const delta=target-point,distance=Math.abs(delta);if(!Number.isFinite(target)||distance>limit||(best&&distance>=best.distance))continue;
+    const nextStart=!edge||edge.includes(startEdge)?start+delta:start,nextEnd=!edge||edge.includes(endEdge)?end+delta:end;
+    if(nextStart<0||nextEnd>100||nextEnd-nextStart<3)continue;
+    best={distance,target,start:nextStart,length:nextEnd-nextStart};
+   }
+   if(best){box[axis]=round(best.start);box[size]=round(best.length);guides[axis]=round(best.target);}
+  }
+  return{box,guides};
+ }
+ return{sources,fonts,dateFormats,defaultLayout,normalize,value,inputValues,fieldValues,geometry,snapGeometry};
 });

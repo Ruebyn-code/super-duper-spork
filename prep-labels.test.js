@@ -22,6 +22,26 @@ test('label field edge and corner resizing stays within the paper and preserves 
 test('new field formatting and automatic values retain source data and require bounded template ready periods',()=>{
  const layout=require('./public/label-layout-model'),design=layout.defaultLayout(),block={...design.blocks[0],id:'ready',source:'readyAt',uppercase:true,inverse:true,wrap:'none',label:'Ready',required:false};design.blocks.push(block);design.readyDelay={amount:0,unit:'minutes'};assert.deepEqual(layout.normalize(design),design);const base={itemName:'Sauce',preparedBy:'Actual staff',createdAt:'2026-10-19T02:00:00.000Z',readyAt:'2026-10-19T06:15:00.000Z',shelfLife:1,shelfLifeUnit:'days'};assert.equal(layout.value(base,{...block,source:'shelfLife',prefix:''}),'1 DAY');assert.equal(layout.value({...base,shelfLife:2},{...block,source:'shelfLife',uppercase:false,prefix:''}),'2 days');assert.equal(layout.value(base,{...block,source:'preparedBy',prefix:'By: '}),'BY: ACTUAL STAFF');assert.equal(base.preparedBy,'Actual staff');assert.equal(layout.value(base,{...block,source:'createdAt',dateFormat:'iso',prefix:''}),'2026-10-19 13:00');for(const bad of [{amount:-1,unit:'hours'},{amount:1.5,unit:'hours'},{amount:1,unit:'months'},{amount:366,unit:'days'}])assert.throws(()=>layout.normalize({...design,readyDelay:bad}));for(const bad of [{...block,inverse:'yes'},{...block,wrap:'html'},{...block,uppercase:2}])assert.throws(()=>layout.normalize({...design,blocks:[bad]}));assert.throws(()=>labels.itemValue({name:'Ready',active:true,shelfLife:48,shelfLifeUnit:'hours',layout:{...design,readyDelay:null}}),e=>e.status===400);
 });
+test('label movement snaps to paper and visible field alignments without changing size or source data',()=>{
+ const {snapGeometry}=require('./public/label-layout-model'),block={id:'moving',x:10,y:20,width:20,height:10},other={id:'other',x:55,y:70,width:20,height:10};
+ const centered=snapGeometry(block,'',29.2,.2,[block,other]);assert.deepEqual(centered,{box:{x:40,y:20.2,width:20,height:10},guides:{x:50,y:null}});
+ assert.deepEqual(snapGeometry(block,'',24.4,0,[other]),{box:{x:35,y:20,width:20,height:10},guides:{x:55,y:null}});
+ assert.deepEqual(snapGeometry(block,'',-9.4,-19.3),{box:{x:0,y:0,width:20,height:10},guides:{x:0,y:0}});
+ assert.equal(snapGeometry(block,'',24.4,0,[{...other,visible:false}]).box.x,34.4);
+ assert.equal(snapGeometry(block,'',24.4,0,[other],{x:.2,y:.2}).box.x,34.4);
+ assert.deepEqual(block,{id:'moving',x:10,y:20,width:20,height:10});assert.equal(other.x,55);
+});
+test('label resize snapping keeps opposite edges fixed and respects minimum size and paper bounds',()=>{
+ const {snapGeometry}=require('./public/label-layout-model'),block={id:'moving',x:10,y:20,width:20,height:10},other={id:'other',x:55,y:70,width:20,height:10};
+ assert.deepEqual(snapGeometry(block,'e',24.4,.8,[other]),{box:{x:10,y:20,width:45,height:10},guides:{x:55,y:null}});
+ assert.deepEqual(snapGeometry(block,'nw',-9.6,-19.5),{box:{x:0,y:0,width:30,height:30},guides:{x:0,y:0}});
+ assert.deepEqual(snapGeometry(block,'se',19.5,39.4,[other]),{box:{x:10,y:20,width:40,height:50},guides:{x:50,y:70}});
+ // Nearby targets may not shrink below 3%, move the fixed edge or leave the paper.
+ for(const edge of ['','n','e','s','w','ne','nw','se','sw'])for(const delta of [-500,-1,0,1,500]){
+  const {box}=snapGeometry(block,edge,delta,delta,[other],{x:4,y:4});assert.ok(box.x>=0&&box.y>=0&&box.width>=3&&box.height>=3&&box.x+box.width<=100.01&&box.y+box.height<=100.01);
+  if(edge&& !edge.includes('w'))assert.equal(box.x,block.x);if(edge&&!edge.includes('n'))assert.equal(box.y,block.y);
+ }
+});
 test('ready times use the configured delay, Melbourne calendar days and the batch server timestamp',async()=>{
  const a=await fixture(),layout=require('./public/label-layout-model'),design=layout.defaultLayout();design.blocks.push({...design.blocks[0],id:'ready',source:'readyAt'});design.blocks.push({...design.blocks[0],id:'current',source:'createdAt'});design.readyDelay={amount:4,unit:'hours'};try{const item=await a.item({layout:design}),batch=await a.batch(item,{readyAt:'2099-01-01T00:00:00Z',createdAt:'2099-01-01T00:00:00Z'});assert.equal(batch.readyAt,'2026-10-19T06:15:00.000Z');assert.equal(batch.createdAt,'2026-10-19T02:00:00.000Z');assert.equal(model.localValue(model.ready(model.instant('2026-10-03T12:00'),{amount:1,unit:'days'})),'2026-10-04T12:00');assert.equal(model.localValue(model.ready(model.instant('2026-10-19T09:15'),{amount:90,unit:'minutes'})),'2026-10-19T10:45');assert.equal(model.ready(batch.preparedAt,{amount:0,unit:'hours'}),batch.preparedAt);const tooLate=await a.item({name:'Too late',shelfLife:1,layout:design});await assert.rejects(a.batch(tooLate),e=>e.status===400);assert.equal((await a.store.list(a.member)).batches.length,1);}finally{await a.close();}
 });
