@@ -10479,5 +10479,305 @@
     "locations": [
       "Ops management"
     ]
+  },
+  {
+    "text": "Labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Reload labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Add prep item",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Labels options",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Print labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Prep items",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label history",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label settings",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Prep item",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Prepared date and time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Number of labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Use by",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Download Zebra file",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Ask a manager to add prep items and their shelf lives.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label preview",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Food prep label preview",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Choose a prep item to preview its label.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Item name · Prepared time · Use-by time · Staff name",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Printing with the Zebra ZD411",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Select your Zebra ZD411 in the print dialog. Use the label size shown in the preview, 100% scale and no headers or footers. Match the resolution in Label settings to your printer.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Download Zebra file creates a ZPL file for sending through Zebra printer software. A computer with the printer installed can use the standard print dialog. Phone printing depends on the printer being available to that device.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Search prep items",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shelf lives are set by your company. Use your approved food safety procedures.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Latest 25 batches at this location",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "A created batch records the label details. Printer delivery is confirmed by your printer, not by this history.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Zebra ZD411",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Width (mm)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Height (mm)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Printer resolution",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "203 dpi",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "300 dpi",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "At 300 dpi, the maximum printable width is 54 mm.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Save label settings",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Close prep item editor",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Item name",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shelf life",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shelf life unit",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Days",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label note (optional)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Active prep item",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Day-based shelf lives keep the same Melbourne time on the use-by date. Hour-based shelf lives use elapsed hours.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Save prep item",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shelf life: {value} {unit}",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Inactive",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "No prep items found.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "No label batches yet.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Edit prep item",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Prep item saved.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label settings saved.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Zebra file downloaded.",
+    "locations": [
+      "Labels"
+    ]
   }
 ]

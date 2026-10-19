@@ -4,6 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
+const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
 const accountEmailSettings=require('./account-email-settings');
@@ -77,6 +78,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const companyStore=companies.createStore(dataDir,locationStore,{defaultsRoot:platformDataDir});
   let defaultsMigration;
   async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory(),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];const people=accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});const operators=platformStore?(await platformStore.summary()).accounts.filter(account=>!account.disabled&&!account.pending):[];return[...people,...operators.map(account=>({id:'opstack-'+account.id,username:account.username+' (Opstack)',companyIds}))];}
+  const prepLabelStore=prepLabels.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),allLocations:()=>auth.levels.locations(),now:communicationsNow});
   const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),people:()=>auth.directory(),roleLevels:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   const libraryStore=knowledgeLibrary.createStore(dataDir);
   // Rich editors share private media URLs; library access is checked against article audiences.
@@ -166,10 +168,11 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/rostering','/communications','/knowledge-library','/ops-management','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/rostering','/communications','/knowledge-library','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
       if(session&&!isSupport(session)){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
+      if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await opsManagement.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:opsStore,body,json,fail}))return;
       if(await knowledgeLibraryRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:libraryStore,body,json,fail}))return;
       if(req.url==='/api/award-source'&&req.method==='GET'){if(!can(session,'awards.manage'))fail('Award settings permission required.',403);res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'private, no-store'});return res.end(await fs.readFile(path.join(__dirname,'docs/awards/ma000003-2026-07.pdf')));}
@@ -346,7 +349,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE')return json(200,await auth.remove(session,accountRoute[1]));
 
-      if(req.method==='GET'&&['/rostering','/knowledge-library','/ops-management','/communications','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/rostering','/knowledge-library','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&!(req.url==='/communications'&&requiredReading?.due.length)&&pagePermission(req.url)&&!canAny(session,pagePermission(req.url))){res.writeHead(303,{Location:['/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup','/email-settings'].includes(req.url)?'/':'/home'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
