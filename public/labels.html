@@ -9,11 +9,9 @@
 <header class="labels-dialog-heading"><h2 id="labels-print-title">Print labels</h2><button id="labels-print-close" type="button" aria-label="Close label printing">×</button></header>
 <div class="labels-print-layout">
 <form id="labels-form" class="labels-card">
-<label>Label template<select id="labels-item" required></select></label>
 <label>Prepared date and time<input id="labels-prepared" type="datetime-local" required></label>
 <div class="labels-copy-field"><label for="labels-copies">Number of labels</label><div class="labels-copy-stepper" data-layout-ui><button id="labels-copies-decrease" type="button" aria-label="Decrease number of labels">−</button><input id="labels-copies" type="number" inputmode="numeric" min="1" max="100" step="1" value="1" required><button id="labels-copies-increase" type="button" aria-label="Increase number of labels">+</button></div></div>
 <div id="labels-dynamic-fields"></div>
-<div class="labels-use-by"><span>Use by</span><strong id="labels-use-by" data-user-text>—</strong></div>
 <div class="labels-print-info"><p id="labels-shelf-life" class="small" data-user-text></p><p class="small">Dates and times use Australia/Melbourne.</p></div>
 <p id="labels-empty" class="small" hidden>Ask a manager to add label templates and their shelf lives.</p>
 </form>

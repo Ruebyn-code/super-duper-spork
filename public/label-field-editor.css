@@ -151,7 +151,8 @@
  max-height:calc(100dvh - 24px);
  padding:14px;
  overflow:hidden;
- background:var(--theme-surface,#fff);
+ background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));
+ border-color:color-mix(in srgb,var(--primary,#008cff) 25%,var(--theme-line,#dce5ed));
 }
 #labels-print-dialog[open] {display:flex;flex-direction:column;gap:10px}
 #labels-print-dialog>.labels-dialog-heading {flex:none;margin:0;min-height:30px}
@@ -189,8 +190,6 @@
 #labels-print-dialog .labels-copy-stepper button:hover {background:color-mix(in srgb,var(--secondary,#45efc3) 80%,var(--theme-surface,#fff))}
 #labels-print-dialog #labels-copies {appearance:textfield;width:54px;min-width:0;text-align:center;font-size:16px;padding:7px 4px}
 #labels-copies::-webkit-inner-spin-button,#labels-copies::-webkit-outer-spin-button {appearance:none;margin:0}
-#labels-print-dialog .labels-use-by {margin:0;padding:7px 9px;font-size:.7rem;flex-direction:row;align-items:center;gap:6px}
-#labels-print-dialog .labels-use-by strong {font-size:.75rem}
 .labels-print-info {display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:5px}
 #labels-print-dialog .small {font-size:.65rem;line-height:1.4;margin:0}
 #labels-print-dialog .labels-preview-card {position:sticky;top:0;order:0}
@@ -199,6 +198,7 @@
 #labels-print-dialog .labels-size {font-size:.65rem;white-space:nowrap}
 #labels-print-dialog .labels-preview-surface {
  container-type:size;
+ background:transparent;
  height:clamp(150px,30dvh,220px);
  min-height:0;
  min-width:0;
@@ -232,7 +232,6 @@
  #labels-print-dialog .labels-preview-card {order:-1;position:static}
  #labels-print-dialog .labels-preview-surface {height:clamp(115px,21dvh,160px);padding:8px}
  #labels-print-dialog input {font-size:16px}
- #labels-print-dialog .labels-use-by {flex-wrap:wrap}
  #labels-print-dialog .labels-actions>button {flex:1;min-width:0;font-size:.7rem;padding:8px}
  .labels-print-footer {padding-top:8px;gap:7px}
 }
