@@ -77,7 +77,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const companyStore=companies.createStore(dataDir,locationStore,{defaultsRoot:platformDataDir});
   let defaultsMigration;
   async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory(),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];const people=accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});const operators=platformStore?(await platformStore.summary()).accounts.filter(account=>!account.disabled&&!account.pending):[];return[...people,...operators.map(account=>({id:'opstack-'+account.id,username:account.username+' (Opstack)',companyIds}))];}
-  const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),now:communicationsNow});
+  const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),people:()=>auth.directory(),now:communicationsNow});
   const libraryStore=knowledgeLibrary.createStore(dataDir);
   // Rich editors share private media URLs; library access is checked against article audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:libraryStore.canReadMedia});

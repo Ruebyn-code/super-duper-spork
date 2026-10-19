@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
-const formats={'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.mp4':'video/mp4','.webm':'video/webm','.mp3':'audio/mpeg','.m4a':'audio/mp4','.wav':'audio/wav','.ogg':'audio/ogg','.pdf':'application/pdf','.txt':'text/plain','.csv':'text/csv','.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','.zip':'application/zip'};
+const formats={'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.mov':'video/quicktime','.mp4':'video/mp4','.webm':'video/webm','.mp3':'audio/mpeg','.m4a':'audio/mp4','.wav':'audio/wav','.ogg':'audio/ogg','.pdf':'application/pdf','.txt':'text/plain','.csv':'text/csv','.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','.zip':'application/zip'};
 const category=mime=>mime.startsWith('image/')?'image':mime.startsWith('video/')?'video':mime.startsWith('audio/')?'audio':'document';
 function createStore(dir){const folder=path.join(dir,'communication-media');
  async function info(id){if(!/^[a-f0-9-]{36}$/i.test(id))fail('File not found.',404);try{return JSON.parse(await fs.readFile(path.join(folder,id+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('File not found.',404);throw error;}}
@@ -10,4 +10,4 @@ function createStore(dir){const folder=path.join(dir,'communication-media');
  const bytes=id=>fs.readFile(path.join(folder,id+'.bin'));
  return{info,save,bytes};
 }
-module.exports={createStore,category};
+module.exports={createStore,category,formats};

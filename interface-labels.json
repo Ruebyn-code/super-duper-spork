@@ -2211,7 +2211,8 @@
     "locations": [
       "Locations and shared ordering",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Ops management"
     ]
   },
   {
@@ -9905,6 +9906,330 @@
   },
   {
     "text": "PNG, JPG, WebP or GIF · up to 10 MB",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checkbox",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Photo / video",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "File submission",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Short text",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Long text",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Number entry",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Selection",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Date and time",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Section",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Number format",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Whole number",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Decimal",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Currency",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Percentage",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Temperature",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Weight",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Volume",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Length",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Duration",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Custom unit",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Decimal places",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Unit",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Format preview",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Selection source",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Custom items",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Users",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Allow multiple selections",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Custom items — one per line",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Shows users assigned to the checklist location.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Shows locations the person completing the checklist can access.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Maximum files",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Allowed media",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Photos and videos",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Photos only",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Videos only",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Date and time format",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Date only",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Time only",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Signature method",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Type or draw",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Draw signature",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Type name",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Signer name",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Clear signature",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Drag to rearrange",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Step options",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Step moved to position {position}.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Dates and times use Australia/Melbourne.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "No selections are available for this location.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Remove file",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Files up to 10 MB; videos up to 25 MB.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Photos up to 10 MB; videos up to 25 MB.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "PDF, Office documents, text, CSV, ZIP, images and audio up to 10 MB; videos up to 25 MB.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Drag the grip to move steps. Moving a section includes its steps. Arrow keys on the grip also move steps.",
     "locations": [
       "Ops management"
     ]
