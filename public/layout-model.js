@@ -14,6 +14,10 @@
   for(const [parent,order] of Object.entries(input)){if(!validId(parent)||!Array.isArray(order)||order.length>3000||order.some(id=>!validId(id))||new Set(order).size!==order.length||(count+=order.length)>12000)throw Error('Invalid or overly large layout.');if(order.length)groups[parent]=[...order];}
   return groups;
  }
+ function validateSize(value){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(key=>!['span','height'].includes(key))||!Number.isInteger(value.span)||value.span<3||value.span>12||!Number.isInteger(value.height)||value.height<0||value.height>1600)throw Error('Choose a section width from 3 to 12 columns and a height from 0 to 1600 px.');return{span:value.span,height:value.height};}
+ function validateSizes(input){if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length>2000)throw Error('Choose valid section sizes.');const result=Object.create(null);for(const[id,value]of Object.entries(input)){if(!validId(id))throw Error('Choose a valid section.');result[id]=validateSize(value);}return result;}
+ // Place the next card at the lowest free column, allowing short cards to stack.
+ function pack(items,gap=12){const columns=Array(12).fill(0);return items.map(item=>{const span=Math.max(3,Math.min(12,Math.round(item.span))),height=Math.max(1,Math.ceil(item.height));let left=0,top=Infinity;for(let column=0;column<=12-span;column++){if(Number.isInteger(item.column)&&column!==Math.max(0,Math.min(12-span,item.column-1)))continue;const y=Math.max(...columns.slice(column,column+span));if(y<top){top=y;left=column;}}for(let column=left;column<left+span;column++)columns[column]=top+height+gap;return{column:left+1,row:top+1,span,rows:height};});}
  function attributes(source){const result={};for(const match of source.matchAll(/([\w:-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g))result[match[1]]=match[2]??match[3]??match[4]??'';return result;}
  const voidTags=new Set(['input','img','hr','br','meta','link','source','area','base','col','embed','param','track','wbr']);
  function renderMarkup(markup,groups){
@@ -37,5 +41,5 @@
   }
   return render(tree);
  }
- const api={pages,validId,key,ordered,mergeOrder,validateGroups,renderMarkup};if(typeof module==='object'&&module.exports)module.exports=api;else root.appLayoutModel=api;
+ const api={pages,validId,key,ordered,mergeOrder,validateGroups,validateSize,validateSizes,pack,renderMarkup};if(typeof module==='object'&&module.exports)module.exports=api;else root.appLayoutModel=api;
 })(globalThis);

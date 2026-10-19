@@ -3,6 +3,8 @@
  const model=window.appLayoutModel,page=window.appBootstrap?.layoutPage;if(!model?.pages.includes(page))return;
  const clone=value=>JSON.parse(JSON.stringify(value)),initial=window.appBootstrap?.layout||{revision:0,groups:{}};
  let saved=clone(initial),draft=clone(initial.groups),editing=false,csrf='',busy=false,groups=new Map(),scheduled=false,drag=null,press=null,hovered=null,suppressUntil=0,saveError=null,toastTimer;
+ let sizeDraft=clone(initial.sizes||{});
+ const snapshot=()=>({groups:clone(draft),sizes:clone(sizeDraft)});
  const defaults=new Map(),undo=[],decorated=new Map(),animations=new Map(),staticNodes=new WeakSet(document.querySelectorAll('*')),uiSelector='hr,canvas,video,audio,iframe,[data-copy-editor],[data-app-no-edit],[inert],:disabled,[readonly],[aria-disabled="true"],[contenteditable]:not([contenteditable="false"]),[data-layout-ui],.unified-app-editor,.app-edit-indicator,#admin-edit-controls,.location-picker-menu';
  const attrs=element=>Object.fromEntries([...element.attributes].map(attribute=>[attribute.name,attribute.value]));
  function identity(element){
@@ -30,7 +32,7 @@
  function reorder(group,order){
   const sorted=model.ordered(group.units,order,unit=>unit.key);if(sorted.every((unit,index)=>unit===group.units[index]))return;
   const markers=group.units.map(unit=>{const marker=document.createComment('layout');unit.element.before(marker);return marker;});
-  sorted.forEach((unit,index)=>{for(const node of unit.nodes)markers[index].before(node);});markers.forEach(marker=>marker.remove());group.units=sorted;
+  sorted.forEach((unit,index)=>{for(const node of unit.nodes)markers[index].before(node);});markers.forEach(marker=>marker.remove());group.units=sorted;window.appSectionResize?.refresh();
  }
  function collect(){
   observer.disconnect();
@@ -54,7 +56,7 @@
   return fallback;
  }
  function itemName(unit){return (unit.element.getAttribute('aria-label')||unit.element.querySelector('h1,h2,h3,.sidebar-label,.stock-name')?.textContent.trim()||unit.element.textContent.trim().replace(/\s+/g,' ')||'Section').slice(0,80);}
- function dirty(){return JSON.stringify(draft)!==JSON.stringify(saved.groups);}
+ function dirty(){return JSON.stringify(draft)!==JSON.stringify(saved.groups)||JSON.stringify(sizeDraft)!==JSON.stringify(saved.sizes||{});}
  const node=(tag,cls,text)=>{const element=document.createElement(tag);if(cls)element.className=cls;if(text!==undefined)element.textContent=text;return element;};
  const gripLayer=node('div','app-layout-grips'),ghostLayer=node('div','app-layout-ghost-layer'),toast=node('div','app-layout-toast');
  for(const layer of [gripLayer,ghostLayer,toast]){layer.dataset.layoutUi='';layer.dataset.copyEditor='';layer.setAttribute('popover','manual');document.body.append(layer);}
@@ -80,19 +82,19 @@
   for(const [element,tabindex] of decorated)if(!next.has(element)){element.removeAttribute('data-layout-movable');if(tabindex===null)element.removeAttribute('tabindex');else element.setAttribute('tabindex',tabindex);decorated.delete(element);}
   for(const element of next){if(!decorated.has(element))decorated.set(element,element.getAttribute('tabindex'));element.dataset.layoutMovable='';if(!element.hasAttribute('tabindex')&&!element.matches('a[href],button,input,textarea,select,summary'))element.tabIndex=0;}
  }
- function changed(next){undo.push(clone(draft));draft=next;collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();if(saveError?.conflict){status('This layout changed elsewhere. Restore the saved layout to continue.','error');return;}saveError=null;save();}
+ function changed(next){undo.push(snapshot());draft=next;collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();if(saveError?.conflict){status('This layout changed elsewhere. Restore the saved layout to continue.','error');return;}saveError=null;save();}
  async function save(){
-  if(busy||!dirty()||saveError?.conflict)return;busy=true;const snapshot=clone(draft);status('Saving layout…','saving');
-  try{const response=await fetch('/api/layout',{method:'PUT',headers:{...companyHeaders(),'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({page,revision:saved.revision,groups:snapshot})}),result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'Unable to save this move.'),{conflict:response.status===409});saved=result;if(JSON.stringify(draft)===JSON.stringify(snapshot))draft=clone(result.groups);saveError=null;status('Layout saved for '+window.appCompanyName+'.','saved');}
+  if(busy||!dirty()||saveError?.conflict)return;busy=true;const nextGroups=clone(draft),nextSizes=clone(sizeDraft);status('Saving layout…','saving');
+  try{const response=await fetch('/api/layout',{method:'PUT',headers:{...companyHeaders(),'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({page,revision:saved.revision,groups:nextGroups,sizes:nextSizes})}),result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'Unable to save this move.'),{conflict:response.status===409});saved=result;if(JSON.stringify(draft)===JSON.stringify(nextGroups)&&JSON.stringify(sizeDraft)===JSON.stringify(nextSizes)){draft=clone(result.groups);sizeDraft=clone(result.sizes||{});}saveError=null;status('Layout saved for '+window.appCompanyName+'.','saved');}
   catch(error){saveError=error;status(error.conflict?'This layout changed elsewhere. Restore the saved layout to continue.':'Could not save this move. Retry, or restore the saved layout.','error');}
   finally{busy=false;if(dirty()&&!saveError)save();}
  }
  async function restoreSaved(){
   if(busy||drag)return;busy=true;status('Restoring saved layout…','saving');
-  try{const response=await fetch('/layouts?page='+page,{headers:companyHeaders(),cache:'no-store'});if(!response.ok)throw Error('Unable to reload layout.');saved=await response.json();draft=clone(saved.groups);undo.length=0;saveError=null;collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();status('Saved layout restored.','saved');}
+  try{const response=await fetch('/layouts?page='+page,{headers:companyHeaders(),cache:'no-store'});if(!response.ok)throw Error('Unable to reload layout.');saved=await response.json();draft=clone(saved.groups);sizeDraft=clone(saved.sizes||{});undo.length=0;saveError=null;collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();window.appSectionResize?.refresh();status('Saved layout restored.','saved');}
   catch(error){saveError=error;status('Could not restore the layout. Check your connection and try again.','error');}finally{busy=false;}
  }
- undoButton.onclick=()=>{if(!undo.length||drag)return;draft=undo.pop();collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();saveError=null;if(dirty())save();else status('Move undone.','saved');};
+ undoButton.onclick=()=>{if(!undo.length||drag)return;const previous=undo.pop();draft=previous.groups;sizeDraft=previous.sizes;collect();window.dispatchEvent(new CustomEvent('app-layout-changed'));collect();saveError=null;if(dirty())save();else status('Move undone.','saved');};
  retryButton.onclick=()=>{saveError=null;save();};restoreButton.onclick=restoreSaved;
  function logicalRect(element){const rect=element.getBoundingClientRect(),animation=animations.get(element);if(!animation)return rect;const [x=0,y=0]=getComputedStyle(element).translate.split(' ').map(value=>parseFloat(value)||0);return {left:rect.left-x,right:rect.right-x,top:rect.top-y,bottom:rect.bottom-y,width:rect.width,height:rect.height};}
  function animateOrder(group,order){
@@ -153,7 +155,7 @@
   if(!current.touch)try{document.body.releasePointerCapture(current.pointerId);}catch{}
   const order=current.group.units.filter(visible).map(unit=>unit.key),moved=!cancel&&order.some((key,index)=>key!==current.before[index]);
   if(target&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const from=current.ghost.style.transform,currentGhost=current.ghost;const animation=currentGhost.animate([{transform:from,opacity:1},{transform:'translate3d('+target.left+'px,'+target.top+'px,0) scale(1)',opacity:0}],{duration:160,easing:'ease-out'});animation.finished.then(()=>{land();if(!drag&&ghostLayer.contains(currentGhost))hide(ghostLayer);currentGhost.remove();},()=>{land();currentGhost.remove();});}else{land();hide(ghostLayer);current.ghost.remove();}
-  if(moved)changed({...draft,[current.group.key]:model.mergeOrder(draft[current.group.key]||defaults.get(current.group.key),order)});else{collect();status(cancel?'Move cancelled.':'Hold a section or card, then drag it to move.');}setHover(null);
+  if(moved)changed({...draft,[current.group.key]:model.mergeOrder(draft[current.group.key]||defaults.get(current.group.key),order)});else{collect();status(cancel?'Move cancelled.':'Hold a section or card, then drag it to move.');}if(!cancel)window.appSectionResize?.dropped(current.unit.element,current.x-current.offsetX);setHover(null);
  }
  function candidate(target){return target.closest('.app-layout-grip')?hovered:info(target);}
  function startPress(target,x,y,details){
@@ -190,6 +192,6 @@
  window.addEventListener('before-location-switch',event=>{if(drag||busy||dirty()){event.preventDefault();status('Wait for the layout to save before switching locations or companies.',saveError?'error':'saving');}});
  window.addEventListener('blur',()=>{if(drag)endDrag(true);clearPress();});window.addEventListener('resize',()=>{if(drag)endDrag(true);schedule();});
  document.addEventListener('scroll',()=>{if(!drag&&hovered)setHover(hovered);},true);window.addEventListener('hashchange',()=>{if(drag)endDrag(true);clearPress();setHover(null);schedule();});
- window.appLayout={info,save,dirty,placeAfter(parent,key,after){collect();const group=groups.get(groupKey(parent));if(!group)return;const order=(draft[group.key]||group.units.map(unit=>unit.key)).filter(id=>id!==key),index=after===null?order.length:order.indexOf(after)+1;order.splice(index,0,key);changed({...draft,[group.key]:order});},isSaving:()=>busy,isArranging:()=>Boolean(drag)||performance.now()<suppressUntil,preventExit(){if(drag)endDrag(true);clearPress();if(busy||dirty()){status(saveError?'Retry or restore the saved layout before finishing App edit.':'Wait for your layout to finish saving.',saveError?'error':'saving');return true;}return false;},orderData(parent,data,kind='product'){const key=groupKey(parent),keys=data.map(item=>kind+':'+item.id);remember(key,keys,parent);return model.ordered(data,draft[key],item=>kind+':'+item.id);}};
+ window.appLayout={info,save,dirty,size(id){return sizeDraft[id];},resize(id,value){if(!editing||saveError?.conflict)return false;undo.push(snapshot());const next={...sizeDraft};if(value===null)delete next[id];else next[id]=model.validateSize(value);sizeDraft=model.validateSizes(next);window.dispatchEvent(new CustomEvent('app-layout-changed'));saveError=null;save();return true;},placeAfter(parent,key,after){collect();const group=groups.get(groupKey(parent));if(!group)return;const order=(draft[group.key]||group.units.map(unit=>unit.key)).filter(id=>id!==key),index=after===null?order.length:order.indexOf(after)+1;order.splice(index,0,key);changed({...draft,[group.key]:order});},isSaving:()=>busy,isArranging:()=>Boolean(drag)||performance.now()<suppressUntil,preventExit(){if(drag)endDrag(true);clearPress();if(busy||dirty()){status(saveError?'Retry or restore the saved layout before finishing App edit.':'Wait for your layout to finish saving.',saveError?'error':'saving');return true;}return false;},orderData(parent,data,kind='product'){const key=groupKey(parent),keys=data.map(item=>kind+':'+item.id);remember(key,keys,parent);return model.ordered(data,draft[key],item=>kind+':'+item.id);}};
  collect();document.addEventListener('DOMContentLoaded',schedule);
 })();

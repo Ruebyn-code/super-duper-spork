@@ -67,3 +67,9 @@ test('Home reads never acknowledge mandatory posts and cannot bypass the require
  for(const url of ['/api/home-dashboard','/api/home-orders','/api/home-totals'])assert.equal((await request(member,url)).status,428,url);
  assert.equal((await request(member,'/api/communications/required')).data.due.length,1);assert.equal((await request(office,'/api/home-dashboard')).status,200);assert.equal((await request(member,'/api/communications/required')).data.due.length,1);
 });
+
+test('Home section geometry preserves preset compatibility and rejects unsafe custom sizes',()=>{
+ const section={id:'resize',type:'heading',size:'half',span:5,height:248};assert.deepEqual(model.validate([section]),[section]);
+ for(const patch of [{span:2},{span:13},{span:3.5},{column:0},{column:13},{height:-1},{height:1601},{height:'200'}])assert.throws(()=>model.validate([{...section,...patch}]));
+ const legacy={id:'old',type:'heading',size:'full'};assert.deepEqual(model.validate([legacy]),[legacy]);
+});
