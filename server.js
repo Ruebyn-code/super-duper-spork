@@ -10,6 +10,8 @@ const accountEmailSettings=require('./account-email-settings');
 const {createPublicAssets}=require('./public-assets');
 const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
 const {createAuth}=require('./auth');
+const {isSupport,parsedBody,supportIdentity}=require('./platform-identity');
+const {createPlatformServer}=require('./opstack-router');
 const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation}=require('./permissions');
 const {apiPermission,pagePermission}=require('./access-routes');
 const companies=require('./companies'),catalogues=require('./catalogue-store'),customisations=require('./company-customisations');
@@ -63,14 +65,14 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,publicOrigin='',migrationMode=false}={}) {
+function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
   const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow}),invitationAttempts=new Map();
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore);
-  async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory(),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];return accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});}
+  async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory(),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];const people=accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});const operators=platformStore?(await platformStore.summary()).accounts.filter(account=>!account.disabled&&!account.pending):[];return[...people,...operators.map(account=>({id:'opstack-'+account.id,username:account.username+' (Opstack)',companyIds}))];}
   const libraryStore=knowledgeLibrary.createStore(dataDir);
   // Rich editors share private media URLs; library access is checked against article audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:libraryStore.canReadMedia});
@@ -83,18 +85,18 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const manualParStore=manualPar.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
-  async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
+  async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
   const publicAssets=createPublicAssets(path.join(__dirname,'public'),publicFiles),asset=publicAssets.read;
-  const platformDir=path.join(dataDir,'platform-appearance');
+  const platformDir=path.join(platformDataDir,'platform-appearance');
   async function readLogo(dir,sidebar=false){
     for(const scope of [...new Set([dir,platformDir])])for(const file of sidebar?['sidebar-logo.json','logo.json']:['logo.json']){
       try{return {...JSON.parse(await fs.readFile(path.join(scope,file),'utf8')),scope:scope===platformDir?'platform':'company'};}catch(error){if(error.code!=='ENOENT')throw error;}
     }
-    const bytes=await fs.readFile(path.join(__dirname,'public/assets/branding',sidebar?'opstack-wordmark.png':'opstack-symbol.png'));
+    let bytes;try{bytes=await fs.readFile(path.join(__dirname,'public/assets/branding',sidebar?'opstack-wordmark.png':'opstack-symbol.png'));}catch(error){if(error.code!=='ENOENT'||!await platformStore?.enabled())throw error;bytes=await fs.readFile(path.join(__dirname,'public/assets/branding/opstack-icon.png'));}
     return {type:'image/png',data:bytes.toString('base64'),scope:'platform'};
   }
-  return http.createServer(async (req,res) => {
+  const server=http.createServer(async (req,res) => {
     const json = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
     try {
       const requestUrl=new URL(req.url,'http://localhost'),embeddedContent=req.headers['sec-fetch-dest']==='iframe'||requestUrl.searchParams.get('__opstack_content')==='1';requestUrl.searchParams.delete('__opstack_content');req.url=requestUrl.pathname;
@@ -123,7 +125,9 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       const authPage=['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
       const platformAppearance=authPage||((customisationRoutes.includes(req.url)||fontAsset||settingsPage)&&(req.headers['x-app-appearance']==='platform'||requestUrl.searchParams.get('platform')==='1'));
       const platformWrite=platformAppearance&&((req.url.startsWith('/api/')&&customisationRoutes.includes(req.url))||settingsPage||req.url.startsWith('/admin/appearance/'));
+      if(platformWrite&&await platformStore?.enabled()&&(!isSupport(session)||session[supportIdentity].platformRole!=='owner'))fail('Manage shared sign-in appearance from the Opstack owner console.',403);
       if(platformWrite){if(!session){if(req.url.startsWith('/api/'))fail('Sign-in required.',401);res.writeHead(303,{Location:'/login'});return res.end();}if(!can(session,'network.access')||!can(session,'appearance.manage')){if(req.url.startsWith('/api/'))fail('Head Office platform appearance permission required.',403);res.writeHead(303,{Location:'/'});return res.end();}}
+      if(await platformStore?.enabled()&&!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset)&&!session)fail('Sign-in required.',401);
       const requestedCompany=!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset||settingsPage)?(req.headers['x-company-id']||requestUrl.searchParams.get('company')):undefined;
       const appearanceCompany=await companyStore.get(requestedCompany||session?.companyId||companies.defaultCompanyId);
       if(session&&requestedCompany&&!can(session,'network.access')&&!(await companyStore.accessible(session)).some(company=>company.id===appearanceCompany.id))fail('You do not have access to this company.',403);
@@ -146,16 +150,16 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
       const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==requestOrigin(req))fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
-        res.setHeader('Set-Cookie',`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`);
+        res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
       const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/rostering','/communications','/knowledge-library','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
-      if(session){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
+      if(session&&!isSupport(session)){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await knowledgeLibraryRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:libraryStore,body,json,fail}))return;
       if(req.url==='/api/award-source'&&req.method==='GET'){if(!can(session,'awards.manage'))fail('Award settings permission required.',403);res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'private, no-store'});return res.end(await fs.readFile(path.join(__dirname,'docs/awards/ma000003-2026-07.pdf')));}
@@ -207,16 +211,17 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);return json(200,await locationStore.update(locationRoute[1],await body(req)));}
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
       if(req.url==='/api/account-email-settings'){
+        if(await platformStore?.enabled())fail('Manage account setup emails in the Opstack owner console.',403);
         if(!can(session,'account-email.manage'))fail('Network account email settings permission required.',403);
-        if(req.method==='GET')return json(200,accountEmailSettings.summary(await accountEmailSettings.read(dataDir)));
+        if(req.method==='GET')return json(200,accountEmailSettings.summary(await accountEmailSettings.read(platformDataDir)));
         if(req.method==='PUT')return json(200,await accountEmailSettings.save(dataDir,await body(req)));
       }
       const resendInvitation=req.url.match(/^\/api\/accounts\/([a-zA-Z0-9-]+)\/invitation$/);
       if(req.method==='POST'&&(req.url==='/api/account-invitations'||resendInvitation)){
-        const env=await accountEmailSettings.read(dataDir);accountInvitations.sender(env);
+        const env=await accountEmailSettings.read(platformDataDir);accountInvitations.sender(env);
         const origin=publicOrigin||requestOrigin(req);if(!publicOrigin&&!['localhost','127.0.0.1','[::1]'].includes(new URL(origin).hostname))fail('Set APP_ORIGIN to your public app URL before sending invitations.',503);
         const invitation=resendInvitation?await auth.resendInvitation(session,resendInvitation[1]):await auth.invite(session,await body(req),id=>locationStore.get(id,{active:true}));
-        const delivery=await accountInvitations.send({...invitation,origin,company:session.companyName,inviter:session.username},{env,fetchImpl});
+        const delivery=await accountInvitations.send({...invitation,origin,company:session.companyName,inviter:session.username,network:network.id==='default'?undefined:network.slug},{env,fetchImpl});
         await auth.invitationDelivered(invitation.account.id,invitation.invitationId,delivery);
         return json(resendInvitation?200:201,{account:(await auth.list(session)).find(account=>account.id===invitation.account.id),delivery});
       }
@@ -402,9 +407,10 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
       if(file.endsWith('.html')){
         const layoutPage=file.replace(/\.html$/,''),[rawMarkup,appearance,text,overrides,font,hasLogo,hasSidebarLogo,fontLibrary,layout,icon]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),readAppearance(customisationDir),interfaceText.read(customisationDir),elementOverrides.read(customisationDir),asset('fonts/Opsilon-xRj8m.ttf'),readLogo(customisationDir).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readLogo(customisationDir,true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readFontLibrary(),layouts.page(customisationDir,layoutPage),asset('assets/branding/opstack-icon.png')]);
         const authPreview=req.url.startsWith('/admin/appearance/');const previewToolbar='<div id="admin-edit-controls" class="auth-preview-toolbar" data-copy-editor><strong>Page preview</strong><a href="'+scopedAsset('/admin/settings')+'#sign-in">Back to settings</a><button id="app-edit-toggle" type="button" aria-pressed="false"><span class="sidebar-edit-label">App edit</span></button><p id="app-edit-status" role="status" class="visually-hidden"></p></div>';
-        const pageMarkup=authPreview?rawMarkup.replace(/<script src="\/(?:login|setup)\.js" defer><\/script>/,'<script src="/auth-preview.js" defer></script>').replace('</head>','<script src="/app-editor.js" defer></script></head>').replace('</body>',previewToolbar+'</body>'):rawMarkup;
+        const sourceMarkup=req.url==='/login'?rawMarkup.replace('name="network"','name="network" value="'+network.slug+'"'):rawMarkup;
+        const pageMarkup=authPreview?sourceMarkup.replace(/<script src="\/(?:login|setup)\.js" defer><\/script>/,'<script src="/auth-preview.js" defer></script>').replace('</head>','<script src="/app-editor.js" defer></script></head>').replace('</body>',previewToolbar+'</body>'):sourceMarkup;
         const sidebarPage=pageMarkup.includes('id="app-sidebar"'),source=scopedAsset(sidebarPage?'/sidebar-logo':'/logo'),branded=(sidebarPage?hasSidebarLogo:hasLogo)?pageMarkup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Opstack" class="app-logo"></a>'):pageMarkup;
-        const clockScripts=sidebarPage&&session&&can(session,'rostering.clock')?'<script src="/clock-model.js" defer></script><script src="/shift-clock.js" defer></script><link rel="stylesheet" href="/shift-clock.css">':'';
+        const clockScripts=sidebarPage&&session&&!isSupport(session)&&can(session,'rostering.clock')?'<script src="/clock-model.js" defer></script><script src="/shift-clock.js" defer></script><link rel="stylesheet" href="/shift-clock.css">':'';
         const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css">'+clockScripts+'<script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script>');
         const markup=layoutModel.renderMarkup(editParts.renderImages(editParts.renderIcons(editParts.annotate(arrangedScripts,file),overrides),overrides),layout.groups);
         const bootstrap=JSON.stringify({requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
@@ -414,14 +420,16 @@ function createServer(dataDir = path.join(__dirname,'data'),{fetchImpl,communica
         const uploadedPreloads=fontLibrary.filter(entry=>usedFonts.has(entry.id)).map(entry=>'<link rel="preload" href="'+entry.url+'" as="font" type="font/'+entry.extension+'" crossorigin>').join('');
         const iconVersion=icon.etag.slice(1,-1);
         const siteIcons='<link rel="icon" type="image/png" href="/favicon.png?v='+iconVersion+'"><link rel="apple-touch-icon" href="/apple-touch-icon.png?v='+iconVersion+'">';
-        const contextScript='<script>window.appThemeAccount='+JSON.stringify(session?.id||'guest')+';window.appCompanyId='+JSON.stringify(appearanceCompany.id).replace(/</g,'\\u003c')+';window.appCompanyName='+JSON.stringify(platformAppearance?'Opstack':appearanceCompany.name).replace(/</g,'\\u003c')+';window.appPlatformAppearance='+JSON.stringify(platformAppearance)+';</script>';
+        const contextScript='<script>window.appNetworkId='+JSON.stringify(network.id)+';</script><script src="/network-context.js"></script><script>window.appThemeAccount='+JSON.stringify(session?.id||'guest')+';window.appCompanyId='+JSON.stringify(appearanceCompany.id).replace(/</g,'\\u003c')+';window.appCompanyName='+JSON.stringify(platformAppearance?'Opstack':appearanceCompany.name).replace(/</g,'\\u003c')+';window.appPlatformAppearance='+JSON.stringify(platformAppearance)+';</script>';
         const initial='<script>window.appLocationId='+JSON.stringify(session?.locationId||'').replace(/</g,'\\u003c')+';document.documentElement.dataset.accountRole='+JSON.stringify(session?.role||'')+';</script>'+uploadedPreloads+'<style id="uploaded-font-faces">'+appearanceStyles.fontFaces(fontLibrary,appearanceCompany.id)+'</style><link rel="preload" href="'+fontUrl+'" as="font" type="font/ttf" crossorigin><style id="app-font">@font-face{font-family:Opsilon;src:url("'+fontUrl+'");font-weight:400;font-style:normal;font-display:block}</style><style id="appearance-style">'+appearanceStyles.build(appearance,fontLibrary)+'</style><style id="element-appearance-style">'+appearanceStyles.buildElements(overrides,markup,fontLibrary)+'</style><script id="app-bootstrap" type="application/json">'+bootstrap+'</script>';
         res.writeHead(200,{'Content-Type':contentType,'X-Content-Type-Options':'nosniff'});const rendered=markup.replace('<head>','<head>'+siteIcons+contextScript+'<script src="/theme-colours.js"></script><script src="/theme.js"></script>').replace('</head>',initial+'<link rel="stylesheet" href="/dark-mode.css"></head>');return res.end(await publicAssets.versionMarkup(((sidebarPage&&!authPreview)||(authPreview&&embeddedContent))?persistentShell.render(rendered,embeddedContent):rendered));
       }
       return json(404,{error:'Not found'});
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
+  server.networkServices={auth,locationStore,companyStore};return server;
 }
+function createServer(dataDir=path.join(__dirname,'data'),options={}){return createPlatformServer(dataDir,{...options,publicOrigin:appOrigin(options.publicOrigin||'')},createNetworkServer);}
 if(require.main===module)(async()=>{
   const config=runtimeConfig();
   await prepareDataDirectory(config.dataDir);

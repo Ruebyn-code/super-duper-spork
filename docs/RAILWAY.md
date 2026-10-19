@@ -110,3 +110,7 @@ If you add your own domain later, follow Railway's displayed DNS instructions, w
 - Keep existing email/SMS provider settings with the data. Check a supplier's contact details before sending a real order; hosting does not create provider accounts or ordering-platform API access.
 
 Official Railway references: [Dockerfiles](https://docs.railway.com/builds/dockerfiles), [Volumes](https://docs.railway.com/volumes), [Volume file commands](https://docs.railway.com/cli/volume), [SSH](https://docs.railway.com/cli/ssh), [Backups](https://docs.railway.com/volumes/backups).
+
+## Opstack owner and multiple networks
+
+After deploying the Opstack console update, see [Opstack console setup](opstack-console.md). In the app service’s Railway SSH terminal run `cd /app` and `npm run opstack:owner` once, then sign in at `/opstack`. Owners manage networks, support accounts and the one shared account setup email sender. Existing network users and records remain in place. Include `opstack/`, `networks/` and all existing files when backing up the persistent data directory.

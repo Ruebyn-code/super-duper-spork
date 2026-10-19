@@ -1,5 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const model=require('./permissions');
+const {isSupport}=require('./platform-identity');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 function createStore(dir){
  const file=path.join(dir,'permission-levels.json');
@@ -24,7 +25,7 @@ function createStore(dir){
   }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,awardsVersion:1,leaveVersion:1,transfersVersion:1,userEmailsVersion:1,levels:structuredClone(model.defaults)};}
  }
  async function locations(){try{return JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return[];throw error;}}
- function decorate(account,companyId,data,stores=[]){if(!account)return null;const baseId=account.baseRole||account.role,network=data.levels.find(role=>role.id===baseId&&role.scope==='network'),id=account.companyRoles?.[companyId]||baseId,role=data.levels.find(role=>role.id===id&&role.scope===companyId)||data.levels.find(role=>role.id===id&&role.scope==='network')||{id,name:'No assigned permission level',level:0,permissions:['home.view']};return{...account,baseRole:baseId,role:id,roleName:role.name,roleLevel:role.level,permissions:role.permissions,networkPermissions:network?.permissions||[],companyId,companyIds:[...new Set(stores.filter(store=>model.locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))],permissionRevision:data.revision};}
+ function decorate(account,companyId,data,stores=[]){if(!account)return null;if(isSupport(account))return{...account,companyId,role:'admin',roleName:'Opstack support',roleLevel:100,permissions:[...model.keys],networkPermissions:[...model.keys],permissionRevision:data.revision};const baseId=account.baseRole||account.role,network=data.levels.find(role=>role.id===baseId&&role.scope==='network'),id=account.companyRoles?.[companyId]||baseId,role=data.levels.find(role=>role.id===id&&role.scope===companyId)||data.levels.find(role=>role.id===id&&role.scope==='network')||{id,name:'No assigned permission level',level:0,permissions:['home.view']};return{...account,baseRole:baseId,role:id,roleName:role.name,roleLevel:role.level,permissions:role.permissions,networkPermissions:network?.permissions||[],companyId,companyIds:[...new Set(stores.filter(store=>model.locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))],permissionRevision:data.revision};}
  async function context(account,companyId){return decorate(account,companyId,await read(),await locations());}
  function authority(actor,data){const network=data.levels.find(role=>role.id===(actor.baseRole||actor.role)&&role.scope==='network');return model.can(actor,'roles.network')&&network?{...actor,roleLevel:Math.max(model.level(actor),network.level),permissions:[...new Set([...actor.permissions,...network.permissions])]}:actor;}
  function complete(role){return role&&model.keys.every(key=>role.permissions.includes(key));}

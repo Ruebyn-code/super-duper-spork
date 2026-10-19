@@ -14,17 +14,17 @@ function find(accounts,token,now){
  return account;
 }
 function sender(env){
- if(!env.enabled||!env.apiKey||!env.from)fail('Set up the shared sender in Settings → Account emails before inviting users.',503);
+ if(!env.enabled||!env.apiKey||!env.from)fail('Set up the shared sender in Opstack console → Account setup emails before inviting users.',503);
  return{key:env.apiKey,from:env.from};
 }
 const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-async function send({account,token,invitationId,origin,company,inviter},{env,fetchImpl=fetch}){
- const configuration=sender(env),link=new URL('/accept-invite',origin);link.hash='token='+token;
- const subject='Set up your Opstack account',text=`Hi ${account.username},\n\n${inviter} has invited you to Opstack for ${company}.\n\nChoose your password:\n${link.href}\n\nSign-in email: ${account.email}\n\nThis link expires in 48 hours and can only be used once. If you were not expecting this invitation, you can ignore this email.`;
- const html=`<div style="font:16px/1.6 Arial,sans-serif;color:#182b3a;max-width:560px;margin:auto;padding:28px"><img src="${escape(origin)}/logo?platform=1" alt="Opstack" width="160"><h1 style="font-size:26px">Welcome to Opstack</h1><p>Hi ${escape(account.username)},</p><p>${escape(inviter)} has invited you to Opstack for ${escape(company)}.</p><p><a href="${escape(link.href)}" style="display:inline-block;background:#0d74c0;color:white;padding:12px 20px;border-radius:9px;text-decoration:none">Choose your password</a></p><p>Sign-in email: <strong>${escape(account.email)}</strong></p><p style="font-size:13px;color:#627383">This link expires in 48 hours and can only be used once. If you were not expecting this invitation, you can ignore this email.</p></div>`;
+async function send({account,token,invitationId,origin,company,inviter,network,setupPath='/accept-invite'},{env,fetchImpl=fetch}){
+ const configuration=sender(env),link=new URL(setupPath,origin);if(network)link.searchParams.set('network',network);link.hash='token='+token;
+ const render=(value,fallback)=>String(value||fallback).replace(/\{\{(name|inviter|company)\}\}/g,(_,key)=>({name:account.username,inviter,company}[key])),template=env.template||{},subject=render(template.subject,'Set up your Opstack account'),heading=render(template.heading,'Welcome to Opstack'),intro=render(template.intro,'{{inviter}} has invited you to Opstack for {{company}}.'),button=render(template.button,'Choose your password'),text=`Hi ${account.username},\n\n${intro}\n\nChoose your password:\n${link.href}\n\nSign-in email: ${account.email}\n\nThis link expires in 48 hours and can only be used once. If you were not expecting this invitation, you can ignore this email.`;
+ const html=`<div style="font:16px/1.6 Arial,sans-serif;color:#182b3a;max-width:560px;margin:auto;padding:28px"><img src="${escape(origin)}/logo?platform=1" alt="Opstack" width="160"><h1 style="font-size:26px">${escape(heading)}</h1><p>Hi ${escape(account.username)},</p><p>${escape(intro)}</p><p><a href="${escape(link.href)}" style="display:inline-block;background:#0d74c0;color:white;padding:12px 20px;border-radius:9px;text-decoration:none">${escape(button)}</a></p><p>Sign-in email: <strong>${escape(account.email)}</strong></p><p style="font-size:13px;color:#627383">This link expires in 48 hours and can only be used once. If you were not expecting this invitation, you can ignore this email.</p></div>`;
  try{
   const response=await fetchImpl('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+configuration.key,'Idempotency-Key':'opstack-invitation-'+invitationId},body:JSON.stringify({from:configuration.from,to:[account.email],subject,text,html}),signal:AbortSignal.timeout(15000),redirect:'error'});
-  return response.ok?{status:'sent',message:'Invitation accepted by the email service. The user can choose their password from the email.'}:{status:'failed',message:'The email service rejected the invitation (HTTP '+response.status+'). Check the location email settings, then resend it from Users.'};
+  return response.ok?{status:'sent',message:'Invitation accepted by the email service. The user can choose their password from the email.'}:{status:'failed',message:'The email service rejected the invitation (HTTP '+response.status+'). Check the shared account email settings, then resend the invitation.'};
  }catch{return{status:'unconfirmed',message:'Email delivery could not be confirmed. Check your email service before resending the invitation.'};}
 }
 module.exports={email,issue,find,sender,send,lifetime};
