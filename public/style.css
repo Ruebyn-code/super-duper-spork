@@ -65,7 +65,7 @@ h1,h2,h3,.stock-name,.cart-row>strong,.hero-art div{font-family:'Opsilon',sans-s
 .leave-blank{display:block;margin-top:12px}.leave-blank input[type=checkbox]{width:auto;margin-right:6px}.app-edit-mode [data-app-blank]{display:inline-block;min-width:32px;min-height:18px}.app-edit-mode [data-app-blank]::after{content:'(blank)';font-family:Arial,sans-serif;font-size:12px;color:var(--theme-primary-text,var(--primary))}
 
 #app-edit-mode{width:100%;margin-top:8px}.app-edit-mode [data-app-style]{outline:1px dashed var(--primary);outline-offset:-2px;cursor:crosshair}.app-edit-mode [data-app-style]:hover{box-shadow:inset 0 0 0 2px var(--primary)}#app-style-colour{height:48px}#app-style-font{width:100%;padding:10px;margin-top:8px}.app-text-dialog [hidden]{display:none!important}
-.app-edit-mode [data-app-target]{outline:1px dashed var(--primary);outline-offset:-2px;cursor:pointer}.app-edit-mode [data-app-target]:hover{box-shadow:inset 0 0 0 2px var(--primary)}.unified-app-editor{max-height:85vh;overflow-y:auto}.unified-app-editor [hidden]{display:none!important}
+.app-edit-mode [data-app-target]{outline:1px dashed var(--primary);outline-offset:-2px;cursor:pointer}.unified-app-editor{max-height:85vh;overflow-y:auto}.unified-app-editor [hidden]{display:none!important}
 
 #app-font-colour{height:48px}
 
@@ -1048,9 +1048,9 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 .app-editor-scope #app-edit-link-help{grid-column:1/-1;font-size:10px;margin:0;line-height:1.5}
 .editor-icon-sizing{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:14px}.editor-icon-sizing input[type=range]{grid-column:1/-1}.editor-icon-sizing output{font:600 12px Arial,sans-serif;color:var(--theme-primary-text,var(--primary))}.unified-app-editor #app-icon-stroke{max-width:80px;margin:0}
 #editor-preview-icon{flex-shrink:0}#editor-preview-icon[hidden]{display:none!important}
-.app-edit-mode [data-app-target]{outline:none;cursor:crosshair}
-.app-edit-mode [data-app-target]:hover{outline:2px solid var(--primary);outline-offset:2px;box-shadow:none}
-.app-edit-mode [data-app-target]:has([data-app-target]:hover){outline:none;box-shadow:none}
+.app-edit-mode [data-app-target]{outline:none;cursor:auto}
+.app-edit-mode .app-hovered-part{cursor:crosshair;outline:2px solid var(--primary);outline-offset:2px;box-shadow:none}
+
 @media(max-width:520px){.app-editor-selection-control{padding:0 18px 12px;grid-template-columns:minmax(0,1fr);gap:6px}.app-editor-scope #app-edit-link-help{margin-top:0}.unified-app-editor .editor-tabs button{padding:10px 8px}}
 
 .app-edit-mode .app-selected-part{outline:3px solid var(--secondary)!important;outline-offset:3px}

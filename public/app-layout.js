@@ -3,7 +3,7 @@
  const model=window.appLayoutModel,page=window.appBootstrap?.layoutPage;if(!model?.pages.includes(page))return;
  const clone=value=>JSON.parse(JSON.stringify(value)),initial=window.appBootstrap?.layout||{revision:0,groups:{}};
  let saved=clone(initial),draft=clone(initial.groups),editing=false,csrf='',busy=false,groups=new Map(),scheduled=false,drag=null,press=null,hovered=null,suppressUntil=0,saveError=null,toastTimer;
- const defaults=new Map(),undo=[],decorated=new Map(),animations=new Map(),staticNodes=new WeakSet(document.querySelectorAll('*')),uiSelector='[data-layout-ui],.unified-app-editor,.app-edit-indicator,#admin-edit-controls,.location-picker-menu';
+ const defaults=new Map(),undo=[],decorated=new Map(),animations=new Map(),staticNodes=new WeakSet(document.querySelectorAll('*')),uiSelector='hr,canvas,video,audio,iframe,[data-copy-editor],[data-app-no-edit],[inert],:disabled,[readonly],[aria-disabled="true"],[contenteditable]:not([contenteditable="false"]),[data-layout-ui],.unified-app-editor,.app-edit-indicator,#admin-edit-controls,.location-picker-menu';
  const attrs=element=>Object.fromEntries([...element.attributes].map(attribute=>[attribute.name,attribute.value]));
  function identity(element){
   let id=model.key(attrs(element));if(id)return id;
@@ -164,7 +164,7 @@
  }
  function movePointer(x,y){if(drag){drag.x=x;drag.y=y;return;}if(press&&Math.hypot(x-press.startX,y-press.startY)>9){clearPress();suppressUntil=performance.now()+500;}}
  document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'||event.button!==0||!event.isPrimary)return;startPress(event.target,event.clientX,event.clientY,{pointerId:event.pointerId,touch:false});},true);
- document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;if(drag||press)movePointer(event.clientX,event.clientY);else if(editing&&!event.target.closest(uiSelector))setHover(info(event.target));},true);
+ document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;if(drag||press)movePointer(event.clientX,event.clientY);else if(editing&&!event.target.closest('.app-layout-grip'))setHover(event.target.closest(uiSelector)?null:info(event.target));},true);
  document.addEventListener('pointerup',event=>{if(event.pointerType==='touch')return;if(drag){event.preventDefault();endDrag();}else clearPress();},true);
  document.addEventListener('pointercancel',event=>{if(event.pointerType!=='touch'){if(drag)endDrag(true);else clearPress();}},true);
  const touchStart=event=>{if(event.touches.length!==1){if(drag)endDrag(true);clearPress();return;}const touch=event.touches[0];if(startPress(event.target,touch.clientX,touch.clientY,{touch:true})&&drag)event.preventDefault();};

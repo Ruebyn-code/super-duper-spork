@@ -12002,5 +12002,35 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "Font & colour",
+    "locations": [
+      "App edit"
+    ]
+  },
+  {
+    "text": "Add quick link",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Search quick links",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No matching quick links.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "All available quick links have been added.",
+    "locations": [
+      "Home"
+    ]
   }
 ]
