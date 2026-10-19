@@ -10257,5 +10257,131 @@
     "locations": [
       "Ops management"
     ]
+  },
+  {
+    "text": "Checklists for {date}",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Run on-demand",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Run on-demand checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist date navigation",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Previous day",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Today",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Sort by",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Sort checklists",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist status",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Due time",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Priority",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Filter checklists",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist filters",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Filter by checklist status",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Filter by checklist priority",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "All priorities",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Normal",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Reset filters",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Choose an on-demand checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "No on-demand checklists are available for this date and location.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "No checklists match these filters.",
+    "locations": [
+      "Ops management"
+    ]
   }
 ]
