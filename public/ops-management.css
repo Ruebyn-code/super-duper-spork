@@ -203,3 +203,32 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
  .ops-builder-open .ops-builder-preview{position:fixed;top:8px;right:var(--preview-right,16px);width:340px;height:var(--preview-panel-height,calc(100dvh - 18px));display:flex;flex-direction:column;z-index:2}.ops-builder-open .ops-preview-toolbar{flex:none}.ops-builder-open #ops-preview-content{display:flex;flex-direction:column;flex:1;min-height:0;box-sizing:border-box}.ops-builder-open .ops-preview-device-name,.ops-builder-open .ops-preview-note,.ops-builder-open .ops-preview-device{flex:none}.ops-builder-open .ops-preview-device{margin:auto}
  .ops-builder-open #ops-builder-layout[data-preview-collapsed=true] .ops-builder-preview{width:42px;height:auto}
 }
+
+/* The full active checklist card opens its run; progress stays compact and readable. */
+.ops-task-grid{gap:8px}
+.ops-task-card{position:relative;padding:12px;gap:6px;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.ops-task-card h3{padding-right:20px;font-size:.94rem}
+.ops-task-card p{font-size:.74rem}
+.ops-task-card .ops-badges{gap:4px;padding-right:14px}
+.ops-task-card .ops-badge{padding:3px 6px;font-size:.64rem}
+.ops-task-progress{margin-top:auto;padding-top:3px}
+.ops-task-progress-text{display:flex;justify-content:space-between;gap:8px;font:500 .68rem Arial,sans-serif;color:var(--theme-muted,#64748b)}
+.ops-task-progress progress{display:block;width:100%;height:5px;margin-top:5px;border:0;border-radius:99px;overflow:hidden;appearance:none;background:var(--theme-line,#e2e8f0);color:var(--primary,#008cff);accent-color:var(--primary,#008cff)}
+.ops-task-progress progress::-webkit-progress-bar{background:var(--theme-line,#e2e8f0);border-radius:99px}
+.ops-task-progress progress::-webkit-progress-value{background:var(--primary,#008cff);border-radius:99px}
+.ops-task-progress progress::-moz-progress-bar{background:var(--primary,#008cff);border-radius:99px}
+.ops-card .ops-task-open{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;align-self:auto;border:0;border-radius:inherit;background:transparent;box-shadow:none;color:var(--theme-muted,#64748b);cursor:pointer}
+.ops-card .ops-task-open:hover,.ops-card .ops-task-open:disabled{background:transparent;box-shadow:none}
+.ops-task-open::after{content:'›';position:absolute;right:12px;top:38px;font:400 22px/1 Arial,sans-serif}
+.ops-task-open:disabled{cursor:default}
+.app-edit-mode .ops-task-open{pointer-events:none}
+.ops-task-open:disabled::after{display:none}
+.ops-task-open:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:3px}
+.ops-task-card:has(.ops-task-open:enabled:hover){border-color:color-mix(in srgb,var(--primary,#008cff) 45%,var(--theme-line,#e2e8f0));box-shadow:0 3px 12px #0000000a}
+.ops-task-card.ops-task-completed{background:color-mix(in srgb,#22a65c 13%,var(--theme-surface,#fff));border-color:color-mix(in srgb,#22a65c 50%,var(--theme-line,#e2e8f0))}
+.ops-task-completed .ops-badge.completed{background:color-mix(in srgb,#22a65c 20%,var(--theme-surface,#fff));color:var(--theme-success-text,#147d43)}
+.ops-task-completed .ops-task-progress-text{color:var(--theme-success-text,#147d43)}
+.ops-task-completed progress{color:#22a65c;accent-color:#22a65c}
+.ops-task-completed progress::-webkit-progress-value{background:#22a65c}
+.ops-task-completed progress::-moz-progress-bar{background:#22a65c}
+@media(prefers-reduced-motion:reduce){.ops-task-card{transition:none}}

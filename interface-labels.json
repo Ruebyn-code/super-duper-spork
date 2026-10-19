@@ -10245,5 +10245,17 @@
     "locations": [
       "Ops management"
     ]
+  },
+  {
+    "text": "{answered} / {total} steps",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist completed",
+    "locations": [
+      "Ops management"
+    ]
   }
 ]
