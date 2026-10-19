@@ -2,7 +2,7 @@
  if(parent!==window&&parent.appShell){parent.appShell.navigate(location.href,{history:'replace'});return;}
  const page=document.querySelector('.app-shell>.app-page');
  if(!page||window.appShell)return;
- const routes=new Set(['/home','/','/cart','/stock-count','/stock-transfers','/sales','/reporting','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup','/email-settings','/rostering','/communications','/knowledge-library']);
+ const routes=new Set(['/home','/','/cart','/stock-count','/stock-transfers','/sales','/reporting','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup','/email-settings','/rostering','/communications','/knowledge-library','/ops-management']);
  const root=document.documentElement,area=document.createElement('div'),placeholder=document.createElement('div');
  area.className='shell-page-area';area.dataset.layoutUi='';placeholder.className='shell-page-placeholder';placeholder.inert=true;
  for(const child of [...page.childNodes])if(!child.classList?.contains('mobile-brand-header'))placeholder.append(child);

@@ -582,7 +582,8 @@
   {
     "text": "Remove photo",
     "locations": [
-      "admin"
+      "admin",
+      "Ops management"
     ]
   },
   {
@@ -2235,7 +2236,8 @@
   {
     "text": "All locations",
     "locations": [
-      "Locations and shared ordering"
+      "Locations and shared ordering",
+      "Ops management"
     ]
   },
   {
@@ -5087,7 +5089,8 @@
   {
     "text": "Completed",
     "locations": [
-      "sales"
+      "sales",
+      "Ops management"
     ]
   },
   {
@@ -6421,7 +6424,8 @@
   {
     "text": "History",
     "locations": [
-      "rostering"
+      "rostering",
+      "Ops management"
     ]
   },
   {
@@ -9501,6 +9505,408 @@
     "text": "Compare sales, costs and stock usage.",
     "locations": [
       "home"
+    ]
+  },
+  {
+    "text": "Ops management",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklists",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Templates",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "+ New checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "New checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Edit checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist name",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Instructions",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Assigned locations",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Choose the locations that use this checklist.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Schedule",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Manual",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "One-off",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Daily",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Weekly",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Start date",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "End date (optional)",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Weekly due day",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Active checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist steps",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "+ Add step",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Save checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Back to checklists",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Save progress",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Complete checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Reload saved progress",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Search checklists",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist location",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist templates",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist history",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Step type",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Step title",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Required step",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Instructions (optional)",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Choices — one per line",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Minimum (optional)",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Maximum (optional)",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Unit (optional)",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Move step up",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Move step down",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Remove step",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Tick box",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Short answer",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Long answer",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Number",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Yes / No",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Single choice",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Multiple choice",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Photo",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Time",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Signature",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Instruction",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "In progress",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "To do",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Overdue",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Start checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Resume checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "View checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Active",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Paused",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Access to every assigned location is needed to edit this checklist.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Create your first checklist and assign its locations.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "No saved checklists match these filters.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "No checklists are due for these filters.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Typing your full name records your signature with your signed-in account and completion time.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Confirmed",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "PNG, JPG, WebP or GIF · up to 10 MB",
+    "locations": [
+      "Ops management"
     ]
   }
 ]
