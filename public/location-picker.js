@@ -40,7 +40,7 @@
    if(!open)return;if(!select.isConnected||!button.getClientRects().length||select.closest('dialog:not([open]),[hidden]:not(select)')){close(false);return;}
    const rect=button.getBoundingClientRect(),viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight;
    anchor={x:scrollX,y:scrollY,left:rect.left,top:rect.top};
-   const menuWidth=Math.min(Math.max(rect.width,260),width-24),below=top+height-rect.bottom-12,above=rect.top-top-12,down=below>=Math.min(320,above),room=Math.max(70,Math.min(360,down?below:above));
+   const menuWidth=Math.min(Number.isFinite(settings.menuWidth)?Math.max(160,settings.menuWidth):Math.max(rect.width,260),width-24),below=top+height-rect.bottom-12,above=rect.top-top-12,down=below>=Math.min(320,above),room=Math.max(70,Math.min(360,down?below:above));
    menu.style.width=menuWidth+'px';menu.style.maxHeight=room+'px';menu.style.left=Math.max(left+12,Math.min(rect.left,left+width-menuWidth-12))+'px';menu.style.top=down?(rect.bottom+6)+'px':'auto';menu.style.bottom=down?'auto':(innerHeight-rect.top+6)+'px';
   }
   function activate(index){

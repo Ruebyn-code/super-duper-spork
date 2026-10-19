@@ -67,3 +67,55 @@ html.ops-checklist-open,html.ops-checklist-open body{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.ops-answer{transition:none}}
 
 .ops-run-dialog #ops-status:empty{display:none}
+
+/* Keep editing and completing steps dense, with touch-sized controls on phones. */
+.ops-add-step-row{display:flex;justify-content:center;margin:10px 0 8px}
+#ops-add-step{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:6px 16px;border:1px dashed color-mix(in srgb,var(--primary) 45%,var(--theme-line,#dce5ed));background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));border-radius:99px;font-size:.8rem}
+.ops-autosave{display:inline-flex;align-items:center;gap:6px;max-width:100%;font:500 .72rem Arial,sans-serif;color:var(--theme-muted,#64748b);overflow-wrap:anywhere}
+.ops-autosave::before{content:"";width:6px;height:6px;flex:none;border-radius:50%;background:currentColor;opacity:.6}
+.ops-autosave[data-state=saved]{color:var(--theme-success-text,#147d43)}
+.ops-autosave[data-state=error]{color:var(--theme-warning-text,#986000)}
+.ops-autosave[data-state=saving]{color:var(--theme-primary-text,var(--primary))}
+.ops-autosave>span{font-weight:400}
+.ops-run-dialog #ops-run-actions .ops-autosave{margin-right:auto;flex:1}
+.ops-run-dialog #ops-run-actions #ops-reload{order:0;margin-right:0}
+.ops-step-details{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 9px;padding:7px 1px 5px;margin-top:1px}
+.ops-step-details .ops-step-help{grid-column:span 2}
+.ops-step-details label{gap:3px;font-size:.68rem}
+.ops-step-details input:not([type=checkbox]):not([type=color]):not([type=file]),.ops-step-details textarea,.ops-step-details .location-select-trigger{height:30px;min-height:30px;padding:4px 7px;font-size:.78rem;line-height:20px}
+.ops-step-details textarea{resize:vertical}
+.ops-step-details .ops-toggle{gap:6px}
+.ops-step-details .ops-number-preview{padding:4px 8px;font-size:.7rem}
+.ops-step-details .ops-number-preview strong{font-size:.8rem}
+.ops-type-icon{width:18px;height:18px;flex:none;color:var(--theme-primary-text,var(--primary));stroke:currentColor}
+.ops-type-icon .icon-detail{stroke:var(--theme-secondary-text,var(--secondary))}
+.ops-step-type-field .location-picker-value{flex:1;text-align:left}
+.ops-type-menu{padding:6px;border-radius:13px}
+.ops-type-menu .location-picker-option{display:flex;align-items:center;gap:9px;min-height:34px;padding:6px 8px;font-size:.8rem;border-radius:8px}
+.ops-type-menu .location-picker-option>span{flex:1;min-width:0;text-align:left}
+.ops-type-menu .location-picker-check{margin-left:auto;width:15px;height:15px}
+.ops-type-menu .select-search{margin:0 0 4px}
+.ops-answer{padding:8px 10px;margin-bottom:6px;border-radius:9px}
+.ops-answer-heading{gap:7px;margin-bottom:4px}
+.ops-answer-heading h3{font-size:.88rem;line-height:1.35}
+.ops-answer .ops-help{font-size:.73rem;line-height:1.35;margin:0 0 5px}
+.ops-answer input:not([type=checkbox]):not([type=radio]):not([type=file]),.ops-answer .location-select-trigger{min-height:32px;height:32px;margin:0;padding:5px 8px;font-size:.85rem;line-height:20px}
+.ops-answer textarea{min-height:54px;margin:0;padding:6px 8px;font-size:.85rem;line-height:1.4}
+.ops-answer .ops-option{padding:4px 8px;min-height:28px;font-size:.8rem;border-radius:7px}
+.ops-answer .ops-options{gap:5px}
+.ops-step-control>label{gap:3px;font-size:.7rem}
+.ops-step-control>input[type=file]{margin:4px 0;font-size:.75rem}
+.ops-submissions{gap:6px}.ops-submission{padding:6px;gap:4px;border-radius:8px}
+.ops-signature-tools{margin:5px 0}.ops-signature-tools button{min-height:28px;padding:4px 8px;font-size:.75rem}
+.ops-answer.section{padding:7px 10px;margin-top:12px}.ops-answer.section h3{font-size:.85rem}
+.ops-run-scroll{padding-top:9px}
+@media(max-width:800px){.ops-step-details{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-step-details .ops-step-help{grid-column:1/-1}}
+@media(max-width:580px){.ops-step-details input:not([type=checkbox]):not([type=color]):not([type=file]),.ops-step-details textarea,.ops-step-details .location-select-trigger{height:36px;min-height:36px;font-size:16px}.ops-type-menu .location-picker-option{min-height:40px}.ops-answer input:not([type=checkbox]):not([type=radio]):not([type=file]),.ops-answer .location-select-trigger{height:40px;min-height:40px;font-size:16px}.ops-answer textarea{font-size:16px}.ops-answer .ops-option{min-height:32px}.ops-run-dialog #ops-run-actions .ops-autosave{flex-basis:100%;font-size:.68rem}.ops-run-dialog #ops-run-actions{gap:7px}}
+
+.ops-step-top .ops-step-title-input:not([type=checkbox]):not([type=color]):not([type=file]){height:32px;min-height:32px;max-height:32px}
+@media(max-width:580px){.ops-step-top .ops-step-title-input:not([type=checkbox]):not([type=color]):not([type=file]){height:36px;min-height:36px;max-height:36px}}
+
+/* Save feedback must not move a step or its open selector while typing. */
+.ops-panel-heading:has(#ops-template-autosave){flex-wrap:nowrap;min-height:25px}
+#ops-template-autosave{min-width:0;max-width:65%;white-space:nowrap;overflow:hidden;flex-wrap:nowrap}
+#ops-template-autosave>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
