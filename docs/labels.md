@@ -10,9 +10,15 @@ Choose **Add label template**, or **Template library → All templates** to incl
 
 ## Design each template
 
-The **Label designer** has a live 50 × 25 mm artwork preview. Select a text field on the artwork or in Selected field, then drag it into position. Arrow keys move a focused field by 1% (Shift by 5%); Delete removes it. Position and size can also be entered as percentages. Add text fields for your own wording or choose automatic item name, location, prep/use-by time, staff name or note sources. Text before value changes prefixes such as “USE BY”.
+The **Label designer** uses a large dark stage with the actual 50 × 25 mm paper inside it. Press **Add a field**, then choose its type from the icon menu. Drag a field to position it; drag any edge or corner to resize it. Arrow keys move a focused field by 1% (Shift by 5%), Enter opens formatting and Delete removes it. An empty editor can be built up again, but a saved template needs at least one field.
 
-Choose Arial, Verdana, Georgia or Courier New, point size, left/centre/right alignment, bold, italic or underline, visibility, date format and Fit text to box. Text wraps inside its box; turn Fit off to retain the chosen size and clip any overflow. The label remains black on white for the thermal printer. Save label template applies the design to future batches. Existing batches retain their original design, category, names and times. Reset label design restores the default field layout in the editor draft. Existing templates retain their original artwork until you change the design.
+Click a field to open **Edit field**. Change the source, text or default value, size slider, fit/wrapping, alignment, letter case, black/white inversion, bold, italic, underline and font. Date sources have date/time formats. More options contains the text prefix, precise point size and percentage positions, visibility and required dynamic values. **Done** keeps changes in the template draft; Close/Escape cancels that field’s changes. **Save label template** commits the whole design. The pink editing tint, borders and resize handles are not printed. Reset label design restores the default field layout in the unsaved draft.
+
+Field types include Static Text, Name, User, Location, Current Date & Time, Preparation Date & Time, Ready Date & Time, Discard Date & Time, Shelf Life, Dynamic Text (On Label), Dynamic Text (On Print), and the template note. Static text stays the same for future batches. Name, User and Location use saved template/current server context. Current Date & Time captures the server’s batch-creation time; reprints keep it. Discard time uses the approved shelf life. Shelf Life displays its configured number and unit.
+
+Ready Date & Time uses an explicit **Ready after** amount and period saved on the template. Minutes/hours use elapsed time; days keep the same Melbourne wall time across daylight saving. Zero is allowed if explicitly entered. Ready time must not fall after discard time; Opstack does not infer a ready delay.
+
+Dynamic Text (On Label) is changed by clicking its highlighted area on the print preview. Dynamic Text (On Print) appears as an entry in the print form. Both may have a field name, default value and a required-entry option. Values apply to the current batch and do not change the shared template. Existing batches retain their original design, category, current/prep/ready/discard times and entered values for reprints.
 
 ## Prepare and print
 

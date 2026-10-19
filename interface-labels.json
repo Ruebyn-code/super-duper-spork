@@ -11025,5 +11025,293 @@
     "locations": [
       "Labels"
     ]
+  },
+  {
+    "text": "Add a field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Editing template fields",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Edit field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Field Type",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "More options",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Static Text",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Name",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Current Date & Time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Preparation Date & Time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Ready Date & Time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Discard Date & Time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shelf Life",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Dynamic Text (On Label)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Dynamic Text (On Print)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Delete field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Close field editor",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Ready after",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Period",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Minutes",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Text size",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Original case",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uppercase",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "White text on black",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Single line",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Wrap text",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Align left",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Align centre",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Align right",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Require a value",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Field name",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Edit label text",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Click highlighted text on the label to edit it for this batch.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Complete the required dynamic text before printing.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Drag a field to move it to its correct place on the label.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Resize a field by dragging any of its edges or corners.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Click a field to bring up its field type and formatting options.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "This text will be the same on all labels using this template.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uses the name saved on this label template.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uses the signed-in user who creates the label batch.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uses the selected location.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Records the current date and time when the batch is created.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uses the preparation date and time entered before printing.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Calculated from the preparation time and this template’s ready-after period.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Calculated from the preparation time and the approved shelf life.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Shows the shelf life saved on this template.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Staff can click this text on the label preview to change it for a batch.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Staff enter this text in the print form before creating a batch.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Uses the note saved on this label template.",
+    "locations": [
+      "Labels"
+    ]
   }
 ]
