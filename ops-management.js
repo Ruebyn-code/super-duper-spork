@@ -1,6 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions'),files=require('./communication-media');
-const stepModel=require('./public/ops-step-model'),plannerModel=require('./public/ops-planner-model');
+const stepModel=require('./public/ops-step-model'),plannerModel=require('./public/ops-planner-model'),stepTiming=require('./public/ops-step-timing');
 const queues=new Map(),types=[...Object.keys(stepModel.kinds),'yesno','choice','multiple','photo','date','time'];
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/i.test(value);
@@ -33,6 +33,7 @@ function normalize(input){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
    if(!['users','locations','custom'].includes(result.source)||typeof result.multiple!=='boolean')fail('Choose a valid selection source.');
   }
+  if(step.type==='timed-section'){if(!stepTiming.clock(step.startTime)||!stepTiming.clock(step.endTime)||step.startTime===step.endTime)fail('Choose different valid start and end times for '+step.title+'.');result.startTime=step.startTime;result.endTime=step.endTime;}
   if(step.type==='number'){
    if(step.format!==undefined){
     if(!Object.hasOwn(stepModel.formats,step.format))fail('Choose a valid number format.');
@@ -129,7 +130,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   }
   return{...structuredClone(run),selectionOptions:await selectionOptions(actor,stores,run),resources};
  }
- const summary=run=>{const{answers,snapshot,requestId,...result}=run;return{...result,title:snapshot.title,stepCount:snapshot.steps.filter(stepModel.responseStep).length,answered:snapshot.steps.filter(step=>stepModel.responseStep(step)&&stepModel.answered(step,answers[step.id])).length};};
+ const summary=run=>{const{answers,snapshot,stepActivity,requestId,...result}=run;return{...result,title:snapshot.title,stepCount:snapshot.steps.filter(stepModel.responseStep).length,answered:snapshot.steps.filter(step=>stepModel.responseStep(step)&&stepModel.answered(step,answers[step.id])).length};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=params.location||'all';if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
@@ -181,7 +182,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const existing=slot.key!==null&&state.runs.find(item=>runPlanner(item)===plan.id&&item.locationId===input.locationId&&item.periodKey===slot.key);if(existing)return presentRun(state,actor,stores,existing);
   const availability=plannerModel.availability(plan,slot,now());if(!availability.allowed)fail(availability.reason);
   const plannerSnapshot={id:plan.id,title:plan.title,schedule:structuredClone(plan.schedule),dueTime:plan.dueTime,reminderMinutes:plan.reminderMinutes,priority:plan.priority,instructions:plan.instructions,type:plannerModel.type(plan),startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,roleIds:plan.roleIds||null,dueAfterDays:plan.dueAfterDays??null};
-  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,dueDate:slot.dueDate,dueAt:plannerModel.deadline(slot.dueDate,plan.dueTime),snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
+  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:plan.schedule.kind==='daily'?slot.startDate:day,dueDate:slot.dueDate,dueAt:plannerModel.deadline(slot.dueDate,plan.dueTime),snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
  });}
  async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){
@@ -226,6 +227,17 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   }
   return{values:result,labels};
  }
+ function recordStepActivity(run,values,actor,at){
+  const activity={...run.stepActivity};
+  for(const step of run.snapshot.steps){
+   if(!stepModel.responseStep(step))continue;
+   const before=run.answers[step.id],after=values[step.id],wasDone=stepModel.answered(step,before),done=stepModel.answered(step,after);
+   if(JSON.stringify(before)===JSON.stringify(after)||!wasDone&&!done)continue;
+   const previous=activity[step.id]||{};
+   activity[step.id]={...previous,firstRecordedAt:previous.firstRecordedAt||(done?at:null),completedAt:done?at:null,completedById:done?actor.id:null,completedBy:done?actor.username:null,updatedAt:at,updatedById:actor.id,updatedBy:actor.username,lastCompletedAt:done?at:previous.completedAt||previous.lastCompletedAt||null,clearedAt:done?null:at};
+  }
+  return activity;
+ }
  async function saveRun(actor,id,input){
   need(actor,'ops.complete');const stores=await access(actor);
   return mutate(async state=>{
@@ -233,7 +245,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(run.status==='completed')fail('Completed checklists cannot be changed.',409);
    if(input?.revision!==run.revision)fail('Someone updated this checklist. Reload before saving.',409);
    if(typeof input.complete!=='boolean')fail('Choose a draft or completed checklist.');
-   const saved=await answers(state,run,input.answers,input.complete,actor,stores);run.answers=saved.values;run.selectionLabels=saved.labels;
+   const saved=await answers(state,run,input.answers,input.complete,actor,stores);run.stepActivity=recordStepActivity(run,saved.values,actor,stamp());run.answers=saved.values;run.selectionLabels=saved.labels;
    run.revision++;run.updatedAt=stamp();run.updatedBy=actor.username;
    if(input.complete){run.status='completed';run.completedAt=stamp();run.completedBy=actor.username;run.completedById=actor.id;}
    return presentRun(state,actor,stores,run);

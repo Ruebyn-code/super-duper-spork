@@ -10383,5 +10383,101 @@
     "locations": [
       "Ops management"
     ]
+  },
+  {
+    "text": "Timed section",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Window starts",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Window ends",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checks the steps below until the next section. Uses the checklist date and Melbourne time; an earlier end time means the next day.",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Not completed",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Time unavailable",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Before window",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "After window",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Within window",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Outside window",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Within window: {count} / {total}",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist date: {date} · Melbourne time",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Saved",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Cleared",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Completion time unavailable",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Step completion times are checked against this window.",
+    "locations": [
+      "Ops management"
+    ]
   }
 ]

@@ -1,8 +1,9 @@
 (function(root){
- const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section',instruction:'Instruction'};
+ const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction'};
  const formats={integer:'Whole number',decimal:'Decimal',currency:'Currency',percentage:'Percentage',temperature:'Temperature',weight:'Weight',volume:'Volume',length:'Length',duration:'Duration',custom:'Custom unit'};
  const units={temperature:['°C','°F'],weight:['kg','g','mg','lb','oz'],volume:['L','mL','gal'],length:['m','cm','mm','km','ft','in'],duration:['minutes','hours','seconds']};
- const responseStep=step=>!['instruction','section'].includes(step.type);
+ const isSection=step=>['section','timed-section'].includes(step.type);
+ const responseStep=step=>step.type!=='instruction'&&!isSection(step);
  function editable(value){const step={...value};if(step.type==='photo'){step.type='media';step.mediaKind='photo';}if(['choice','multiple','yesno'].includes(step.type)){step.multiple=step.type==='multiple';step.options=step.type==='yesno'?['Yes','No']:step.options;step.type='selection';step.source='custom';}if(['date','time'].includes(step.type)){step.dateMode=step.type;step.type='datetime';}if(step.type==='signature')step.signatureMode||='typed';return step;}
  function decimals(step){return step.format==='integer'?0:step.decimals??(step.format==='currency'?2:step.format?2:null);}
  function validNumber(step,value){const places=decimals(step);return typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=1e12&&(step.min==null||value>=step.min)&&(step.max==null||value<=step.max)&&(places===null||Math.abs(value*10**places-Math.round(value*10**places))<=Math.max(1e-7,Math.abs(value*10**places)*Number.EPSILON*4));}
@@ -27,7 +28,7 @@
   return false;
  }
  // Moving a section carries its following steps up to the next section.
- function movingIds(steps,id){const index=steps.findIndex(step=>step.id===id);if(index<0)return[];let end=index+1;if(steps[index].type==='section')while(end<steps.length&&steps[end].type!=='section')end++;return steps.slice(index,end).map(step=>step.id);}
+ function movingIds(steps,id){const index=steps.findIndex(step=>step.id===id);if(index<0)return[];let end=index+1;if(isSection(steps[index]))while(end<steps.length&&!isSection(steps[end]))end++;return steps.slice(index,end).map(step=>step.id);}
  function move(steps,id,beforeId){const ids=new Set(movingIds(steps,id));if(!ids.size||ids.has(beforeId))return steps;const moving=steps.filter(step=>ids.has(step.id)),remaining=steps.filter(step=>!ids.has(step.id)),at=beforeId===null?remaining.length:remaining.findIndex(step=>step.id===beforeId);if(at<0)return steps;return[...remaining.slice(0,at),...moving,...remaining.slice(at)];}
- const api={kinds,formats,units,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
+ const api={kinds,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
 })(globalThis);

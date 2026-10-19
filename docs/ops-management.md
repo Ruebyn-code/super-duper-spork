@@ -59,6 +59,14 @@ Signature steps can require a drawn signature, a typed name, or either method. D
 
 History retains drafts and completed records with location, author, timestamps, answers and the original template version. Completed records are read-only. Edits to a template affect new records, not existing drafts or completed checklists. Concurrent saves use revisions; reload saved progress before retrying a conflicting change.
 
+## Step timestamps and timed sections
+
+Each valid changed response receives a server timestamp and the signed-in person's name when it saves. The step shows its **Saved** date and time in Australia/Melbourne, including seconds. Unchanged autosaves and completing the checklist keep that timestamp. Editing the answer records a new completion time; clearing or unchecking it removes the current completion time and records when it was cleared. The server retains the first recorded time and previous completion time. Existing answers with no step-level timestamp show **Completion time unavailable**; the system does not invent historical times. User-entered Date and time answers remain separate from these timestamps.
+
+Choose **Timed section** in a step's type menu and set **Window starts** and **Window ends**, for example 9:15 am–10:25 am. It checks every response below it until the next Section or Timed section. Instructions are excluded. Moving either section type carries the steps beneath it. The section shows the number completed within the window and a summary. Each response shows **Before window**, **Within window**, **After window**, **Not completed** or **Time unavailable**. A green response still means a valid answer; its separate timing indicator shows whether it met the window. Outside-window answers can still be saved and the checklist completed.
+
+Windows use the record's fixed checklist date in Melbourne, rather than today's date when reviewing. A daily overnight occurrence retains its original day's date; other records use the selected date when first started. An end time earlier than the start continues into the next day. Equal start/end times are invalid. The exact start and end instants are included. Melbourne skipped/repeated clock times follow the same daylight-saving behavior as planners. New windows and step order apply to new records; existing snapshots and completed records are preserved. The live builder preview displays the window without creating records or timestamps.
+
 ## Number and selection options
 
 Number entry supports whole numbers, decimals, currency, percentage, temperature, weight, volume, length, duration and custom units. Choose 0–6 decimal places, currency or measurement units, and optional minimum/maximum. Values format when leaving the field and remain numeric in storage. Percentage values are entered as percentage points: enter `28` for `28%`. Durations use the selected seconds/minutes/hours unit. Existing plain number steps retain their original precision until edited.
