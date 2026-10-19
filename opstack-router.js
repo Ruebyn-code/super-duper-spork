@@ -1,6 +1,7 @@
 const http=require('node:http'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const platformStore=require('./opstack-store'),accountEmails=require('./account-email-settings'),invitations=require('./account-invitations');
 const publicFiles=require('./public-files'),newNetworkDefaults=require('./new-network-defaults');
+const monthlyReports=require('./opstack-monthly-reports');
 const {supportIdentity,parsedBody}=require('./platform-identity');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const cookies=req=>Object.fromEntries((req.headers.cookie||'').split(';').map(part=>{const at=part.indexOf('=');return[part.slice(0,at).trim(),part.slice(at+1)];}).filter(([name])=>name));
@@ -13,7 +14,7 @@ function createPlatformServer(root,options,createNetworkServer){
  function actor(entry,network){return{id:'opstack-'+entry.id,username:entry.account.username+' (Opstack)',role:'admin',roleName:'Opstack support',roleLevel:100,csrf:entry.csrf,token:entry.token,version:entry.version,locationId:entry.locations[network.id],companyLocations:entry.companyLocations[network.id]||{},[supportIdentity]:{platformRole:entry.account.role,selectLocation:async(id,check)=>{const location=await check(id);entry.locations[network.id]=id;(entry.companyLocations[network.id]||={})[location.companyId]=id;return id;}}};}
  function service(network){if(!services.has(network.id)){const server=createNetworkServer(store.folder(network),{...options,platformDataDir:root,platformStore:store,network});services.set(network.id,server);}return services.get(network.id);}
  const primary=service({id:'default',slug:'default',name:'Existing network',active:true});
- async function body(req){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>16000)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
+ async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
  function trusted(req){if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==origin(req)))fail('Invalid request origin or content type.',403);}
  function rate(req,kind,max){const key=kind+':'+req.socket.remoteAddress,now=Date.now();let record=attempts.get(key);if(!record||record.until<=now){record={count:0,until:now+15*60000};attempts.set(key,record);}if(record.count>=max)fail('Too many attempts. Try again in 15 minutes.',429);return{failure:()=>record.count++,success:()=>attempts.delete(key)};}
  async function discoverNetwork(input){
@@ -60,6 +61,10 @@ function createPlatformServer(root,options,createNetworkServer){
      if(req.method==='POST'&&networkRoute[2]==='open'){if(!network.active)fail('Activate this network before opening it.',409);const input=await body(req);addCookie(res,cookie(req,'opstack_support',network.id));await store.audit(account,'network.opened',{networkId:network.id});return json(200,{url:input.appearance&&owner?'/admin/settings?platform=1#colours':'/home'});}
     }
     if(!owner)fail('Opstack owner access required.',403);
+    if(route==='/api/opstack/monthly-report'&&req.method==='GET')return json(200,await monthlyReports.report(root,(await store.summary()).networks,url.searchParams.get('month')||undefined));
+    const feeRoute=route.match(/^\/api\/opstack\/monthly-report\/fees\/([a-f0-9-]+|default)\/([a-zA-Z0-9-]{1,100})$/);
+    if(feeRoute&&req.method==='PUT'){const input=await body(req);await monthlyReports.saveFee(root,(await store.summary()).networks,feeRoute[1],feeRoute[2],input);await store.audit(account,'report.fee.updated',{networkId:feeRoute[1],locationId:feeRoute[2],month:input.month});return json(200,{saved:true});}
+    if(route==='/api/opstack/monthly-report/expenses'&&req.method==='PUT'){const input=await body(req,128000),saved=await monthlyReports.saveExpenses(root,input);await store.audit(account,'report.expenses.updated',{month:input.month});return json(200,saved);}
     if(route==='/api/opstack/networks'&&req.method==='POST'){
      invitations.sender(await accountEmails.read(root));const issued=await store.createNetwork(account,await body(req)),network=issued.network,delivery=await deliver(req,issued,network.name,account.username,network.slug);await service(network).networkServices.auth.invitationDelivered(issued.account.id,issued.invitationId,delivery);return json(201,{network,delivery});
     }
