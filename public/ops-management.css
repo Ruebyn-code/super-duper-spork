@@ -205,11 +205,11 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 }
 
 /* The full active checklist card opens its run; progress stays compact and readable. */
-.ops-task-grid{gap:8px}
-.ops-task-card{position:relative;padding:12px;gap:6px;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
-.ops-task-card h3{padding-right:20px;font-size:.94rem}
+.ops-task-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,130px),1fr));gap:6px}
+.ops-task-card{position:relative;padding:10px;gap:4px;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.ops-task-card h3{padding-right:12px;font-size:.85rem;line-height:1.3;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .ops-task-card p{font-size:.74rem}
-.ops-task-card .ops-badges{gap:4px;padding-right:14px}
+.ops-task-card .ops-badges{gap:4px}
 .ops-task-card .ops-badge{padding:3px 6px;font-size:.64rem}
 .ops-task-progress{margin-top:auto;padding-top:3px}
 .ops-task-progress-text{display:flex;justify-content:space-between;gap:8px;font:500 .68rem Arial,sans-serif;color:var(--theme-muted,#64748b)}
@@ -219,7 +219,7 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-task-progress progress::-moz-progress-bar{background:var(--primary,#008cff);border-radius:99px}
 .ops-card .ops-task-open{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;align-self:auto;border:0;border-radius:inherit;background:transparent;box-shadow:none;color:var(--theme-muted,#64748b);cursor:pointer}
 .ops-card .ops-task-open:hover,.ops-card .ops-task-open:disabled{background:transparent;box-shadow:none}
-.ops-task-open::after{content:'›';position:absolute;right:12px;top:38px;font:400 22px/1 Arial,sans-serif}
+.ops-task-open::after{content:'›';position:absolute;right:7px;top:32px;font:400 20px/1 Arial,sans-serif}
 .ops-task-open:disabled{cursor:default}
 .app-edit-mode .ops-task-open{pointer-events:none}
 .ops-task-open:disabled::after{display:none}
@@ -232,3 +232,23 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-task-completed progress::-webkit-progress-value{background:#22a65c}
 .ops-task-completed progress::-moz-progress-bar{background:#22a65c}
 @media(prefers-reduced-motion:reduce){.ops-task-card{transition:none}}
+
+/* Keep the active view dense; checklist creation belongs in Checklist builder. */
+.ops-active-page .ops-page{padding:10px clamp(12px,2vw,24px) 16px}
+.ops-active-page .ops-heading{margin-bottom:8px}
+.ops-active-page .ops-heading>div{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.ops-active-page .ops-heading h1{font-size:1.1rem;line-height:1.3}
+.ops-active-page .ops-heading .eyebrow{margin:0;font-size:.65rem}
+.ops-active-page .ops-layout{gap:8px;min-height:0}
+.ops-active-page .ops-filters{gap:6px;margin-bottom:8px}
+.ops-active-page .ops-filters h2{width:auto;font-size:.85rem}
+.ops-active-page .ops-filters>label{flex:0 1 auto;font-size:.72rem;gap:5px}
+.ops-active-page .ops-filters .location-picker{min-width:120px;max-width:160px}
+.ops-active-page .ops-filters .location-select-trigger{min-height:32px;padding:6px 9px;font-size:.75rem}
+.ops-active-page .ops-filters .date-toggle,.ops-active-page .ops-filters .search-toggle{min-height:32px;min-width:32px;width:32px;height:32px;padding:6px}
+.embedded-page .ops-active-page .ops-layout>nav.page-sidebar{top:10px}
+@media(max-width:720px){
+ .ops-active-page .ops-page{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+ .ops-active-page .ops-filters h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .ops-active-page .ops-filters .location-picker{max-width:145px}
+}
