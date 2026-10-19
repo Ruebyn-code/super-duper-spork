@@ -144,3 +144,95 @@
  #labels-designer.label-designer-canvas-first {gap:5px}
  #labels-designer .label-design-help {max-height:70px;padding:5px 10px}
 }
+
+/* Compact print sheet: contain the whole paper, with actions outside the scroll area. */
+#labels-print-dialog {
+ width:min(780px,calc(100% - 24px));
+ max-height:calc(100dvh - 24px);
+ padding:14px;
+ overflow:hidden;
+ background:var(--theme-surface,#fff);
+}
+#labels-print-dialog[open] {display:flex;flex-direction:column;gap:10px}
+#labels-print-dialog>.labels-dialog-heading {flex:none;margin:0;min-height:30px}
+#labels-print-dialog .labels-dialog-heading h2 {font-size:.94rem}
+#labels-print-dialog .labels-print-layout {
+ grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+ gap:14px;
+ align-items:start;
+ min-height:0;
+ overflow:auto;
+ overscroll-behavior:contain;
+ scrollbar-width:thin;
+ padding:2px;
+}
+#labels-print-dialog .labels-card {min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent}
+#labels-print-dialog #labels-form>label {margin:0 0 9px;gap:4px;font-size:.72rem}
+#labels-print-dialog input {min-height:36px;margin:0;padding:7px 9px}
+#labels-print-dialog .location-picker {margin:0;min-width:0;max-width:100%}
+#labels-print-dialog .location-select-trigger {min-height:36px;margin:0;padding:7px 9px;font-size:.78rem}
+.labels-copy-field {display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}
+#labels-print-dialog .labels-copy-field>label {display:block;margin:0;font-size:.72rem}
+.labels-copy-stepper {display:flex;align-items:center;gap:5px;flex:none}
+#labels-print-dialog .labels-copy-stepper button {
+ display:grid;
+ place-items:center;
+ width:36px;
+ min-height:36px;
+ padding:0;
+ border:1px solid color-mix(in srgb,var(--secondary,#45efc3) 65%,var(--theme-line,#dce5ed));
+ border-radius:7px;
+ background:var(--secondary,#45efc3);
+ color:#182b3a;
+ font:600 21px Arial,sans-serif;
+}
+#labels-print-dialog .labels-copy-stepper button:hover {background:color-mix(in srgb,var(--secondary,#45efc3) 80%,var(--theme-surface,#fff))}
+#labels-print-dialog #labels-copies {appearance:textfield;width:54px;min-width:0;text-align:center;font-size:16px;padding:7px 4px}
+#labels-copies::-webkit-inner-spin-button,#labels-copies::-webkit-outer-spin-button {appearance:none;margin:0}
+#labels-print-dialog .labels-use-by {margin:0;padding:7px 9px;font-size:.7rem;flex-direction:row;align-items:center;gap:6px}
+#labels-print-dialog .labels-use-by strong {font-size:.75rem}
+.labels-print-info {display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:5px}
+#labels-print-dialog .small {font-size:.65rem;line-height:1.4;margin:0}
+#labels-print-dialog .labels-preview-card {position:sticky;top:0;order:0}
+#labels-print-dialog .labels-card-heading {margin:0 0 7px;gap:6px;flex-wrap:nowrap}
+#labels-print-dialog .labels-card-heading h2 {margin:0;font-size:.75rem}
+#labels-print-dialog .labels-size {font-size:.65rem;white-space:nowrap}
+#labels-print-dialog .labels-preview-surface {
+ container-type:size;
+ height:clamp(150px,30dvh,220px);
+ min-height:0;
+ min-width:0;
+ margin:0;
+ padding:10px;
+}
+#labels-print-dialog .labels-output-stage {
+ width:min(100cqw,calc(100cqh * var(--label-output-aspect,2)));
+ max-width:100%;
+ aspect-ratio:var(--label-output-aspect,2);
+ min-width:0;
+ margin:0;
+}
+#labels-print-dialog .labels-output-stage canvas {display:block;width:100%;max-width:100%;height:auto;max-height:none}
+#labels-print-dialog #labels-on-label-hint {margin-top:6px}
+#labels-dynamic-fields:has(textarea) {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#labels-dynamic-fields label {min-width:0;margin:0 0 8px;gap:3px;font-size:.7rem}
+#labels-dynamic-fields textarea {min-height:48px;padding:7px 9px}
+#labels-dynamic-required {grid-column:1/-1}
+.labels-print-footer {display:flex;flex-direction:column;gap:8px;flex:none;border-top:1px solid var(--theme-line,#dce5ed);padding-top:10px;min-height:0}
+#labels-print-dialog .labels-actions {margin:0;gap:7px}
+#labels-print-dialog .labels-actions>button {min-height:36px;margin:0;padding:8px 12px;font-size:.75rem}
+#labels-print-dialog .labels-guide {margin:0;padding:0;border:0;border-radius:0;max-height:110px;overflow:auto;font-size:.67rem}
+#labels-print-dialog .labels-guide p {margin:6px 0}
+#labels-print-status {margin:0;font-size:.72rem;max-height:50px;overflow:auto}
+#labels-print-status:empty {display:none}
+@media(max-width:580px) {
+ #labels-print-dialog {width:calc(100% - 16px);max-height:calc(100dvh - 16px);padding:10px}
+ #labels-print-dialog[open] {gap:8px}
+ #labels-print-dialog .labels-print-layout {grid-template-columns:minmax(0,1fr);gap:10px}
+ #labels-print-dialog .labels-preview-card {order:-1;position:static}
+ #labels-print-dialog .labels-preview-surface {height:clamp(115px,21dvh,160px);padding:8px}
+ #labels-print-dialog input {font-size:16px}
+ #labels-print-dialog .labels-use-by {flex-wrap:wrap}
+ #labels-print-dialog .labels-actions>button {flex:1;min-width:0;font-size:.7rem;padding:8px}
+ .labels-print-footer {padding-top:8px;gap:7px}
+}

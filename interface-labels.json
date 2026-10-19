@@ -10541,6 +10541,14 @@
     ]
   },
   {
+    "text": "Decrease number of labels",
+    "locations": ["Labels · aria-label"]
+  },
+  {
+    "text": "Increase number of labels",
+    "locations": ["Labels · aria-label"]
+  },
+  {
     "text": "Number of labels",
     "locations": [
       "Labels"
