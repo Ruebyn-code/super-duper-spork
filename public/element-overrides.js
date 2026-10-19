@@ -5,6 +5,7 @@ function elementIdentity(element){if(!element||element.closest('.unified-app-edi
  const kind=root.dataset.productId?'product':root.dataset.supplierId?'supplier':'account';const id=root.dataset.productId||root.dataset.supplierId||root.dataset.accountId;return 'dynamic-'+location.pathname.replace(/[^a-z0-9]/gi,'_')+'-'+kind+'-'+id+'-'+(path.join('.')||'root');
 }
 function applyElementOverrides(root=document){
+ window.homeDashboard?.apply(elementOverrides);
  if(root.nodeType===Node.TEXT_NODE)root=root.parentElement;if(!root)return;
  for(const element of localTracked)if(!element.isConnected)localTracked.delete(element);
  if(!Object.keys(elementOverrides).length&&!localTracked.size)return;

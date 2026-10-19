@@ -20,6 +20,7 @@
   if(typeof interfaceLabel==='function')template($('home-totals-heading'),'Location totals');
   if(session)$('home-totals-location').textContent=session.locationName||'';
   if(!totals)return;
+  $('home-totals-status').toggleAttribute('data-home-error',Boolean(totals.quarterPricePending));$('home-averages-status').toggleAttribute('data-home-error',Boolean(totals.averages?.pricePending));
   $('home-total-sales').textContent=money(totals.salesCents);
   $('home-total-orders').textContent=money(totals.placedOrdersCents)+(totals.pricePending?' + '+wording('prices pending'):'');
   $('home-total-expense').textContent=totals.expensePercent===null?'—':new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(totals.expensePercent)+'%';
@@ -49,7 +50,7 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){$('home-totals-status').setAttribute('data-home-error','');$('home-averages-status').setAttribute('data-home-error','');template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }

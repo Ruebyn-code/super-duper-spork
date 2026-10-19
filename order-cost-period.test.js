@@ -89,8 +89,9 @@ test('Sunday cart preview uses the upcoming ordering budget and preserves the cu
   vm.runInNewContext(script,context);await new Promise(resolve=>setImmediate(resolve));listeners['ordering-cart-updated']({detail:cart});assert.equal(comparisons.at(-1).weekStart,'2026-10-12');return nodes;
  }
  const sunday=await render(true,{total:20000,pricePending:false});assert.equal(sunday.get('ordering-budget-remaining').textContent,'$60.00');assert.equal(sunday.get('ordering-budget-remaining').previousElementSibling.textContent,'Budget after this cart');assert.equal(sunday.get('ordering-budget-spent').textContent,'$20.00');assert.equal(sunday.get('ordering-budget-spent').previousElementSibling.textContent,'Order costs next week');assert.match(sunday.get('ordering-budget-period').textContent,/Upcoming week · 19 Oct 2026 – 25 Oct 2026/);
- const pending=await render(true,{total:20000,pricePending:true});assert.equal(pending.get('ordering-budget-remaining').textContent,'—');assert.match(pending.get('ordering-budget-status').textContent,/prices pending/);
- const saturday=await render(false,{total:20000,pricePending:false});assert.equal(saturday.get('ordering-budget-remaining').textContent,'-$20.00');assert.match(saturday.get('ordering-budget-status').textContent,/over this week/);
+ assert.equal(sunday.get('ordering-budget-status').dataset.homeError,undefined);
+ const pending=await render(true,{total:20000,pricePending:true});assert.equal(pending.get('ordering-budget-status').dataset.homeError,'');assert.equal(pending.get('ordering-budget-remaining').textContent,'—');assert.match(pending.get('ordering-budget-status').textContent,/prices pending/);
+ const saturday=await render(false,{total:20000,pricePending:false});assert.equal(saturday.get('ordering-budget-status').dataset.homeError,'');assert.equal(saturday.get('ordering-budget-remaining').textContent,'-$20.00');assert.match(saturday.get('ordering-budget-status').textContent,/over this week/);
 });
 
 test('existing order files recalculate through APIs and restarts without rewriting timestamps or sending to suppliers',async()=>{

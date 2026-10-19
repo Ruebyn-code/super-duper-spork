@@ -9478,5 +9478,29 @@
     "locations": [
       "login"
     ]
+  },
+  {
+    "text": "Your shifts and team roster.",
+    "locations": [
+      "home"
+    ]
+  },
+  {
+    "text": "Keep up with your team.",
+    "locations": [
+      "home"
+    ]
+  },
+  {
+    "text": "Company policies and information.",
+    "locations": [
+      "home"
+    ]
+  },
+  {
+    "text": "Compare sales, costs and stock usage.",
+    "locations": [
+      "home"
+    ]
   }
 ]

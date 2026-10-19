@@ -14,6 +14,7 @@
   template($('ordering-budget-spent').previousElementSibling,upcoming?'Order costs next week':'Order costs this week');
   template($('ordering-budget-remaining').previousElementSibling,'Budget after this cart');
   const remaining=projection.remainingCents===null||cartPending?null:projection.remainingCents-cart.total;
+  if(remaining!==null&&remaining<0||projection.pricePending||cartPending)$('ordering-budget-status').dataset.homeError='';else delete $('ordering-budget-status').dataset.homeError;
   $('ordering-budget-remaining').textContent=money(remaining);$('ordering-budget-remaining').classList.toggle('budget-over',remaining!==null&&remaining<0);
   const dateLabel=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
   const period={start:dateLabel(projection.weekStart),end:dateLabel(projection.weekEnd)};
@@ -24,7 +25,7 @@
  async function refresh(){
   if(document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
   try{const response=await fetch('/api/sales',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(!response.ok)throw Error('Unable to load sales budget.');const report=await response.json();currentProjection=report.projection;projection=report.orderingProjection||report.projection;render();}
-  catch{template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');}
+  catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
  window.addEventListener('ordering-cart-updated',event=>{cart=event.detail;render();});

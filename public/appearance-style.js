@@ -2,6 +2,7 @@
 (function(root){
  const parts=typeof module==='object'&&module.exports?require('./edit-parts'):root.appEditParts;
  const themeColours=typeof module==='object'&&module.exports?require('./theme-colours'):root.themeColours;
+ const homeLayout=typeof module==='object'&&module.exports?require('./home-layout-model'):root.homeLayoutModel;
  const baseFonts={opsilon:"'Opsilon',sans-serif",arial:'Arial,Helvetica,sans-serif',verdana:'Verdana,sans-serif',georgia:'Georgia,serif',trebuchet:"'Trebuchet MS',sans-serif",monospace:'monospace'};
  const fonts={...baseFonts};let library=[];
  const baseLabels={opsilon:'Opsilon (your font)',arial:'Arial',verdana:'Verdana',georgia:'Georgia',trebuchet:'Trebuchet MS',monospace:'Monospace'};
@@ -55,7 +56,7 @@
   if(typeof settings.iconStroke==='number'&&settings.iconStroke>=0.5&&settings.iconStroke<=4)properties+='stroke-width:'+settings.iconStroke+'!important;';return properties;
  }
  function buildElements(overrides,html,uploaded=library){
-  const families=fontFamilies(uploaded);let css='';
+  const families=fontFamilies(uploaded);let css=homeLayout&&html.includes('data-edit-id="home-main"')?homeLayout.css(overrides?.['home-main']?.homeLayout):'';
   for(const [id,settings] of Object.entries(overrides||{})){
    if(!/^[a-zA-Z0-9_.:-]{1,240}$/.test(id))continue;let selector;
    if(id.startsWith('type:')){const type=id.slice(5);if(!parts||!Object.hasOwn(parts.typeLabels,type))continue;const exclude=Object.entries(overrides).filter(([key,entry])=>!key.startsWith('type:')&&entry.linked===false&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(key)).map(([key])=>'[data-edit-id="'+key+'"]').join(',');selector=':where([data-app-part="'+type+'"]'+(exclude?':not('+exclude+')':'')+')';}
