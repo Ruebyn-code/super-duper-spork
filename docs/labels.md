@@ -1,16 +1,16 @@
 # Labels
 
-Open **Labels** in the main navigation, or **More → Labels** on a phone. It is a separate page. Each company has its own prep items and label settings. Label history is limited to the selected location and the user's current access.
+Open **Labels** in the main navigation, or **More → Labels** on a phone. It is a separate page. Each company has its own label templates and label settings. Label history is limited to the selected location and the user's current access.
 
-Head Office can manage company prep items/settings by default. All signed-in built-in staff roles can view and print labels. Settings → Permission levels has separate **Labels**, **Print prep labels** and **Manage prep labels** grants. Existing customised roles keep their permissions; grant the new controls explicitly where needed. Managing the shared company library/settings also requires access to all of that company's active locations.
+Head Office can manage company label templates/settings by default. All signed-in built-in staff roles can view and print labels. Settings → Permission levels has separate **Labels**, **Print prep labels** and **Manage prep labels** grants. Existing customised roles keep their permissions; grant the new controls explicitly where needed. Managing the shared company library/settings also requires access to all of that company's active locations.
 
-## Create prep items
+## Create label templates
 
-Choose **Prep items → Add prep item**. Enter the name, approved shelf life in hours or days, and an optional label note. Save. Use the pencil on a prep item to edit it or turn off Active prep item. Shelf lives start blank: Opstack does not infer food safety storage periods. Use the company's approved procedures. Editing or deactivating an item does not rewrite existing label batches.
+Choose **Label templates → Add label template**. Enter the name, approved shelf life in hours or days, and an optional label note. Save. Use the pencil on a label template to edit it or turn off Active label template. Shelf lives start blank: Opstack does not infer food safety storage periods. Use the company's approved procedures. Editing or deactivating an item does not rewrite existing label batches.
 
 ## Prepare and print
 
-Choose **Print labels**, select an active prep item, enter the preparation date/time and number of copies (1–100), then review the label. The use-by time is calculated from the saved item settings. Hour-based shelf life adds elapsed hours. Day-based shelf life keeps the same Melbourne time on the following date, including daylight-saving changes; skipped times use the first valid minute afterwards and repeated times use the later occurrence.
+Choose **Print labels**, select an active label template, enter the preparation date/time and number of copies (1–100), then review the label. The use-by time is calculated from the saved item settings. Hour-based shelf life adds elapsed hours. Day-based shelf life keeps the same Melbourne time on the following date, including daylight-saving changes; skipped times use the first valid minute afterwards and repeated times use the later occurrence.
 
 The label shows item name, location, preparation time, use-by time, signed-in staff name and any note. Preparation time is an entered value; the record also keeps a separate server creation timestamp. Staff names, location and use-by calculation are resolved on the server. Concurrent item/settings changes require refreshing before a new batch can be created. Retries with the same request reference do not duplicate a batch.
 

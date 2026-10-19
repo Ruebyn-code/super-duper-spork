@@ -10493,7 +10493,7 @@
     ]
   },
   {
-    "text": "Add prep item",
+    "text": "Add label template",
     "locations": [
       "Labels"
     ]
@@ -10511,7 +10511,7 @@
     ]
   },
   {
-    "text": "Prep items",
+    "text": "Label templates",
     "locations": [
       "Labels"
     ]
@@ -10529,7 +10529,7 @@
     ]
   },
   {
-    "text": "Prep item",
+    "text": "Label template",
     "locations": [
       "Labels"
     ]
@@ -10559,7 +10559,7 @@
     ]
   },
   {
-    "text": "Ask a manager to add prep items and their shelf lives.",
+    "text": "Ask a manager to add label templates and their shelf lives.",
     "locations": [
       "Labels"
     ]
@@ -10577,7 +10577,7 @@
     ]
   },
   {
-    "text": "Choose a prep item to preview its label.",
+    "text": "Choose a label template to preview its label.",
     "locations": [
       "Labels"
     ]
@@ -10607,7 +10607,7 @@
     ]
   },
   {
-    "text": "Search prep items",
+    "text": "Search label templates",
     "locations": [
       "Labels"
     ]
@@ -10679,7 +10679,7 @@
     ]
   },
   {
-    "text": "Close prep item editor",
+    "text": "Close label template editor",
     "locations": [
       "Labels"
     ]
@@ -10715,7 +10715,7 @@
     ]
   },
   {
-    "text": "Active prep item",
+    "text": "Active label template",
     "locations": [
       "Labels"
     ]
@@ -10727,7 +10727,7 @@
     ]
   },
   {
-    "text": "Save prep item",
+    "text": "Save label template",
     "locations": [
       "Labels"
     ]
@@ -10745,7 +10745,7 @@
     ]
   },
   {
-    "text": "No prep items found.",
+    "text": "No label templates found.",
     "locations": [
       "Labels"
     ]
@@ -10757,13 +10757,13 @@
     ]
   },
   {
-    "text": "Edit prep item",
+    "text": "Edit label template",
     "locations": [
       "Labels"
     ]
   },
   {
-    "text": "Prep item saved.",
+    "text": "Label template saved.",
     "locations": [
       "Labels"
     ]
