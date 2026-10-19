@@ -4,37 +4,44 @@ Open **Ops management** from the main navigation, or **More → Ops management**
 
 Head Office and Franchisees can create templates by default. All signed-in staff can complete them. Settings → Permission levels has separate **View**, **Complete** and **Manage checklists** controls. Existing customised roles keep their grants; grant these controls explicitly where needed.
 
-## Checklist builder
+## Checklist builder and grouped settings
 
-Checklist builder contains the reusable content: its name, instructions and step cards. Locations and scheduling are managed separately in **Planners**.
+Open **Checklist builder → New checklist** or **Edit checklist** on an existing card. Enter the name and instructions, then add its compact step cards. Open a step's chevron for its type/options and drag its grip to rearrange. Arrow keys move a focused grip; Escape cancels a drag. Moving a section carries the following steps until the next section.
 
-1. Open **Checklist builder → New checklist**. Enter a name and instructions.
-2. Add compact step cards. Edit titles directly, open the chevron to choose a step type and its options, and drag a grip to rearrange. Arrow keys on a focused grip move steps too; Escape cancels dragging. Moving a section carries its following steps until the next section.
-3. Choose Checkbox, Photo / video, File submission, Short text, Long text, Number entry, Selection, Signature, Date and time, Section, or Instruction. Sections and instructions require no response.
-4. Valid changes save automatically. **Done** returns to the builder list. **Plan this checklist** opens a new planner for the saved content. A checklist without a planner does not appear in the team's due checklists.
+The checklist contains three settings groups: **Planners**, **Locations** and **Assignees**. Clicking a group opens its popup; there is no separate planner page. Changes save automatically. Closing the popup returns to the same checklist, preserving its content, scroll and focus. **Done** on the main builder returns to the list.
 
-Managers can create reusable content for their selected company. Editing content used by planners requires access to every assigned location, including paused planners. A manager with access to only some locations can complete its checklists and create a separate planner for locations they can access, without changing the shared content.
+Each checklist can retain several planners, such as morning and evening checks. Choose the planner at the top of the popup when there is more than one, or use **Add planner** inside it. All three groups edit that selected planner. Its locations and permission audience are independent of the other planners. New configurations start as Unscheduled until you choose how the team should use them.
 
-## Planners
+Managers can create content for their selected company. Editing shared content requires access to every location used by any planner, including paused planners. Managers with partial location access can open the checklist with its content read-only and configure planners covering only their own accessible locations. A shared planner requires access to all of its assigned locations before it can be edited.
 
-A planner chooses where and when a saved checklist is used. One checklist can have multiple planners: for example, Morning checks and Evening checks can use the same content while keeping their completion records separate.
+## Planners group
 
-Open **Planners → New planner**, or choose **Create planner** on a builder card. Set:
+Choose:
 
-- **Planner name** and **Checklist**.
-- **Locations**: one or more accessible locations in the selected company.
-- **Repeat**: Manual, One-off, Daily / selected days, or Weekly. Daily planners can use any combination of Monday–Sunday. Weekly planners have one due day within each Monday–Sunday week.
-- **Start date** and an optional **End date** for recurring planners.
-- Optional **Due by** time and **In-app reminder**. A reminder marks incomplete checklist cards **Due soon** before the deadline; they become **Overdue** after it. Reminders update while Ops management is open and do not send emails, push notifications or background alerts. A due time is required for reminders. Manual planners have no deadline or reminder.
-- **Priority**: Normal, High or Urgent. Higher-priority checklists appear first.
-- Optional **Location instructions**, shown when someone opens the checklist alongside its company instructions.
-- **Active planner**: pause/resume new occurrences without deleting saved history.
+- **Checklist type**: **Recurring** repeats on a schedule; **On-demand** can be started manually and repeatedly; **Once off** has one occurrence per location; **Unscheduled** keeps the configuration out of the team's checklist list.
+- **When it happens** for recurring checklists: Daily, Weekly, Fortnightly, Monthly or Yearly. Daily can use selected weekdays. New weekly and fortnightly schedules repeat from the configured start date, every 7 or 14 days. Monthly schedules retain the start day, clamping to the final day of shorter months; yearly schedules similarly clamp a 29 February anniversary to 28 February in non-leap years.
+- **Start date** and **Checklist start time**: an occurrence becomes available from its first scheduled day/time. Start time belongs to the chosen recurrence, rather than changing the date anchor each day. An optional end date stops new occurrences.
+- **Due time** and **Due day**: choose the day relative to the start, including Next day for an overnight deadline. Existing weekly schedules retain their original calendar-week identity and due day when unrelated settings are edited.
+- **Active from / Active until**: daily opening and closing hours for new starts. Blank opening uses the checklist start time, or midnight. A closing time before opening continues overnight. Leave both blank for no daily hour restriction; the scheduled start time still applies. The server uses its Melbourne clock and rejects attempts to bypass a window by selecting an earlier date. Work already started remains available to finish after the window closes.
+- Optional **In-app reminder**, **Priority**, **Planner instructions** and **Active planner**. Reminders mark incomplete cards Due soon before the deadline and Overdue after it, while Ops management is open; no background emails or push notifications are sent. Pausing stops new occurrences without deleting records.
 
-The preview shows upcoming dates before saving. Valid edits save automatically; use **Done** to return to the list. Managers need access to every existing assigned location before editing a planner, and can add only locations they can access. A planner's checklist cannot be changed after records have started; create another planner for different content.
+The preview shows upcoming dates. Melbourne daylight-saving gaps move a skipped time to the first real minute after it; repeated clock times use the later occurrence. Daily overnight windows retain the previous day's occurrence after midnight until closing.
 
-Schedule and content edits affect new records. Existing drafts and completed records retain their original content, planner instructions, due information and revision snapshots. Starting or retrying a scheduled occurrence cannot create duplicate records for the same planner, location and period.
+## Locations group
 
-Existing checklist assignments and schedules automatically appear as one planner per former template. The legacy planner keeps the original template ID, so existing drafts, completed records, private uploads and scheduled occurrence identity remain intact. The conversion is deterministic on read and is persisted atomically with the next checklist/planner write.
+Choose the locations using this planner. Only accessible locations in the selected company can be added. Existing assignments outside a manager's access are never silently removed. Users still need current location access to view, start, save or upload to its checklists.
+
+## Assignees group
+
+Use **All permission levels**, or choose specific levels. The choices include network levels and the selected company's overrides/custom levels. Selection does not grant application permissions: users also need checklist view/complete grants and access to the location.
+
+The audience is checked on the server for tasks, starts, history, record reads/writes and private uploads/downloads. Changes take effect on subsequent requests, including existing records. Management access permits configuring settings; it does not bypass an excluded permission audience for checklist records. Roles are stored by stable ID so renaming a level does not break the assignment. A removed level remains unavailable and cannot grant access.
+
+## Existing data
+
+Legacy assignments and schedules continue to use stable planner IDs. Editing grouped settings does not recreate a planner or rewrite an existing checklist snapshot. Scheduled starts are deduplicated by planner, location and period; separate planners using the same content keep independent answers.
+
+New content and timing edits affect new records. Drafts and completed records retain their original instructions, due information and revision snapshots. Current location and assignee restrictions still apply. Completed records stay read-only. Backups continue to include the same data file and private media directory.
 
 ## Complete and review
 
@@ -56,6 +63,8 @@ Existing yes/no, choice, multiple choice, photo, date and time records remain re
 
 ## Schedules and storage
 
-Dates use Australia/Melbourne. Each planner has its own records: a daily schedule has one per selected date/location; a weekly schedule has one per Monday–Sunday week/location. The weekly due day is a deadline, and the checklist is available from the start of that week or its configured start date. The first partial week never has a deadline before its start date. End-of-day deadlines use Melbourne time. During daylight-saving changes, repeated due times use the later occurrence and skipped times move to the first real minute after the requested time. A one-off checklist stays available from its start date until completed. Manual checklists can be started repeatedly; an existing manual draft is offered for resuming. Future occurrences cannot be started. Earlier dates can be selected to complete a missed occurrence. Scheduled occurrences appear when viewed; records are created on Start, without a background job or notification service. Checklist cards update due-soon/overdue indicators every 30 seconds while the page is visible.
+Dates use Australia/Melbourne. Daily planners have one occurrence per selected date/location. Other recurring planners have one per anchored 7-day, 14-day, month or year interval/location. Legacy weekly planners keep Monday–Sunday periods. One-off planners have one occurrence; On-demand planners permit repeated manual starts, offering an existing draft for resuming.
+
+Future occurrences cannot be started. Earlier dates can be selected for missed occurrences without configured active times; a timed window always uses the server's current clock. Scheduled occurrences appear when viewed and records are created on Start. Cards update timing indicators and current-window availability every 30 seconds while visible.
 
 The network's data directory contains `ops-management.json` and `ops-management/communication-media/`. Include both in data backups and migrations. File downloads check the current company, location access and checklist permission on every request; they are not public assets. No invoice, sales, stock or expense data is changed by checklist completion.

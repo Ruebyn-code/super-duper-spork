@@ -1,14 +1,49 @@
 (function(root){
  const zone='Australia/Melbourne',formatter=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}),deadlines=new Map();
  const shift=(day,n)=>new Date(Date.parse(day+'T00:00:00Z')+n*86400000).toISOString().slice(0,10),weekday=day=>(new Date(day+'T00:00:00Z').getUTCDay()+6)%7+1,monday=day=>shift(day,1-weekday(day));
- function period(plan,day){const s=plan.schedule;if(!plan.active||day<s.startDate||s.endDate&&day>s.endDate)return null;if(s.kind==='manual')return{key:null,dueDate:null};if(s.kind==='once')return{key:'once',dueDate:s.startDate};if(s.kind==='daily')return !s.days||s.days.includes(weekday(day))?{key:day,dueDate:day}:null;const start=monday(day),due=shift(start,s.weekday-1);return{key:start,dueDate:[s.startDate,s.endDate&&s.endDate<due?s.endDate:due].sort().at(-1)};}
+ const type=plan=>plan.type||(plan.schedule.kind==='manual'?'on-demand':plan.schedule.kind==='once'?'once':plan.schedule.kind==='unscheduled'?'unscheduled':'recurring');
+ function monthDate(anchor,n){const parts=anchor.split('-').map(Number),month=parts[0]*12+parts[1]-1+n,year=Math.floor(month/12),index=month%12,day=Math.min(parts[2],new Date(Date.UTC(year,index+1,0)).getUTCDate());return String(year).padStart(4,'0')+'-'+String(index+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');}
+ function period(plan,day){
+  const s=plan.schedule,kind=s.kind;if(!plan.active||type(plan)==='unscheduled'||day<s.startDate||s.endDate&&day>s.endDate)return null;
+  let start=day,end=day,key=day,due=day;
+  if(kind==='manual'){key=null;due=plan.dueTime?day:null;}
+  else if(kind==='once'){start=s.startDate;end=s.endDate||null;key='once';due=start;}
+  else if(kind==='daily'){if(s.days&&!s.days.includes(weekday(day)))return null;}
+  else if(kind==='weekly'&&s.anchor!=='start'){start=monday(day);key=start;end=shift(start,6);due=shift(start,(s.weekday||7)-1);}
+  else if(['weekly','fortnightly'].includes(kind)){const span=kind==='weekly'?7:14,n=Math.floor((Date.parse(day+'T00:00:00Z')-Date.parse(s.startDate+'T00:00:00Z'))/(span*86400000));start=shift(s.startDate,n*span);end=shift(start,span-1);key=start;due=end;}
+  else if(kind==='monthly'||kind==='yearly'){const months=kind==='monthly'?1:12,parts=day.split('-').map(Number),first=s.startDate.split('-').map(Number);let index=Math.floor(((parts[0]-first[0])*12+parts[1]-first[1])/months);if(monthDate(s.startDate,index*months)>day)index--;start=monthDate(s.startDate,index*months);end=shift(monthDate(s.startDate,(index+1)*months),-1);key=start;due=end;}
+  else return null;
+  if(s.endDate&&end&&end>s.endDate)end=s.endDate;
+  const actualStart=start<s.startDate?s.startDate:start;
+  if(plan.dueAfterDays!==undefined&&due){due=shift(start,plan.dueAfterDays);const last=end?(kind==='weekly'&&s.anchor!=='start'?end:shift(end,1)):null;if(last&&due>last)due=last;}
+  else if(end&&due&&due>end)due=end;
+  if(due&&due<actualStart)due=actualStart;
+  return{key,startDate:actualStart,endDate:end,dueDate:due};
+ }
  function local(epoch){const parts=Object.fromEntries(formatter.formatToParts(new Date(epoch)).map(part=>[part.type,part.value]));return parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute+':'+parts.second;}
  function deadline(day,time){if(!day)return null;const key=day+'T'+(time||'23:59');if(deadlines.has(key))return deadlines.get(key);const wall=Date.parse(key+':00Z'),offsets=new Set();for(let probe=wall-36*3600000;probe<=wall+36*3600000;probe+=6*3600000)offsets.add(Date.parse(local(probe)+'Z')-Math.floor(probe/1000)*1000);let matches=[...offsets].map(offset=>wall-offset).filter(epoch=>local(epoch).slice(0,16)===key);
-  // A repeated clock hour uses its later occurrence; a skipped time moves to the first real minute after it.
+  // Repeated clock times use their later occurrence; skipped times move to the first real minute after them.
   if(!matches.length)for(let n=1;n<=120&&!matches.length;n++){const next=new Date(wall+n*60000).toISOString().slice(0,16);matches=[...offsets].map(offset=>wall+n*60000-offset).filter(epoch=>local(epoch).slice(0,16)===next);}
   const result=matches.length?new Date(Math.max(...matches)+(time?0:59999)).toISOString():null;if(deadlines.size>500)deadlines.clear();deadlines.set(key,result);return result;
  }
+ function availability(plan,slot,now=Date.now()){
+  if(!slot)return{allowed:false,reason:'This checklist is not scheduled for this date.'};
+  const release=deadline(slot.startDate,plan.startTime||'00:00');if(now<Date.parse(release))return{allowed:false,reason:'This checklist has not started yet.',opensAt:release};
+  if(!plan.startTime&&!plan.activeFrom&&!plan.activeUntil)return{allowed:true,opensAt:release};
+  const wall=local(now),today=wall.slice(0,10),clock=wall.slice(11,16),from=plan.activeFrom||plan.startTime||'00:00',until=plan.activeUntil||null,overnight=Boolean(until&&until<from),activeDay=overnight&&clock<until?shift(today,-1):today;
+  if(activeDay<slot.startDate||slot.endDate&&activeDay>slot.endDate)return{allowed:false,reason:'This checklist is outside its active dates.'};
+  if(plan.schedule.endDate&&activeDay>plan.schedule.endDate)return{allowed:false,reason:'This checklist is outside its active dates.'};
+  if(!plan.activeFrom&&!plan.activeUntil)return{allowed:true,opensAt:release};
+  const opens=deadline(activeDay,from),closes=deadline(overnight?shift(activeDay,1):activeDay,until);
+  if(now<Date.parse(opens)||now>=Date.parse(closes))return{allowed:false,reason:'This checklist is outside its active hours.',opensAt:opens,closesAt:closes};
+  return{allowed:true,opensAt:opens,closesAt:closes};
+ }
+ function occurrence(plan,day,now=Date.now()){
+  const wall=local(now),from=plan.activeFrom||plan.startTime||'00:00';
+  if(day===wall.slice(0,10)&&plan.activeUntil&&plan.activeUntil<from&&wall.slice(11,16)<plan.activeUntil){const previous=period(plan,shift(day,-1));if(previous&&availability(plan,previous,now).allowed)return previous;}
+  return period(plan,day);
+ }
  function timing(dueAt,reminderMinutes,now=Date.now()){if(!dueAt)return null;const left=Date.parse(dueAt)-now;return left<0?'overdue':reminderMinutes>0&&left<=reminderMinutes*60000?'soon':null;}
- function upcoming(plan,from,limit=4){const dates=[],s=plan.schedule;if(!plan.active||s.kind==='manual')return dates;let day=from>s.startDate?from:s.startDate;for(let n=0;n<40&&dates.length<limit;n++,day=shift(day,1)){const slot=period(plan,day);if(slot&&!dates.includes(slot.dueDate)&&slot.dueDate>=from)dates.push(slot.dueDate);if(s.endDate&&day>=s.endDate)break;}return dates;}
- const api={period,deadline,timing,upcoming,shift,monday,weekday,zone};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsPlannerModel=api;
+ function upcoming(plan,from,limit=4){const dates=[],s=plan.schedule;if(!plan.active||['manual','unscheduled'].includes(s.kind)||type(plan)==='unscheduled')return dates;let day=from>s.startDate?from:s.startDate;for(let n=0;n<1600&&dates.length<limit;n++){const slot=period(plan,day);if(slot&&!dates.includes(slot.dueDate)&&slot.dueDate>=from)dates.push(slot.dueDate);if(s.endDate&&day>=s.endDate||s.kind==='once')break;day=slot?.endDate&&s.kind!=='daily'?shift(slot.endDate,1):shift(day,1);}return dates;}
+ const api={period,occurrence,availability,type,deadline,timing,upcoming,shift,monday,weekday,zone,local,monthDate};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsPlannerModel=api;
 })(globalThis);
