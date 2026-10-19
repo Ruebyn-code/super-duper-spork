@@ -17,7 +17,7 @@
  const excluded='.app-shell,.app-page,.admin-sidebar,.secondary-sidebar,.sidebar-scroll,.sidebar-footer,.mobile-brand-header,.password-control,.quantity,.add-controls,.location-picker,.admin-record-header,.pagination,.date-control,.expanding-search';
  function canGroup(element){return element.matches(containerSelector)&&!element.matches(excluded)&&!element.closest(uiSelector);}
  function canMove(element,parent){
-  if(element.closest(uiSelector)||element.matches('script,style,[role=status],.user-editor-row,.empty,.small,.description,.sku'))return false;
+  if(appEditParts.isTextPart(element)||element.closest(uiSelector)||element.matches('script,style,[role=status],.user-editor-row,.empty,.small,.description,.sku'))return false;
   if(parent.tagName==='TBODY')return element.matches('.user-record,.location-record,.company-record');
   return element.matches('section,article,nav,aside,div,form,fieldset,details,label')||(element.tagName==='A'&&parent.matches('nav,.home-admin-links'))||element.matches('img.app-logo');
  }
@@ -49,7 +49,7 @@
  const semantic='section,article,aside,details,label,.product,.count-item,.management,.user-record,.location-record,.company-record';
  function isSemantic(unit,parent){return unit.element.matches(semantic)||parent.matches('main,nav,.home-actions,.home-overview,.home-total-metrics,.ordering-budget-metrics,.sales-metrics,.sales-performance-metrics');}
  function info(element){
-  if(!element||element.closest(uiSelector))return null;let fallback=null;
+  if(!element||appEditParts.isTextPart(element)||element.closest(uiSelector))return null;let fallback=null;
   for(let part=element;part&&part!==document.body;part=part.parentElement){const parent=part.parentElement;if(!parent)break;const group=groups.get(groupKey(parent)),unit=group?.units.find(unit=>unit.element===part);if(!unit||group.units.filter(visible).length<2)continue;const result={group,unit};fallback||=result;if(isSemantic(unit,parent))return result;}
   return fallback;
  }
@@ -164,7 +164,7 @@
  }
  function movePointer(x,y){if(drag){drag.x=x;drag.y=y;return;}if(press&&Math.hypot(x-press.startX,y-press.startY)>9){clearPress();suppressUntil=performance.now()+500;}}
  document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'||event.button!==0||!event.isPrimary)return;startPress(event.target,event.clientX,event.clientY,{pointerId:event.pointerId,touch:false});},true);
- document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;if(drag||press)movePointer(event.clientX,event.clientY);else if(editing&&!event.target.closest('.app-layout-grip'))setHover(event.target.closest(uiSelector)?null:info(event.target));},true);
+ document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;if(drag||press)movePointer(event.clientX,event.clientY);else if(editing&&!event.target.closest('.app-layout-grip'))setHover(event.target.closest(uiSelector)||appEditParts.isTextPart(event.target)?null:info(event.target));},true);
  document.addEventListener('pointerup',event=>{if(event.pointerType==='touch')return;if(drag){event.preventDefault();endDrag();}else clearPress();},true);
  document.addEventListener('pointercancel',event=>{if(event.pointerType!=='touch'){if(drag)endDrag(true);else clearPress();}},true);
  const touchStart=event=>{if(event.touches.length!==1){if(drag)endDrag(true);clearPress();return;}const touch=event.touches[0];if(startPress(event.target,touch.clientX,touch.clientY,{touch:true})&&drag)event.preventDefault();};

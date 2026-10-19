@@ -14,3 +14,12 @@ test('appearance-only linking and unlinking preserve existing wording without ac
   await store.patch(dir,{id:'other',changes:{linked:false}});assert.equal(parts.effective(await store.read(dir),'other','heading').texts,undefined);assert.equal(before['type:heading'].texts.Ordering.value,'Shared wording');
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('surface-only linking preserves inherited and individual text appearance and rejects font edits',async()=>{
+ const dir=await fs.mkdtemp('/tmp/opstack-surface-');try{
+  await store.patch(dir,{id:'panel',scope:'type',type:'container',changes:{font:'verdana',fontColour:'secondary',background:'primary'}});await store.patch(dir,{id:'panel',changes:{linked:false,background:'secondary'}});
+  let result=await store.patch(dir,{id:'panel',scope:'type',type:'container',styleOnly:true,surfaceOnly:true,changes:{background:'primary'}});assert.equal(result.panel.fontLinked,false);assert.equal(parts.effective(result,'panel','container').font,undefined);assert.equal(parts.effective(result,'panel','container').background,'primary');const css=styles.buildElements(result,'<div data-edit-id="panel" data-app-part="container">');assert.match(css,/data-edit-id="panel"/);assert.match(css,/font-family:Verdana/);
+  await store.patch(dir,{id:'text-styled',changes:{font:'georgia',fontColour:'#123456'}});result=await store.patch(dir,{id:'text-styled',scope:'type',type:'container',styleOnly:true,surfaceOnly:true,changes:{background:'secondary'}});assert.equal(result['text-styled'].font,'georgia');assert.equal(result['text-styled'].fontColour,'#123456');
+  await store.patch(dir,{id:'inherited',styleOnly:true,surfaceOnly:true,changes:{linked:false,background:'primary'}});result=await store.read(dir);assert.equal(parts.effective(result,'inherited','container').font,'verdana');assert.equal(parts.effective(result,'inherited','container').fontColour,'secondary');for(const changes of [{font:'arial'},{fontColour:'primary'}])await assert.rejects(store.patch(dir,{id:'panel',styleOnly:true,surfaceOnly:true,changes}),/Text styling/);assert.deepEqual(await store.read(dir),result);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

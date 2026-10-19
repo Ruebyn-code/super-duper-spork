@@ -7,9 +7,8 @@ function applyAdminPanels(){
 }
 window.addEventListener('hashchange',()=>{applyAdminPanels();appAccess.apply();});applyAdminPanels();
 
-document.querySelectorAll('#font-settings>label').forEach(label=>adminUI.wrap(label,label.firstChild.textContent,label.querySelector('select').id,document.getElementById('font-settings')));
 document.querySelectorAll('.settings-colours>label').forEach(label=>adminUI.wrap(label,label.firstChild.textContent,label.querySelector('input').id,document.querySelector('.settings-colours')));
-for(const [id,title] of [['logo-form','Sign-in / app logo'],['sidebar-logo-form','Sidebar logo'],['signin-background-form','Sign-in background'],['font-upload-form','Font uploads']])adminUI.wrap(document.getElementById(id),title,id);
+for(const [id,title] of [['logo-form','Sign-in / app logo'],['sidebar-logo-form','Sidebar logo'],['signin-background-form','Sign-in background']])adminUI.wrap(document.getElementById(id),title,id);
 for(const [id,title] of [['supplier-form','Add supplier']])adminUI.creation(document.getElementById(id),title,id);
 // Native validation must be able to reveal and focus fields in closed sections.
 document.addEventListener('invalid',event=>{let parent=event.target.parentElement;while(parent){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement;}},true);

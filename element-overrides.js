@@ -7,6 +7,8 @@ let pending=Promise.resolve();
 function patch(dir,input){const task=pending.then(async()=>{
  if(typeof input?.id!=='string'||!/^[a-zA-Z0-9_.:-]{1,240}$/.test(input.id)||!input.changes||typeof input.changes!=='object'||Array.isArray(input.changes))throw Error('Invalid element change.');
  input={...input,original:canonical(input.original),changes:{...input.changes,...(input.changes.text?{text:{...input.changes.text,original:canonical(input.changes.text.original)}}:{})}};
+ if(input.surfaceOnly!==undefined&&(typeof input.surfaceOnly!=='boolean'||input.surfaceOnly&&!input.styleOnly))throw Error('Invalid surface-only setting.');
+ if(input.surfaceOnly&&Object.keys(input.changes).some(key=>['font','fontColour'].includes(key)))throw Error('Text styling is not editable.');
  if(input.styleOnly!==undefined&&typeof input.styleOnly!=='boolean')throw Error('Invalid appearance-only setting.');
  if(input.styleOnly&&Object.keys(input.changes).some(key=>['text','texts','restoreText'].includes(key)))throw Error('App edit changes appearance only.');
  const allowed=['font','fontColour','background','backgroundImage','image','text','restoreText','linked','icon','iconColour','iconDetailColour','iconSize','iconStroke','homeLayout'];if(Object.keys(input.changes).some(k=>!allowed.includes(k)))throw Error('Unknown element setting.');
@@ -19,7 +21,7 @@ function patch(dir,input){const task=pending.then(async()=>{
   if(key==='restoreText'){if(value!==true)throw Error('Invalid text reset.');if(targetId.startsWith('type:')){if(typeof input.original!=='string'||!labels.has(input.original))throw Error('Choose the original wording to restore.');if(entry.texts){delete entry.texts[input.original];if(!Object.keys(entry.texts).length)delete entry.texts;}if(entry.text?.original===input.original)delete entry.text;}else delete entry.text;continue;}
   if(key==='text'){if(!value||typeof value.original!=='string'||!labels.has(value.original)||(value.value!==null&&typeof value.value!=='string')||(typeof value.value==='string'&&value.value.length>1000))throw Error('Invalid element wording.');for(const token of value.original.match(/\{\w+\}/g)||[])if(value.value&& !value.value.includes(token))throw Error('Keep the '+token+' placeholder.');if(value.attribute!==undefined&&!['placeholder','title'].includes(value.attribute))throw Error('Invalid wording field.');const spec={original:value.original,value:value.value,...(value.attribute?{attribute:value.attribute}:{})};if(targetId.startsWith('type:')){entry.texts={...(entry.texts||{}),...(entry.text?{[entry.text.original]:entry.text}:{}),[value.original]:spec};delete entry.text;}else entry.text=spec;continue;}
   if(key==='homeLayout'){if(shared||input.id!=='home-main')throw Error('Home layout settings belong to the Home page only.');if(value===null)delete entry.homeLayout;else entry.homeLayout=homeLayout.validate(value);continue;}
-  if(key==='linked'&&input.styleOnly){if(typeof value!=='boolean'||targetId.startsWith('type:'))throw Error('Invalid link setting.');entry.wordingLinked??=entry.linked??true;}else if(key==='linked')delete entry.wordingLinked;
+  if(key==='linked'&&input.styleOnly){if(typeof value!=='boolean'||targetId.startsWith('type:'))throw Error('Invalid link setting.');entry.wordingLinked??=entry.linked??true;if(input.surfaceOnly)entry.fontLinked??=entry.linked??true;else delete entry.fontLinked;}else if(key==='linked'){delete entry.wordingLinked;delete entry.fontLinked;}
   if(value===null){delete entry[key];continue;}
   if(key==='linked'&&(typeof value!=='boolean'||targetId.startsWith('type:')))throw Error('Invalid link setting.');
   if(key==='icon'&&!Object.hasOwn(parts.icons,value))throw Error('Choose a supported icon.');
@@ -32,7 +34,7 @@ function patch(dir,input){const task=pending.then(async()=>{
  }
  if(targetId.startsWith('type:')&&!type.startsWith('icon-')&&Object.keys(entry).some(key=>key.startsWith('icon')))throw Error('Icon settings require an icon type.');
  if(Object.keys(entry).length)current[targetId]=entry;else delete current[targetId];
- if(shared){const selected={...(current[input.id]||{})};if(input.styleOnly)selected.wordingLinked??=selected.linked??true;else delete selected.wordingLinked;for(const key of allowed)if(!['linked','homeLayout',...(input.styleOnly?['text','restoreText']:[])].includes(key))delete selected[key];selected.linked=true;current[input.id]=selected;}
+ if(shared){const selected={...(current[input.id]||{})};if(input.styleOnly)selected.wordingLinked??=selected.linked??true;else delete selected.wordingLinked;if(input.surfaceOnly)selected.fontLinked??=selected.linked??true;else delete selected.fontLinked;for(const key of allowed)if(!['linked','homeLayout',...(input.styleOnly?['text','restoreText']:[]),...(input.surfaceOnly?['font','fontColour']:[])].includes(key))delete selected[key];selected.linked=true;current[input.id]=selected;}
  await fs.mkdir(dir,{recursive:true});const target=path.join(dir,'element-overrides.json'),temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.writeFile(temp,JSON.stringify(current),{mode:0o600});await fs.rename(temp,target);return current;
  });pending=task.catch(()=>{});return task;}
 module.exports={read,patch};

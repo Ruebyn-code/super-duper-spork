@@ -25,7 +25,7 @@ const {splitBySupplier}=require('./supplier-orders');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
 const wordingModel=require('./public/wording-model');
-const homeBoard=require('./home-board');
+const homeBoard=require('./home-board'),homeGreeting=require('./home-greeting');
 const layouts=require('./layouts'),layoutModel=require('./public/layout-model');
 const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');const editParts=require('./public/edit-parts');
@@ -132,7 +132,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
       let session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
-      const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout','/api/home-dashboard'];
+      const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout','/api/home-dashboard','/api/home-greeting'];
       const authPage=['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
       const platformAppearance=authPage||((customisationRoutes.includes(req.url)||fontAsset||settingsPage)&&(req.headers['x-app-appearance']==='platform'||requestUrl.searchParams.get('platform')==='1'));
       const sharedAppearance=platformAppearance&&(settingsPage||req.url.startsWith('/admin/appearance/')||requestUrl.searchParams.get('console')==='1'||req.headers['x-opstack-shared-appearance']==='1');
@@ -162,7 +162,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
       const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}',opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await homeGreeting.read(customisations.folder(dataDir,session.companyId),(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}')).text,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:await companyStore.accessible(session),locations:(await locationStore.accessible(session)).map(({id,name})=>({id,name})),dataScope:session.dataScope,canMigrateBrowserData:session.canMigrateBrowserData}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==requestOrigin(req))fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
@@ -186,6 +186,13 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(management&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie',`admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(req)?'; Secure':''}`);return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/home-greeting'){
+        if(platformAppearance)fail('Home greetings belong to a company.',400);
+        const seed=(await newNetworkDefaults.companySnapshot(dataDir,appearanceCompany.id))?.greeting||'Hello {user}';
+        if(req.method==='GET')return json(200,await homeGreeting.read(customisationDir,seed));
+        if(req.method==='PUT')return json(200,await homeGreeting.save(customisationDir,await body(req,4000),seed));
+        fail('Unsupported greeting action.',405);
+      }
       if(req.url==='/api/home-dashboard'){
         if(platformAppearance)fail('Home sections belong to a company.',400);
         if(req.method==='GET')return json(200,await homeBoard.read(customisationDir));

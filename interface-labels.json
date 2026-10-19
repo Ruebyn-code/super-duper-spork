@@ -12032,5 +12032,53 @@
     "locations": [
       "Home"
     ]
+  },
+  {
+    "text": "App edit mode",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Home greeting",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Greeting",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Keep {user} so each person sees their own name.",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Use default",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Reload saved greeting",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Save greeting",
+    "locations": [
+      "Home greeting"
+    ]
+  },
+  {
+    "text": "Saving greeting…",
+    "locations": [
+      "Home greeting"
+    ]
   }
 ]

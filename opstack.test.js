@@ -162,7 +162,7 @@ test('monthly sales automatically add new networks and new locations without dup
 test('company Home defaults and section edits remain isolated across networks for platform support',async t=>{
  const app=await fixture(t);await app.configure();const first=await app.create(),second=await app.create('home-other'),{actor:support}=await app.support();
  let session=await app.open(support,first.id);const headers={'X-CSRF-Token':session.csrf},original=(await app.request(support,'/api/home-dashboard')).data;
- assert.equal(original.revision,0);const sections=[{id:'welcome',type:'heading',size:'full',title:'First network Home'}];assert.equal((await app.request(support,'/api/home-dashboard','PUT',{revision:0,sections},headers)).status,200);
- session=await app.open(support,second.id);assert.equal((await app.request(support,'/api/home-dashboard')).data.revision,0);assert.equal((await app.request(support,'/api/home-dashboard','PUT',{revision:0,sections:[]},{'X-CSRF-Token':session.csrf,'X-Opstack-Network':first.id})).status,409);
- await app.open(support,first.id);assert.deepEqual((await app.request(support,'/api/home-dashboard')).data.sections,sections);
+ assert.equal(original.revision,0);assert.equal((await app.request(support,'/api/home-greeting','PUT',{revision:0,text:'Hello first {user}'},headers)).status,200);const sections=[{id:'welcome',type:'heading',size:'full',title:'First network Home'}];assert.equal((await app.request(support,'/api/home-dashboard','PUT',{revision:0,sections},headers)).status,200);
+ session=await app.open(support,second.id);assert.equal((await app.request(support,'/api/home-greeting')).data.text,'Hello {user}');assert.equal((await app.request(support,'/api/home-dashboard')).data.revision,0);assert.equal((await app.request(support,'/api/home-dashboard','PUT',{revision:0,sections:[]},{'X-CSRF-Token':session.csrf,'X-Opstack-Network':first.id})).status,409);
+ await app.open(support,first.id);assert.equal((await app.request(support,'/api/home-greeting')).data.text,'Hello first {user}');assert.deepEqual((await app.request(support,'/api/home-dashboard')).data.sections,sections);
 });

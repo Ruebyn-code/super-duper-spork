@@ -59,9 +59,8 @@
   const families=fontFamilies(uploaded);let css=homeLayout&&html.includes('data-edit-id="home-main"')?homeLayout.css(overrides?.['home-main']?.homeLayout):'';
   for(const [id,settings] of Object.entries(overrides||{})){
    if(!/^[a-zA-Z0-9_.:-]{1,240}$/.test(id))continue;let selector;
-   if(id.startsWith('type:')){const type=id.slice(5);if(!parts||!Object.hasOwn(parts.typeLabels,type))continue;const exclude=Object.entries(overrides).filter(([key,entry])=>!key.startsWith('type:')&&entry.linked===false&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(key)).map(([key])=>'[data-edit-id="'+key+'"]').join(',');selector=':where([data-app-part="'+type+'"]'+(exclude?':not('+exclude+')':'')+')';}
-   else{if(!html.includes('data-edit-id="'+id+'"'))continue;selector='[data-edit-id="'+id+'"]';}
-   const properties=styleProperties(settings,families);if(properties)css+=selector+'{'+properties+'}';
+   if(id.startsWith('type:')){const type=id.slice(5);if(!parts||!Object.hasOwn(parts.typeLabels,type))continue;const target=field=>{const exclude=Object.entries(overrides).filter(([key,entry])=>!key.startsWith('type:')&&(field==='fontLinked'?(entry.fontLinked??entry.linked):entry.linked)===false&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(key)).map(([key])=>'[data-edit-id="'+key+'"]').join(',');return ':where([data-app-part="'+type+'"]'+(exclude?':not('+exclude+')':'')+')';};selector=target('linked');const textProperties=styleProperties({font:settings.font,fontColour:settings.fontColour},families);if(textProperties)css+=target('fontLinked')+'{'+textProperties+'}';const surface={...settings};delete surface.font;delete surface.fontColour;const properties=styleProperties(surface,families);if(properties)css+=selector+'{'+properties+'}';}
+   else{if(!html.includes('data-edit-id="'+id+'"'))continue;selector='[data-edit-id="'+id+'"]';const properties=styleProperties(settings,families);if(properties)css+=selector+'{'+properties+'}';}
    if(colour(settings.iconDetailColour))css+=selector+' .icon-detail,'+selector+' .icon-detail *{stroke:'+colourValue(settings.iconDetailColour)+'!important;}';
   }return css;
  }
