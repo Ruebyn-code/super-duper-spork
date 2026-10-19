@@ -1,5 +1,5 @@
 // Explicit public routes. HTML pages continue through authentication and permission checks.
-module.exports={'/home.css':'home.css','/home-layout-model.js':'home-layout-model.js','/home-layout.js':'home-layout.js','/opstack.js':'opstack.js','/opstack-monthly.js':'opstack-monthly.js','/opstack.css':'opstack.css','/network-context.js':'network-context.js','/persistent-navigation.js':'persistent-navigation.js',
+module.exports={'/wording-model.js':'wording-model.js','/home.css':'home.css','/home-layout-model.js':'home-layout-model.js','/home-layout.js':'home-layout.js','/opstack.js':'opstack.js','/opstack-monthly.js':'opstack-monthly.js','/opstack.css':'opstack.css','/network-context.js':'network-context.js','/persistent-navigation.js':'persistent-navigation.js',
   '/accept-invite':'accept-invite.html',
   '/accept-invite.js':'accept-invite.js',
   '/page-bridge.js':'page-bridge.js',

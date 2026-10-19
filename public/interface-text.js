@@ -4,9 +4,19 @@ const interfaceDefaults={'Collapse sidebar':'Compact navigation','Keep sidebar e
 function applyInterfaceText(root=document){
  const replacements={...interfaceDefaults,...interfaceOverrides};
  if(root.nodeType===Node.TEXT_NODE)root=root.parentElement;if(!root)return;
- const ignored=element=>element?.closest('script,style,[data-local-wording],[data-copy-editor],[data-user-text],#menu h3,#menu .sku,#menu .description,.stock-name,.supplier-title h3,.cart-row>strong,input,textarea');
- const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walker.nextNode()){const node=walker.currentNode;if(ignored(node.parentElement))continue;const actual=node.nodeValue;let original=originalNodes.get(node);if(!original||actual!==original.rendered){original={source:actual,rendered:actual};originalNodes.set(node,original);}const key=original.source.trim().replace(/\s+/g,' ');const value=Object.hasOwn(replacements,key)?original.source.replace(original.source.trim(),(replacements[key]??'')):original.source;if(node.nodeValue!==value)node.nodeValue=value;original.rendered=value;}
- const elements=[...(root.matches?.('[placeholder],[title]')?[root]:[]),...(root.querySelectorAll?.('[placeholder],[title]')||[])];for(const element of elements){if(element.closest('[data-copy-editor]')||element.hasAttribute('data-local-wording'))continue;let source=originalAttributes.get(element);if(!source){source={};for(const attr of ['placeholder','title'])if(element.hasAttribute(attr))source[attr]=element.getAttribute(attr);originalAttributes.set(element,source);}for(const [attr,value] of Object.entries(source))element.setAttribute(attr,Object.hasOwn(interfaceOverrides,value)?(interfaceOverrides[value]??''):value);}
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walker.nextNode()){
+  const node=walker.currentNode,element=node.parentElement;if(element?.closest('[data-copy-editor],[data-local-wording]'))continue;
+  const origin=appWording.source(node,originalNodes.get(node));if(!origin)continue;
+  const choice=Object.hasOwn(replacements,origin.key)?replacements[origin.key]:origin.key;
+  const rendered=String(choice??'').replace(/\{(\w+)\}/g,(_,key)=>String(origin.values[key]??'{'+key+'}'));
+  const value=origin.source===origin.key?rendered:origin.source.replace(origin.source.trim(),rendered);
+  if(node.nodeValue!==value)node.nodeValue=value;originalNodes.set(node,{source:origin.source,key:origin.key,rendered:value});
+ }
+ const elements=[...(root.matches?.('[placeholder],[title]')?[root]:[]),...(root.querySelectorAll?.('[placeholder],[title]')||[])];
+ for(const element of elements){if(element.closest('[data-copy-editor]')||element.hasAttribute('data-local-wording'))continue;const record=originalAttributes.get(element)||{};
+  for(const attr of ['placeholder','title']){const key=appWording.attribute(element,attr,record[attr]);if(key===null)continue;const value=Object.hasOwn(interfaceOverrides,key)?(interfaceOverrides[key]??''):key;element.setAttribute(attr,value);record[attr]={source:key,rendered:value};}
+  originalAttributes.set(element,record);
+ }
 }
 async function refreshInterfaceText(){try{const response=await fetch('/interface-text',{headers:companyHeaders()});if(response.ok){interfaceOverrides=await response.json();applyInterfaceText();window.dispatchEvent(new Event('interface-text-updated'));}}catch{}}
 const textRoots=new Set();let scheduled=false;

@@ -26,7 +26,7 @@ window.createAppControls=({footer,toggle,wording,beforeOpen})=>{
   trigger.title=wording('Account menu');trigger.setAttribute('aria-label',trigger.title);menu.setAttribute('aria-label',wording('Account menu'));
   profileClose.setAttribute('aria-label',wording('Close profile'));profileClose.title=wording('Close profile');
   for(const [element,text] of [[profileButton.querySelector('span'),'User profile'],[settingsLink.querySelector('span'),'Settings'],[profileTitle,'User profile']]){const label=wording(text);if(element.textContent!==label)element.textContent=label;}
-  if(session){const role=wording(appAccess.roleName(session));permission.textContent=profileRole.textContent=role;}
+  if(session){const role=appAccess.roleName(session);permission.textContent=profileRole.textContent=role;}
   if(['/settings','/admin/settings'].includes(location.pathname))settingsLink.setAttribute('aria-current','page');else settingsLink.removeAttribute('aria-current');
  }
  function position(){
@@ -46,7 +46,7 @@ window.createAppControls=({footer,toggle,wording,beforeOpen})=>{
  function setSession(value){
   session=value;if(value.opstackSupport&&!document.getElementById('opstack-support-banner')){const banner=create('div','opstack-support-banner');banner.id='opstack-support-banner';banner.style.cssText='position:fixed;bottom:calc(76px + env(safe-area-inset-bottom,0px));right:12px;z-index:10020;padding:8px 12px;border-radius:10px;background:#e27925;color:#182b3a;text-align:center;font:600 12px Arial,sans-serif;box-shadow:0 3px 12px #0002';banner.append(document.createTextNode('Opstack support · '+value.networkName+' · '));const back=create('a',undefined,'Return to console');back.href='/opstack';back.style.color='inherit';banner.append(back);document.body.append(banner);}
   window.appTheme?.setAccount(value.id);const role=appAccess.roleName(value),initials=value.username.trim().split(/\s+/).slice(0,2).map(part=>Array.from(part)[0]||'').join('').toUpperCase();
-  name.textContent=profileName.textContent=value.username;permission.textContent=profileRole.textContent=wording(role);avatar.textContent=profileAvatar.textContent=initials;values.company.textContent=value.companyName||'—';values.location.textContent=value.locationName||'—';
+  name.textContent=profileName.textContent=value.username;permission.textContent=profileRole.textContent=role;avatar.textContent=profileAvatar.textContent=initials;values.company.textContent=value.companyName||'—';values.location.textContent=value.locationName||'—';
   for(const [key,entries] of [['companies',value.companies],['locations',value.locations]]){values[key].replaceChildren();values[key].className='user-profile-tags';for(const entry of entries||[])values[key].append(create('span',undefined,entry.name));if(!values[key].childNodes.length)values[key].textContent='—';}
   settingsLink.hidden=!appAccess.any(['appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage'],value);if(editControls)editControls.hidden=!appAccess.can('appearance.manage',value);profileButton.disabled=false;refresh();
  }

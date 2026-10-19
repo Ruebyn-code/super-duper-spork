@@ -30,18 +30,17 @@ function applyElementOverrides(root=document){
    if(settings.image&&element.getAttribute('src')!==settings.image)element.setAttribute('src',settings.image);else if(!settings.image&&localImageRecords.has(element)){const original=localImageRecords.get(element);if(original!==null)element.setAttribute('src',original);else element.removeAttribute('src');localImageRecords.delete(element);}
   }
   const previous=localTextRecords.get(element);
-  const values=()=>{try{return JSON.parse(element.dataset.appValues||'{}');}catch{return {};}};
-  const formatted=(template)=>String(template??'').replace(/\{(\w+)\}/g,(_,key)=>String(values()[key]??'{'+key+'}'));
-  if(!elementOverrides[id]?.text&&settings.texts){let key=element.dataset.appTemplate||element.dataset.localWording||previous?.original||originalAttributes.get(element)?.placeholder||element.getAttribute('placeholder');if(!key||!Object.hasOwn(settings.texts,key)){const walker=document.createTreeWalker(element,NodeFilter.SHOW_TEXT);while(walker.nextNode()){const node=walker.currentNode;if(node.parentElement.closest('[data-user-text],.stock-name,#menu h3,#menu .sku,#menu .description,.supplier-title h3'))continue;const original=(originalNodes.get(node)?.source||node.nodeValue).trim().replace(/\s+/g,' ');if(Object.hasOwn(settings.texts,original)){key=original;break;}}}if(key&&Object.hasOwn(settings.texts,key))settings.text=settings.texts[key];}
-  const profileText=settings.text&&!elementOverrides[id]?.text;if(profileText&&element.closest('[data-user-text],.stock-name,#menu h3,#menu .sku,#menu .description,.supplier-title h3'))delete settings.text;
-  if(settings.text){
-   const spec=settings.text;
-   if(spec.attribute){element.dataset.localWording=spec.original;element.setAttribute(spec.attribute,spec.value??'');localTextRecords.set(element,{attribute:spec.attribute,original:spec.original});continue;}
-   let record=previous;
-   if(!record?.node?.isConnected||record.original!==spec.original){const walker=document.createTreeWalker(element,NodeFilter.SHOW_TEXT);let found;while(walker.nextNode()){const node=walker.currentNode;const original=(originalNodes.get(node)?.source||node.nodeValue).trim().replace(/\s+/g,' ');if(original===spec.original||(element.dataset.appTemplate===spec.original&&node.parentElement===element)){found=node;break;}}if(found){record={node:found,original:spec.original};localTextRecords.set(element,record);}}
-   if(profileText&&record?.original!==spec.original)record=null;
-   if(record?.node){element.dataset.localWording=spec.original;const rendered=formatted(spec.value);if(record.node.nodeValue!==rendered)record.node.nodeValue=rendered;originalNodes.set(record.node,{source:record.original,rendered});}
-  }else if(previous){element.removeAttribute('data-local-wording');const value=formatted(Object.hasOwn(interfaceOverrides,previous.original)?interfaceOverrides[previous.original]:(interfaceDefaults[previous.original]??previous.original));if(previous.attribute)element.setAttribute(previous.attribute,value);else if(previous.node?.isConnected){previous.node.nodeValue=value;originalNodes.set(previous.node,{source:previous.original,rendered:value});}localTextRecords.delete(element);}
+  const candidates=[];const walker=document.createTreeWalker(element,NodeFilter.SHOW_TEXT);while(walker.nextNode()){const node=walker.currentNode,origin=appWording.source(node,originalNodes.get(node));if(origin)candidates.push({node,origin});}
+  let spec=settings.text;
+  if(!elementOverrides[id]?.text&&settings.texts){const key=candidates.find(item=>Object.hasOwn(settings.texts,item.origin.key))?.origin.key||['placeholder','title'].map(attr=>appWording.attribute(element,attr,originalAttributes.get(element)?.[attr])).find(key=>key&&Object.hasOwn(settings.texts,key));spec=key?settings.texts[key]:undefined;}
+  let applied=false;
+  if(spec?.attribute){const key=appWording.attribute(element,spec.attribute,originalAttributes.get(element)?.[spec.attribute]);if(key===spec.original){const rendered=spec.value??'';element.dataset.localWording=key;element.setAttribute(spec.attribute,rendered);originalAttributes.set(element,{...(originalAttributes.get(element)||{}),[spec.attribute]:{source:key,rendered}});localTextRecords.set(element,{attribute:spec.attribute,original:key,rendered});applied=true;}}
+  else if(spec){const found=candidates.find(item=>item.origin.key===spec.original);if(found){const {node,origin}=found,choice=String(spec.value??'').replace(/\{(\w+)\}/g,(_,key)=>String(origin.values[key]??'{'+key+'}')),rendered=origin.source===origin.key?choice:origin.source.replace(origin.source.trim(),choice);element.dataset.localWording=spec.original;if(node.nodeValue!==rendered)node.nodeValue=rendered;originalNodes.set(node,{source:origin.source,key:origin.key,rendered});localTextRecords.set(element,{node,original:spec.original,source:origin.source,values:origin.values,rendered});applied=true;}}
+  if(!applied&&previous){element.removeAttribute('data-local-wording');
+   if(previous.attribute){const key=appWording.attribute(element,previous.attribute,originalAttributes.get(element)?.[previous.attribute]);if(key===previous.original){const rendered=interfaceLabel(key);element.setAttribute(previous.attribute,rendered);originalAttributes.set(element,{...(originalAttributes.get(element)||{}),[previous.attribute]:{source:key,rendered}});}}
+   else if(previous.node?.isConnected&&previous.node.nodeValue===previous.rendered&&!appWording.data(previous.node.parentElement)){const choice=interfaceLabel(previous.original,previous.values),rendered=previous.source===previous.original?choice:previous.source.replace(previous.source.trim(),choice);previous.node.nodeValue=rendered;originalNodes.set(previous.node,{source:previous.source,key:previous.original,rendered});}
+   localTextRecords.delete(element);
+  }
 
  }
 }
