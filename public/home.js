@@ -38,7 +38,7 @@
   template($('home-averages-status'),averageHint,{weeks:averages.skippedWeeks});
  }
  function render(){
-  if(session){$('home-user-name').textContent=session.username+'!';template($('home-location'),'You are in {location}',{location:session.locationName||''});}
+  if(session){$('home-user-name').textContent=session.username+(session.homeGreeting?session.homeGreeting.split('{user}')[1]:'!');template($('home-location'),'You are in {location}',{location:session.locationName||''});}
   $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
   renderTotals();
   if(!catalogue)return;

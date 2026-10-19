@@ -1,6 +1,6 @@
 const http=require('node:http'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const platformStore=require('./opstack-store'),accountEmails=require('./account-email-settings'),invitations=require('./account-invitations');
-const publicFiles=require('./public-files');
+const publicFiles=require('./public-files'),newNetworkDefaults=require('./new-network-defaults');
 const {supportIdentity,parsedBody}=require('./platform-identity');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const cookies=req=>Object.fromEntries((req.headers.cookie||'').split(';').map(part=>{const at=part.indexOf('=');return[part.slice(0,at).trim(),part.slice(at+1)];}).filter(([name])=>name));
@@ -23,7 +23,7 @@ function createPlatformServer(root,options,createNetworkServer){
    const url=new URL(req.url,'http://localhost'),route=url.pathname;
    if(options.migrationMode||route==='/healthz')return primary.emit('request',req,res);
    if(publicFiles[route]&&!publicFiles[route].endsWith('.html'))return primary.emit('request',req,res);
-   if(req.method==='GET'&&url.searchParams.get('platform')==='1'&&['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/layouts'].includes(route))return primary.emit('request',req,res);
+   if(req.method==='GET'&&url.searchParams.get('platform')==='1'&&(['/logo','/sidebar-logo','/interface-text','/element-overrides','/font-library','/layouts'].includes(route)||(route==='/appearance'&&url.searchParams.get('console')==='1')))return primary.emit('request',req,res);
    const entry=await session(req);
    if(route==='/opstack'||route==='/opstack/accept-invite'){
     if(req.method!=='GET')fail('Unsupported action.',405);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY'});return res.end(await fs.readFile(path.join(__dirname,'public/opstack.html')));
@@ -64,6 +64,7 @@ function createPlatformServer(root,options,createNetworkServer){
      if(req.method==='GET')return json(200,accountEmails.summary(await accountEmails.read(root)));
      if(req.method==='PUT'){const settings=await accountEmails.save(root,await body(req));await store.audit(account,'account.emails.updated');return json(200,settings);}
     }
+    if(route==='/api/opstack/new-network-defaults'){if(req.method==='GET')return json(200,await newNetworkDefaults.read(root));if(req.method==='PUT'){const saved=await newNetworkDefaults.save(root,await body(req));await store.audit(account,'network.defaults.updated');return json(200,saved);}}
     if(route==='/api/opstack/activity'&&req.method==='GET')return json(200,{events:await store.activity()});
     fail('Opstack action not found.',404);
    }

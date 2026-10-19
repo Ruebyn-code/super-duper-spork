@@ -1,6 +1,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {promisify}=require('node:util');
 const scrypt=promisify(crypto.scrypt),invitations=require('./account-invitations'),{credentials}=require('./auth');
+const newNetworkDefaults=require('./new-network-defaults');
 const queues=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const label=(value,description)=>{if(typeof value!=='string'||!value.trim()||value.length>100)fail('Enter a '+description+' of 1–100 characters.');return value.trim();};
@@ -29,7 +30,7 @@ function createStore(root,{now=Date.now}={}){
   const owner={id:crypto.randomUUID(),username,email,role:'admin',locationId,locationIds:[locationId],version:crypto.randomUUID(),invitation:issued.record};
   record.ownerId=owner.id;
   await fs.mkdir(path.dirname(target),{recursive:true});await fs.mkdir(target);
-  try{for(const [name,value] of Object.entries({'accounts.json':[owner],'locations.json':[{id:locationId,name:locationName,companyId:'default',archived:false,legacyAccountIds:[],createdAt:record.createdAt}],'companies.json':[{id:'default',name:companyName,createdAt:record.createdAt}],'catalogue.json':{suppliers:[],products:[],imports:['book2-v1']}}))await fs.writeFile(path.join(target,name),JSON.stringify(value),{mode:0o600});}catch(error){await fs.rm(target,{recursive:true,force:true});throw error;}
+  try{const startingDefaults=await newNetworkDefaults.read(root);for(const [name,value] of Object.entries({...newNetworkDefaults.files(startingDefaults),'accounts.json':[owner],'locations.json':[{id:locationId,name:locationName,companyId:'default',archived:false,legacyAccountIds:[],createdAt:record.createdAt}],'companies.json':[{id:'default',name:companyName,createdAt:record.createdAt}],'catalogue.json':{suppliers:[],products:[],imports:['book2-v1']}}))await fs.writeFile(path.join(target,name),JSON.stringify(value),{mode:0o600});}catch(error){await fs.rm(target,{recursive:true,force:true});throw error;}
   data.networks.push(record);event(data,actor,'network.created',{networkId:record.id});return{network:record,account:owner,token:issued.token,invitationId:issued.record.id};
  });}
  async function updateNetwork(actor,id,input){return change(data=>{const record=data.networks.find(n=>n.id===id);if(!record)fail('Network not found.',404);if(typeof input.active!=='boolean')fail('Choose whether the network is active.');record.name=label(input.name,'network name');if(data.networks.some(n=>n.id!==id&&n.name.toLowerCase()===record.name.toLowerCase()))fail('That network name already exists.',409);record.active=input.active;event(data,actor,'network.updated',{networkId:id,active:record.active});return record;});}
