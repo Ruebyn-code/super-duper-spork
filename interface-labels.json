@@ -10779,5 +10779,251 @@
     "locations": [
       "Labels"
     ]
+  },
+  {
+    "text": "Template library",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "All templates",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "All labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Search all labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Sort labels",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Name A–Z",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Name Z–A",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Recently updated",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Previews · Click a label to print",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label actions",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Close label printing",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "New category…",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Label designer",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Drag fields on the label to move them. Select a field to change its formatting.",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Selected field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Field type",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Custom text",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Text",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Text before value",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Font",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Font size (pt)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Alignment",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Left",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Centre",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Right",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Date format",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Short date and time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Year-month-day and time",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Left (%)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Top (%)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Width (%)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Height (%)",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Bold",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Italic",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Underline",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Fit text to box",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Show field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Add text field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Remove field",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Reset label design",
+    "locations": [
+      "Labels"
+    ]
+  },
+  {
+    "text": "Staff name",
+    "locations": [
+      "Labels"
+    ]
   }
 ]
