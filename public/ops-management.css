@@ -107,7 +107,7 @@ html.ops-checklist-open,html.ops-checklist-open body{overflow:hidden}
 .ops-step-control>input[type=file]{margin:4px 0;font-size:.75rem}
 .ops-submissions{gap:6px}.ops-submission{padding:6px;gap:4px;border-radius:8px}
 .ops-signature-tools{margin:5px 0}.ops-signature-tools button{min-height:28px;padding:4px 8px;font-size:.75rem}
-.ops-answer:is(.section,.timed-section){padding:7px 10px;margin-top:12px}.ops-answer:is(.section,.timed-section) h3{font-size:.85rem}
+.ops-answer:is(.section,.timed-section){padding:7px 10px;margin-top:12px}.ops-answer:is(.section,.timed-section) h3{font-size:.85rem}.ops-answer.timed-section h3{font-size:1.7rem;min-width:0;text-wrap:balance}
 .ops-run-scroll{padding-top:9px}
 @media(max-width:800px){.ops-step-details{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-step-details .ops-step-help{grid-column:1/-1}}
 @media(max-width:580px){.ops-step-details input:not([type=checkbox]):not([type=color]):not([type=file]),.ops-step-details textarea,.ops-step-details .location-select-trigger{height:36px;min-height:36px;font-size:16px}.ops-type-menu .location-picker-option{min-height:40px}.ops-answer input:not([type=checkbox]):not([type=radio]):not([type=file]),.ops-answer .location-select-trigger{height:40px;min-height:40px;font-size:16px}.ops-answer textarea{font-size:16px}.ops-answer .ops-option{min-height:32px}.ops-run-dialog #ops-run-actions .ops-autosave{flex-basis:100%;font-size:.68rem}.ops-run-dialog #ops-run-actions{gap:7px}}
