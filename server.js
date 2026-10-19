@@ -25,6 +25,7 @@ const {splitBySupplier}=require('./supplier-orders');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
 const wordingModel=require('./public/wording-model');
+const homeBoard=require('./home-board');
 const layouts=require('./layouts'),layoutModel=require('./public/layout-model');
 const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');const editParts=require('./public/edit-parts');
@@ -131,7 +132,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
       let session=await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
-      const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout'];
+      const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout','/api/home-dashboard'];
       const authPage=['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
       const platformAppearance=authPage||((customisationRoutes.includes(req.url)||fontAsset||settingsPage)&&(req.headers['x-app-appearance']==='platform'||requestUrl.searchParams.get('platform')==='1'));
       const sharedAppearance=platformAppearance&&(settingsPage||req.url.startsWith('/admin/appearance/')||requestUrl.searchParams.get('console')==='1'||req.headers['x-opstack-shared-appearance']==='1');
@@ -185,6 +186,12 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(management&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie',`admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(req)?'; Secure':''}`);return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(req.url==='/api/home-dashboard'){
+        if(platformAppearance)fail('Home sections belong to a company.',400);
+        if(req.method==='GET')return json(200,await homeBoard.read(customisationDir));
+        if(req.method==='PUT')return json(200,await homeBoard.save(customisationDir,await body(req,64000)));
+        fail('Unsupported Home action.',405);
+      }
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
       const permissionLevelRoute=req.url.match(/^\/api\/permission-levels\/([a-zA-Z0-9-]+)$/);
       if((req.url==='/api/permission-levels'&&req.method==='POST')||(permissionLevelRoute&&['PUT','DELETE'].includes(req.method))){await auth.changePermissionLevel(session,await body(req,64000),req.method,permissionLevelRoute?.[1]);return json(req.method==='POST'?201:200,await auth.permissionLevels(await auth.forCompany(session,session.companyId)));}
@@ -270,6 +277,10 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const [records,history,catalogue]=await Promise.all([salesStore.history(dataDir,session),usageHistory(dataDir),readCatalogue()]);
         const report=reporting.calculate(records,history.orders,history.counts,catalogue,session,params,{now,transfers:history.transfers});
         report.details=await reportingDetails.build(dataDir,session,report.period,{...history,catalogue,store:weeklySalesReportStore,now,weekBasis:params.weekBasis});return json(200,report);
+      }
+      if(req.url==='/api/home-orders'&&req.method==='GET'){
+        const history=await usageHistory(dataDir),seen=new Set();
+        return json(200,history.orders.filter(order=>order.requestOwnerId===session.id&&sales.allTimeTotals([],[order],session).orderCount&&!seen.has(order.id)&&seen.add(order.id)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).slice(0,8).map(order=>({id:order.id,createdAt:order.createdAt,totalCents:order.total,pricePending:Boolean(order.pricePending||order.items.some(item=>item?.price===null)),units:order.items.reduce((sum,item)=>sum+(Number(item?.quantity)||0),0)})));
       }
       if(req.url==='/api/home-totals'&&req.method==='GET'){
         const history=await usageHistory(dataDir);

@@ -96,7 +96,8 @@
       "index",
       "settings",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -185,7 +186,8 @@
       "index",
       "settings",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -495,7 +497,8 @@
       "index",
       "settings",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -801,7 +804,8 @@
   {
     "text": "Stock catalogue",
     "locations": [
-      "index"
+      "index",
+      "Home"
     ]
   },
   {
@@ -815,7 +819,8 @@
       "index",
       "settings",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -1099,7 +1104,8 @@
     "locations": [
       "Stock count",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -1862,7 +1868,8 @@
     "locations": [
       "Sales and ordering budget",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -2034,7 +2041,8 @@
     "text": "Projected sales",
     "locations": [
       "Sales and ordering budget",
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -2212,7 +2220,8 @@
       "Locations and shared ordering",
       "rostering",
       "Award compliance",
-      "Ops management"
+      "Ops management",
+      "Home"
     ]
   },
   {
@@ -3463,7 +3472,8 @@
     "text": "Actual sales",
     "locations": [
       "sales",
-      "cart"
+      "cart",
+      "Home"
     ]
   },
   {
@@ -3576,7 +3586,8 @@
       "Companies",
       "Navigation",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -3857,7 +3868,8 @@
     "locations": [
       "Reporting",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -4459,7 +4471,8 @@
   {
     "text": "Done",
     "locations": [
-      "Dropdowns"
+      "Dropdowns",
+      "Home"
     ]
   },
   {
@@ -4519,7 +4532,8 @@
   {
     "text": "Labour",
     "locations": [
-      "sales · weekly report"
+      "sales · weekly report",
+      "Home"
     ]
   },
   {
@@ -4657,7 +4671,8 @@
   {
     "text": "Weekly sales report",
     "locations": [
-      "sales · weekly report"
+      "sales · weekly report",
+      "Home"
     ]
   },
   {
@@ -4693,7 +4708,8 @@
   {
     "text": "Profit",
     "locations": [
-      "sales · weekly report"
+      "sales · weekly report",
+      "Home"
     ]
   },
   {
@@ -4741,7 +4757,8 @@
   {
     "text": "R&O",
     "locations": [
-      "sales"
+      "sales",
+      "Home"
     ]
   },
   {
@@ -5091,7 +5108,8 @@
     "text": "Completed",
     "locations": [
       "sales",
-      "Ops management"
+      "Ops management",
+      "Home"
     ]
   },
   {
@@ -5214,7 +5232,8 @@
       "settings",
       "setup",
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -5299,7 +5318,8 @@
   {
     "text": "Comms",
     "locations": [
-      "Comms"
+      "Comms",
+      "Home"
     ]
   },
   {
@@ -5714,7 +5734,8 @@
   {
     "text": "Knowledge Library",
     "locations": [
-      "knowledge-library"
+      "knowledge-library",
+      "Home"
     ]
   },
   {
@@ -6021,7 +6042,8 @@
   {
     "text": "Rostering",
     "locations": [
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -6111,7 +6133,8 @@
   {
     "text": "Timesheets",
     "locations": [
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -6377,7 +6400,8 @@
     "text": "Cancel",
     "locations": [
       "rostering",
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -6600,7 +6624,8 @@
   {
     "text": "Availability",
     "locations": [
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -6678,7 +6703,8 @@
   {
     "text": "Close",
     "locations": [
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -7128,7 +7154,8 @@
   {
     "text": "Award compliance",
     "locations": [
-      "Award compliance"
+      "Award compliance",
+      "Home"
     ]
   },
   {
@@ -7902,7 +7929,8 @@
   {
     "text": "App appearance",
     "locations": [
-      "settings-hub"
+      "settings-hub",
+      "Home"
     ]
   },
   {
@@ -8454,7 +8482,8 @@
   {
     "text": "Permission levels",
     "locations": [
-      "settings-hub"
+      "settings-hub",
+      "Home"
     ]
   },
   {
@@ -8809,7 +8838,8 @@
   {
     "text": "Leave",
     "locations": [
-      "rostering"
+      "rostering",
+      "Home"
     ]
   },
   {
@@ -9685,7 +9715,8 @@
   {
     "text": "Checklist history",
     "locations": [
-      "Ops management"
+      "Ops management",
+      "Home"
     ]
   },
   {
@@ -10063,7 +10094,8 @@
   {
     "text": "Users",
     "locations": [
-      "Ops management"
+      "Ops management",
+      "Home"
     ]
   },
   {
@@ -10483,7 +10515,8 @@
   {
     "text": "Labels",
     "locations": [
-      "Labels"
+      "Labels",
+      "Home"
     ]
   },
   {
@@ -10513,13 +10546,15 @@
   {
     "text": "Label templates",
     "locations": [
-      "Labels"
+      "Labels",
+      "Home"
     ]
   },
   {
     "text": "Label history",
     "locations": [
-      "Labels"
+      "Labels",
+      "Home"
     ]
   },
   {
@@ -10542,11 +10577,15 @@
   },
   {
     "text": "Decrease number of labels",
-    "locations": ["Labels · aria-label"]
+    "locations": [
+      "Labels · aria-label"
+    ]
   },
   {
     "text": "Increase number of labels",
-    "locations": ["Labels · aria-label"]
+    "locations": [
+      "Labels · aria-label"
+    ]
   },
   {
     "text": "Number of labels",
@@ -11320,6 +11359,648 @@
     "text": "Uses the note saved on this label template.",
     "locations": [
       "Labels"
+    ]
+  },
+  {
+    "text": "Edit Home",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add section",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Undo",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Reset sections",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Retry save",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Reload saved sections",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add a section",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Build your Home by adding a section.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Apply section",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Loading section…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unable to load this section.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Retry",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "You’re up to date.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No outstanding checklists today.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No placed orders yet.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No transfers awaiting receipt.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No upcoming shifts this week.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No leave requests to show.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No library articles yet.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No label templates yet.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "No invoice bundles yet.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unread messages",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Recent unread posts",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Outstanding",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Expected so far",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Difference",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Suppliers",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Awaiting receipt",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Current-week entries",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Awaiting approval",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Active templates",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Available records",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quick links",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Choose shortcuts from every part of Opstack.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Essentials",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quarter totals & averages",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Current-quarter sales and completed-week averages.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Sales & finance",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Weekly sales progress",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Actual sales against the projection so far this week.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Weekly financial performance",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Sales, profit, Cost of goods, labour, Op Ex and R&O.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Ordering budget",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "The current ordering forecast, spend and remaining budget.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Recent placed orders",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Your recent placed orders at the selected location.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Stock & suppliers",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Catalogue and latest stock-count information.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Stock transfers",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Incoming transfers waiting for receipt.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Attention",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unread messages, required posts and outstanding checklists.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Pending Comms",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unread conversations and recent unread posts.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Today’s checklists",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Assigned work, completion and upcoming due times.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Operations",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "My upcoming shifts",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Your published shifts for the current week.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Current-week timesheets within your access.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Leave & availability",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Your requests and authorised leave reviews.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Recent policies and company information.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Company label templates and printing shortcuts.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Invoice bundles",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Stored invoice bundles for this location.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Users in your location and management scope.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Accessible locations in the selected company.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Companies available to your account.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "App module",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "A focused shortcut panel for any app destination.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Section heading",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add a heading and a short note to organise Home.",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Stock count history",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Quarter & year overview",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Cost of goods",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Op Ex",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Invoice scanner & bundles",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Direct messages",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Group chats",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Company & network posts",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Active checklists",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Checklist builder",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "My roster",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Team roster",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Roster maker",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Roster settings",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Settings",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Order sending",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Opstack console",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Saving Home…",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Unsaved Home sections",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Editing company Home · hold sections to move",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Company Home",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Full width",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Half width",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Third width",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Edit section",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Add below",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Remove section",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Search Home sections",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Your conversations",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Read in Comms",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Assigned at this location",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Projected week",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Latest stock count",
+    "locations": [
+      "Home"
+    ]
+  },
+  {
+    "text": "Manage your available hours",
+    "locations": [
+      "Home"
     ]
   }
 ]

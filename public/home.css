@@ -1,5 +1,5 @@
 /* A compact dashboard. Saved App edit colours, fonts and imagery keep precedence. */
-.home-page{--home-columns:4;--home-gap:12px;--home-radius:14px;--home-pad:12px;--home-card-height:82px;--home-max-width:none;display:flex;flex-direction:column;gap:var(--home-gap);width:100%;max-width:var(--home-max-width);padding-top:20px;padding-bottom:24px}
+.home-page{--home-columns:6;--home-gap:12px;--home-radius:14px;--home-pad:12px;--home-card-height:82px;--home-max-width:none;display:flex;flex-direction:column;gap:var(--home-gap);width:100%;max-width:var(--home-max-width);padding-top:20px;padding-bottom:24px}
 .home-page .home-overview{display:flex;align-items:stretch;gap:var(--home-gap);margin:0}
 .home-page .home-overview .home-hero{flex:1 1 230px;padding:var(--home-pad) 4px;align-items:center}
 .home-page .home-hero>div:first-child{gap:5px}

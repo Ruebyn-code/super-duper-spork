@@ -3,6 +3,8 @@ function apiPermission(url,method){
  if(url.startsWith('/api/communications/'))return null; // Granular checks, mandatory access and CSRF are handled by its router.
  if(url==='/api/permission-levels'||url.startsWith('/api/permission-levels/'))return read?['roles.manage','users.manage']:['roles.manage'];
  if(['/api/menu','/api/catalogue'].includes(url))return['orders.view','counts.view','stock.manage','suppliers.manage'];
+ if(url==='/api/home-orders')return['orders.view'];
+ if(url==='/api/home-dashboard')return[read?'home.view':'appearance.manage'];
  if(url==='/api/home-totals')return['home.view'];
  if(url.startsWith('/api/stock-transfers'))return ['transfers.view'];
  if(url.startsWith('/api/reporting'))return['reporting.view'];

@@ -14,7 +14,7 @@
   'home-budget-projection':'Projected sales','home-budget-amount':'Ordering budget','home-budget-spent':'Order costs','home-budget-remaining':'Budget after cart'
  };
  const widgets={...sections,...shortcuts,...metrics};
- const defaults={density:'compact',columns:4,gap:12,radius:14,width:'full',shortcutStyle:'cards',descriptions:false,periods:true,notes:false,hidden:['home-roster-card','home-comms-card','home-library-card','home-reporting-card']};
+ const defaults={density:'compact',columns:6,gap:12,radius:14,width:'full',shortcutStyle:'cards',descriptions:false,periods:true,notes:false,hidden:[]};
  function validate(value){
   if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(key=>!Object.hasOwn(defaults,key)))throw Error('Choose valid Home layout settings.');
   const result={...defaults,hidden:[...defaults.hidden],...value};
@@ -28,7 +28,7 @@
   let settings;try{settings=validate(value||{});}catch{return '';}
   const compact=settings.density==='compact',scope='[data-edit-id="home-main"]';
   let result=scope+'{--home-columns:'+settings.columns+';--home-gap:'+settings.gap+'px;--home-radius:'+settings.radius+'px;--home-pad:'+(compact?12:18)+'px;--home-card-height:'+(compact?82:108)+'px;--home-max-width:'+(settings.width==='full'?'none':settings.width+'px')+';}';
-  const hidden=[...settings.hidden.map(id=>'[data-edit-id="'+id+'"]'),...(!settings.descriptions?['.home-card-content>p']:[]),...(!settings.periods?['.home-total-period']:[]),...(!settings.notes?['.home-explanation:not([data-home-error])']:[])];
+  const hidden=[...settings.hidden.flatMap(id=>['[data-edit-id="'+id+'"]',...(Object.hasOwn(sections,id)?['.home-section:has(>.home-section-body>[data-edit-id="'+id+'"])']:[])]),...(!settings.descriptions?['.home-card-content>p']:[]),...(!settings.periods?['.home-total-period']:[]),...(!settings.notes?['.home-explanation:not([data-home-error])']:[])];
   for(const target of hidden)result+='body:not(.app-edit-mode) '+scope+' '+target+'{display:none!important;}';
   for(const id of settings.hidden)result+='body.app-edit-mode '+scope+' [data-edit-id="'+id+'"]{opacity:.45;outline:1px dashed var(--primary);outline-offset:-1px;}';
   if(settings.shortcutStyle==='list')result+=scope+' .home-actions{grid-template-columns:repeat(min(2,var(--home-columns)),minmax(0,1fr));}'+scope+' .home-action{min-height:54px;height:auto;padding:8px 12px;}'+scope+' .home-card-icon{width:32px;flex-basis:32px;height:32px;}'+scope+' .home-card-value{margin-top:2px;}';

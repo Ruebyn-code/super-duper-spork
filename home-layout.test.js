@@ -3,13 +3,13 @@ const model=require('./public/home-layout-model'),elements=require('./element-ov
 const {createServer}=require('./server'),{saveAdmin}=require('./auth');
 
 test('Home options validate bounded sizes and known widgets without permitting arbitrary CSS or selectors',()=>{
- const defaults=model.validate({});assert.equal(defaults.density,'compact');assert.equal(defaults.columns,4);
+ const defaults=model.validate({});assert.equal(defaults.density,'compact');assert.equal(defaults.columns,6);
  assert.notEqual(defaults.hidden,model.defaults.hidden);
  const value=model.validate({columns:6,radius:0,gap:24,hidden:['home-totals','home-cart-card']});
  assert.equal(value.radius,0);assert.match(model.css(value),/--home-radius:0px/);
  for(const bad of [null,[],{columns:1},{columns:7},{columns:2.5},{gap:100},{radius:-1},{width:'100%;color:red'},{notes:'true'},{hidden:['body']},{hidden:['home-totals','home-totals']},{hidden:['home-main']},{position:'fixed'},{density:'tiny'},{shortcutStyle:'raw'}])assert.throws(()=>model.validate(bad));
  const css=model.css(value);assert.match(css,/body:not\(.app-edit-mode\).*home-totals/);assert.match(css,/body.app-edit-mode.*home-cart-card/);assert.equal(model.css({hidden:['<style>']}),'');
- assert.match(styles.buildElements({},'<main data-edit-id="home-main">'),/--home-columns:4/);
+ assert.match(styles.buildElements({},'<main data-edit-id="home-main">'),/--home-columns:6/);
  assert.equal(styles.buildElements({'home-main':{homeLayout:value}},'<main data-edit-id="sales-main">'),'');
 });
 
