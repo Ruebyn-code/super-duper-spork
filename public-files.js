@@ -6,6 +6,7 @@ module.exports={'/ops-planner-model.js':'ops-planner-model.js','/ops-autosave.js
   '/persistent-navigation.css':'persistent-navigation.css',
   '/favicon.png':'assets/branding/opstack-icon.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',
+  '/checklist-phone-frame.png':'assets/branding/checklist-phone-frame.png',
   '/stock-transfers':'stock-transfers.html',
   '/stock-transfers.js':'stock-transfers.js',
   '/stock-transfers.css':'stock-transfers.css',

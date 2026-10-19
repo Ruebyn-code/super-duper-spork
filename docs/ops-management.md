@@ -12,13 +12,15 @@ The builder has two stages inside the selected checklist: **1 Checklist** for th
 
 The **Planner** stage contains three settings groups: **Planners**, **Locations** and **Assignees**. Clicking a group opens its popup; there is no separate planner page in the sidebar. Changes save automatically. Closing the popup returns to the Planner stage, preserving the checklist content and focus. **Back to checklist** returns to the first stage; **Done** in Planner returns to the checklist list.
 
-On a computer, a live **iPhone 18 Pro–style phone preview** sits to the right of both stages. It uses the checklist’s mobile field layout, required markers, descriptions, number formats, media controls and signature fields. It reflects draft edits and step order without creating records, saving answers or uploading files. Collapse/expand it with the phone icon; that choice is remembered for the signed-in account and company in this browser. The preview stays hidden on tablets and phones.
+On a computer, a live **iPhone 18 Pro–style phone preview** sits to the right of both stages. The enlarged preview targets twice the previous size, scales down only when the desktop width is constrained, and uses the supplied phone-frame reference with metallic edges and its camera cutout. Scroll within the preview panel to see the full enlarged device. It uses the checklist’s mobile field layout, required markers, descriptions, number formats, media controls and signature fields. It reflects draft edits and step order without creating records, saving answers or uploading files. Collapse/expand it with the phone icon; that choice is remembered for the signed-in account and company in this browser. The preview stays hidden on tablets and phones.
 
 Each checklist can retain several planners, such as morning and evening checks. Choose the planner at the top of the popup when there is more than one, or use **Add planner** inside it. All three groups edit that selected planner. Its locations and permission audience are independent of the other planners. New configurations start as Unscheduled until you choose how the team should use them.
 
 Managers can create content for their selected company. Editing shared content requires access to every location used by any planner, including paused planners. Managers with partial location access can open the checklist with its content read-only and configure planners covering only their own accessible locations. A shared planner requires access to all of its assigned locations before it can be edited.
 
 ## Planners group
+
+The compact **Set schedule** popup uses four checklist-type cards, a single recurrence row, three-column timing fields on desktop, and a short schedule summary. Dates, active hours, due time/day, reminders and priority stay visible together; phones use a two-column layout with scrolling when needed. Selected cards use the company primary colour.
 
 Choose:
 
