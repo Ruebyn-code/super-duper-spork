@@ -30,8 +30,18 @@
  const moreClose=document.createElement('button');moreClose.type='button';moreClose.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';moreHeading.append(moreTitle,moreClose);moreMenu.append(moreHeading);
  const navSlots=navs.map(nav=>{const marker=document.createComment('top navigation position');nav.before(marker);return {nav,marker};});
  const pinnedSlots=['/home','/rostering','/communications'].map(path=>{const link=sidebar.querySelector('.main-sidebar-nav a[href="'+path+'"]');if(!link)return null;const marker=document.createComment('main link position');link.before(marker);return {link,marker};}).filter(Boolean);
+ // Phones open active checklists directly; management and history stay in More.
+ const desktopOps=sidebar.querySelector('.main-sidebar-nav a[href="/ops-management"]');
+ function checklistLink(view,title,permission){
+  const link=document.createElement('a');link.href='/ops-management#'+view;link.dataset.mobileChecklistView=view;link.dataset.sidebarName=title;link.dataset.permission=permission;link.dataset.editId='navigation-mobile-checklists-'+view;
+  const icon=desktopOps?.querySelector('svg')?.cloneNode(true);if(icon){for(const node of [icon,...icon.querySelectorAll('[data-edit-id]')])node.removeAttribute('data-edit-id');if(view==='history')icon.innerHTML='<path d="M3 11a9 9 0 1 1 3 8M3 4v7h7"/><g class="icon-detail"><path d="M12 7v5l3 2"/></g>';link.append(icon);}
+  const label=document.createElement('span');label.className='sidebar-label';label.dataset.interfaceLabel=title;label.textContent=title;link.append(label);return link;
+ }
+ const checklistTab=desktopOps?checklistLink('checklists','Checklists','ops.view'):null,checklistMore=document.createElement('nav');checklistMore.className='main-sidebar-nav mobile-checklist-options';checklistMore.dataset.permission='ops.view';checklistMore.setAttribute('aria-label','Checklist options');
+ if(desktopOps)checklistMore.append(checklistLink('templates','Checklist builder','ops.manage'),checklistLink('history','History','ops.view'));
+ function currentLink(link){if(link===desktopOps&&mobile.matches)return false;if(link.dataset.mobileChecklistView)return location.pathname==='/ops-management'&&(location.hash||'#checklists')==='#'+link.dataset.mobileChecklistView;return link.dataset.sidebarGroup?link.dataset.sidebarGroup===currentGroup():new URL(link.href).pathname===location.pathname;}
  const footerSlot=document.createComment('account control position');footer?.before(footerSlot);let brandSlot,morePointerWasOpen=false;
- scroll.id='app-sidebar-menu';sidebar.append(mobileBar,moreMenu);mobileBar.append(more);shell.before(backdrop);page.prepend(mobileHeader);
+ scroll.id='app-sidebar-menu';sidebar.append(mobileBar,moreMenu);mobileBar.append(more);if(checklistTab)mobileBar.insertBefore(checklistTab,more);if(desktopOps)moreMenu.append(checklistMore);shell.before(backdrop);page.prepend(mobileHeader);
  function updateMore(){const label=wording('More'),span=more.querySelector('.sidebar-label'),opened=moreMenu.matches(':popover-open');if(span.textContent!==label)span.textContent=label;moreTitle.textContent=label;more.title=label||'More';more.setAttribute('aria-label',more.title);more.setAttribute('aria-haspopup','true');more.setAttribute('aria-controls',moreMenu.id);more.setAttribute('aria-expanded',String(opened));moreMenu.setAttribute('aria-label',label||'More');moreClose.title=wording('Close menu');moreClose.setAttribute('aria-label',moreClose.title);const active=Boolean(moreMenu.querySelector('a[aria-current=page],a[data-submenu-open=true]'));more.classList.toggle('active',opened||active);if(active)more.setAttribute('aria-current','true');else more.removeAttribute('aria-current');}
  function closeMore(restoreFocus=false){if(moreMenu.matches(':popover-open'))moreMenu.hidePopover();updateMore();if(restoreFocus)more.focus({preventScroll:true});}
  function openMore(focus=false){controls.close();closeSubmenu();window.locationPickers?.closeAll();moreMenu.showPopover({source:more});updateMore();if(focus)[...moreMenu.querySelectorAll('a')].find(link=>link.getClientRects().length)?.focus();}
@@ -42,13 +52,13 @@
  function syncMobileLayout(){
   controls.sync();closeMore();closeSubmenu();window.locationPickers?.closeAll();pointerInside=false;keyboardInside=false;sidebar.classList.toggle('top-navigation',!mobile.matches);
   if(mobile.matches){
-   for(const {nav} of navSlots)moreMenu.append(nav);if(admin)moreMenu.append(admin);for(const {link} of pinnedSlots)mobileBar.insertBefore(link,more);if(secondary)shell.insertBefore(secondary,page);
+   for(const {nav} of navSlots)moreMenu.append(nav);if(desktopOps)moreMenu.append(checklistMore);if(admin)moreMenu.append(admin);for(const {link} of pinnedSlots)mobileBar.insertBefore(link,more);if(checklistTab)mobileBar.insertBefore(checklistTab,more);if(secondary)shell.insertBefore(secondary,page);
    const brand=scroll.querySelector('.sidebar-brand-row');if(brand){if(!brandSlot){brandSlot=document.createComment('top brand position');brand.before(brandSlot);}mobileHeader.append(brand);}
    if(footer)mobileHeader.append(footer);
   }else{
    for(const {link,marker} of pinnedSlots)marker.after(link);if(admin)tabs.append(admin);for(const {nav,marker} of navSlots)marker.after(nav);if(footer)footerSlot.after(footer);if(secondary)sidebar.append(secondary);const brand=mobileHeader.querySelector('.sidebar-brand-row');if(brand&&brandSlot)brandSlot.after(brand);openSubmenu(currentGroup());
   }
-  renderNavigation();renderMobileSheets();
+  if(desktopOps)desktopOps.hidden=mobile.matches;renderNavigation();renderMobileSheets();
  }
  mobile.addEventListener('change',syncMobileLayout);
  function updateSubmenuTitle(){const link=groupLink(selectedGroup),title=document.getElementById('subsidebar-title');if(title&&(link||selectedGroup==='settings')){title.dataset.localWording=link?.dataset.sidebarName||'App settings';const text=selectedGroup==='settings'?wording('App settings'):link.querySelector('.sidebar-label')?.textContent||'';if(title.textContent!==text)title.textContent=text;}const close=document.getElementById('subsidebar-close');if(close){close.title=wording('Close submenu')||'Close submenu';close.setAttribute('aria-label',close.title);}}
@@ -66,7 +76,7 @@
   const first=[...secondary.querySelectorAll('[data-subsidebar-group="'+group+'"] a[href]')].find(link=>!link.closest('.access-denied,[hidden]'));if(first&&first.href!==location.href){if(mobile.matches)try{sessionStorage.setItem('souvlaki-navigation-group',group);}catch{}if(window.appShell)appShell.navigate(first.href);else location.assign(first.href);}
  }));
  document.getElementById('subsidebar-close')?.addEventListener('click',()=>closeSubmenu(true));
- sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{controls.close();closeMore();closeSubmenu();}));
+ sidebar.querySelectorAll('.main-sidebar-nav a:not([data-sidebar-group]),.mobile-tabbar a:not([data-sidebar-group])').forEach(link=>link.addEventListener('click',()=>{controls.close();closeMore();closeSubmenu();}));
  document.addEventListener('keydown',event=>{if(event.defaultPrevented||event.key!=='Escape'||document.querySelector('dialog[open], [popover]:popover-open:not(.app-edit-indicator)'))return;if(selectedGroup){event.preventDefault();closeSubmenu(true);}});
  secondary?.addEventListener('click',event=>{if(mobile.matches&&event.target.closest('a'))closeSubmenu();});
  window.addEventListener('hashchange',()=>{updatePageLinks();if(!mobile.matches)openSubmenu(currentGroup());});
@@ -107,14 +117,14 @@
    if(changed)window.dispatchEvent(new Event('company-options-updated'));
   }
   if(session){appAccess.apply(session);isAdmin=appAccess.can('appearance.manage');isUserManager=appAccess.any(appAccess.admin);if(admin)admin.hidden=!isUserManager;controls.setSession(session);}
-  sidebar.querySelectorAll('.main-sidebar-nav a,.mobile-tabbar a').forEach(link=>{if(link.dataset.sidebarGroup?link.dataset.sidebarGroup===currentGroup():new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+  sidebar.querySelectorAll('.main-sidebar-nav a,.mobile-tabbar a').forEach(link=>{if(currentLink(link))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
   if(mobile.matches){closeMore();closeSubmenu();}else openSubmenu(currentGroup(),false,true);
   updateNavigationLabels();renderMobileSheets();
  }};
  (async()=>{
   try{
    session=await appAccess.initialSession();if(!session.csrf){location.href=companyLoginUrl();return;}
-   sidebar.querySelectorAll('.main-sidebar-nav a,.mobile-tabbar a').forEach(link=>{if(link.dataset.sidebarGroup?link.dataset.sidebarGroup===currentGroup():new URL(link.href).pathname===location.pathname)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+   sidebar.querySelectorAll('.main-sidebar-nav a,.mobile-tabbar a').forEach(link=>{if(currentLink(link))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
    const brand=sidebar?.querySelector('.brand');
    if(session.locationName&&brand){
     let row=brand.closest('.sidebar-brand-row');if(!row){row=document.createElement('div');row.className='sidebar-brand-row';brand.before(row);row.append(brand);}

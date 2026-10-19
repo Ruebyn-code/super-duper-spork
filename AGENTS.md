@@ -24,7 +24,7 @@
 
 - The Knowledge Library category sidebar is a one-off exception: it uses an explicit collapse/expand button and remembers the choice per user/company. It must not expand on hover or keyboard focus. Other in-page sidebars keep the shared hover behavior.
 
-- Keep App edit in the shared bar account dropdown on larger screens; hide it and suspend editing on phones. Phone bottom navigation contains Home, Rostering, Comms and More; More holds the other pages. Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
+- Keep App edit in the shared bar account dropdown on larger screens; hide it and suspend editing on phones. Phone bottom navigation contains Home, Rostering, Comms, Checklists and More. Checklists opens only the active view; Checklist builder and History are direct More destinations with existing Ops permissions. Hide the local Ops sidebar on phones, retain it on desktop/tablet, and keep hash navigation, selected-tab highlighting and draft guards consistent. More holds the other pages. Rearranging happens directly by holding and dragging sections/cards while edit mode is on, with automatic company-wide saving and Undo. Do not add a separate arranging menu.
 
 - On phones, Rostering opens as a popup above the current page. Keep My roster, Team roster, timesheets, availability and leave inside it; closing restores the underlying page and its state. Do not expose roster creation, editing or labour settings on phones. Keep the shared navigation usable while this sheet is open.
 

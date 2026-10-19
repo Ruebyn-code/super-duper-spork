@@ -252,3 +252,7 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
  .ops-active-page .ops-filters h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
  .ops-active-page .ops-filters .location-picker{max-width:145px}
 }
+
+/* Phone checklist navigation belongs in the shared bar and More menu. */
+.ops-phone-navigation .ops-layout{grid-template-columns:minmax(0,1fr)}
+.ops-phone-navigation .ops-layout>nav.page-sidebar{display:none}

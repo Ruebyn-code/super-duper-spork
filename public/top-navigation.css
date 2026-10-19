@@ -146,7 +146,7 @@
 /* Keep feature status visible in icon-only and mobile navigation. */
 .roster-navigation-link{position:relative}.navigation-beta-badge{position:absolute;top:1px;right:1px;z-index:1;padding:1px 3px;border-radius:4px;border:1px solid color-mix(in srgb,var(--secondary) 30%,var(--theme-line,white));background:color-mix(in srgb,var(--secondary) 16%,var(--theme-surface,white));color:color-mix(in srgb,var(--theme-secondary-text,var(--secondary)) 55%,var(--theme-warning-text,#40250f));font:700 7px/1.2 Arial,sans-serif;letter-spacing:.02em;white-space:nowrap;pointer-events:none}.rostering-heading h1{display:inline-flex;align-items:center;gap:7px}.rostering-heading h1>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis}.feature-beta-badge{flex-shrink:0;display:inline-flex;align-items:center;padding:3px 6px;border:1px solid color-mix(in srgb,var(--secondary) 30%,var(--theme-line,white));border-radius:5px;background:color-mix(in srgb,var(--secondary) 12%,var(--theme-surface,white));color:color-mix(in srgb,var(--theme-secondary-text,var(--secondary)) 55%,var(--theme-warning-text,#40250f));font:700 10px/1 Arial,sans-serif;letter-spacing:.02em;vertical-align:middle}
 
-/* Phones keep four destinations within reach; other pages open from More. */
+/* Phones keep everyday destinations within reach; other pages open from More. */
 #app-sidebar .mobile-navigation-menu{display:none}
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  .app-controls-menu #admin-edit-controls{display:none!important}
@@ -183,3 +183,9 @@
  .mobile-brand-header .account-menu-footer #toolbar-toggle[aria-expanded=true] .account-menu-chevron{transform:rotate(180deg)}
 }
 @media(prefers-reduced-motion:reduce){.mobile-navigation-menu:popover-open{animation:none}.mobile-brand-header .account-menu-chevron{transition:none}}
+
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
+ #app-sidebar .mobile-tabbar{gap:3px;padding-inline:max(6px,env(safe-area-inset-left,0px)) max(6px,env(safe-area-inset-right,0px))}
+ #app-sidebar .mobile-tabbar [data-mobile-checklist-view] .sidebar-label{font-size:10px}
+ #app-sidebar .mobile-navigation-menu .mobile-checklist-options{margin-top:5px!important;padding-top:5px;border-top:1px solid var(--theme-line,#dce5ed)}
+}
