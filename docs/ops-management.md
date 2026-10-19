@@ -4,11 +4,15 @@ Open **Ops management** from the main navigation, or **More → Ops management**
 
 Head Office and Franchisees can create templates by default. All signed-in staff can complete them. Settings → Permission levels has separate **View**, **Complete** and **Manage checklists** controls. Existing customised roles keep their grants; grant these controls explicitly where needed.
 
-## Checklist builder and grouped settings
+## Two-stage checklist builder
 
 Open **Checklist builder → New checklist** or **Edit checklist** on an existing card. Enter the name and instructions, then add its compact step cards. Open a step's chevron for its type/options and drag its grip to rearrange. Arrow keys move a focused grip; Escape cancels a drag. Moving a section carries the following steps until the next section.
 
-The checklist contains three settings groups: **Planners**, **Locations** and **Assignees**. Clicking a group opens its popup; there is no separate planner page. Changes save automatically. Closing the popup returns to the same checklist, preserving its content, scroll and focus. **Done** on the main builder returns to the list.
+The builder has two stages inside the selected checklist: **1 Checklist** for the name, instructions and steps, and **2 Planner** for configuration. Use the stage buttons or **Continue to planner** to switch. Pending content saves before entering Planner; incomplete or invalid content stays in Checklist with an error. Switching back retains the same fields, step order and open step options.
+
+The **Planner** stage contains three settings groups: **Planners**, **Locations** and **Assignees**. Clicking a group opens its popup; there is no separate planner page in the sidebar. Changes save automatically. Closing the popup returns to the Planner stage, preserving the checklist content and focus. **Back to checklist** returns to the first stage; **Done** in Planner returns to the checklist list.
+
+On a computer, a live **iPhone 18 Pro–style phone preview** sits to the right of both stages. It uses the checklist’s mobile field layout, required markers, descriptions, number formats, media controls and signature fields. It reflects draft edits and step order without creating records, saving answers or uploading files. Collapse/expand it with the phone icon; that choice is remembered for the signed-in account and company in this browser. The preview stays hidden on tablets and phones.
 
 Each checklist can retain several planners, such as morning and evening checks. Choose the planner at the top of the popup when there is more than one, or use **Add planner** inside it. All three groups edit that selected planner. Its locations and permission audience are independent of the other planners. New configurations start as Unscheduled until you choose how the team should use them.
 
