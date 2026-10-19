@@ -40,7 +40,7 @@ Open **Opstack console → Monthly report** as an Opstack owner. Support and net
 
 **Expenses** contains Opstack's named monthly cost entries, amounts and optional notes. Add/remove entries and choose **Save expenses**. Expenses apply only to the selected month. Switching tabs retains drafts; save or reload changes before switching months. Concurrent edits require reloading rather than overwriting another owner's changes.
 
-The summary shows Sales, Expenses and Profit. Sales adds configured location fees once; Expenses adds that month's saved costs. Profit is Sales minus Expenses, coloured green for positive, red for negative and yellow for zero. Unconfigured location fees leave Profit unavailable and show how many fees need entering. These amounts are platform reporting records and do not alter tenant sales, ordering budgets or expenses. Report edits do not send invoices or collect payments.
+The report uses the compact weekly-report layout: tinted table headers, network subtotals, a total row and overview cards directly underneath. Sales and Expenses share the month controls at the top. The overview shows Sales, Profit and Expenses. Sales adds configured location fees once; Expenses adds that month's saved costs. Profit is Sales minus Expenses, coloured green for positive, red for negative and yellow for zero. Unconfigured location fees leave Profit unavailable and show how many fees need entering. These amounts are platform reporting records and do not alter tenant sales, ordering budgets or expenses. Report edits do not send invoices or collect payments.
 
 ## Storage and activity
 

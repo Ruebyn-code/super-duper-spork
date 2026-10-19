@@ -2,5 +2,92 @@
 @media(prefers-reduced-motion:reduce){.console-layout .page-sidebar,.console-layout .page-sidebar-label{transition:none}}
 
 .console-default-fields>label{margin-top:16px}.console-default-fields input[type=color]{width:100%;padding:5px;cursor:pointer}
-.console-report-toolbar,.console-report-period{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.console-report-toolbar{margin:8px 0 18px}.console-report-period{flex-wrap:nowrap}.console-report-period strong{min-width:135px;text-align:center;font-size:14px}.console-report-toolbar button{padding:7px 11px;min-width:36px}.console-report-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.console-report-metric{display:flex;flex-direction:column;gap:8px;padding:17px 20px;border:1px solid var(--theme-line,#e0e8f0);border-radius:14px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));min-width:0}.console-report-metric>span{font-size:12px;color:var(--theme-muted,#64748b)}.console-report-metric>strong{font-size:25px;color:var(--theme-primary-text,var(--primary));overflow-wrap:anywhere}.console-report-metric small{font-size:11px;color:var(--theme-muted,#64748b)}.console-report-metric[data-result=positive]{background:color-mix(in srgb,#22c55e 10%,var(--theme-surface,#fff))}.console-report-metric[data-result=negative]{background:color-mix(in srgb,#ef4444 10%,var(--theme-surface,#fff))}.console-report-metric[data-result=even]{background:color-mix(in srgb,#eab308 12%,var(--theme-surface,#fff))}.console-report-metric[data-result=positive]>strong{color:var(--theme-success-text,#168344)}.console-report-metric[data-result=negative]>strong{color:var(--theme-danger-text,#c83232)}.console-report-metric[data-result=even]>strong{color:var(--theme-warning-text,#946200)}.console-report-tabbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;min-height:40px}.console-report-tabbar [role=tablist]{display:flex;gap:4px;padding:4px;border-radius:10px;background:var(--theme-surface,#fff);border:1px solid var(--theme-line,#e0e8f0)}.console-report-tabbar [role=tab]{border:0;background:transparent;padding:7px 18px;min-height:32px}.console-report-tabbar [aria-selected=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}.console-report-panel{margin-top:12px}.console-report-sales{width:100%;border-collapse:collapse;text-align:left}.console-report-sales th{padding:10px;font-size:11px;color:var(--theme-muted,#64748b);font-weight:600}.console-report-sales td{padding:12px 10px;font-size:13px;overflow-wrap:anywhere}.console-report-network{border-top:1px solid var(--theme-line,#e0e8f0);background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}.console-report-sales small{display:block;color:var(--theme-muted,#64748b);font-size:11px;margin-top:4px}.console-report-network td:nth-child(2){text-align:right;width:150px}.console-report-network td:last-child{width:40px;text-align:right}.console-report-sales th:nth-child(2){text-align:right}.console-report-location td{padding:8px 14px 8px 30px}.console-report-location td>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.console-report-location svg{width:16px;height:16px;min-width:16px}.console-report-location small{margin:0 0 0 auto}.console-report-expense{display:grid;grid-template-columns:minmax(120px,1fr) 150px minmax(120px,1.4fr) 38px;gap:12px;align-items:end;padding:12px 0;border-bottom:1px solid var(--theme-line,#e0e8f0)}.console-report-expense label{margin:0;font-size:11px;color:var(--theme-muted,#64748b)}.console-report-expense input{margin-top:6px;min-height:38px;font-size:13px}.console-report-money{display:flex;align-items:center;border:1px solid var(--theme-line,#d5dfeb);border-radius:9px;background:var(--theme-surface,#fff);margin-top:6px;overflow:hidden;color:var(--theme-muted,#64748b)}.console-report-money>span{padding-left:11px;font-size:13px}.console-report-money input{border:0;box-shadow:none;margin:0!important;min-width:0;width:100%;background:transparent;padding:9px 10px!important;color:var(--theme-text,#182b3a)}.console-report-money:focus-within{outline:2px solid color-mix(in srgb,var(--primary) 25%,transparent)}.console-month-control{display:flex;width:38px;height:38px;align-items:center;border:1px solid var(--theme-line,#e0e8f0);border-radius:9px;background:var(--theme-surface,#fff);transition:width .36s ease;max-width:100%;overflow:hidden}.console-month-control.is-open{width:280px}.console-month-control>button{width:36px;flex-shrink:0;padding:8px;border:0;background:transparent}.console-month-fields{display:flex;align-items:center;gap:5px;min-width:0;width:0;opacity:0;transition:opacity .2s ease}.console-month-control.is-open .console-month-fields{width:230px;opacity:1}.console-month-fields .location-picker{min-width:0}.console-month-fields .app-select-trigger{padding:6px 8px;min-height:32px;font-size:12px;min-width:0}.console-month-fields .location-picker:first-child{width:130px}.console-month-fields .location-picker:last-child{width:90px}@media(max-width:900px){.console-report-expense{grid-template-columns:minmax(100px,1fr) 120px 38px}.console-expense-notes{grid-column:1/3;grid-row:2}.console-report-expense>button{grid-column:3;grid-row:1}}@media(max-width:600px){.console-report-totals{gap:7px}.console-report-metric{padding:12px 9px;gap:6px}.console-report-metric>strong{font-size:17px}.console-report-metric small{font-size:10px}.console-report-period strong{min-width:110px;font-size:13px}.console-report-sales th,.console-report-sales td{padding:10px 6px;font-size:12px}.console-report-network td:nth-child(2){width:90px}.console-report-location td{padding-left:16px}.console-report-location small{margin-left:26px;width:100%}.console-report-tabbar [role=tab]{padding:7px 12px}.console-report-expense{gap:8px;grid-template-columns:minmax(80px,1fr) 95px 34px}.console-report-tabbar>#monthly-add-expense{font-size:12px;padding:8px}.console-report-metric>span{font-size:11px}}@media(prefers-reduced-motion:reduce){.console-month-control,.console-month-fields{transition:none}}
-.console-report-location td:nth-child(2){text-align:right;width:150px;padding-left:6px}.console-report-location td:last-child{width:40px;padding-left:6px}.console-report-location td>div{flex-wrap:nowrap}.console-report-location td>div>div{min-width:0}.console-report-location small{margin:4px 0 0}.console-report-location svg{flex-shrink:0}@media(max-width:600px){.console-report-location td:nth-child(2){width:90px}.console-report-location small{width:auto;margin:4px 0 0}.console-report-location td:last-child{width:36px}}
+/* Keep the platform report in the same compact table format as weekly sales. */
+.console-main[data-view=monthly]{padding-top:18px}
+.console-main[data-view=monthly] .console-heading{flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.console-main[data-view=monthly] .console-heading .eyebrow{display:none}
+.console-main[data-view=monthly] .console-heading h1{margin:0;font-size:18px;line-height:1.4;letter-spacing:0}
+.console-main[data-view=monthly] #console-status:empty{display:none}
+.console-report-toolbar,.console-report-period{display:flex;align-items:center;gap:6px;min-width:0}
+.console-report-toolbar{justify-content:flex-end;flex-wrap:wrap}
+.console-report-period{flex-wrap:nowrap}
+.console-report-period strong{min-width:118px;text-align:center;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.console-report-toolbar button{height:32px;min-height:32px;padding:6px 9px;font-size:11px;white-space:nowrap}
+.console-report-period button{width:28px;padding:4px;font-size:18px}
+.console-report-toolbar #monthly-refresh{width:32px;padding:4px;font-size:18px}
+.console-report-tabbar{display:flex;align-items:center;gap:8px;min-width:0}
+.console-report-tabbar [role=tablist]{display:flex;gap:3px;padding:3px;border-radius:9px;background:var(--theme-surface,#fff);border:1px solid var(--theme-line,#e0e8f0)}
+.console-report-tabbar [role=tab]{border:0;background:transparent;padding:5px 12px;min-height:26px;height:26px}
+.console-report-tabbar [aria-selected=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.console-report-info{position:relative;flex:0 0 32px}
+.console-report-info>summary{display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:6px;list-style:none;cursor:pointer;border:1px solid var(--theme-line,#e0e8f0);border-radius:8px;background:var(--theme-surface,#fff)}
+.console-report-info>summary::-webkit-details-marker{display:none}
+.console-report-info[open]>summary,.console-report-info>summary:hover{background:color-mix(in srgb,var(--primary) 8%,var(--theme-surface,#fff))}
+.console-report-info>div{position:absolute;top:calc(100% + 8px);right:0;z-index:6;width:290px;max-width:calc(100vw - 100px);padding:14px;border:1px solid var(--theme-line,#e0e8f0);border-radius:12px;background:var(--theme-surface,#fff);box-shadow:0 8px 24px #182b3a20;font-size:12px;line-height:1.5}
+.console-report-info p{margin:5px 0 12px;color:var(--theme-muted,#64748b)}
+.console-report-info p:last-child{margin-bottom:0}
+.console-report-panel{min-width:0}
+.console-report-table-wrap{max-width:100%;overflow:auto;border:1px solid var(--theme-line,#e0e8f0);border-radius:12px;overscroll-behavior-x:contain;scrollbar-width:thin}
+.console-report-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:11px;font-variant-numeric:tabular-nums;background:var(--theme-surface,#fff)}
+.console-report-amount-col{width:150px}.console-report-action-col{width:40px}
+.console-report-table th,.console-report-table td{padding:5px 8px;text-align:left;vertical-align:middle;overflow-wrap:anywhere;border-bottom:1px solid var(--theme-line,#e0e8f0);border-right:1px solid color-mix(in srgb,var(--primary) 8%,var(--theme-line,#e0e8f0))}
+.console-report-table tr>*:last-child{border-right:0;text-align:center;padding:3px}
+.console-report-table thead th{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-weight:600;height:32px}
+.console-report-table tr>*:nth-last-child(2){text-align:right;background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.console-report-table thead tr>*:nth-last-child(2){background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff))}
+.console-report-table tfoot tr>*{border-bottom:0;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));font-weight:700;color:var(--theme-primary-text,var(--primary));height:32px}
+.console-report-network>*{background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff))!important}
+.console-report-sales strong{font-size:12px}.console-report-sales tbody th{font-weight:400}
+.console-report-sales small{display:block;color:var(--theme-muted,#64748b);font-size:10px;font-weight:400;line-height:1.4;margin-top:2px}
+.console-report-location th{padding-left:20px}
+.console-report-location th>div{display:flex;align-items:center;gap:8px;min-width:0}
+.console-report-location th>div>div{min-width:0}
+.console-report-location th svg{width:16px;height:16px;min-width:16px;flex-shrink:0}
+.console-report-location td:nth-child(2){white-space:nowrap}
+.console-report-table .console-icon-button{display:inline-flex;align-items:center;justify-content:center;min-width:30px;min-height:30px;height:30px;padding:6px;border-radius:7px}
+.console-report-table .console-icon-button svg{width:16px;height:16px;min-width:16px}
+.console-report-expense label{display:block;margin:0}
+.opstack-console .console-report-expense input[type=text]{width:100%;margin:0;min-width:0;min-height:30px;height:30px;padding:5px 7px;font-size:11px;border:1px solid color-mix(in srgb,var(--primary) 15%,var(--theme-line,#e0e8f0));border-radius:7px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.console-report-money{display:flex;align-items:center;min-width:0;border:1px solid var(--theme-line,#d5dfeb);border-radius:9px;background:var(--theme-surface,#fff);margin-top:6px;overflow:hidden;color:var(--theme-primary-text,var(--primary))}
+.console-report-money>span{padding-left:8px;font-size:12px}
+.console-report-money input{border:0;box-shadow:none;margin:0!important;min-width:0;width:100%;background:transparent;padding:9px 8px!important;color:var(--theme-text,#182b3a);font-variant-numeric:tabular-nums}
+.console-report-money:focus-within{outline:2px solid color-mix(in srgb,var(--primary) 35%,transparent);outline-offset:1px}
+.console-report-expense .console-report-money{margin:0;border-radius:7px;border-color:color-mix(in srgb,var(--primary) 15%,var(--theme-line,#e0e8f0));background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.console-report-expense .console-report-money input[type=text]{text-align:right;border:0;background:transparent}
+.console-report-panel .console-actions{gap:6px;margin-top:12px}
+.console-report-panel .console-actions button{min-height:32px;padding:6px 10px;font-size:11px}
+.console-report-panel>p,.console-report-panel form>p{font-size:11px;margin:12px 0}
+.console-report-overview{margin-top:12px;min-width:0}
+.opstack-console .console-report-overview h2{margin:0 0 8px;font-size:14px;line-height:20px}
+.console-report-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:100%;padding-bottom:4px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+.console-report-metric{display:flex;flex-direction:column;gap:7px;min-width:0;padding:12px 10px;border:1px solid color-mix(in srgb,var(--secondary) 25%,var(--theme-line,#e0e8f0));border-top:3px solid var(--secondary);border-radius:10px;background:color-mix(in srgb,var(--secondary) 9%,var(--theme-surface,#fff))}
+.console-report-metric>span{font-size:11px;color:var(--theme-muted,#64748b)}
+.console-report-metric>strong{font-size:18px;line-height:1.4;color:var(--theme-secondary-text,var(--secondary));font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.console-report-metric small{font-size:10px;color:var(--theme-muted,#64748b)}
+.console-report-metric[data-result]{--result-colour:#667887;border-color:color-mix(in srgb,var(--result-colour) 28%,var(--theme-line,#e0e8f0));border-top-color:var(--result-colour);background:color-mix(in srgb,var(--result-colour) 10%,var(--theme-surface,#fff))}
+.console-report-metric[data-result=positive]{--result-colour:#22804a}.console-report-metric[data-result=negative]{--result-colour:#b13c2e}.console-report-metric[data-result=even]{--result-colour:#d4a100}
+.console-report-metric[data-result=positive]>strong{color:var(--theme-success-text,#168344)}.console-report-metric[data-result=negative]>strong{color:var(--theme-danger-text,#c83232)}.console-report-metric[data-result=even]>strong{color:var(--theme-warning-text,#946200)}
+#monthly-report-message{font-size:11px;margin:10px 0 0}#monthly-report-message:empty{display:none}
+.console-month-control{display:flex;width:34px;height:32px;align-items:center;border:1px solid var(--theme-line,#e0e8f0);border-radius:8px;background:var(--theme-surface,#fff);transition:width .36s ease;max-width:100%;overflow:hidden}
+.console-month-control.is-open{width:262px}
+.console-month-control>button{width:32px;flex-shrink:0;padding:6px;border:0;background:transparent}
+.console-month-control>button svg,.console-report-info svg{width:18px;height:18px;min-width:18px}
+.console-month-fields{display:flex;align-items:center;gap:5px;min-width:0;width:0;opacity:0;transition:opacity .2s ease}
+.console-month-control.is-open .console-month-fields{width:225px;opacity:1}
+.console-month-fields .location-picker{min-width:0}
+.console-month-fields .app-select-trigger{padding:5px 7px;min-height:28px;height:28px;font-size:11px;min-width:0}
+.console-month-fields .location-picker:first-child{width:130px}.console-month-fields .location-picker:last-child{width:80px}
+@media(max-width:1100px){.console-main[data-view=monthly] .console-report-toolbar{flex-basis:100%;justify-content:flex-start}}
+@media(max-width:600px){
+ .console-main[data-view=monthly] .console-heading h1{font-size:16px}
+ .console-report-toolbar #monthly-current{display:none}
+ .console-report-period strong{min-width:106px;font-size:11px}
+ .console-report-tabbar{flex-basis:100%;justify-content:space-between}
+ .console-report-amount-col{width:108px}.console-report-action-col{width:36px}
+ .console-report-table th,.console-report-table td{padding:5px 6px}
+ .console-report-location th{padding-left:12px}
+ .console-report-sales strong{font-size:11px}.console-report-sales small{font-size:9px}
+ .console-report-expenses{min-width:460px}
+ .console-report-totals{grid-template-columns:repeat(3,minmax(145px,1fr))}
+}
+@media(prefers-reduced-motion:reduce){.console-month-control,.console-month-fields{transition:none}}
