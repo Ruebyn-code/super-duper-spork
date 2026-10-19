@@ -27,8 +27,9 @@
   if(step.type==='datetime')return typeof value==='string'&&value.length===16&&validDate(value.slice(0,10))&&value[10]==='T'&&validTime(value.slice(11));
   return false;
  }
+ function allAnswered(list,answers){const responses=list.filter(responseStep);return responses.length>0&&responses.every(step=>answered(step,answers?.[step.id]));}
  // Moving a section carries its following steps up to the next section.
  function movingIds(steps,id){const index=steps.findIndex(step=>step.id===id);if(index<0)return[];let end=index+1;if(isSection(steps[index]))while(end<steps.length&&!isSection(steps[end]))end++;return steps.slice(index,end).map(step=>step.id);}
  function move(steps,id,beforeId){const ids=new Set(movingIds(steps,id));if(!ids.size||ids.has(beforeId))return steps;const moving=steps.filter(step=>ids.has(step.id)),remaining=steps.filter(step=>!ids.has(step.id)),at=beforeId===null?remaining.length:remaining.findIndex(step=>step.id===beforeId);if(at<0)return steps;return[...remaining.slice(0,at),...moving,...remaining.slice(at)];}
- const api={kinds,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
+ const api={kinds,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,allAnswered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
 })(globalThis);

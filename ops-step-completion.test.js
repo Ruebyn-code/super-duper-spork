@@ -1,0 +1,8 @@
+const test=require('node:test'),assert=require('node:assert/strict'),model=require('./public/ops-step-model');
+test('automatic completion requires every response and ignores sections, timed sections and instructions',()=>{
+ const steps=[{id:'section',type:'section'},{id:'window',type:'timed-section'},{id:'note',type:'instruction'},{id:'check',type:'check',required:true},{id:'number',type:'number',format:'integer',required:true},{id:'no',type:'yesno',required:true},{id:'optional',type:'text',required:false}],values={check:true,number:0,no:'no'};
+ assert.equal(model.allAnswered(steps,values),false,'Optional blanks still need a conscious manual finish');assert.equal(model.allAnswered(steps,{...values,optional:'Done'}),true);assert.equal(model.allAnswered(steps,{...values,optional:'  '}),false);assert.equal(model.allAnswered(steps,{...values,optional:'Done',check:false}),false);assert.equal(model.allAnswered(steps,{...values,optional:'Done',number:0.1}),false);assert.equal(model.allAnswered([],{}),false);assert.equal(model.allAnswered(steps.slice(0,3),{}),false);assert.equal(model.allAnswered(steps),false);
+});
+test('final submissions must be valid answers before automatic completion can run',()=>{
+ for(const [step,value,invalid]of [[{type:'signature',signatureMode:'drawn'},{name:'Member',assetId:'saved-signature'},{name:'',drawn:true}],[{type:'media',maxFiles:2},['saved-photo'],[]],[{type:'selection',multiple:true},['a','b'],[]],[{type:'datetime',dateMode:'date'},'2026-10-19','2026-02-30']]){assert.equal(model.allAnswered([{...step,id:'final'}],{final:value}),true,step.type);assert.equal(model.allAnswered([{...step,id:'final'}],{final:invalid}),false,step.type);}
+});
