@@ -2,7 +2,7 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
  const model=opsStepModel,el=(tag,cls)=>{const node=document.createElement(tag);if(cls)node.className=cls;return node;};
  const button=(key,action)=>{const node=ui('button',key);node.type='button';node.onclick=action;return node;};
  function render(step,answer,{readonly,run}){
-  const host=el('div','ops-step-control');let read;
+  const host=el('div','ops-step-control');let read,inspect=()=>answer;
   const accessible=node=>{node.id='ops-answer-'+step.id;node.setAttribute('aria-label',step.title);node.disabled=readonly;return node;};
   if(step.type==='number'){
    const control=accessible(input('text')),wrap=el('div','ops-number-entry');let value=answer??null,invalid=false;control.inputMode=step.format==='integer'?'numeric':'decimal';control.placeholder=model.formatNumber(step,0);
@@ -10,16 +10,16 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
    function format(){if(!invalid)control.value=model.formatNumber(step,value);}
    control.onfocus=()=>{if(!invalid)control.value=value===null?'':String(value);};control.oninput=()=>{parse();onChange();};control.onblur=format;format();wrap.append(control);host.append(wrap);
    const limits=[];if(step.min!=null)limits.push('Min '+model.formatNumber(step,step.min));if(step.max!=null)limits.push('Max '+model.formatNumber(step,step.max));if(limits.length)host.append(data('p',limits.join(' · '),'ops-help'));
-   read=()=>{if(invalid){control.focus();throw Error('Enter a number matching the format and limits for '+step.title+'.');}return value;};
+   inspect=()=>invalid?NaN:value;read=()=>{if(invalid){control.focus();throw Error('Enter a number matching the format and limits for '+step.title+'.');}return value;};
   }
   if(step.type==='datetime'){
-   const control=accessible(input(step.dateMode==='date'?'date':step.dateMode==='time'?'time':'datetime-local',answer));host.append(control);if(step.dateMode==='datetime')host.append(ui('p','Dates and times use Australia/Melbourne.','ops-help'));read=()=>control.value||null;
+   const control=accessible(input(step.dateMode==='date'?'date':step.dateMode==='time'?'time':'datetime-local',answer));host.append(control);if(step.dateMode==='datetime')host.append(ui('p','Dates and times use Australia/Melbourne.','ops-help'));read=()=>control.value||null;inspect=read;
   }
   if(step.type==='selection'){
    const values=Array.isArray(answer)?answer:answer?[answer]:[],available=(run.selectionOptions?.[step.id]||[]).map(option=>({...option})),saved=run.selectionLabels?.[step.id]||{};
    for(const value of values)if(!available.some(option=>option.value===value)&&saved[value])available.push({value,label:saved[value]});
    if(readonly){const pills=el('div','ops-options');for(const value of values)pills.append(data('span',saved[value]||available.find(option=>option.value===value)?.label||value,'ops-badge'));host.append(pills);}
-   else{const control=accessible(el('select'));control.multiple=step.multiple;choices(control,[...(!step.multiple?[['','Choose an option']]:[]),...available.map(option=>[option.value,option.label])],step.multiple?'':answer||'');if(step.multiple)for(const option of control.options)option.selected=values.includes(option.value);host.append(control);if(!available.length)host.append(ui('p','No selections are available for this location.','ops-help'));control.onchange=onChange;read=()=>step.multiple?[...control.selectedOptions].map(option=>option.value):control.value||null;}
+   else{const control=accessible(el('select'));control.multiple=step.multiple;choices(control,[...(!step.multiple?[['','Choose an option']]:[]),...available.map(option=>[option.value,option.label])],step.multiple?'':answer||'');if(step.multiple)for(const option of control.options)option.selected=values.includes(option.value);host.append(control);if(!available.length)host.append(ui('p','No selections are available for this location.','ops-help'));control.onchange=onChange;read=()=>step.multiple?[...control.selectedOptions].map(option=>option.value):control.value||null;inspect=read;}
   }
   if(['media','file'].includes(step.type)){
    let ids=Array.isArray(answer)?[...answer]:[];const files=el('div','ops-submissions');host.append(files);
@@ -28,7 +28,7 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
     control.onchange=async()=>{const selected=[...control.files];if(!selected.length)return;if(ids.length+selected.length>step.maxFiles){status('This step allows up to '+step.maxFiles+' files.',true);control.value='';return;}if(selected.some(file=>file.size>(/\.(mp4|webm|mov)$/i.test(file.name)?25000000:10000000))){status('Files can be up to 10 MB; videos up to 25 MB.',true);control.value='';return;}
      control.disabled=true;files.inert=true;uploading(1);status('Uploading files…');try{for(const file of selected){const asset=await upload(step.id,file);run.resources||={};run.resources[asset.id]=asset;ids.push(asset.id);onChange();}status('Files added. Save progress or complete the checklist to keep your answers.');}catch(error){status(error.message,true);}finally{list();control.disabled=false;files.inert=false;control.value='';uploading(-1);}
     };host.append(control,ui('p','Files up to 10 MB; videos up to 25 MB.','ops-help'));}
-   read=()=>ids;
+   read=()=>ids;inspect=read;
   }
   if(step.type==='signature'){
    const saved=answer&&typeof answer==='object'?answer:null,name=accessible(input('text',saved?.name??answer??'',500));let assetId=saved?.assetId||null,ink=false,pen=false,mode=step.signatureMode==='drawn'||assetId?'drawn':'typed';host.append(field('Signer name',name));name.oninput=onChange;
@@ -38,9 +38,10 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
    const point=event=>{const rect=canvas.getBoundingClientRect();return{x:(event.clientX-rect.left)*canvas.width/rect.width,y:(event.clientY-rect.top)*canvas.height/rect.height};};
    canvas.onpointerdown=event=>{if(readonly||event.button!==0)return;event.preventDefault();pen=true;canvas.setPointerCapture(event.pointerId);const{x,y}=point(event);context.beginPath();context.moveTo(x,y);context.lineTo(x+.1,y+.1);context.stroke();ink=true;onChange();};canvas.onpointermove=event=>{if(!pen)return;const{x,y}=point(event);context.lineTo(x,y);context.stroke();};canvas.onpointerup=canvas.onpointercancel=()=>{pen=false;};drawing.prepend(canvas,image);host.append(tools,drawing);display();
    if(readonly){tools.hidden=true;canvas.hidden=true;name.disabled=true;}
+   inspect=()=>mode==='typed'?name.value.trim()||null:assetId?{name:name.value,assetId}:ink?{name:name.value,drawn:true}:null;
    read=async()=>{if(mode==='typed')return name.value.trim()||null;if(ink){const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('Unable to save the signature.');const asset=await upload(step.id,new File([blob],'signature.png',{type:'image/png'}));run.resources||={};run.resources[asset.id]=asset;assetId=asset.id;ink=false;display();}return assetId?{name:name.value,assetId}:name.value||null;};
   }
-  return{host,read};
+  return{host,read,inspect};
  }
  return{render};
 };

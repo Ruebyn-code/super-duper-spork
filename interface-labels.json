@@ -10233,5 +10233,17 @@
     "locations": [
       "Ops management"
     ]
+  },
+  {
+    "text": "Close checklist",
+    "locations": [
+      "Ops management"
+    ]
+  },
+  {
+    "text": "Checklist progress",
+    "locations": [
+      "Ops management"
+    ]
   }
 ]

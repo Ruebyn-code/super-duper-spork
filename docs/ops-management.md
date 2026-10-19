@@ -8,7 +8,7 @@ Head Office and Franchisees can create templates by default. All signed-in staff
 
 1. Select **New checklist**, enter its name and instructions, and tick its assigned locations.
 2. Choose Manual, One-off, Daily or Weekly, then set the start date. Daily and weekly schedules can have an end date; weekly schedules have a due day.
-3. Add compact step cards. Edit titles directly, open the chevron for options, and drag a grip to rearrange. Arrow keys on a focused grip move steps too; Escape cancels dragging. Moving a section carries its following steps until the next section.
+3. Add compact step cards. Edit titles directly, open the chevron to choose a step type and its options, and drag a grip to rearrange. Arrow keys on a focused grip move steps too; Escape cancels dragging. Moving a section carries its following steps until the next section.
 4. Choose Checkbox, Photo / video, File submission, Short text, Long text, Number entry, Selection, Signature, Date and time, Section, or Instruction. Sections and instructions require no response.
 5. Save. Use Templates to edit or pause an existing checklist. Pausing stops new starts without deleting records.
 
@@ -16,7 +16,9 @@ Managers can assign only locations they can access. Editing a shared template re
 
 ## Complete and review
 
-Checklists shows the occurrences for the selected date and locations. Start or resume a checklist, enter answers, and **Save progress** or **Complete checklist**. Progress is shared within its location. Completion validates required steps, number precision and limits, selection access and uploaded files. Photo/video and file steps allow 1–10 submissions. Photos and other files support up to 10 MB each; MP4, WebM and MOV videos support up to 25 MB each. Supported documents include PDF, Office documents, text, CSV and ZIP; audio uploads are also supported. Videos preview inside the checklist and support seeking.
+Checklists shows the occurrences for the selected date and locations. Starting, resuming or reviewing a checklist opens a desktop popup. On tablets and phones it fills the app viewport and hides the shared navigation until closed. The same form and draft stay in place when resizing or rotating.
+
+Valid answered steps turn green immediately, with a check mark and an answered/total progress counter. Clearing an answer or entering an invalid number removes the green state. Zero and a “No” answer count as valid answers. Sections and instructions do not count toward the response total. Green indicates a valid local answer; use **Save progress** or **Complete checklist** to save it. Closing asks before discarding unsaved progress, and waits for active saves or uploads. Progress is shared within its location. Completion validates required steps, number precision and limits, selection access and uploaded files. Photo/video and file steps allow 1–10 submissions. Photos and other files support up to 10 MB each; MP4, WebM and MOV videos support up to 25 MB each. Supported documents include PDF, Office documents, text, CSV and ZIP; audio uploads are also supported. Videos preview inside the checklist and support seeking.
 
 Signature steps can require a drawn signature, a typed name, or either method. Drawings are private PNG files saved with the entered signer name and the signed-in user’s completion attribution and timestamp. Date and time steps can collect a date, time, or both, using Melbourne wall-clock values.
 

@@ -43,10 +43,11 @@
  function presentation(child){
   if(child!==current?.contentWindow&&child!==rosterPopup?.contentWindow)return;
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
+  root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
   // The phone roster is a page reader. Its sheet covers only the content
   // document, so users must still be able to leave through the shared bar.
   const modal=[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('dialog[open]:not(#phone-roster)'));
-  for(const control of document.querySelectorAll('#app-sidebar,.mobile-brand-header,#app-edit-indicator,#shift-clock-dock'))control.inert=modal;
+  for(const control of document.querySelectorAll('#app-sidebar,#mobile-tabbar,.mobile-brand-header,#app-edit-indicator,#shift-clock-dock'))control.inert=modal;
  }
  function closePhoneRoster(focus=false){
   if(!rosterPopup)return;clearTimeout(rosterPopup.navigationTimer);rosterPopup.remove();rosterPopup=null;root.classList.remove('phone-roster-popup-open');
