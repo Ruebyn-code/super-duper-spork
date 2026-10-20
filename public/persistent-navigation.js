@@ -14,7 +14,7 @@
  let current=null,pending=null,rosterPopup=null,generation=0,committed=new URL(location.href),lastRequest=committed.href,lastMode='replace',editing=false,refreshingAppearance=false;
  const phone=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)');
  const syncingEdits=new WeakMap();
- const canonical=value=>{const url=new URL(value,location.href);url.searchParams.delete('__opstack_content');return url;};
+ const canonical=value=>{const url=new URL(value,location.href);url.searchParams.delete('__opstack_content');if(url.origin===location.origin&&url.pathname==='/cart'){url.pathname='/';url.hash='#cart';}return url;};
  const samePage=(a,b)=>a.pathname===b.pathname&&a.search===b.search;
  function accepts(url){return url.origin===location.origin&&routes.has(url.pathname);}
  function fail(text){area.setAttribute('aria-busy','false');loading.hidden=true;message.textContent=text;error.hidden=false;}

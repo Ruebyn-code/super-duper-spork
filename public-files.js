@@ -77,6 +77,8 @@ module.exports={'/weekly-sales-import.js':'weekly-sales-import.js','/invoice-pri
   '/home':'home.html',
   '/home.js':'home.js',
   '/cart':'cart.html',
+  '/cart-popup.js':'cart-popup.js',
+  '/cart-popup.css':'cart-popup.css',
   '/stock-count':'stock-count.html',
   '/sales':'sales.html',
   '/sales.js':'sales.js',

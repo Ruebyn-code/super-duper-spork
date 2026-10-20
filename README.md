@@ -225,7 +225,9 @@ After sign-in, every user opens **Home**. The greeting appears first, followed b
 
 ## Ordering and cart
 
-Ordering uses a simple page title without the personal greeting. The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select **Cart** at the top of the left sidebar to review quantities and submit a request on its own page.
+Open the bottom-left **Cart** pill in the Ordering catalogue to review supplier groups, change quantities, add notes and submit without leaving your selected category. The pill shows units and the estimated total, including pending prices, and stays above phone navigation. Close with **×**, Escape or the backdrop; dismissal waits during submission. Cart shortcuts and the old `/cart` address open this same popup. Carts remain separate for each user and location.
+
+Ordering uses a simple page title without the personal greeting. The ordering catalogue shows 25 items per page. Use Previous/Next to browse; searching or choosing a supplier resets to page one and filters the complete catalogue. Select the **Cart** pill or the Cart shortcut under Ordering to review quantities and submit in the catalogue popup.
 
 Cart items are grouped under collapsible supplier headings with item counts. Select a supplier heading to hide or show its compact rows; your expanded/collapsed choices stay in place while quantities change or another tab adds stock. Each row keeps its quantity, remove controls and line total together. All suppliers, including collapsed groups, are included when submitting. Carts are saved per signed-in account and assigned location in this browser’s local storage. Successful orders remove the submitted quantities, keeping any additions made while the request was saving.
 

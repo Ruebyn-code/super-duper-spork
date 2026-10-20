@@ -56,6 +56,7 @@ if($('list-view')){
 function refreshStoredCart(){if(!cartKey)return;try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');if(stored&&typeof stored==='object'&&!Array.isArray(stored))cart=Object.fromEntries(Object.entries(stored).filter(([id,quantity])=>(!products.length||products.some(product=>product.id===id))&&Number.isInteger(quantity)&&quantity>0&&quantity<=999));}catch{}}
 function syncStoredCart(){if(busy)return;refreshStoredCart();if(products.length)render();}
 window.addEventListener('storage',event=>{if(event.key===cartKey)syncStoredCart();});window.addEventListener('focus',syncStoredCart);window.addEventListener('pageshow',event=>{if(event.persisted)syncStoredCart();});
+window.addEventListener('cart-opening',()=>{if(!busy){refreshStoredCart();render(false);}});
 function renderProductPar(product){
   const panel=el('div',undefined,'product-par'),label=el('strong',undefined,'par-value'),hint=el('span',undefined,'par-hint');
   const known=product.par&&product.par.level!==null;
@@ -99,7 +100,7 @@ function render(refreshMenu=true){
   const focusedSupplier=focused?.matches('summary')?focused.parentElement.dataset.supplierId:null;
   if(cartKey){try{localStorage.setItem(cartKey,JSON.stringify(cart));}catch{$('message').textContent='Browser storage is unavailable; your cart cannot be kept between pages.';}}
   $('cart-badge').textContent=products.reduce((sum,p)=>sum+(cart[p.id]||0),0);
-  window.dispatchEvent(new CustomEvent('ordering-cart-updated',{detail:{total:products.reduce((sum,p)=>sum+(p.price??0)*(cart[p.id]||0),0),pricePending:products.some(p=>p.price===null&&(cart[p.id]||0)>0)}}));
+  window.dispatchEvent(new CustomEvent('ordering-cart-updated',{detail:{total:products.reduce((sum,p)=>sum+(p.price??0)*(cart[p.id]||0),0),pricePending:products.some(p=>p.price===null&&(cart[p.id]||0)>0),count:products.reduce((sum,p)=>sum+(cart[p.id]||0),0),busy}}));
   if(!$('cart'))return;
   for(const group of $('cart').querySelectorAll('.cart-supplier-group'))cartSupplierOpen.set(group.dataset.supplierId,group.open);
   $('cart').replaceChildren();
