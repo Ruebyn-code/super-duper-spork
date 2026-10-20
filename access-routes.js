@@ -6,6 +6,7 @@ function apiPermission(url,method){
  if(url==='/api/home-orders')return['orders.view'];
  if(url==='/api/home-dashboard'||url==='/api/home-greeting')return[read?'home.view':'appearance.manage'];
  if(url==='/api/home-totals')return['home.view'];
+ if(url==='/api/home-daily-sales')return['sales.edit'];
  if(url.startsWith('/api/stock-transfers'))return ['transfers.view'];
  if(url.startsWith('/api/reporting'))return['reporting.view'];
  if(url.startsWith('/api/invoices'))return[read?'invoices.view':'invoices.edit'];

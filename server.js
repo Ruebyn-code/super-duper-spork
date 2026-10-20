@@ -16,6 +16,7 @@ const {isSupport,parsedBody,supportIdentity}=require('./platform-identity');
 const {createPlatformServer}=require('./opstack-router');
 const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation}=require('./permissions');
 const {apiPermission,pagePermission}=require('./access-routes');
+const locationHoursModel=require('./public/location-hours-model');
 const companies=require('./companies'),catalogues=require('./catalogue-store'),customisations=require('./company-customisations');
 const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
@@ -237,6 +238,20 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         return json(200,await Promise.all(records.map(async record=>{const company=companyList.find(company=>company.id===record.companyId),base={...record,tradingStatus:require('./public/location-hours-model').status(record.tradingHours,locationNow(),record.archived),companyName:company?.name||''};if(!canAny(session,['locations.manage','email.manage','companies.manage']))return all?{id:base.id,name:base.name,archived:base.archived,companyId:base.companyId,companyName:base.companyName}:{id:base.id,name:base.name,archived:base.archived};if(!can(await auth.forCompany(session,record.companyId),'email.manage'))return base;const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...base,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));
       }
       if(req.url==='/api/location-status'&&req.method==='GET'){if(!can(session,'home.view'))fail('Home viewing permission required.',403);return json(200,await locationStore.status(session.locationId,locationNow()));}
+      if(req.url==='/api/home-daily-sales'){
+        if(!can(session,'home.view'))fail('Home viewing permission required.',403);
+        if(!['GET','PUT'].includes(req.method)){res.setHeader('Allow','GET, PUT');fail('Unsupported daily sales action.',405);}
+        if(req.method==='PUT'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        const now=locationNow(),location=await locationStore.status(session.locationId,now),entry=locationHoursModel.salesEntry(location.tradingHours,now),checkedAt=new Date(now).toISOString();
+        let record;
+        if(req.method==='PUT'){
+          const input=await body(req);
+          if(!input||typeof input!=='object'||Array.isArray(input))fail('Enter a daily sales amount.');
+          if(!entry?.available||input.date!==entry.tradingDate)fail('The Home sales entry period has changed. Open Daily sales to enter another date.',409);
+          record=await salesStore.saveDay(dataDir,session,input);
+        }else if(entry?.available)record=await sales.read(dataDir,session,sales.currentWeek(new Date(entry.tradingDate+'T12:00:00Z')));
+        return json(200,{checkedAt,locationId:location.locationId,locationName:location.name,entry:entry?{...entry,...(record?{amountCents:record.days[(new Date(entry.tradingDate+'T12:00:00Z').getUTCDay()+6)%7],revision:record.revision}:{})}:null});
+      }
       const managerRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/managers$/);
       if(managerRoute){const store=await locationStore.get(managerRoute[1]),context=await auth.forCompany(session,store.companyId);if(!canAccessLocation(context,store))fail('Location not found.',404);if(req.method==='GET')return json(200,await auth.locationManagers(context,store.id));if(req.method==='PUT')return json(200,await auth.assignLocationManagers(context,store.id,await body(req)));}
       if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId}));}

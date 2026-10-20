@@ -112,6 +112,15 @@ function homeTotals(records,orders,session,{now=new Date(),transfers=[]}={}){
 }
 function createStore(){
  const pending=new Map();
+ async function saveDay(dir,session,{date,amountCents,revision}={}){
+  if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)invalid('Choose a valid sales date.');
+  if(!Number.isSafeInteger(amountCents)||amountCents<0||amountCents>maximumDailyCents)invalid('Enter sales between $0 and $10,000,000 with no more than two decimal places.');
+  if(!Number.isSafeInteger(revision)||revision<0)invalid('Reload saved sales before saving.');
+  const index=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,weekStart=shift(date,-index),previous=await read(dir,session,weekStart);
+  // Reuse the weekly writer's queue and revision check, preserving every other day.
+  if(previous.days[index]===amountCents)return previous;
+  const days=[...previous.days];days[index]=amountCents;return save(dir,session,{weekStart,days,revision});
+ }
  async function save(dir,session,input){
   const normalized=validate(input),file=path.join(accountFolder(dir,session),normalized.weekStart+'.json');
   const operation=(pending.get(file)||Promise.resolve()).then(async()=>{
@@ -143,6 +152,6 @@ function createStore(){
   return records;
  }
  async function totals(dir,session,{orders=[],now=new Date(),transfers=[]}={}){return homeTotals(await history(dir,session),orders,session,{now,transfers});}
- return {save,report,totals,history};
+ return {save,saveDay,report,totals,history};
 }
 module.exports={read,calculate,orderingProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
