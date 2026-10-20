@@ -40,7 +40,7 @@ const sales=require('./sales');
 const weeklySalesReports=require('./weekly-sales-reports'),weeklySalesOverview=require('./weekly-sales-overview'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
 const reporting=require('./reporting'),reportingDetails=require('./reporting-details');
 const locations=require('./locations');
-const invoices=require('./invoices');
+const invoices=require('./invoices'),invoicePrices=require('./invoice-prices');
 const communications=require('./communications'),communicationRoutes=require('./communications-routes');
 const opsManagement=require('./ops-management');
 const learningCentre=require('./learning-centre');
@@ -236,6 +236,9 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
       const permissionLevelRoute=req.url.match(/^\/api\/permission-levels\/([a-zA-Z0-9-]+)$/);
       if((req.url==='/api/permission-levels'&&req.method==='POST')||(permissionLevelRoute&&['PUT','DELETE'].includes(req.method))){await auth.changePermissionLevel(session,await body(req,64000),req.method,permissionLevelRoute?.[1]);return json(req.method==='POST'?201:200,await auth.permissionLevels(await auth.forCompany(session,session.companyId)));}
+      if(req.url==='/api/invoices/price-review'&&req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await invoicePrices.createStore(dataDir,catalogueStore).review(session,await body(req,2000000)));}
+      const priceConfirmation=req.url.match(/^\/api\/invoices\/([a-f0-9-]{36})\/confirm-prices$/i);
+      if(priceConfirmation&&req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await invoicePrices.createStore(dataDir,catalogueStore).confirm(session,priceConfirmation[1],await body(req,160000)));}
       if(req.url==='/api/invoices'){
         if(req.method==='GET')return json(200,await invoices.list(dataDir,session,requestUrl.searchParams.get('week')));
         if(req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);const saved=await invoices.create(dataDir,session,await body(req,16000000));return json(saved.alreadySaved?200:201,saved);}
@@ -248,7 +251,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(req.method==='GET'){const {fingerprint,...record}=await invoices.read(dataDir,session,id);return json(200,record);}
         if(kind)fail('Invoice not found.',404);
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
-        if(req.method==='PUT')return json(200,await invoices.update(dataDir,session,id,await body(req)));
+        if(req.method==='PUT')return json(200,await invoices.update(dataDir,session,id,await body(req,2000000)));
         if(req.method==='DELETE'){const input=await body(req);return json(200,await invoices.remove(dataDir,session,id,input?.revision));}
         res.setHeader('Allow','GET, PUT, DELETE');fail('Unsupported invoice action.',405);
       }

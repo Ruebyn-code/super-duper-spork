@@ -1,4 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const priceModel=require('./public/invoice-price-model');
 const {currentWeek}=require('./sales'),{shift}=require('./stock-usage');
 const maximumFileBytes=10000000,maximumPreviewBytes=1000000,queues=new Map();
 const validId=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
@@ -11,6 +12,8 @@ function fields(input){
  for(const [key,max] of [['supplier',120],['invoiceNumber',80],['notes',1000]]){if(typeof input[key]!=='string'||input[key].length>max)fail('Enter valid invoice details.');result[key]=input[key].trim();}
  if(input.invoiceDate!==null&&!day(input.invoiceDate))fail('Choose a valid invoice date, or leave it blank.');result.invoiceDate=input.invoiceDate;
  for(const key of ['subtotalCents','taxCents','totalCents']){const value=input[key];if(value!==null&&(!Number.isSafeInteger(value)||value<0||value>7000000000))fail('Enter non-negative invoice amounts with up to two decimal places.');result[key]=value;}
+ if(input.priceSupplierId!==undefined){if(input.priceSupplierId!==null&&(typeof input.priceSupplierId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(input.priceSupplierId)))fail('Choose a valid stock supplier.');result.priceSupplierId=input.priceSupplierId;}
+ if(input.priceLines!==undefined){try{result.priceLines=priceModel.lines(input.priceLines);}catch(error){fail(error.message);}}
  return result;
 }
 function decode(data,maximum){if(typeof data!=='string'||!data.length||data.length>Math.ceil(maximum/3)*4||!/^[A-Za-z0-9+/]+={0,2}$/.test(data))fail('Choose a valid invoice file.');const bytes=Buffer.from(data,'base64');if(!bytes.length||bytes.length>maximum||bytes.toString('base64')!==data)fail('Choose an invoice up to 10 MB.');return bytes;}
@@ -20,7 +23,7 @@ function source(input){
  if(!valid)fail('Choose a JPEG, PNG, WebP or PDF invoice.');return {bytes,name:input.name.trim(),mime,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),size:bytes.length};
 }
 function preview(data){if(data===null||data===undefined)return null;const bytes=decode(data,maximumPreviewBytes);if(bytes[0]!==255||bytes[1]!==216||bytes[2]!==255)fail('Invalid invoice preview.');return bytes;}
-const summary=record=>{const {ocrText,fingerprint,...rest}=record;return rest;};
+const summary=record=>{const {ocrText,fingerprint,priceLines,...rest}=record;return{...rest,lineCount:priceLines?.length||0};};
 async function read(dir,session,id){if(!validId(id))fail('Invoice not found.',404);try{return JSON.parse(await fs.readFile(path.join(folder(dir,session),id,'record.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('Invoice not found.',404);throw error;}}
 async function records(dir,session){let entries;try{entries=await fs.readdir(folder(dir,session),{withFileTypes:true});}catch(error){if(error.code==='ENOENT')return [];throw error;}const result=[];for(let i=0;i<entries.length;i+=16)result.push(...await Promise.all(entries.slice(i,i+16).filter(entry=>entry.isDirectory()&&validId(entry.name)).map(entry=>read(dir,session,entry.name).catch(error=>{if(error.status===404)return null;throw error;}))));return result.filter(Boolean);}
 async function list(dir,session,selectedWeek){if(selectedWeek)week(selectedWeek);const saved=(await records(dir,session)).filter(row=>!selectedWeek||row.weekStart===selectedWeek),groups=new Map();for(const record of saved){if(!groups.has(record.weekStart))groups.set(record.weekStart,{weekStart:record.weekStart,weekEnd:shift(record.weekStart,6),invoices:[],totalCents:0,missingTotals:0});const bundle=groups.get(record.weekStart);bundle.invoices.push(summary(record));bundle.totalCents+=record.totalCents??0;if(record.totalCents===null)bundle.missingTotals++;}return {bundles:[...groups.values()].sort((a,b)=>b.weekStart.localeCompare(a.weekStart)).map(bundle=>({...bundle,count:bundle.invoices.length,invoices:bundle.invoices.sort((a,b)=>b.createdAt.localeCompare(a.createdAt))})),currentWeek:currentWeek(),timeZone:'Australia/Melbourne'};}
@@ -39,4 +42,5 @@ async function create(dir,session,input){
 async function update(dir,session,id,input){const values=fields(input);if(!Number.isSafeInteger(input.revision)||input.revision<1)fail('Reload the invoice before editing.');return serialized(dir,session,async()=>{const previous=await read(dir,session,id);if(previous.revision!==input.revision)fail('This invoice changed in another tab. Reopen it before saving.',409);const record={...previous,...values,revision:previous.revision+1,updatedBy:session.username,updatedAt:new Date().toISOString()},target=path.join(folder(dir,session),id,'record.json'),temporary=target+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temporary,JSON.stringify(record),{mode:0o600});await fs.rename(temporary,target);}finally{await fs.rm(temporary,{force:true});}return summary(record);});}
 async function remove(dir,session,id,revision){return serialized(dir,session,async()=>{const record=await read(dir,session,id);if(record.revision!==revision)fail('This invoice changed. Reopen it before deleting.',409);const target=path.join(folder(dir,session),id),temporary=target+'.deleted-'+crypto.randomUUID();await fs.rename(target,temporary);await fs.rm(temporary,{recursive:true,force:true});return {removed:true};});}
 async function asset(dir,session,id,kind){const record=await read(dir,session,id);if(kind==='preview'&&!record.hasPreview)fail('Preview not found.',404);return {data:await fs.readFile(path.join(folder(dir,session),id,kind==='preview'?'preview.jpg':'source.bin')),mime:kind==='preview'?'image/jpeg':record.source.mime,name:record.source.name};}
-module.exports={list,create,update,remove,read,asset,day,week,maximumFileBytes,maximumPreviewBytes};
+async function withRecord(dir,session,id,revision,work){return serialized(dir,session,async()=>{const record=await read(dir,session,id);if(record.revision!==revision)fail('This invoice changed. Reopen it before confirming prices.',409);return work(record);});}
+module.exports={validId,withRecord,list,create,update,remove,read,asset,day,week,maximumFileBytes,maximumPreviewBytes};
