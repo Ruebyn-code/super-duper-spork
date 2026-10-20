@@ -34,10 +34,12 @@ function createPlatformServer(root,options,createNetworkServer){
   const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
   try{
    const url=new URL(req.url,'http://localhost'),route=url.pathname;
+   if(cookies(req).opstack_kiosk&&(/^\/api\/opstack\//.test(route)||route==='/opstack'))fail('The Opstack console is not available on a paired kiosk.',403);
    if(options.migrationMode||route==='/healthz')return primary.emit('request',req,res);
    if(publicFiles[route]&&!publicFiles[route].endsWith('.html'))return primary.emit('request',req,res);
    if(req.method==='GET'&&url.searchParams.get('platform')==='1'&&(['/logo','/sidebar-logo','/interface-text','/element-overrides','/font-library','/layouts'].includes(route)||(route==='/appearance'&&url.searchParams.get('console')==='1')))return primary.emit('request',req,res);
    const entry=await session(req);
+   if(route==='/api/kiosk/pair'&&req.method==='POST'&&entry)res.once('finish',()=>{if(res.statusCode===200)sessions.delete(entry.token);});
    if(route==='/opstack'||route==='/opstack/accept-invite'){
     if(req.method!=='GET')fail('Unsupported action.',405);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY'});return res.end(await fs.readFile(path.join(__dirname,'public/opstack.html')));
    }
@@ -86,7 +88,8 @@ function createPlatformServer(root,options,createNetworkServer){
     fail('Opstack action not found.',404);
    }
    const sharedSignIn=req.method==='GET'&&route==='/login'&&!url.searchParams.has('network');
-   let network=await store.network(sharedSignIn?'default':cookies(req).opstack_network||'default');
+   const pairedNetwork=cookies(req).opstack_kiosk?.match(/^([-a-zA-Z0-9]+)\.[a-f0-9]{64}$/)?.[1];
+   let network=await store.network(pairedNetwork||(sharedSignIn?'default':cookies(req).opstack_network||'default'));
    if(sharedSignIn&&cookies(req).opstack_support)addCookie(res,cookie(req,'opstack_support','',0));
    const normalLogin=req.method==='POST'&&route==='/api/login';
    if(normalLogin){
@@ -96,11 +99,11 @@ function createPlatformServer(root,options,createNetworkServer){
     if(network){const selected=network,writeHead=res.writeHead;res.writeHead=function(status,...args){if(status===200){addCookie(res,cookie(req,'opstack_network',selected.id,365*86400));addCookie(res,cookie(req,'opstack_support','',0));}return writeHead.call(this,status,...args);};}
    }
    if(url.searchParams.has('network')){
-    if(!['/login','/accept-invite'].includes(route)||req.method!=='GET')fail('Choose a network from its sign-in link.',400);
+    if(!['/login','/accept-invite','/kiosk'].includes(route)||req.method!=='GET')fail('Choose a network from its sign-in link.',400);
     network=await store.network(url.searchParams.get('network'));if(!network)fail('Network not found.',404);
     if(cookies(req).opstack_network!==network.id){addCookie(res,cookie(req,'opstack_network',network.id,365*86400));addCookie(res,cookie(req,'admin_session','',0));}
     addCookie(res,cookie(req,'opstack_support','',0));
-   }else if(cookies(req).opstack_support&&!normalLogin&&!sharedSignIn){
+   }else if(!pairedNetwork&&cookies(req).opstack_support&&!normalLogin&&!sharedSignIn){
     if(!entry)fail('Opstack support session expired. Return to the Opstack console.',401);
     network=await store.network(cookies(req).opstack_support);if(!network)fail('Network not found.',404);
     req[supportIdentity]=actor(entry,network);

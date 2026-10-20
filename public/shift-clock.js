@@ -27,6 +27,7 @@
  dialog.append(heading,schedule,display,title,elapsed,staff.panel,pinHelp,reminder,actions,exception,error,details);
  const approval=modal('shift-clock-approval','shift-clock-approval','shift-clock-approval-title'),approvalHeading=node('div','shift-clock-heading'),approvalTitle=node('h2',null,'Manager approval'),approvalClose=closeButton('Cancel manager approval'),manager=pinPad('shift-clock-manager-pin','Manager’s four-digit PIN'),approvalError=node('p','shift-clock-error');approvalTitle.id='shift-clock-approval-title';approvalError.setAttribute('role','status');approvalHeading.append(approvalTitle,approvalClose);approval.append(approvalHeading,manager.panel,approvalError);document.body.append(dock,dialog,approval);
  let session,state,offset=0,loading,refreshAgain=false,busy=false,generation=0,nextTimer,request,pendingAction,managerContext,entryNotesId,stopped=false,lastDigits='';const seen=new Set();
+ let kioskOpened=false;
  const now=()=>Date.now()+offset,phase=()=>state?M.phase(state,now()):'idle',blocked=()=>document.hidden||window.appRequiredReading?.blocked||document.body.classList.contains('app-edit-mode'),stamp=value=>new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}).format(new Date(value));
  const contextKey=()=>[state?.entry?.id,state?.entry?.revision,state?.shift?.id].join(':');
  function phaseKey(){return[session?.id,phase(),state?.entry?.id||state?.shift?.id,state?.shift?.endAt,state?.entry?.breaks.find(item=>!item.endAt)?.startAt].join(':');}
@@ -55,7 +56,7 @@
   staff.input.disabled=busy||!state.pinSet;manager.input.disabled=busy;notes.disabled=reason.disabled=busy;
   for(const b of dialog.querySelectorAll('button'))b.disabled=busy||(staff.keys.contains(b)&&!state.pinSet);
   for(const b of approval.querySelectorAll('button'))b.disabled=busy;
-  if(['clock-in','clock-out','break-ready','meal-overdue','meal-due'].includes(current))open(true);
+  if(['clock-in','clock-out','break-ready','meal-overdue','meal-due'].includes(current))open(true);if(window.appKioskClock&&!kioskOpened){kioskOpened=true;open();}
  }
  async function fetchState(force=false){
   if(stopped||!session||blocked()&&!force)return;if(loading){if(force){await loading;return fetchState(true);}refreshAgain=true;return loading;}const version=generation;

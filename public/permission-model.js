@@ -1,6 +1,6 @@
 (function(root){
  const definitions=[
-  ['home.view','Home','View Home totals','Daily work'],['orders.view','Ordering','Browse stock and view the cart','Daily work'],['orders.place','Place orders','Place and send supplier orders','Daily work'],
+  ['devices.manage','Manage kiosks','Pair location devices, choose features and revoke kiosk access','Administration'],['home.view','Home','View Home totals','Daily work'],['orders.view','Ordering','Browse stock and view the cart','Daily work'],['orders.place','Place orders','Place and send supplier orders','Daily work'],
   ['transfers.view','View stock transfers','Read incoming and outgoing transfers at accessible locations','Stock transfers'],['transfers.send','Send stock transfers','Send and cancel transfers from accessible locations','Stock transfers'],['transfers.receive','Receive stock transfers','Confirm stock and optional cost transfers into an accessible location','Stock transfers'],
   ['counts.view','View stock counts','Read counts, usage and par levels','Daily work'],['counts.edit','Record stock counts','Save stock counts','Daily work'],['sales.view','View daily sales','Read daily sales, projections and budgets','Daily work'],['sales.edit','Enter daily sales','Save daily sales','Daily work'],
   ['finances.view','View weekly finances','Read weekly reports, expenses and quarter overview','Finance'],['finances.edit','Edit weekly finances','Save reports, labour, Op Ex and R&O','Finance'],['reporting.view','Reporting','Run detailed reports for accessible locations','Finance'],['invoices.view','View invoices','Read and download weekly invoice bundles','Finance'],['invoices.edit','Manage invoices','Upload, edit and remove invoices','Finance'],
@@ -18,7 +18,7 @@
  definitions.push({id:'account-email.manage',name:'Account invitation email',description:'Configure the one shared sender for account setup emails across Opstack; network role only',group:'Network'});
  const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network','comms.post.network','knowledge.manage.network','rostering.budget.network','account-email.manage'];
  const work=['learning.view','learning.complete','prep.view','prep.print','ops.view','ops.complete','rostering.view','rostering.clock','rostering.availability','rostering.leave','knowledge.view','comms.view','comms.chat','home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
- const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'learning.manage','learning.assign','learning.report','ops.manage','transfers.view','transfers.send','transfers.receive','reporting.view','users.manage','rostering.manage','rostering.approve','rostering.costs','rostering.budget.location','rostering.leave.approve']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
+ const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'learning.manage','learning.assign','learning.report','ops.manage','transfers.view','transfers.send','transfers.receive','reporting.view','users.manage','devices.manage','rostering.manage','rostering.approve','rostering.costs','rostering.budget.location','rostering.leave.approve']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
  function can(account,key){if(!account)return false;const permissions=account.permissions||defaults.find(role=>role.id===account.role)?.permissions||[],network=account.networkPermissions||permissions;if(key==='roles.manage'&&network.includes('roles.network'))return true;return(networkKeys.includes(key)?network:permissions).includes(key);}
  const any=(account,permissions)=>permissions.some(key=>can(account,key));
  const level=account=>account?.roleLevel??defaults.find(role=>role.id===account?.role)?.level??0;
@@ -29,6 +29,7 @@
  const knowledgeKeys=['knowledge.view','knowledge.manage.company','knowledge.manage.network'];
  const communicationKeys=['comms.view','comms.chat','comms.post.company','comms.post.network','comms.require'];
  const learningKeys=['learning.view','learning.complete','learning.manage','learning.assign','learning.report'];
+ const deviceKeys=['devices.manage'];
  const prepKeys=['prep.view','prep.print','prep.manage'];
  const opsKeys=['ops.view','ops.complete','ops.manage'];
  const dependencies={...Object.fromEntries(learningKeys.filter(key=>key!=='learning.view').map(key=>[key,'learning.view'])),'prep.print':'prep.view','prep.manage':'prep.view','ops.complete':'ops.view','ops.manage':'ops.view',...Object.fromEntries(rosteringKeys.filter(key=>key!=='rostering.view').map(key=>[key,'rostering.view'])),'knowledge.manage.company':'knowledge.view','knowledge.manage.network':'knowledge.view','comms.chat':'comms.view','comms.post.company':'comms.view','comms.post.network':'comms.view','comms.require':'comms.view','transfers.send':'transfers.view','transfers.receive':'transfers.view','orders.place':'orders.view','counts.edit':'counts.view','sales.edit':'sales.view','finances.edit':'finances.view','invoices.edit':'invoices.view','roles.network':'roles.manage','network.access':'locations.all'};
@@ -36,5 +37,5 @@
  dependencies['users.email.manage']='users.manage';
  const awardKeys=['awards.manage'],leaveKeys=['rostering.leave','rostering.leave.approve','rostering.leave.confidential'];
  const userEmailKeys=['users.email.manage','account-email.manage'];
- const api={learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
+ const api={deviceKeys,learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
 })(globalThis);

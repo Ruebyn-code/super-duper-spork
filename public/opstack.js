@@ -1,4 +1,5 @@
 (()=>{
+ window.addEventListener('storage',event=>{if(event.key==='opstack-kiosk-paired')location.replace('/kiosk');});
  const $=id=>document.getElementById(id),node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
  let session,emailRevision=0,defaultsRevision=0,active='networks',networks=[];
  for(const image of document.querySelectorAll('img')){image.addEventListener('error',()=>{image.src='/favicon.png';},{once:true});if(image.complete&&!image.naturalWidth)image.src='/favicon.png';}
