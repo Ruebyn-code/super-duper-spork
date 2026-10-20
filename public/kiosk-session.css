@@ -1,0 +1,3 @@
+html.kiosk-lock-pending body,html.kiosk-lock-pending body *{visibility:hidden!important}
+.kiosk-idle-notice{position:fixed;z-index:2147483646;bottom:80px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:10px 16px;border:1px solid var(--primary);border-radius:14px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);box-shadow:0 6px 24px #0002;font-size:13px;text-align:center;pointer-events:none}
+.kiosk-idle-notice[hidden]{display:none}

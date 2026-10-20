@@ -149,7 +149,7 @@
  window.addEventListener('app-theme-changed',event=>{for(const frame of [current,rosterPopup]){const child=frame?.contentWindow;if(child?.appTheme&&child.appTheme.mode!==event.detail.mode)child.appTheme.set(event.detail.mode);}});
  window.addEventListener('app-design-saved',appearanceChanged);window.addEventListener('app-appearance-updated',appearanceChanged);
  window.addEventListener('focus',()=>{const child=(rosterPopup||current)?.contentWindow;if(child)child.dispatchEvent(new child.Event('focus'));});
- window.addEventListener('beforeunload',event=>{if(!current)return;const child=current.contentWindow,unload=new child.Event('beforeunload',{cancelable:true});child.dispatchEvent(unload);if(unload.defaultPrevented){event.preventDefault();event.returnValue='';}});
+ window.addEventListener('beforeunload',event=>{if(window.appKioskSession?.locking||!current)return;const child=current.contentWindow,unload=new child.Event('beforeunload',{cancelable:true});child.dispatchEvent(unload);if(unload.defaultPrevented){event.preventDefault();event.returnValue='';}});
  phone.addEventListener('change',()=>{
   if(!phone.matches&&rosterPopup){const destination=canonical(rosterPopup.contentWindow.location.href);closePhoneRoster();navigate(destination.href);}
   else if(phone.matches&&current?.contentWindow.location.pathname==='/rostering'){const destination=canonical(current.contentWindow.location.href);if(navigate('/home',{history:'replace'}))openPhoneRoster(destination);}
