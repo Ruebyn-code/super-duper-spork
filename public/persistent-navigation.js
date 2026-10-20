@@ -44,6 +44,7 @@
   if(child!==current?.contentWindow&&child!==rosterPopup?.contentWindow)return;
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
   root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
+  root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')));
   // The phone roster is a page reader. Its sheet covers only the content
   // document, so users must still be able to leave through the shared bar.
   const modal=[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('dialog[open]:not(#phone-roster)'));

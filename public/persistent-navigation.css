@@ -24,6 +24,8 @@ html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
 .shell-conversation-fullscreen .app-shell{padding:0!important}
 .shell-checklist-fullscreen #app-sidebar,.shell-checklist-fullscreen #app-subsidebar,.shell-checklist-fullscreen .mobile-brand-header,.shell-checklist-fullscreen #mobile-tabbar,.shell-checklist-fullscreen #app-edit-indicator,.shell-checklist-fullscreen #shift-clock-dock{display:none!important}
 .shell-checklist-fullscreen .app-shell{padding:0!important}
+.shell-course-fullscreen #app-sidebar,.shell-course-fullscreen #app-subsidebar,.shell-course-fullscreen .mobile-brand-header,.shell-course-fullscreen #mobile-tabbar,.shell-course-fullscreen #app-edit-indicator,.shell-course-fullscreen #shift-clock-dock{display:none!important}
+.shell-course-fullscreen .app-shell{padding:0!important}
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  .persistent-shell body>.app-shell{box-sizing:border-box;padding-bottom:var(--mobile-nav-space)}
 }
