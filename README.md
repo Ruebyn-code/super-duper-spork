@@ -47,6 +47,12 @@ Click a user/location/company row, an editable setting heading, or a checklist/c
 
 **Trading hours** stores opening and closing times for each day, Monday–Sunday. Enter AM/PM times such as **11am–4am**, or 24-hour times. A closing time before the opening time belongs to the following day and shows **Closes next day**; equal times mean 24 hours. Each row belongs to its opening day. Mark non-trading days **Closed**, or leave both fields blank for **Not set**. **Copy Monday to all** fills the week; adjust individual days and press **Save location**. The same controls are available when creating a location. Editing requires the existing Manage locations permission and access to that location. These settings do not change sales weeks, order costs, roster shifts or checklist schedules.
 
+## Import weekly sales from Excel
+
+In **Sales → Weekly report**, select the store, then **Import spreadsheet** and choose its `.xlsx` weekly report workbook. The preview lists the dated weeks, total sales and Uber Eats/DoorDash fees. Confirm **Import weeks** to fill missing entries. Existing matching values are retained; a week with conflicting saved values is skipped. If a report changes after previewing, review the refreshed preview before confirming again. Uploading or previewing a workbook does not save reports.
+
+This imports **sales and platform fees only**: Till sales, Cash, Eftpos, Petty cash, combined Uber Eats brands, DoorDash, and each platform’s fees, marketing and refunds. Dates come from the actual Monday–Sunday Excel date cells. Amounts are rounded to cents, blank values stay blank, and cash/refund credit adjustments retain their signs. Labour, Op Ex, R&O, Cost of goods, operating schedules, Daily sales, projections and ordering budgets stay unchanged. Existing financial permissions and the selected location control access. Excel formulas and external links are never executed; formula values must have been calculated and saved in Excel.
+
 ## Invoice scanner and weekly bundles
 
 The circular **Invoice scanner** button stays collapsed in the bottom-right corner of **Home**. On phones it sits above the bottom navigation. Open it to **Take photo** or **Upload invoice**, or drag a file into the upload area. JPEG, PNG, WebP and PDF files up to 10 MB are supported, with up to 20 pages per PDF. Camera availability follows the phone/browser file picker. Supported HEIC camera photos are converted to JPEG when the browser can read them; use JPEG or PDF otherwise.

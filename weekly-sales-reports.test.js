@@ -30,7 +30,7 @@ test('platform fee settlements match the sample, distinguish blanks from zero an
  assert.deepEqual(weekly.settlement(null,fees.uberEats),{salesCents:null,totalFeesCents:150961,expectedPayCents:null});
  const blank=weekly.blankPlatformFees();assert.equal(weekly.settlement(100,blank.uberEats).totalFeesCents,null);blank.uberEats.feesCents=0;blank.uberEats.marketingCents=0;blank.uberEats.refundsCents=0;assert.deepEqual(weekly.settlement(0,blank.uberEats),{salesCents:0,totalFeesCents:0,expectedPayCents:0});assert.equal(blank.doorDash.feesCents,null);
  assert.equal(weekly.settlement(100,{feesCents:100,marketingCents:1,refundsCents:0}).expectedPayCents,-1);
- for(const field of weekly.feeFields)for(const value of [null,undefined,NaN,-1,1.1])assert.equal(weekly.settlement(100,{...fees.uberEats,[field]:value}).totalFeesCents,null);
+ for(const field of weekly.feeFields)for(const value of [null,undefined,NaN,...(field==='refundsCents'?[]:[-1]),1.1])assert.equal(weekly.settlement(100,{...fees.uberEats,[field]:value}).totalFeesCents,null);
  const costs={stockOrdersCents:20000,labourCents:30000,operatingExpensesCents:10000};assert.equal(weekly.profit(100000,{...costs,roCents:40000}).state,'break-even');assert.equal(weekly.profit(100000,{...costs,roCents:40001}).amountCents,-1);assert.equal(weekly.profit(100000,{...costs,roCents:39999}).amountCents,1);assert.equal(weekly.profit(100000,{...costs,roCents:null}).reason,'costs');assert.equal(weekly.profit(100000,{...costs,platformFees:fees}).amountCents,40000);
 });
 test('R&O and platform fees persist independently, retain legacy reports and old-client edits, and detect fee-only conflicts',async()=>{
@@ -49,7 +49,7 @@ test('new weekly expenses reject malformed, negative, fractional and excessive a
  const valid={...input(),roCents:0,platformFees:platformFees()};assert.equal(validate(valid).roCents,0);
  for(const value of [-1,1.1,Infinity,NaN,'1',undefined,7000000001])assert.throws(()=>validate({...valid,roCents:value}),error=>error.status===400);
  for(const value of [null,[],{},'fees',{...platformFees(),other:{}},{uberEats:platformFees().uberEats}])assert.throws(()=>validate({...valid,platformFees:value}),error=>error.status===400);
- for(const platform of weekly.platforms)for(const field of weekly.feeFields)for(const value of [-1,1.1,Infinity,'1',undefined,7000000001]){const fees=platformFees();fees[platform][field]=value;assert.throws(()=>validate({...valid,platformFees:fees}),error=>error.status===400);}
+ for(const platform of weekly.platforms)for(const field of weekly.feeFields)for(const value of [...(field==='refundsCents'?[]:[-1]),1.1,Infinity,'1',undefined,7000000001]){const fees=platformFees();fees[platform][field]=value;assert.throws(()=>validate({...valid,platformFees:fees}),error=>error.status===400);}
  for(const value of [[],{...platformFees().uberEats,unexpected:0}])assert.throws(()=>validate({...valid,platformFees:{...platformFees(),uberEats:value}}),error=>error.status===400);
  assert.equal(validate({...valid,roCents:null,platformFees:weekly.blankPlatformFees()}).roCents,null);assert.equal(validate({...valid,roCents:7000000000}).roCents,7000000000);
 });
@@ -63,7 +63,7 @@ test('weekly reports persist separately by location and protect concurrent detai
   const other=await store.report(dir,{...actor,locationId:'other'},'2026-10-05');assert.equal(other.record.revision,0);assert.equal(other.summary.totals.sales,null);
   assert.deepEqual((await sales.createStore().report(dir,actor,'2026-10-05')).record.days,Array(7).fill(null));assert.equal((await sales.createStore().history(dir,actor)).length,0);
   await assert.rejects(store.report(dir,{...actor,locationId:'../../outside'},'2026-10-05'),error=>error.status===403);
-  for(const change of [{weekStart:'2026-10-11'},{weekStart:'2026-02-30'},{weekStart:'../../outside'},{revision:-1},{breakdown:[]},{breakdown:{...input().breakdown,other:[]}},{breakdown:{...input().breakdown,cash:[1]}},{breakdown:{...input().breakdown,cash:Array(7).fill(-1)}},{breakdown:{...input().breakdown,cash:Array(7).fill(1.1)}},{breakdown:{...input().breakdown,cash:Array(7).fill('1')}},{labourCents:-1},{operatingExpensesCents:Infinity}])assert.throws(()=>validate({...input(),...change}),error=>error.status===400);
+  for(const change of [{weekStart:'2026-10-11'},{weekStart:'2026-02-30'},{weekStart:'../../outside'},{revision:-1},{breakdown:[]},{breakdown:{...input().breakdown,other:[]}},{breakdown:{...input().breakdown,cash:[1]}},{breakdown:{...input().breakdown,tillSales:Array(7).fill(-1)}},{breakdown:{...input().breakdown,cash:Array(7).fill(1.1)}},{breakdown:{...input().breakdown,cash:Array(7).fill('1')}},{labourCents:-1},{operatingExpensesCents:Infinity}])assert.throws(()=>validate({...input(),...change}),error=>error.status===400);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 test('weekly overview costs use only placed orders at the selected location and Melbourne weeks with Sunday costs allocated forward',async()=>{

@@ -37,7 +37,7 @@ const manualPar=require('./manual-par');
 const stockUsage=require('./stock-usage');
 const stockTransfers=require('./stock-transfers');
 const sales=require('./sales');
-const weeklySalesReports=require('./weekly-sales-reports'),weeklySalesOverview=require('./weekly-sales-overview'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
+const weeklySalesReports=require('./weekly-sales-reports'),weeklySalesImport=require('./weekly-sales-import'),weeklySalesOverview=require('./weekly-sales-overview'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
 const reporting=require('./reporting'),reportingDetails=require('./reporting-details');
 const locations=require('./locations');
 const invoices=require('./invoices'),invoicePrices=require('./invoice-prices');
@@ -365,6 +365,12 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const params=Object.fromEntries(requestUrl.searchParams);weeklySalesOverview.period(params);
         const history=await usageHistory(dataDir);
         return json(200,await weeklySalesOverview.build(dataDir,session,params,{orders:history.orders,transfers:history.transfers,store:weeklySalesReportStore}));
+      }
+      if(['/api/weekly-sales-import/preview','/api/weekly-sales-import/confirm'].includes(req.url)){
+        if(req.method!=='POST')fail('Use POST to import a weekly sales workbook.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        const input=await body(req,7000000),workbook=weeklySalesImport.upload(input,session);
+        return json(200,await weeklySalesReportStore.importReports(dataDir,session,workbook,req.url.endsWith('/confirm')?{expectedRevisions:input.expectedRevisions??null,sha256:input.sha256}:{}));
       }
       if(req.url==='/api/weekly-sales-reports'&&req.method==='GET'){
         const history=await usageHistory(dataDir);

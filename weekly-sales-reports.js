@@ -10,12 +10,12 @@ function validate(input){
  if(!input||typeof input!=='object')invalid('Enter a weekly sales report.');week(input.weekStart);
  if(!Number.isSafeInteger(input.revision)||input.revision<0)invalid('Reload the report before saving.');
  if(!input.breakdown||typeof input.breakdown!=='object'||Array.isArray(input.breakdown)||Object.keys(input.breakdown).some(key=>!weeklyReport.fields.includes(key)))invalid('Enter a valid weekly sales breakdown.');
- const breakdown=Object.fromEntries(weeklyReport.fields.map(field=>{const values=input.breakdown[field];if(!Array.isArray(values)||values.length!==7||values.some(value=>value!==null&&(!Number.isSafeInteger(value)||value<0||value>maximumDailyCents)))invalid('Enter non-negative amounts with up to two decimal places, or leave cells blank.');return [field,[...values]];}));
+ const breakdown=Object.fromEntries(weeklyReport.fields.map(field=>{const values=input.breakdown[field];if(!Array.isArray(values)||values.length!==7||values.some(value=>value!==null&&(!Number.isSafeInteger(value)||value<(field==='cash'?-maximumDailyCents:0)||value>maximumDailyCents)))invalid('Enter valid amounts with up to two decimal places, or leave cells blank.');return [field,[...values]];}));
  const costs={};for(const field of ['labourCents','operatingExpensesCents']){const value=input[field]??null;if(value!==null&&(!Number.isSafeInteger(value)||value<0||value>maximumDailyCents*7))invalid('Enter valid non-negative weekly costs.');costs[field]=value;}
  if(Object.hasOwn(input,'roCents')){if(input.roCents!==null&&(!Number.isSafeInteger(input.roCents)||input.roCents<0||input.roCents>maximumDailyCents*7))invalid('Enter a valid non-negative R&O amount.');costs.roCents=input.roCents;}
  if(Object.hasOwn(input,'platformFees')){
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);if(!object(input.platformFees)||Object.keys(input.platformFees).some(platform=>!weeklyReport.platforms.includes(platform)))invalid('Enter valid platform fees.');
-  costs.platformFees=Object.fromEntries(weeklyReport.platforms.map(platform=>{const fees=input.platformFees[platform];if(!object(fees)||Object.keys(fees).some(field=>!weeklyReport.feeFields.includes(field)))invalid('Enter valid platform fees.');return [platform,Object.fromEntries(weeklyReport.feeFields.map(field=>{const value=fees[field];if(value!==null&&(!Number.isSafeInteger(value)||value<0||value>maximumDailyCents*7))invalid('Enter non-negative platform fees with up to two decimal places, or leave them blank.');return [field,value];}))];}));
+  costs.platformFees=Object.fromEntries(weeklyReport.platforms.map(platform=>{const fees=input.platformFees[platform];if(!object(fees)||Object.keys(fees).some(field=>!weeklyReport.feeFields.includes(field)))invalid('Enter valid platform fees.');return [platform,Object.fromEntries(weeklyReport.feeFields.map(field=>{const value=fees[field];if(value!==null&&(!Number.isSafeInteger(value)||value<(field==='refundsCents'?-maximumDailyCents*7:0)||value>maximumDailyCents*7))invalid('Enter valid platform fees with up to two decimal places, or leave them blank.');return [field,value];}))];}));
  }
  if(Object.hasOwn(input,'expenseEntries')){
   const entries=input.expenseEntries,object=value=>value&&typeof value==='object'&&!Array.isArray(value);if(!object(entries)||Object.keys(entries).some(field=>!weeklyReport.expenseFields.includes(field)))invalid('Enter valid expense entries.');
@@ -47,9 +47,23 @@ function createStore(){
    if(content(previous)===content(next))return {...previous,operatingSchedule:schedule};
    if(previous.revision!==normalized.revision)invalid('This report was changed by another user or tab. Reload the saved week before saving.',409);
    schedule=await operatingSchedule.applyLegacy(dir,session,schedule,normalized.operatingAllocations,next.weekStart);
-   const record={...next,revision:previous.revision+1,locationId:session.locationId,companyId:session.companyId,recordedBy:session.username,updatedAt:new Date().toISOString()},temp=target+'.'+crypto.randomUUID()+'.tmp';
+   const record={...next,revision:previous.revision+1,locationId:session.locationId,companyId:session.companyId,recordedBy:session.username,updatedAt:new Date().toISOString(),...(previous.salesImport?{salesImport:previous.salesImport}:{})},temp=target+'.'+crypto.randomUUID()+'.tmp';
    await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}return {...record,operatingSchedule:schedule};
   });const settled=operation.catch(()=>{});pending.set(target,settled);try{return await operation;}finally{if(pending.get(target)===settled)pending.delete(target);}
+ }
+ async function importReports(dir,session,workbook,{expectedRevisions,sha256}={}){
+  const model=require('./weekly-sales-import'),rows=workbook.reports.map(row=>validate({...row,revision:0})),targets=rows.map(row=>file(dir,session,row.weekStart)),confirm=expectedRevisions!==undefined;
+  if(confirm&&(!expectedRevisions||typeof expectedRevisions!=='object'||Array.isArray(expectedRevisions)||Object.keys(expectedRevisions).length!==rows.length||rows.some(row=>!Number.isSafeInteger(expectedRevisions[row.weekStart])||expectedRevisions[row.weekStart]<0)||sha256!==workbook.sha256))invalid('Preview this workbook before importing.');
+  const operation=Promise.all(targets.map(target=>pending.get(target)||Promise.resolve())).then(async()=>{
+   const previous=await Promise.all(rows.map(row=>read(dir,session,row.weekStart)));
+   if(confirm&&previous.some(record=>record.revision!==expectedRevisions[record.weekStart]))invalid('A report changed after the preview. Preview the workbook again before importing.',409);
+   const results=rows.map((row,index)=>{const merge=model.merge(previous[index],row),summary=weeklyReport.calculate(row.breakdown);return{weekStart:row.weekStart,weekEnd:new Date(Date.parse(row.weekStart+'T00:00:00Z')+6*86400000).toISOString().slice(0,10),revision:previous[index].revision,status:merge.status,changes:merge.changes,salesCents:summary.totals.sales,platformSettlements:Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],row.platformFees[platform])])),merge};});
+   if(confirm)for(const[index,result]of results.entries())if(result.status==='ready'){
+    const saved={...previous[index],breakdown:result.merge.breakdown,platformFees:result.merge.platformFees,revision:previous[index].revision+1,locationId:session.locationId,companyId:session.companyId,recordedBy:session.username,updatedAt:new Date().toISOString(),salesImport:{sha256:workbook.sha256,name:workbook.name,sourceLocation:workbook.sourceLocation,importedBy:session.username,importedAt:new Date().toISOString()}},target=targets[index],temp=target+'.'+crypto.randomUUID()+'.tmp';
+    await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(saved,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}result.status='imported';result.revision=saved.revision;
+   }
+   return{name:workbook.name,sha256:workbook.sha256,sourceLocation:workbook.sourceLocation,locationId:session.locationId,locationName:session.locationName,reports:results.map(({merge,...result})=>result),salesCents:results.reduce((sum,row)=>sum+(row.salesCents??0),0),ready:results.filter(row=>row.status==='ready').length,imported:results.filter(row=>row.status==='imported').length,conflicts:results.filter(row=>row.status==='conflict').length,unchanged:results.filter(row=>row.status==='unchanged').length};
+  });const settled=operation.catch(()=>{});for(const target of targets)pending.set(target,settled);try{return await operation;}finally{for(const target of targets)if(pending.get(target)===settled)pending.delete(target);}
  }
  async function report(dir,session,selectedWeek,{orders=[],transfers=[],now=new Date(),operatingScheduleSnapshot,expenseTypesSnapshot}={}){
   const start=selectedWeek||currentWeek(now),record=await read(dir,session,start),formatter=calendar(defaultTimeZone),operatingExpenseTypes=expenseTypesSnapshot||await expenseTypes.read(dir,session);
@@ -63,6 +77,6 @@ function createStore(){
   const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:supplierCosts.placedOrdersCents,stockTransferCents:transferCosts.totalCents,pricePending:costs.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
   return {record,summary,profit,platformSettlements,stockOrders,stockTransfers:transferCosts.lines,stockCosts:{totalCents:costs.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount,supplierOrdersCents:supplierCosts.placedOrdersCents,transferCents:transferCosts.totalCents,transferCount:transferCosts.transferCount},operatingExpenseTypes,weeklyOrders:{totalCents:supplierCosts.placedOrdersCents,pricePending:costs.pricePending,orderCount:costs.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
  }
- return {save,report};
+ return {save,report,importReports};
 }
 module.exports={createStore,validate};

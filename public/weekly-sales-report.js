@@ -53,6 +53,6 @@
   }}
   return [...suppliers.values()].map(group=>({key:group.key,supplier:group.supplier,totalCents:group.totalCents,pricePending:group.pricePending,orderCount:group.orders.size,items:[...group.items.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-AU'))})).sort((a,b)=>(a.supplier||'').localeCompare(b.supplier||'','en-AU')||a.key.localeCompare(b.key));
  }
- function settlement(salesCents,fees){const values=feeFields.map(field=>fees?.[field]),totalFeesCents=values.every(value=>Number.isSafeInteger(value)&&value>=0)?values.reduce((total,value)=>total+value,0):null;return {salesCents,totalFeesCents,expectedPayCents:Number.isSafeInteger(salesCents)&&salesCents>=0&&totalFeesCents!==null?salesCents-totalFeesCents:null};}
+ function settlement(salesCents,fees){const values=feeFields.map(field=>fees?.[field]),totalFeesCents=values.every((value,index)=>Number.isSafeInteger(value)&&(feeFields[index]==='refundsCents'||value>=0))?values.reduce((total,value)=>total+value,0):null;return {salesCents,totalFeesCents,expectedPayCents:Number.isSafeInteger(salesCents)&&salesCents>=0&&totalFeesCents!==null?salesCents-totalFeesCents:null};}
  return {fields,expenseFields,blankExpenses,expenseLineTotal,expenseTotal,allocationCost,operatingCost,resolveOperatingAllocations,restoreOperatingDraft,platforms,feeFields,blankPlatformFees,blank,calculate,profit,settlement,stockSupplierCosts};
 });
