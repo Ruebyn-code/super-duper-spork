@@ -209,3 +209,18 @@ test('manual pars are Head Office-only location fallbacks, survive restarts and 
  const simultaneous=await Promise.all(['pens','boxes'].map(id=>app.request(admin,'/api/products/'+id+'/par','PUT',{level:0},pin)));assert.ok(simultaneous.every(response=>response.status===200));const catalogue=(await app.request(user,'/api/catalogue')).data;for(const id of ['pens','boxes'])assert.equal(catalogue.products.find(product=>product.id===id).par.level,0);
  }finally{await app.close();}
 });
+
+test('location trading hours persist overnight schedules, preserve older edits and enforce location permissions',async()=>{
+ const app=await fixture();try{
+  const admin=await app.login('admin'),first=await app.login('first'),blank=Array(7).fill(null),schedule=[{open:'11am',close:'4am'},{open:'11:00',close:'16:00'},{closed:true},null,null,null,null];
+  const legacy=(await app.request(admin,'/api/locations')).data.find(r=>r.id===first.session.locationId);assert.deepEqual(legacy.tradingHours,blank);
+  const response=await app.request(admin,'/api/locations','POST',{name:'Night trade',tradingHours:schedule});assert.equal(response.status,201);const shop=response.data;assert.deepEqual(shop.tradingHours[0],{closed:false,open:'11:00',close:'04:00'});assert.equal(shop.tradingHours[2].closed,true);assert.equal(shop.tradingHours[3],null);
+  const renamed=await app.request(admin,'/api/locations/'+shop.id,'PUT',{name:'Night trade renamed'});assert.equal(renamed.status,200);assert.deepEqual(renamed.data.tradingHours,shop.tradingHours);
+  for(const tradingHours of [[],[{open:'11am',close:''},...blank.slice(1)],[{open:'24:00',close:'4am'},...blank.slice(1)]])assert.equal((await app.request(admin,'/api/locations/'+shop.id,'PUT',{name:'Rejected rename',tradingHours})).status,400);
+  const unchanged=(await app.request(admin,'/api/locations')).data.find(r=>r.id===shop.id);assert.equal(unchanged.name,'Night trade renamed');assert.deepEqual(unchanged.tradingHours,shop.tradingHours);
+  assert.equal((await app.request(first,'/api/locations/'+first.session.locationId,'PUT',{name:'Forbidden',tradingHours:schedule})).status,403);assert.equal((await app.request(admin,'/api/locations/'+shop.id,'PUT',{name:'No CSRF',tradingHours:schedule},{'X-CSRF-Token':''})).status,403);
+  const other=(await app.request(admin,'/api/companies','POST',{name:'Separate trading company',locationName:'Other store'})).data;const otherStore=(await app.request(admin,'/api/locations?all=true')).data.find(r=>r.companyId===other.id);assert.deepEqual(otherStore.tradingHours,blank);
+  await app.restart();const fresh=await app.login('admin');assert.deepEqual((await app.request(fresh,'/api/locations')).data.find(r=>r.id===shop.id).tradingHours,shop.tradingHours);
+  const cleared=await app.request(fresh,'/api/locations/'+shop.id,'PUT',{name:'Night trade renamed',tradingHours:null});assert.equal(cleared.status,200);assert.deepEqual(cleared.data.tradingHours,blank);assert.deepEqual((await app.request(fresh,'/api/locations?all=true')).data.find(r=>r.id===otherStore.id).tradingHours,blank);
+ }finally{await app.close();}
+});

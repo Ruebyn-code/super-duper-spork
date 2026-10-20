@@ -37,6 +37,8 @@ Desktop related pages appear in the row underneath the main bar. Phones open the
 
 **User profile** opens an in-app panel showing the signed-in username, permissions, current company and location, and accessible companies and locations in the current company. Profile details use the current signed-in session. User administration and location email settings remain in their existing administration pages. The account dropdown supports outside-click dismissal, Escape and arrow-key navigation.
 
+**Admin → Locations → Edit location → Trading hours** stores opening and closing times for each day, Monday–Sunday. Enter AM/PM times such as **11am–4am**, or 24-hour times. A closing time before the opening time belongs to the following day and shows **Closes next day**; equal times mean 24 hours. Each row belongs to its opening day. Mark non-trading days **Closed**, or leave both fields blank for **Not set**. **Copy Monday to all** fills the week; adjust individual days and press **Save location**. The same controls are available when creating a location. Editing requires the existing Manage locations permission and access to that location. These settings do not change sales weeks, order costs, roster shifts or checklist schedules.
+
 ## Invoice scanner and weekly bundles
 
 The circular **Invoice scanner** button stays collapsed in the bottom-right corner of **Home**. On phones it sits above the bottom navigation. Open it to **Take photo** or **Upload invoice**, or drag a file into the upload area. JPEG, PNG, WebP and PDF files up to 10 MB are supported, with up to 20 pages per PDF. Camera availability follows the phone/browser file picker. Supported HEIC camera photos are converted to JPEG when the browser can read them; use JPEG or PDF otherwise.

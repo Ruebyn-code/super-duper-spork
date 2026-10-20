@@ -109,6 +109,8 @@ module.exports={'/learning-course-model.js':'learning-course-model.js','/learnin
   '/email-template-editor.js':'email-template-editor.js',
   '/email-settings.js':'email-settings.js',
   '/locations.js':'locations.js',
+  '/location-hours-model.js':'location-hours-model.js',
+  '/location-hours.css':'location-hours.css',
   '/companies.js':'companies.js',
   '/admin':'admin.html',
   '/admin/accounts':'accounts.html',
