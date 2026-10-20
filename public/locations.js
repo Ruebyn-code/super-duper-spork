@@ -1,5 +1,6 @@
 (()=>{
  const $=id=>document.getElementById(id),form=$('location-form');if(!form)return;
+const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialAppSearch&&document.getElementById('locations-search')&&location.hash==='#locations')document.getElementById('locations-search').value=initialAppSearch.slice(0,120);
  const message=$('location-message'),list=$('location-list'),filters=new Set();let records=[],users=[],saving=false,emailSaving=false,editId='',loaded=false,activeEditor=null,managerSaving=false,managerGeneration=0,clockOffset=0;
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
  const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};

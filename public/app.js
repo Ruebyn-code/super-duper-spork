@@ -141,6 +141,7 @@ function render(refreshMenu=true){
     replacement?.focus({preventScroll:true});
   }
 }
+const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialAppSearch&&document.getElementById('search'))document.getElementById('search').value=initialAppSearch.slice(0,120);
 if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};

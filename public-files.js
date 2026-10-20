@@ -3,6 +3,8 @@ module.exports={'/weekly-sales-import.js':'weekly-sales-import.js','/invoice-pri
   '/accept-invite':'accept-invite.html',
   '/accept-invite.js':'accept-invite.js',
   '/page-bridge.js':'page-bridge.js',
+  '/app-search.js':'app-search.js',
+  '/app-search.css':'app-search.css',
   '/persistent-navigation.css':'persistent-navigation.css',
   '/favicon.png':'assets/branding/opstack-icon.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',

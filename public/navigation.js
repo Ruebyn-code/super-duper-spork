@@ -102,7 +102,7 @@
  window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateSubmenuTitle();updateMore();controls.refresh();});
  new MutationObserver(()=>{updateNavigationLabels();updateSubmenuTitle();}).observe(sidebar,{childList:true,characterData:true,subtree:true});
  updateNavigationLabels();syncMobileLayout();
- window.appNavigation={dismissTransient(){controls.close();closeMore();window.locationPickers?.closeAll();},refresh(value){
+ window.appNavigation={dismissTransient(){window.appSearch?.close();controls.close();closeMore();window.locationPickers?.closeAll();},refresh(value){
   if(value){
    session=value;let changed=false;
    for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',session.locations,session.locationId]]){

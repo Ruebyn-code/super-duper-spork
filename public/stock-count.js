@@ -108,6 +108,7 @@
   finally{saving=false;for(const control of form.elements)control.disabled=false;updateProgress();refreshPar();}
  };
  for(const key of ['countDate','notes'])form.elements[key].addEventListener('input',writeDraft);
+ const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialAppSearch)$('count-search').value=initialAppSearch.slice(0,120);
  $('count-search').oninput=filterRows;$('count-history-refresh').onclick=loadHistory;
  $('count-clear').onclick=()=>{if(Object.values(quantities).some(value=>value.trim())||form.elements.notes.value){if(!confirm(wording('Clear your unsaved stock count?')))return;}resetDraft();$('count-message').textContent=wording('Draft cleared.');};
  $('logout').onclick=async()=>{try{await api('/api/logout','POST');location.href=companyLoginUrl();}catch(error){$('count-message').textContent=error.message;}};
