@@ -1,0 +1,90 @@
+/* Compact directory rows, scoped to Users and Locations. */
+.admin-page [data-compact-directory] .users-directory-heading{gap:10px;margin-bottom:9px}
+.admin-page [data-compact-directory] .users-company{gap:9px}
+.admin-page [data-compact-directory] .users-company-mark{width:36px;height:36px;flex-basis:36px}
+.app-page .admin-page [data-compact-directory] .users-company h1{font-size:23px;margin:0;line-height:1.25}
+.admin-page [data-compact-directory] .users-company p{font-size:11px;line-height:1.4;margin:2px 0 0}
+.admin-page [data-compact-directory] .users-search{gap:8px;min-height:36px;margin:0 0 8px;padding:5px 10px;border-radius:7px}
+.admin-page [data-compact-directory] .users-search svg{width:18px;height:18px;flex-basis:18px}
+.admin-page [data-compact-directory] .users-search input[type=search]{min-height:26px;height:26px;font-size:13px;line-height:1.3}
+.admin-page [data-compact-directory] .users-directory-tools{align-items:center;gap:8px;margin-bottom:8px}
+.admin-page [data-compact-directory] .users-filter-toolbar{gap:7px;padding:0;border:0;background:transparent}
+.admin-page [data-compact-directory] .users-directory-actions{padding:0;border:0;background:transparent;width:auto}
+.admin-page [data-compact-directory] :is(#users-filter-toggle,.directory-filter-toggle,#create-user,.directory-create){min-height:32px;margin:0;padding:6px 10px;font-size:11px;gap:6px}
+.admin-page [data-compact-directory] :is(#users-filter-toggle,.directory-filter-toggle) svg{width:16px;height:16px}
+.admin-page [data-compact-directory] :is(#users-clear-filters,.directory-clear-filters){font-size:10px;min-height:30px;margin:0;padding:5px 2px}
+.admin-page [data-compact-directory] .users-all-locations{font-size:10px}
+.admin-page [data-compact-directory] .users-filter-chips{gap:4px}
+.admin-page [data-compact-directory] .users-location-chip{font-size:10px;padding:3px 6px;min-height:26px;gap:4px}
+.admin-page [data-compact-directory] .users-filter-panel{padding:9px 10px;margin:0 0 8px}
+.admin-page [data-compact-directory] .users-filter-panel legend{font-size:11px;margin-bottom:7px}
+.admin-page [data-compact-directory] .users-table-shell{border-radius:8px}
+.admin-page [data-compact-directory] .users-table th{padding:8px 10px;font-size:11px}
+.admin-page [data-compact-directory] .users-table :is(.user-record,.location-record)>td{padding:7px 10px;font-size:12px}
+.admin-page [data-compact-directory] .users-identity{gap:8px}
+.admin-page [data-compact-directory] .user-avatar{width:28px;height:28px;flex-basis:28px;font-size:11px}
+.admin-page [data-compact-directory] .location-avatar svg{width:18px;height:18px}
+.admin-page [data-compact-directory] .users-table .user-name{margin:0;font-size:13px;line-height:1.35;letter-spacing:normal}
+.admin-page [data-compact-directory] .user-record .users-role{display:none}
+.admin-page [data-compact-directory] :is(.user-email,.users-invitation){font-size:10px;line-height:1.3;margin:2px 0 0}
+.admin-page [data-compact-directory] .users-location-list{min-height:24px;gap:4px}
+.admin-page [data-compact-directory] .users-location-tag{font-size:11px;line-height:1.35;padding:3px 5px}
+.admin-page [data-compact-directory] .users-locations-more{font-size:10px;min-height:26px;padding:3px 5px}
+.admin-page [data-compact-directory] .permission-badge{font-size:10px;padding:3px 6px;line-height:1.3;max-width:100%;overflow-wrap:anywhere}
+.admin-page [data-compact-directory] .users-permission-help{font-size:10px;margin:2px 0 0;line-height:1.3}
+.admin-page [data-compact-directory] :is(.locations-email-address,.locations-users-cell .header-link){font-size:11px;line-height:1.35}
+.admin-page [data-compact-directory] .location-trading-summary{font-size:10px;margin:2px 0 0;line-height:1.3}
+.admin-page [data-compact-directory] :is(.user-edit-toggle,.location-edit-toggle){width:28px;height:28px;min-height:28px;margin:0 auto;padding:5px}
+.admin-page [data-compact-directory] .users-results{font-size:10px;margin:7px 0 0!important}
+.admin-page [data-compact-directory]>:is(#location-message,#account-message):empty{display:none}
+
+/* Native dialog provides keyboard focus containment; only the body scrolls. */
+html.location-settings-open,html.location-settings-open body{overflow:hidden}
+.admin-page .location-settings-dialog{width:min(1140px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-text,#21384a);box-shadow:0 18px 70px #10273540;overflow:hidden}
+.location-settings-dialog:not([open]){display:none!important}
+.location-settings-dialog[open]{display:flex;flex-direction:column}
+.location-settings-dialog::backdrop{background:#10273580;backdrop-filter:blur(3px)}
+.location-settings-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;padding:10px 12px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
+.location-settings-heading>div{min-width:0}
+.admin-page .location-settings-heading h2{font-size:16px;line-height:1.3;margin:0;letter-spacing:normal}
+.location-settings-name{font-size:11px;line-height:1.35;margin:2px 0 0;color:var(--theme-muted,#64748b);overflow-wrap:anywhere}
+.admin-page .location-settings-close{width:32px;height:32px;min-height:32px;margin:0;padding:0;flex:none;border-radius:8px;font:24px/1 Arial,sans-serif;background:color-mix(in srgb,var(--secondary) 18%,var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--secondary) 45%,var(--line));color:var(--theme-text,#21384a)}
+.location-settings-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 12px 12px}
+.admin-page .location-settings-body>.location-edit-panel{padding:0;margin:0;border:0;background:transparent}
+.location-settings-dialog>#location-message{flex:none;max-height:80px;overflow:auto;margin:0;padding:7px 12px;font-size:12px;line-height:1.4;border-bottom:1px solid var(--line)}
+.location-settings-dialog>#location-message:empty{display:none}
+
+@media(min-width:900px){
+ .admin-page [data-compact-directory]:not([hidden]):not(.access-denied){display:grid;grid-template-columns:minmax(200px,1fr) minmax(0,auto);column-gap:12px;align-items:start}
+ .admin-page [data-compact-directory]>.users-directory-heading{grid-column:1/-1}
+ .admin-page [data-compact-directory]>.users-search{grid-column:1}
+ .admin-page [data-compact-directory]>.users-directory-tools{grid-column:2;min-height:36px}
+ .admin-page [data-compact-directory]>.users-directory-tools .users-filter-chips{max-width:250px}
+ .admin-page [data-compact-directory]>:not(.users-directory-heading):not(.users-search):not(.users-directory-tools){grid-column:1/-1}
+}
+@media(max-width:600px){
+ .admin-page [data-compact-directory] .users-search input[type=search]{font-size:16px;min-height:30px;height:30px}
+ .admin-page [data-compact-directory] .users-search{min-height:40px}
+ .admin-page [data-compact-directory] .users-directory-tools{gap:7px;flex-wrap:wrap}
+ .admin-page [data-compact-directory] .users-filter-toolbar{flex-basis:auto}
+ .admin-page [data-compact-directory] :is(#users-filter-toggle,.directory-filter-toggle,#create-user,.directory-create){min-height:36px;padding:7px 9px}
+ .admin-page [data-compact-directory] :is(#users-clear-filters,.directory-clear-filters,.users-location-chip){min-height:32px}
+ .admin-page [data-compact-directory] .users-table :is(.user-record,.location-record){grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px;gap:4px 7px;padding:9px 10px}
+ .admin-page [data-compact-directory] .users-table :is(.user-record,.location-record)>td{padding:0}
+ .admin-page [data-compact-directory] .users-name-cell{grid-column:1/3;grid-row:1}
+ .admin-page [data-compact-directory] .users-edit-cell{grid-column:3;grid-row:1/3;align-self:start}
+ .admin-page [data-compact-directory] :is(.users-locations-cell,.locations-users-cell){grid-column:1;grid-row:2;align-self:center;min-width:0}
+ .admin-page [data-compact-directory] :is(.users-permissions-cell,.locations-email-cell){grid-column:2;grid-row:2;min-width:0}
+ .admin-page [data-compact-directory] .users-cell-label{display:none}
+ .admin-page [data-compact-directory] .user-avatar{width:30px;height:30px;flex-basis:30px}
+ .admin-page [data-compact-directory] :is(.user-edit-toggle,.location-edit-toggle){width:36px;height:36px;min-height:36px;padding:8px}
+ .admin-page [data-compact-directory] .users-locations-more{min-height:32px}
+ .admin-page [data-compact-directory] .users-permission-help{font-size:9px}
+ .admin-page .location-settings-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:10px}
+ .location-settings-heading{padding:8px 10px}
+ .admin-page .location-settings-close{width:36px;height:36px;min-height:36px}
+ .location-settings-body{padding:8px 9px 10px}
+}
+@media(pointer:coarse){
+ .admin-page [data-compact-directory] :is(.user-edit-toggle,.location-edit-toggle,.users-locations-more){min-height:36px}
+}

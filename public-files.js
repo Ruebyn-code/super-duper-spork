@@ -111,6 +111,7 @@ module.exports={'/learning-course-model.js':'learning-course-model.js','/learnin
   '/locations.js':'locations.js',
   '/location-hours-model.js':'location-hours-model.js',
   '/location-hours.css':'location-hours.css',
+  '/accounts-directory.css':'accounts-directory.css',
   '/companies.js':'companies.js',
   '/admin':'admin.html',
   '/admin/accounts':'accounts.html',
