@@ -11,3 +11,13 @@ test('overnight, midnight and 24-hour trading periods remain attached to their o
 test('malformed trading hours reject partial times, invalid clock values and unsupported fields',()=>{
  for(const value of [{},[],Array(6).fill(null),Array(8).fill(null),Array(7),week({open:'11am',close:''}),week({open:'25:00',close:'4am'}),week({open:'11am',close:'4:99am'}),week({open:1100,close:'4am'}),week({closed:'true'}),week({open:'11am',close:'4am',overnight:false}),week({open:'0pm',close:'4am'})])assert.throws(()=>hours.normalize(value),error=>error.status===400);
 });
+test('live trading status uses Melbourne opening-day hours, including overnight carry and exact boundaries',()=>{
+ const schedule=hours.normalize(Array.from({length:7},()=>({open:'11am',close:'4am'}))),at=(date,time)=>require('./public/ops-planner-model').deadline(date,time);
+ for(const [time,state]of [['00:00','open'],['03:59','open'],['04:00','closed'],['10:59','closed'],['11:00','open'],['23:59','open']])assert.equal(hours.status(schedule,at('2026-10-20',time)).state,state,time);
+ schedule[1]={closed:true,open:'',close:''};assert.equal(hours.status(schedule,at('2026-10-20','03:59')).state,'open');assert.equal(hours.status(schedule,at('2026-10-20','04:00')).state,'closed');assert.equal(hours.status(schedule,at('2026-10-20','11:00')).state,'closed');assert.equal(hours.status(hours.empty(),at('2026-10-20','11:00')).state,'unknown');assert.equal(hours.status(schedule,at('2026-10-20','11:00'),true).state,'archived');assert.equal(hours.status(schedule,at('2026-10-19','03:00')).tradingDate,'2026-10-18');
+});
+test('24-hour trading and Melbourne daylight-saving transitions do not reopen a closed period',()=>{
+ const all=hours.normalize(Array.from({length:7},()=>({open:'11am',close:'11am'})));for(const instant of ['2026-10-19T23:59:59+11:00','2026-10-20T04:00:00+11:00','2026-10-20T11:00:00+11:00'])assert.equal(hours.status(all,instant).state,'open');
+ const week=hours.normalize(Array.from({length:7},()=>({closed:true})));week[5]={closed:false,open:'11:00',close:'02:30'};
+ assert.equal(hours.status(week,'2026-04-05T02:45:00+11:00').state,'open');assert.equal(hours.status(week,'2026-04-05T02:29:59+10:00').state,'open');assert.equal(hours.status(week,'2026-04-05T02:30:00+10:00').state,'closed');assert.equal(hours.status(week,'2026-10-04T03:00:00+11:00').state,'closed');assert.throws(()=>hours.status(week,'invalid'),e=>e.status===400);
+});

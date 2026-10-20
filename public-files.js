@@ -112,6 +112,7 @@ module.exports={'/learning-course-model.js':'learning-course-model.js','/learnin
   '/location-hours-model.js':'location-hours-model.js',
   '/location-hours.css':'location-hours.css',
   '/accounts-directory.css':'accounts-directory.css',
+  '/openable.js':'openable.js',
   '/companies.js':'companies.js',
   '/admin':'admin.html',
   '/admin/accounts':'accounts.html',

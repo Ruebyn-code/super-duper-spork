@@ -4,7 +4,7 @@ const shellScripts=new Set(['network-context','theme-colours','theme','location-
 const parentOnly=new Set(['required-reading','message-badge','clock-model','shift-clock','navigation-groups','app-controls','navigation']);
 function render(markup,embedded){
   const filtered=markup.replace(/<script\b[^>]*\bsrc="\/([a-z0-9-]+)\.js"[^>]*><\/script>/g,(tag,name)=>embedded?(parentOnly.has(name)?'':tag):(shellScripts.has(name)?tag:''));
-  const boot=embedded?'<script src="/page-bridge.js"></script>':'<script src="/persistent-navigation.js" defer></script>';
+  const boot=embedded?'<script src="/page-bridge.js"></script><script src="/openable.js" defer></script>':'<script src="/persistent-navigation.js" defer></script>';
   return filtered.replace('<head>','<head>'+ (embedded?boot:''))
     .replace('</head>','<link rel="stylesheet" href="/persistent-navigation.css">'+(embedded?'':boot)+'</head>');
 }

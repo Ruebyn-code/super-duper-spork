@@ -3,6 +3,8 @@
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  const money=value=>value===null?wording('Price pending'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
  let session,catalogue,totals,cartKey='',loading=false,refreshAgain=false;
+ let locationInfo,locationClockOffset=0;function tradingStatus(){if(!locationInfo)return;const value=locationHoursModel.status(locationInfo.tradingHours,Date.now()+locationClockOffset),badge=$('home-trading-status');badge.dataset.state=value.state;badge.textContent={open:'Open',closed:'Closed',unknown:'Hours not set'}[value.state];badge.title=value.closesAt?'Closes '+new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hour:'numeric',minute:'2-digit'}).format(new Date(value.closesAt)):'Based on Melbourne trading hours';$('home-location-managers').textContent=locationInfo.managers.length?'Managers: '+locationInfo.managers.map(p=>p.username).join(', '):'';}
+ setInterval(()=>{if(!document.hidden)tradingStatus();},30000);
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  async function api(path){if(path==='/api/session')return appAccess.initialSession();const response=await fetch(path,{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}if(!response.ok)throw Error('Unable to load dashboard.');return response.json();}
  function renderCart(){
@@ -41,7 +43,7 @@
  function render(){
   if(session){window.homeGreeting?.render(session);template($('home-location'),'You are in {location}',{location:session.locationName||''});}
   $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
-  renderTotals();
+  renderTotals();tradingStatus();
   if(!catalogue)return;
   template($('home-stock-items'),'{count} stock items',{count:catalogue.products.length});
   const date=catalogue.stockTake?.countDate;
@@ -50,7 +52,7 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;render();if(results[1].status==='rejected'){$('home-totals-status').setAttribute('data-home-error','');$('home-averages-status').setAttribute('data-home-error','');template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null),appAccess.can('home.view')?api('/api/location-status'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;if(results[2].status==='fulfilled'&&results[2].value){locationInfo=results[2].value;locationClockOffset=Date.parse(locationInfo.tradingStatus.checkedAt)-Date.now();}render();if(results[1].status==='rejected'){$('home-totals-status').setAttribute('data-home-error','');$('home-averages-status').setAttribute('data-home-error','');template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }

@@ -88,3 +88,5 @@ html.location-settings-open,html.location-settings-open body{overflow:hidden}
 @media(pointer:coarse){
  .admin-page [data-compact-directory] :is(.user-edit-toggle,.location-edit-toggle,.users-locations-more){min-height:36px}
 }
+
+.location-record .users-identity>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 6px;align-items:center}.location-record .users-identity>div>.user-name{grid-column:1}.location-record .location-trading-status{grid-column:2}.location-record .users-identity>div>p{grid-column:1/-1}.location-manager-summary:empty{display:none}
