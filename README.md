@@ -113,6 +113,16 @@ Head Office can publish, edit and delete articles by default. The article editor
 
 **Settings → Permission levels → Knowledge Library** has separate controls for reading, company publishing and network publishing. Default Ordering manager and Franchisee levels can read; network publishing requires a network permission level. Existing customised roles retain their grants. Attachments stay private to their uploader and authorised article/message/post audiences. Keep **data/knowledge-library.json** and **data/communication-media/** with the rest of your data when updating the app.
 
+## Learning centre
+
+Open **Learning centre** from the main bar, or **More** on phones. Courses belong to the selected company. **My learning** shows assigned and self-started courses, due dates, progress and completed results. **Course library** contains published courses that staff can start themselves.
+
+Head Office and Franchisees manage training by default. In **Course builder**, create a course, add required or optional lessons and use the same formatting, media and Insert menu as Comms. Drag the lesson grip or use its arrows to change the lesson order. Add single-choice quiz questions and choose a pass mark, or leave the quiz empty for a reading-only course. **Save draft** keeps unfinished work private to training managers; **Publish course** makes a fixed version available. Later edits and new versions do not change existing assignments. Archiving removes a course from the library while retaining existing training and results.
+
+In **Assignments**, choose a published course and accessible locations, with optional permission-level and individual-staff filters, a due date and required/optional status. Location, permission-level and staff filters combine; new staff who match an active assignment receive it too. Staff explicitly mark lessons complete, then submit their quiz. Required lessons are completed in order. The server calculates quiz scores and records completion; simply opening a page never completes training. Failed quizzes can be retried. **Progress reports** filters staff/course/location/status and exports CSV.
+
+**Settings → Permission levels → Learning centre** controls viewing, course completion, course management, assignments and reporting separately. Existing customised roles keep their permissions. Course media remains private to authorised company or assignment audiences. Keep **data/learning-centre.json** and **data/communication-media/** with the rest of the data when updating or backing up.
+
 ## Comms
 
 Open **Comms** in the main navigation (the bottom bar on phones). The collapsed sidebar switches between **All posts**, **Company posts**, **Network posts**, **Direct messages** and **Group chats**. It expands on hover or keyboard focus and collapses when leaving. Unread counts appear on the chat types and the main Comms icon.

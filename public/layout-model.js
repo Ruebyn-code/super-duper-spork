@@ -1,5 +1,5 @@
 (function(root){
- const pages=['index','home','cart','sales','reporting','stock-count','stock-transfers','admin','accounts','settings','settings-hub','award-settings','communications','rostering','knowledge-library','ops-management','labels','login','accept-invite','setup'];
+ const pages=['index','home','cart','sales','reporting','stock-count','stock-transfers','admin','accounts','settings','settings-hub','award-settings','communications','rostering','knowledge-library','learning-centre','ops-management','labels','login','accept-invite','setup'];
  const validId=value=>typeof value==='string'&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(value)&&!['__proto__','constructor','prototype'].includes(value);
  function key(attributes){
   for(const [attribute,kind] of [['data-product-id','product'],['data-supplier-id','supplier'],['data-account-id','account'],['data-location-id','location'],['data-company-id','company']])if(attributes[attribute])return kind+':'+attributes[attribute];
