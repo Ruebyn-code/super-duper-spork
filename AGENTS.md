@@ -1,6 +1,7 @@
 # Project instructions
 
-- Run relevant tests whenever adding or changing application behavior. Run `npm test` before delivering code changes.
+- Test every change before committing or pushing, including follow-up fixes and small adjustments. Run relevant checks for the affected behavior and run `npm test` before delivering code changes.
+- Before pushing an update for deployment, build the Docker image and verify that it starts and serves its healthcheck. Report test results separately from the hosted deployment outcome.
 - For interface or navigation changes, also check the affected interactions in desktop and phone browsers, including relevant permission levels.
 - Use isolated temporary data for tests so existing accounts, settings and orders are preserved.
 
