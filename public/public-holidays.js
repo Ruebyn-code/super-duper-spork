@@ -18,7 +18,7 @@
    const names=[...new Set(periods.filter(period=>period.date===date).map(period=>period.name+(period.start==='00:00'&&period.end==='24:00'?'':' ('+period.start+'–'+period.end+')')))];
    if(!names.length){remove(element);return;}
    const label='Public holiday: '+names.join(' / ');let marker=element.querySelector(':scope > .public-holiday-marker');
-   if(!marker){marker=document.createElement('span');marker.className='public-holiday-marker';marker.dataset.userText='';marker.setAttribute('role','img');marker.tabIndex=0;marker.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0"/><path class="icon-detail" d="M9 8h6"/></svg>';element.append(marker);}
+   if(!marker){marker=document.createElement('span');marker.className='public-holiday-marker';marker.dataset.userText='';marker.setAttribute('role','img');marker.tabIndex=0;marker.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2Z"/></svg>';element.append(marker);}
    marker.title=label;marker.setAttribute('aria-label',label);
   });
   return element;
