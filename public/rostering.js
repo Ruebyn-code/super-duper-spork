@@ -95,7 +95,7 @@
   const wrap=node('div',undefined,'phone-roster-card-wrap'),day=user(node('p',dayNames[(new Date(shift.date+'T12:00:00Z').getUTCDay()+6)%7].slice(0,3)+' '+date(shift.date),'phone-roster-card-date')),card=node('article',undefined,'roster-shift phone-roster-card'),position=user(node('span',shift.position?shift.position.split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase():'–','roster-position-static')),content=node('div',undefined,'phone-roster-card-content'),times=node('div',undefined,'phone-roster-card-times'),person=node('div',undefined,'phone-roster-card-person');
   card.dataset.phoneShift=shift.id;positionColour(card,shift.position,shift.positionColor);card.setAttribute('aria-label',day.textContent+' · '+(shift.position||'No position')+' · '+M.formatTimeInput(shift.start)+' – '+M.formatTimeInput(shift.end)+(shift.overnight?' · ends next day':''));
   position.title=shift.position||'No position';position.setAttribute('aria-label',position.title);times.append(user(node('span',M.formatTimeInput(shift.start))),user(node('span',M.formatTimeInput(shift.end))));if(shift.overnight)times.append(node('small','+1'));
-  person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);return wrap;
+  person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);window.publicHolidayMarkers?.mark(day,shift.date);return wrap;
  }
  function renderPhoneRoster(){
   syncPhoneRosterMode();if(!data||!phoneViewport.matches)return;
@@ -104,7 +104,7 @@
   const mine=phoneRosterScope==='mine',host=$('phone-roster-shifts'),team=data.teamRoster||{shifts:[],carryoverShifts:[]},shifts=(mine?team.shifts:[...team.shifts,...team.carryoverShifts]).filter(shift=>!mine||shift.userId===session.id);
   $('phone-roster-location').textContent=session.locationName;$('phone-roster-caption').textContent=mine?'My shifts · Monday–Sunday':'Team shifts · By position';
   $('phone-roster-date-label').textContent=mine?date(week)+' – '+date(data.weekEnd):dayNames[(new Date(phoneRosterDay+'T12:00:00Z').getUTCDay()+6)%7].slice(0,3)+' '+date(phoneRosterDay);
-  $('phone-roster-date').value=mine?week:phoneRosterDay;
+  window.publicHolidayMarkers?.mark($('phone-roster-date-label'),mine?null:phoneRosterDay);$('phone-roster-date').value=mine?week:phoneRosterDay;
   for(const id of ['previous','next'])$('phone-roster-'+id).setAttribute('aria-label',(id==='previous'?'Previous':'Next')+(mine?' week':' day'));
   for(const id of ['mine','team'])$('phone-roster-'+id).setAttribute('aria-pressed',String(id===phoneRosterScope));
   host.replaceChildren();
@@ -303,7 +303,7 @@
    const day=M.shiftDate(week,index),shifts=data.roster.shifts.filter(item=>item.date===day),header=node('div',undefined,'roster-board-day');
    header.dataset.rosterDate=day;header.append(user(node('strong',dayNames[index].slice(0,3)+' '+date(day))),user(node('small',hours(shifts.reduce((sum,item)=>sum+item.paidSeconds,0)))));
    if(summary){const cost=shifts.some(item=>item.costCents===null)?null:shifts.reduce((sum,item)=>sum+item.costCents,0);header.append(user(node('small',money(cost)+' labour','roster-day-cost')));}
-   board.append(header);
+   window.publicHolidayMarkers?.mark(header.querySelector('strong'),day);board.append(header);
   }
   if(rosterView==='staff'){
    const people=[...(manage?[{id:null,username:'Vacant'}]:[]),...data.people];
@@ -339,7 +339,7 @@
  }
  function renderDailyRoster(manage,shifts){
   const host=$('roster-days');host.classList.add('roster-daily-scroll');host.setAttribute('aria-label','Daily roster hourly timeline');
-  const board=node('div',undefined,'roster-day-board'),corner=node('div',undefined,'roster-board-corner'),axis=node('div',undefined,'roster-day-hours');corner.append(node('strong','Staff'),user(node('small',date(rosterDay))));
+  const board=node('div',undefined,'roster-day-board'),corner=node('div',undefined,'roster-board-corner'),axis=node('div',undefined,'roster-day-hours');corner.append(node('strong','Staff'),user(node('small',date(rosterDay))));window.publicHolidayMarkers?.mark(corner.querySelector('small'),rosterDay);
   for(let hour=0;hour<24;hour++){const tick=user(node('span',String(hour).padStart(2,'0')+':00'));axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);
   const visible=dailyShifts(),people=[...(manage?[{id:null,username:'Vacant'}]:[]),...data.people];
   for(const shift of visible)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});

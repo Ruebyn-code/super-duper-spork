@@ -18,7 +18,7 @@
    controls();return;
   }
   current=result;expired=false;panel.hidden=!entry?.available;if(panel.hidden)return;
-  $('home-daily-sales-date').textContent=result.locationName+' · '+date(entry.tradingDate);
+  $('home-daily-sales-date').textContent=result.locationName+' · '+date(entry.tradingDate);window.publicHolidayMarkers?.mark($('home-daily-sales-date'),entry.tradingDate);
   $('home-daily-sales-closing').textContent='Closes '+clock(entry.closesAt)+' · Melbourne';
   input.value=entry.amountCents===null?'':number(entry.amountCents);input.setCustomValidity('');$('home-daily-sales-reload').hidden=true;
   message(entry.amountCents===null?'Enter the total for this trading day. Enter 0 for no sales.':'Daily sales saved. You can update this amount.');controls();

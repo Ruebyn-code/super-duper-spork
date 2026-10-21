@@ -1,4 +1,5 @@
 const Holidays=require('date-holidays');
+const fs=require('node:fs/promises'),path=require('node:path');
 const {shift}=require('./stock-usage');
 const states={ACT:'Australian Capital Territory',NSW:'New South Wales',NT:'Northern Territory',QLD:'Queensland',SA:'South Australia',TAS:'Tasmania',VIC:'Victoria',WA:'Western Australia'};
 const source={name:'date-holidays',version:'3.37.0',url:'https://github.com/commenthol/date-holidays',licence:'ISC / CC BY-SA 3.0'};
@@ -27,4 +28,10 @@ function resolve(config,locationId,year,{forecast=false,state}={}){
  if(validState(state))return {...generate(state,year),locationId};
  return saved?{...saved,automatic:false}:{locationId,year,confirmed:false,brokenHill:false,dates:[],automatic:false};
 }
-module.exports={states,source,validState,generate,resolve};
+async function locationCalendars(dir,session,years){
+ if(!session.locationId||!session.companyId)return [];
+ const read=async(file,fallback)=>{try{return JSON.parse(await fs.readFile(path.join(dir,file),'utf8'));}catch(error){if(error.code==='ENOENT')return fallback;throw error;}};
+ const [settings,locations]=await Promise.all([read('award-compliance.json',{}),read('locations.json',[])]),config=settings.companies?.find(company=>company.companyId===session.companyId),location=locations.find(location=>location.id===session.locationId&&(location.companyId||'default')===session.companyId&&!location.archived);
+ return [...new Set(years)].filter(year=>Number.isInteger(year)&&year>=2000&&year<=2100).map(year=>resolve(config,session.locationId,year,{forecast:true,state:location?.publicHolidayState})).filter(calendar=>calendar.confirmed===true||calendar.automatic===true);
+}
+module.exports={states,source,validState,generate,resolve,locationCalendars};

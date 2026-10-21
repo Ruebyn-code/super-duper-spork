@@ -1,4 +1,3 @@
-const fs=require('node:fs/promises'),path=require('node:path');
 const {shift}=require('./stock-usage');
 const publicHolidays=require('./australian-public-holidays');
 const nameKey=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
@@ -8,10 +7,7 @@ const valid=value=>Number.isSafeInteger(value)&&value>=0;
 // Only location-scoped holiday dates and revenue aggregates enter forecasts.
 async function adjustments(dir,session,{weekStarts,anchor,asOf=anchor,readRevenue}){
  if(!session.locationId||!session.companyId)return {};
- let state;try{state=JSON.parse(await fs.readFile(path.join(dir,'award-compliance.json'),'utf8'));}catch(error){if(error.code==='ENOENT')state={};else throw error;}
- let locations;try{locations=JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')locations=[];else throw error;}
- const location=locations.find(location=>location.id===session.locationId&&(location.companyId||'default')===session.companyId&&!location.archived);
- const config=state.companies?.find(company=>company.companyId===session.companyId),years=new Set(weekStarts.flatMap(start=>[Number(start.slice(0,4)),Number(shift(start,6).slice(0,4))]).flatMap(year=>[year-1,year])),calendars=[...years].filter(year=>year>=2000&&year<=2100).map(year=>publicHolidays.resolve(config,session.locationId,year,{forecast:true,state:location?.publicHolidayState})).filter(calendar=>calendar.confirmed===true||calendar.automatic===true);
+ const years=weekStarts.flatMap(start=>[Number(start.slice(0,4)),Number(shift(start,6).slice(0,4))]).flatMap(year=>[year-1,year]),calendars=await publicHolidays.locationCalendars(dir,session,years);
  const holidays=[];for(const calendar of calendars)for(const item of calendar.dates||[]){if(typeof item.date==='string'&&Number(item.date.slice(0,4))===calendar.year&&nameKey(item.name)&&!holidays.some(day=>day.date===item.date&&nameKey(day.name)===nameKey(item.name)))holidays.push({date:item.date,name:item.name});}
  const dates=new Set(weekStarts.flatMap(start=>Array.from({length:7},(_,index)=>shift(start,index)))),targets=holidays.filter(day=>dates.has(day.date));if(!targets.length)return {};
  const plans=targets.map(target=>{

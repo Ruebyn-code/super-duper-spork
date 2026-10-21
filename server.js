@@ -5,6 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
 const globalSearch=require('./global-search');
+const publicHolidays=require('./australian-public-holidays');
 const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
@@ -284,6 +285,13 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.url==='/api/locations'&&req.method==='GET'){
         const all=requestUrl.searchParams.get('all')==='true',companyList=await companyStore.list(session),records=(await Promise.all((await locationStore.list()).filter(record=>all||record.companyId===session.companyId).map(async record=>{const context=await auth.forCompany(session,record.companyId);return canAccessLocation(context,record)&&canAny(context,['users.manage','locations.manage','email.manage','companies.manage'])&&(!record.archived||can(context,'locations.manage'))?record:null;}))).filter(Boolean);
         return json(200,await Promise.all(records.map(async record=>{const company=companyList.find(company=>company.id===record.companyId),base={...record,tradingStatus:require('./public/location-hours-model').status(record.tradingHours,locationNow(),record.archived),companyName:company?.name||''};if(!canAny(session,['locations.manage','email.manage','companies.manage']))return all?{id:base.id,name:base.name,archived:base.archived,companyId:base.companyId,companyName:base.companyName}:{id:base.id,name:base.name,archived:base.archived};if(!can(await auth.forCompany(session,record.companyId),'email.manage'))return base;const email=deliverySettings.summary(await deliverySettings.deliveryEnvironment(dataDir,record.id));return {...base,senderEmail:email.values.ORDER_FROM_EMAIL,orderEmailEnabled:email.enabled.DELIVERY_EMAIL_ENABLED};})));
+      }
+      if(req.url==='/api/public-holidays'){
+        if(req.method!=='GET'){res.setHeader('Allow','GET');fail('Public holidays are read-only.',405);}
+        const value=requestUrl.searchParams.get('year')||'',year=Number(value);
+        if(!/^\d{4}$/.test(value)||year<2000||year>2100)fail('Choose a holiday year from 2000 to 2100.');
+        const calendars=await publicHolidays.locationCalendars(dataDir,session,[year]);
+        return json(200,{locationId:session.locationId,year,dates:calendars.flatMap(calendar=>(calendar.dates||[]).map(({date,name,start,end})=>({date,name,start,end})))});
       }
       if(req.url==='/api/location-status'&&req.method==='GET'){if(!can(session,'home.view'))fail('Home viewing permission required.',403);return json(200,await locationStore.status(session.locationId,locationNow()));}
       if(req.url==='/api/home-daily-sales'){

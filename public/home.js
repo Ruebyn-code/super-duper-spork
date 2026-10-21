@@ -42,7 +42,8 @@
  }
  function render(){
   if(session){window.homeGreeting?.render(session);template($('home-location'),'You are in {location}',{location:session.locationName||''});}
-  $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
+  const now=new Date(Date.now()+locationClockOffset),parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now),part=type=>parts.find(p=>p.type===type).value;
+  $('home-today').textContent=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(now);window.publicHolidayMarkers?.mark($('home-today'),part('year')+'-'+part('month')+'-'+part('day'));
   renderTotals();tradingStatus();
   if(!catalogue)return;
   template($('home-stock-items'),'{count} stock items',{count:catalogue.products.length});
