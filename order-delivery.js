@@ -11,14 +11,28 @@ function validateDelivery(input){
  return {method,contact:method==='none'?'':contact};
 }
 function providerStatus(env={}){return {email:Boolean(env.DELIVERY_EMAIL_ENABLED==='true'&&env.RESEND_API_KEY&&env.ORDER_FROM_EMAIL),sms:Boolean(env.DELIVERY_SMS_ENABLED==='true'&&/^AC[0-9a-f]{32}$/i.test(env.TWILIO_ACCOUNT_SID||'')&&env.TWILIO_AUTH_TOKEN&&/^\+[1-9]\d{7,14}$/.test(env.ORDER_SMS_FROM||''))};}
+function deliveryConfigurationIssue(order,delivery,env={}){
+ try{delivery=validateDelivery(delivery);}catch{return delivery?.method==='email'?'The supplier email address is missing or invalid. Ask an administrator to update Suppliers & delivery → Order delivery.':'The supplier delivery details are invalid. Ask an administrator to update them.';}
+ if(delivery.method==='none')return 'No delivery method is saved for this supplier. Ask an administrator to choose Email, text message or an ordering platform in Suppliers & delivery → Order delivery.';
+ if(delivery.method==='platform')return null;
+ if(providerStatus(env)[delivery.method])return null;
+ if(delivery.method==='email'){
+  const missing=[];
+  if(env.DELIVERY_EMAIL_ENABLED!=='true')missing.push('automatic supplier emails are switched off');
+  if(!env.ORDER_FROM_EMAIL)missing.push('no sender email is saved');
+  if(!env.RESEND_API_KEY)missing.push('no Resend API key is saved');
+  return 'Email sending is not configured for '+(order.locationName||'the selected location')+': '+missing.join('; ')+'. Ask an administrator to update this location’s sending settings.';
+ }
+ return 'Supplier contact or sending service is not configured.';
+}
 function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(emailTemplate.itemLine).join('\n')}\n\nNotes: ${order.notes||'None'}`;}
 async function deliverSupplier(order,delivery,{env={},fetchImpl=fetch}={}){
- try{delivery=validateDelivery(delivery);}catch{return {status:'not_configured',message:'The supplier delivery details are invalid. Ask an administrator to update them.'};}
+ const issue=deliveryConfigurationIssue(order,delivery,env);if(issue)return {status:'not_configured',message:issue};
+ delivery=validateDelivery(delivery);
  if(delivery.method==='platform'){
   let content;try{content=env.ORDER_EMAIL_TEMPLATE?emailTemplate.render(env.ORDER_EMAIL_TEMPLATE,order):{subject:'Stock order for '+(order.locationName||order.location||'your location'),text:textOrder(order)};}catch{return {status:'failed',message:'Update the company order email template in Settings before preparing this order.'};}
   return {status:'action_required',message:'Saved in Opstack. Copy the items and submit the order in '+destinations.platforms.find(item=>item.id===delivery.platform).name+'. It has not been sent to the platform.',handoff:{platform:delivery.platform,url:delivery.contact,text:content.subject+'\n\n'+content.text}};
  }
- const ready=providerStatus(env);if(delivery.method==='none'||!delivery.contact||!ready[delivery.method])return {status:'not_configured',message:'Supplier contact or sending service is not configured.'};
  let url,headers,body;
  if(delivery.method==='sms'){
   let content;try{content=env.ORDER_EMAIL_TEMPLATE?emailTemplate.render(env.ORDER_EMAIL_TEMPLATE,order):{subject:'Stock order for '+(order.locationName||order.location||'your location'),text:textOrder(order)};}catch{return {status:'failed',message:'Update the company order email template in Settings before sending this order.'};}
@@ -29,4 +43,4 @@ async function deliverSupplier(order,delivery,{env={},fetchImpl=fetch}={}){
  try{const response=await fetchImpl(url,{method:'POST',headers,body,signal:AbortSignal.timeout(15000),redirect:'error'});if(!response.ok)return {status:'failed',message:'Sending service rejected the order (HTTP '+response.status+').'};return {status:'submitted',message:'Accepted by the sending service; supplier receipt is not confirmed.'};}catch{return {status:'unconfirmed',message:'Could not confirm submission. Check the sending service before resending.'};}
 }
 async function dispatchOrder(order,suppliers,options){const results=[];for(const supplierOrder of splitBySupplier(order)){const supplier=suppliers.find(s=>s.id===supplierOrder.supplierId);const delivery=supplier?.delivery||{method:'none',contact:''};results.push({supplierId:supplierOrder.supplierId,supplier:supplierOrder.supplier,method:delivery.method,...await deliverSupplier(supplierOrder,delivery,options)});}return results;}
-module.exports={validateDelivery,providerStatus,deliverSupplier,dispatchOrder,textOrder};
+module.exports={validateDelivery,providerStatus,deliveryConfigurationIssue,deliverSupplier,dispatchOrder,textOrder};

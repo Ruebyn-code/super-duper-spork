@@ -59,6 +59,25 @@ test('location sender settings are admin-only and every member uses that locatio
  assert.equal((await app.request(admin,'/api/accounts/'+second.session.id+'/email')).data.values.ORDER_FROM_EMAIL,'shop@example.com');
  }finally{await app.close();}
 });
+test('a saved unsent Mernda order can check current sending setup without resending or rewriting history',async()=>{
+ const calls=[],app=await fixture({fetchImpl:async(url,options)=>{calls.push({url,...options});return {ok:true};}});
+ try{
+  const admin=await app.login('admin'),mernda=(await app.request(admin,'/api/locations','POST',{name:'Mernda'})).data;
+  await app.assign(admin,'first',mernda.id);const actor=await app.login('first'),other=await app.login('second'),settings='/api/locations/'+mernda.id+'/email';
+  assert.equal((await app.request(admin,settings,'PUT',{ORDER_FROM_EMAIL:'mernda@example.com',RESEND_API_KEY:'private-mernda-test-key',DELIVERY_EMAIL_ENABLED:true})).status,200);
+  const input={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:1}]},saved=await app.request(actor,'/api/orders','POST',input);assert.equal(saved.status,201);assert.match(saved.data.delivery[0].message,/No delivery method/);assert.equal(calls.length,0);
+  const file=path.join(app.dir,saved.data.id+'.json'),original=await fs.readFile(file,'utf8');assert.deepEqual((await app.request(actor,'/api/orders/'+saved.data.id)).data,saved.data);
+  let current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.match(current.data.delivery[0].configurationMessage,/No delivery method/);
+  await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
+  await app.request(admin,settings,'PUT',{DELIVERY_EMAIL_ENABLED:false});
+  current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.match(current.data.delivery[0].configurationMessage,/Mernda: automatic supplier emails are switched off/);
+  await app.request(admin,settings,'PUT',{DELIVERY_EMAIL_ENABLED:true});
+  current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.equal(current.status,200);assert.equal(current.data.delivery[0].status,'not_configured');assert.match(current.data.delivery[0].configurationMessage,/settings for Mernda are complete/);assert.match(current.data.delivery[0].configurationMessage,/has not been retried/);
+  assert.ok(!JSON.stringify(current.data).includes('private-mernda-test-key'));assert.equal(await fs.readFile(file,'utf8'),original);assert.equal(calls.length,0);
+  assert.equal((await app.request(other,'/api/orders/'+saved.data.id+'?deliverySetup=true')).status,404);assert.equal((await app.request(actor,'/api/orders','POST',input)).status,200);assert.equal(calls.length,0);
+  const sent=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});assert.equal(sent.data.delivery[0].status,'submitted');assert.equal(calls.length,1);assert.equal(JSON.parse(calls[0].body).from,'mernda@example.com');
+ }finally{await app.close();}
+});
 test('location assignments and archives validate safely and preserve last-admin protection',async()=>{
  const app=await fixture();try{const admin=await app.login('admin'),first=await app.login('first');const created=await app.request(admin,'/api/locations','POST',{name:'New store'});assert.equal(created.status,201);const store=created.data;
  for(const name of ['', ' '.repeat(5),'x'.repeat(101)])assert.equal((await app.request(admin,'/api/locations','POST',{name})).status,400);assert.equal((await app.request(admin,'/api/locations','POST',{name:'new STORE'})).status,400);assert.equal((await app.request(first,'/api/locations','POST',{name:'Not allowed'})).status,403);

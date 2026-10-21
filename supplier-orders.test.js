@@ -4,6 +4,16 @@ test('split orders isolate each supplier and retain quantities and pending price
  const result=splitBySupplier(order);assert.equal(result.length,2);assert.deepEqual(result[0].items.map(i=>i.id),['a','c']);assert.deepEqual(result[1].items.map(i=>i.id),['b']);assert.equal(result[0].total,300);assert.equal(result[0].pricePending,true);assert.equal(result[1].total,1000);assert.equal(result[1].pricePending,false);assert.equal(result[1].location,'Store');assert.equal(order.items.length,3);
 });
 const {validateDelivery,deliverSupplier,dispatchOrder}=require('./order-delivery');
+test('email configuration failures identify the missing setting without contacting the provider or exposing credentials',async()=>{
+ const order={locationName:'Mernda'},delivery={method:'email',contact:'supplier@example.com'},env={DELIVERY_EMAIL_ENABLED:'true',ORDER_FROM_EMAIL:'mernda@example.com',RESEND_API_KEY:'private-test-key'};
+ const fetchImpl=()=>{throw Error('Configuration failures must not contact the provider');};
+ for(const [settings,pattern]of [[{...env,DELIVERY_EMAIL_ENABLED:'false'},/Mernda: automatic supplier emails are switched off/],[{...env,ORDER_FROM_EMAIL:''},/Mernda: no sender email is saved/],[{...env,RESEND_API_KEY:''},/Mernda: no Resend API key is saved/]]){
+  const result=await deliverSupplier(order,delivery,{env:settings,fetchImpl});assert.equal(result.status,'not_configured');assert.match(result.message,pattern);assert.ok(!JSON.stringify(result).includes('private-test-key'));assert.ok(!JSON.stringify(result).includes('mernda@example.com'));
+ }
+ const missing=await deliverSupplier(order,delivery,{env:{},fetchImpl});for(const pattern of [/switched off/,/no sender email/,/no Resend API key/])assert.match(missing.message,pattern);
+ const noMethod=await deliverSupplier(order,{method:'none'},{env,fetchImpl});assert.equal(noMethod.status,'not_configured');assert.match(noMethod.message,/No delivery method is saved/);
+ const invalid=await deliverSupplier(order,{method:'email',contact:''},{env,fetchImpl});assert.equal(invalid.status,'not_configured');assert.match(invalid.message,/supplier email address is missing or invalid/);
+});
 test('email submissions use their configured route and invalid delivery details are rejected',async()=>{
  const order={orderId:'test-order',supplierId:'supplier-a',supplier:'A',requester:'Buyer',phone:'0400000000',location:'Store',notes:'',items:[{name:'Only supplier A item',price:100,quantity:2}],total:200,pricePending:false};
  const env={DELIVERY_EMAIL_ENABLED:'true',DELIVERY_SMS_ENABLED:'true',DELIVERY_SYSTEM_ENABLED:'true',RESEND_API_KEY:'test-key',ORDER_FROM_EMAIL:'orders@example.com',TWILIO_ACCOUNT_SID:'test-account',TWILIO_AUTH_TOKEN:'test-token',ORDER_SMS_FROM:'+61400000000',SUPPLIER_SYSTEM_TOKEN:'test-system'};const calls=[];const fetchImpl=async(url,options)=>{calls.push({url,options});return {ok:true};};

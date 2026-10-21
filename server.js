@@ -21,7 +21,7 @@ const locationHoursModel=require('./public/location-hours-model');
 const kioskDevices=require('./kiosk-devices'),kioskPolicy=require('./kiosk-policy');
 const companies=require('./companies'),catalogues=require('./catalogue-store'),customisations=require('./company-customisations');
 const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
-const {validateDelivery,providerStatus,dispatchOrder}=require('./order-delivery');
+const {validateDelivery,providerStatus,deliveryConfigurationIssue,dispatchOrder}=require('./order-delivery');
 const deliverySettings=require('./delivery-settings');
 const orderEmailTemplates=require('./order-email-templates');
 const {splitBySupplier}=require('./supplier-orders');
@@ -487,7 +487,19 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         c[collection]=c[collection].filter(item=>item.id!==id);return {removed:true};
       }));}
       const savedOrderRoute=req.url.match(/^\/api\/orders\/([a-f0-9-]{36})$/i);
-      if(req.method==='GET'&&savedOrderRoute){let record;try{record=JSON.parse(await fs.readFile(path.join(dataDir,savedOrderRoute[1]+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('Order not found.',404);throw error;}if(record.requestOwnerId!==session.id||!belongs(record,session,'requestOwnerId'))fail('Order not found.',404);return json(200,record);}
+      if(req.method==='GET'&&savedOrderRoute){
+        let record;try{record=JSON.parse(await fs.readFile(path.join(dataDir,savedOrderRoute[1]+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('Order not found.',404);throw error;}
+        if(record.requestOwnerId!==session.id||!belongs(record,session,'requestOwnerId'))fail('Order not found.',404);
+        if(requestUrl.searchParams.get('deliverySetup')==='true'&&record.delivery?.some(result=>result.status==='not_configured')){
+          const [catalogue,env]=await Promise.all([readCatalogue(),deliverySettings.deliveryEnvironment(dataDir,session.locationId)]);
+          record.delivery=record.delivery.map(result=>{
+            if(result.status!=='not_configured')return result;
+            const supplier=catalogue.suppliers.find(supplier=>supplier.id===result.supplierId),issue=deliveryConfigurationIssue({locationName:session.locationName},supplier?.delivery,env);
+            return {...result,configurationMessage:issue?'Current setup: '+issue:'Current sending settings for '+session.locationName+' are complete. This saved order was not sent and has not been retried.'};
+          });
+        }
+        return json(200,record);
+      }
       if (req.method === 'POST' && req.url === '/api/orders') {
         const input=await body(req);
         const requestId=input?.requestId;
