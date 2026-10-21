@@ -1,6 +1,6 @@
 const money = n => n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(n/100);
 let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',scopeKey='',page=1,parWindow=null,latestStockTake=null;
-let cartRuleNotice='';
+let cartRuleNotice='',reviewingOrder=false,orderContext={};
 const itemQuantities=new Map(),itemMessages=new Map(),itemAddedQuantities=new Map();let submissionId='',submissionBody='';
 const $=id=>document.getElementById(id);
 const wording=(template,values={})=>typeof interfaceLabel==='function'?interfaceLabel(template,values):template.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
@@ -135,7 +135,7 @@ function render(refreshMenu=true){
   }
   if(!count)$('cart').append(el('div','Your request is empty. Add stock to get started.','empty'));
   $('count').dataset.appValues=JSON.stringify({count});$('count').textContent=wording('{count} units',{count});
-  $('total').textContent=money(total)+(pricePending?' + prices pending':'');$('submit').disabled=!appAccess.can('orders.place')||!count||busy||products.some(product=>cart[product.id]&&!stockOrderRules.valid(product,cart[product.id]));$('submit').textContent=busy?'Saving request…':'Submit stock request →';
+  $('total').textContent=money(total)+(pricePending?' + prices pending':'');$('submit').disabled=!appAccess.can('orders.place')||!count||busy||reviewingOrder||products.some(product=>cart[product.id]&&!stockOrderRules.valid(product,cart[product.id]));$('submit').textContent=wording(busy?'Placing order…':'Place order');for(const control of $('checkout').querySelectorAll('input,textarea,select'))control.disabled=busy;
   if(focused&&!focused.isConnected){
     const replacement=focusedSupplier!==null?[...$('cart').querySelectorAll('.cart-supplier-group')].find(group=>group.dataset.supplierId===focusedSupplier)?.querySelector('summary'):focusedLabel?[...$('cart').querySelectorAll('[aria-label]')].find(element=>element.getAttribute('aria-label')===focusedLabel):null;
     replacement?.focus({preventScroll:true});
@@ -145,7 +145,28 @@ const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialA
 if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};
-if($('checkout'))$('checkout').onsubmit=async e=>{e.preventDefault();if(busy||!appAccess.can('orders.place'))return;refreshStoredCart();busy=true;render();$('message').textContent='';const body=Object.fromEntries(new FormData(e.target));body.items=Object.entries(cart).filter(([,q])=>q>0).map(([id,quantity])=>({id,quantity}));try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}refreshStoredCart();for(const item of body.items){const remaining=(cart[item.id]||0)-item.quantity;if(remaining>0)cart[item.id]=remaining;else delete cart[item.id];}window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Request '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':d.status==='action_required'?'finish in ordering platform':'submission unconfirmed')).join('; ');window.orderDeliveryResults?.show(order);e.target.reset();}catch(error){refreshStoredCart();$('message').textContent=error.message||'Could not save the request. Try again.';}finally{busy=false;render();}};
+function orderSnapshot(form){
+ const items=products.filter(product=>cart[product.id]>0).map(product=>({id:product.id,name:product.name,supplierId:product.supplierId,supplier:product.supplier,unitAmount:product.unitAmount,price:product.price,quantity:cart[product.id]}));
+ if(!items.length||products.some(product=>cart[product.id]&&!stockOrderRules.valid(product,cart[product.id])))return null;
+ const body={...Object.fromEntries(new FormData(form)),items:items.map(({id,quantity})=>({id,quantity}))};
+ return {...orderContext,locationId:window.appLocationId||orderContext.locationId,notes:body.notes||'',items,body,signature:JSON.stringify({body,items})};
+}
+async function placeReviewedOrder(form,body){busy=true;render();$('message').textContent='';try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}refreshStoredCart();for(const item of body.items){const remaining=(cart[item.id]||0)-item.quantity;if(remaining>0)cart[item.id]=remaining;else delete cart[item.id];}window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Order '+order.id+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':d.status==='action_required'?'finish in ordering platform':'submission unconfirmed')).join('; ');window.orderDeliveryResults?.show(order);form.reset();}catch(error){refreshStoredCart();$('message').textContent=error.message||'Could not place the order. Try again.';}finally{busy=false;render();}}
+if($('checkout'))$('checkout').onsubmit=async event=>{
+ event.preventDefault();if(busy||reviewingOrder||!appAccess.can('orders.place'))return;
+ reviewingOrder=true;let notice='';
+ try{while(true){
+  refreshStoredCart();render(false);const snapshot=orderSnapshot(event.target);if(!snapshot)return;
+  if(!window.orderReview){$('message').textContent='Reload this page to review your order.';return;}
+  if(!await orderReview.review({...snapshot,notice}))return;
+  if(!appAccess.can('orders.place'))return;
+  if(snapshot.locationId!==(window.appLocationId||orderContext.locationId)){$('message').textContent='Your location changed. Open the cart and review the order again.';return;}
+  refreshStoredCart();render(false);const current=orderSnapshot(event.target);
+  if(!current){$('message').textContent='Your cart changed. Check its quantities before placing an order.';return;}
+  if(snapshot.signature!==current.signature){notice='Your cart changed. Check the updated order before placing it.';continue;}
+  await placeReviewedOrder(event.target,snapshot.body);return;
+ }}finally{reviewingOrder=false;render(false);if(!$('submit').disabled)$('submit').focus({preventScroll:true});}
+};
 async function api(url,method,body){if(url==='/api/session'&&(!method||method==='GET'))return appAccess.initialSession();const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;}
 async function reload(){
   const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;parWindow=data.parWindow;latestStockTake=data.stockTake;renderParPeriod();
@@ -156,7 +177,7 @@ async function reload(){
   refreshStoredCart();render();
 }
 $('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href=companyLoginUrl();}catch(error){$('message').textContent=error.message;}};
-(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href=companyLoginUrl();return;}csrf=session.csrf;window.orderDeliveryResults?.init(session);scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}$('admin-link').hidden=!appAccess.any(appAccess.admin,session);await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
+(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href=companyLoginUrl();return;}csrf=session.csrf;orderContext={locationId:session.locationId,locationName:session.locationName,companyName:session.companyName};window.orderDeliveryResults?.init(session);scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}$('admin-link').hidden=!appAccess.any(appAccess.admin,session);await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
 
 window.addEventListener('interface-text-updated',()=>{if(products.length){renderParPeriod();renderMenu();if($('cart'))render(false);}});
 
@@ -181,6 +202,6 @@ if($('menu')){
  window.addEventListener('pageshow',event=>{if(event.persisted)refreshParIfNeeded(true);});
 }
 
-window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();});
+window.addEventListener('before-location-switch',event=>{if(busy||reviewingOrder)event.preventDefault();});
 
 window.addEventListener('app-layout-changed',()=>renderMenu());
