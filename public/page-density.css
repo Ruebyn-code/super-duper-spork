@@ -1,0 +1,194 @@
+/* Remaining catalogue and management screens. Keep these rules separate from
+   directory/profile editors, builders, readers and printable label artwork. */
+.app-page main.compact-page{padding-top:16px}
+.compact-page>h1,
+.compact-page>.management>h1,
+.compact-page>.admin-content>.management>h1,
+.appearance-page>.admin-content>h1{font-size:24px;line-height:1.3;margin:0 0 12px}
+.compact-page>.management{margin-top:0}
+.compact-page>.management>p{margin:6px 0 10px;line-height:1.5}
+.compact-page :is(.transfer-page-heading,.settings-hub-heading,.award-heading,.library-heading,.devices-heading){padding:0 0 10px;margin-bottom:12px;gap:10px}
+.compact-page :is(.transfer-page-heading,.settings-hub-heading,.award-heading,.library-heading,.devices-heading) h1{font-size:24px;line-height:1.3;margin:0}
+.compact-page :is(.settings-hub-heading,.award-heading,.library-heading) p{margin:4px 0 0}
+
+/* Catalogue: fit more stock on desktop and reduce the space before the items. */
+.ordering-page.compact-page .hero{padding:0 0 12px;margin-bottom:12px}
+.ordering-page .hero h1{font-size:28px;line-height:1.25}
+.ordering-page .hero>div{gap:4px 18px}
+.ordering-page .hero .eyebrow{font-size:9px}
+.ordering-page .hero p:not(.eyebrow){margin:0;line-height:1.5}
+.ordering-page .ordering-budget{padding:12px 14px;margin-bottom:12px}
+.ordering-page .ordering-budget-heading h2{font-size:15px}
+.ordering-page .ordering-budget-metrics{margin-top:10px;gap:10px}
+.ordering-page .ordering-budget-metrics strong{font-size:17px}
+.ordering-page .catalogue-toolbar{gap:8px;margin-bottom:10px}
+.ordering-page .catalogue-toolbar h2{font-size:19px}
+.ordering-page #filters{margin:8px 0 10px}
+.ordering-page .menu:not(.menu-list){gap:10px}
+.ordering-page .menu:not(.menu-list) .product{padding:12px;border-radius:12px}
+.ordering-page .menu:not(.menu-list) .product-art{height:88px;border-radius:8px;font-size:36px}
+.ordering-page .menu:not(.menu-list) .product h3{font-size:16px;margin:6px 0}
+.ordering-page .menu:not(.menu-list) .product-par{margin-top:8px;padding:8px;gap:5px 8px}
+.ordering-page .menu:not(.menu-list) .product .product-bottom{padding-top:10px;gap:6px}
+.ordering-page .menu:not(.menu-list) .add-feedback{margin-top:4px;min-height:16px}
+@media(min-width:1200px){
+ .ordering-page .catalogue-layout .menu:not(.menu-list){grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+/* Creation forms use the same short rows as their already compact record lists. */
+.stock-admin-page>.admin-content>.eyebrow{margin:0 0 8px;font-size:9px}
+.stock-admin-page .management{margin-top:0}
+.stock-admin-page .management-forms{margin-top:12px;gap:12px}
+.stock-admin-page :is(#supplier-form,#stock-form,.inline-stock-form){max-width:900px}
+.stock-admin-page :is(#supplier-form,#stock-form,.inline-stock-form)>label{margin:0;min-width:0;font-size:12px}
+.stock-admin-page :is(#supplier-form,#stock-form,.inline-stock-form)>label :is(input,textarea,.app-select-trigger){margin-top:5px}
+.stock-admin-page :is(#supplier-form,#stock-form,.inline-stock-form) .small{line-height:1.4}
+.stock-admin-page #supplier-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:end}
+.stock-admin-page #supplier-form>h2{grid-column:1/-1;margin:0}
+.stock-admin-page #supplier-form>button{margin:0;min-height:36px}
+.stock-admin-page :is(#stock-form,.inline-stock-form){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.stock-admin-page :is(#stock-form,.inline-stock-form)>*{grid-column:1/-1;min-width:0}
+.stock-admin-page :is(#stock-form,.inline-stock-form)>label{grid-column:auto}
+.stock-admin-page :is(#stock-form,.inline-stock-form)>:is(h2,h3){margin:0}
+.stock-admin-page .admin-form-actions{margin-top:2px}
+
+/* Stock transfer summaries, composer and history retain their existing actions. */
+.transfers-page.compact-page{gap:10px}
+.transfers-page .transfer-metrics{gap:8px}
+.transfers-page .transfer-metrics>article.management{padding:10px 12px;gap:4px;border-radius:10px}
+.transfers-page .transfer-metrics strong{font-size:21px}
+.transfers-page :is(.transfer-composer,.transfer-history).management{padding:14px;margin:0;border-radius:12px}
+.transfers-page .transfer-composer form{gap:10px}
+.transfers-page .transfer-destinations{gap:10px}
+.transfers-page .transfer-filters{margin-bottom:10px;gap:8px}
+.transfers-page .transfer-card{padding:10px 12px;gap:8px}
+.transfers-page .transfer-pagination{margin-top:10px}
+
+/* Companies have their own density; Users, Locations and profile editors keep
+   their existing layouts. */
+.companies-directory .users-directory-heading{margin-bottom:12px;gap:12px}
+.companies-directory .users-directory-heading h1{font-size:24px;margin:0 0 6px}
+.companies-directory .users-directory-heading p{margin:0;line-height:1.5;max-width:720px}
+.companies-directory .companies-table :is(th,td){padding:10px 12px}
+.companies-directory .admin-edit-panel{padding:12px;margin:8px 0}
+.companies-directory .admin-edit-panel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.companies-directory .admin-edit-panel form>label{margin:0;min-width:0}
+.companies-directory .admin-edit-panel form>:is(h3,.admin-form-actions){grid-column:1/-1;margin:0}
+
+/* Settings tiles become short, recognisable rows instead of large panels. */
+.settings-hub.compact-page{padding-bottom:32px}
+.settings-hub .settings-options-grid{gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.settings-hub .settings-option{padding:14px;border-radius:12px}
+.settings-hub .settings-option>a{display:grid;grid-template-columns:36px minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
+.settings-hub .settings-option-icon{grid-column:1;grid-row:1/3;width:36px;height:36px;border-radius:9px}
+.settings-hub .settings-option-icon svg{width:22px;height:22px}
+.settings-hub .settings-option h2{grid-column:2;margin:0;font-size:16px}
+.settings-hub .settings-option p{grid-column:2;margin:0;font-size:13px;line-height:1.5}
+.settings-hub .settings-edit-tools:empty{display:none}
+.settings-hub .settings-edit-tools:not(:empty){margin:10px 0 0}
+.settings-hub .permission-toolbar{margin-bottom:12px;gap:10px}
+.settings-hub .permission-toolbar h2{font-size:18px;margin:0 0 4px}
+.settings-hub .permission-toolbar p{font-size:12px;line-height:1.5}
+.settings-hub .permission-level-grid{gap:10px}
+.settings-hub .permission-level-card{padding:12px;border-radius:12px}
+.settings-hub .permission-card-top{gap:6px;flex-direction:row;align-items:center;flex-wrap:wrap}
+.settings-hub .permission-card-top h3{font-size:16px}
+.settings-hub .permission-level-card p{margin:8px 0;font-size:12px;line-height:1.5}
+.settings-hub #account-email-panel>h2{font-size:18px;margin:0 0 8px}
+.settings-hub #account-email-panel>p{font-size:12px;line-height:1.5;margin:0 0 12px;max-width:720px}
+.settings-hub .account-email-form.management{padding:14px;margin:0;border-radius:12px}
+.settings-hub .account-email-form>label{margin:0 0 10px}
+.settings-hub .account-email-form>.submit{margin-top:8px;min-height:36px;padding:8px 12px}
+.permission-dialog form{padding:16px}
+.permission-dialog .permission-dialog-header{margin-bottom:12px;gap:10px}
+.permission-dialog .permission-dialog-header h2{font-size:20px}
+.permission-dialog .permission-fields{gap:10px}
+.permission-dialog .permission-fields label{margin:0}
+.permission-dialog .permission-checkbox-groups{gap:10px}
+.permission-dialog .permission-scope-hint{padding:9px 10px;font-size:12px}
+.permission-dialog .permission-actions{margin-top:10px;padding-top:10px}
+
+/* Appearance and award settings: compact spacing, with full help and field values. */
+.appearance-page .company-customisation-notice{margin-bottom:10px;padding:8px 12px}
+.appearance-page>p:has(#platform-appearance-link){margin:8px 0;font-size:12px}
+.appearance-page .management{padding:14px;margin-top:12px}
+.appearance-page .management h2{font-size:18px;margin:0 0 10px}
+.appearance-page .management h3{font-size:15px;margin:12px 0 8px}
+.appearance-page .management p{font-size:12px;line-height:1.5;margin:8px 0}
+.appearance-page .colour-guide{padding:10px 12px;margin:12px 0}
+.appearance-page .colour-guide ul{margin:6px 0;line-height:1.5}
+.appearance-page .settings-logo-preview:not(.sidebar-logo-preview){width:120px;height:120px}
+.appearance-page .sidebar-logo-form{margin-top:14px;padding-top:14px}
+.appearance-page .signin-background-preview{height:140px;margin-top:10px}
+.award-page .award-heading{margin-bottom:10px}
+.award-page .award-card{padding:12px;margin-bottom:10px}
+.award-page .award-content h2{font-size:18px;margin-bottom:10px}
+.award-page .award-notice{padding:10px 12px;margin-bottom:10px}
+.award-page .award-form-grid{gap:10px}
+.award-page .award-form-grid>label{margin:0}
+.award-page .award-person{padding:9px 12px;gap:10px}
+.award-page .award-actions{margin-top:10px}
+
+/* Library cards/sidebar and device rows are already dense; finish their page
+   headings and empty states without changing article typography or editors. */
+.knowledge-library-page.compact-page .library-empty{padding:24px 16px;border-radius:12px}
+.knowledge-library-page.compact-page .library-empty h2{font-size:20px;margin:0 0 8px}
+.knowledge-library-page.compact-page .library-empty p{margin:0;line-height:1.5}
+
+/* Comms browsing and post tools; fullscreen conversations retain their measured
+   viewport, message typography, composer and Back navigation. */
+body:not(.comms-conversation-open) .app-page .communications-page{padding-top:16px}
+.communications-page .communications-heading h1{font-size:24px;margin:0 0 4px}
+.communications-page .communication-view-heading{margin-bottom:10px}
+.communications-page .communication-view-heading h2{font-size:18px;margin-bottom:4px}
+.communications-page .communication-post-list{gap:10px}
+.communications-page .communication-post{padding:14px;border-radius:12px}
+.communications-page .communication-post h2{font-size:19px;margin:12px 0 8px}
+.communications-page .communication-post-actions{margin-top:12px;padding-top:10px}
+.communications-page .communication-post>.communication-reactions{margin-top:10px}
+.communications-page #communication-post-list>.communication-empty{padding:24px 16px;border-radius:12px}
+.communication-dialog{padding:16px;border-radius:14px}
+.communication-dialog .communication-dialog-heading h2{font-size:20px}
+.communication-dialog .communication-dialog-actions{margin-top:12px}
+
+@media(max-width:720px){
+ .app-page main.compact-page{padding-top:12px}
+ .compact-page :is(.transfer-page-heading,.settings-hub-heading,.award-heading,.library-heading,.devices-heading) h1,
+ .compact-page>.management>h1,
+ .compact-page>.admin-content>.management>h1,
+ .appearance-page>.admin-content>h1{font-size:22px}
+ .ordering-page .hero h1{font-size:24px}
+ .ordering-page .ordering-budget{padding:10px 12px}
+ .ordering-page .menu:not(.menu-list) .product-art{height:76px}
+ .ordering-page .menu:not(.menu-list) .product{padding:12px}
+ .ordering-page .product .add-controls input[type=number]{height:40px;min-height:40px;font-size:16px}
+ .ordering-page .product .add-controls button{min-height:40px}
+ .stock-admin-page :is(#stock-form,.inline-stock-form){grid-template-columns:minmax(0,1fr)}
+ .transfers-page .transfer-metrics>article.management{padding:9px 8px}
+ .transfers-page :is(.transfer-composer,.transfer-history).management{padding:12px}
+ .settings-hub .settings-options-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+ .settings-hub .settings-option{padding:12px}
+ .settings-hub .settings-option>a{column-gap:10px}
+ .settings-hub .permission-level-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .settings-hub .permission-toolbar{align-items:flex-start;flex-direction:column}
+ .companies-directory .users-directory-heading{align-items:flex-start;flex-wrap:wrap}
+ .companies-directory .admin-edit-panel form{grid-template-columns:minmax(0,1fr)}
+ body:not(.comms-conversation-open) .app-page .communications-page{padding-top:12px}
+ .communications-page .communications-heading h1{font-size:22px}
+ .communication-dialog .communication-dialog-close{width:40px;height:40px;flex-shrink:0}
+ /* Reduce surrounding space while retaining touch targets and iOS input sizing. */
+ .compact-page :is(#supplier-form,#stock-form,.inline-stock-form,.transfer-composer,.account-email-form,.award-card,.appearance-page .management) :is(button,input:not([type=checkbox]):not([type=radio]):not([type=color]),.app-select-trigger),
+ .settings-hub :is(.permission-edit,#create-permission-level),
+ .companies-directory .admin-edit-panel :is(button,input),
+ .permission-dialog :is(button,input:not([type=checkbox]),.app-select-trigger){min-height:40px}
+ .compact-page :is(#supplier-form,#stock-form,.inline-stock-form,.transfer-composer,.account-email-form,.award-card) :is(input:not([type=checkbox]):not([type=radio]),textarea),
+ .companies-directory .admin-edit-panel input,
+ .permission-dialog .permission-fields input{font-size:16px}
+ .permission-dialog .permission-dialog-close{min-width:40px}
+}
+@media(max-width:480px){
+ .stock-admin-page #supplier-form{grid-template-columns:minmax(0,1fr)}
+ .stock-admin-page #supplier-form>button{justify-self:start}
+ .settings-hub .permission-level-grid{grid-template-columns:minmax(0,1fr)}
+ .permission-dialog form{padding:12px}
+}

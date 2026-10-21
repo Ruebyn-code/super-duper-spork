@@ -145,6 +145,7 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/login.js':'login.js',
   '/app.js':'app.js',
   '/style.css':'style.css',
+  '/page-density.css':'page-density.css',
   '/top-navigation.css':'top-navigation.css',
   '/smooth.css':'smooth.css',
   '/interactions.js':'interactions.js',
