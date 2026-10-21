@@ -40,8 +40,30 @@
   try{await child.appEditor?.setEnabled(editing);if(frame===current&&child.appEditor?.enabled!==editing)await child.appEditor?.setEnabled(editing);}
   finally{syncingEdits.set(child,syncingEdits.get(child)-1);}
  }
+ // The shared clock belongs to this document; the Cart belongs to the active
+ // content frame. Measure both in viewport coordinates, including phone bars
+ // and custom fonts, rather than assigning them the same fixed corner.
+ let observedCart=null;
+ const clockDock=document.getElementById('shift-clock-dock');
+ const floatingSizes=new ResizeObserver(positionClockDock);
+ floatingSizes.observe(area);if(clockDock)floatingSizes.observe(clockDock);
+ function positionClockDock(){
+  if(!clockDock)return;
+  const child=current?.contentDocument,cart=child?.getElementById('cart-pill');
+  if(cart!==observedCart){if(observedCart)floatingSizes.unobserve(observedCart);observedCart=cart;if(cart)floatingSizes.observe(cart);}
+  clockDock.style.removeProperty('--shift-clock-bottom');
+  child?.documentElement.style.removeProperty('--ordering-dock-clearance');
+  if(!cart||!cart.getClientRects().length||!clockDock.getClientRects().length||getComputedStyle(clockDock).visibility==='hidden')return;
+  const frame=current.getBoundingClientRect(),pill=cart.getBoundingClientRect(),dock=clockDock.getBoundingClientRect(),left=frame.left+pill.left,right=frame.left+pill.right;
+  if(dock.left>=right||dock.right<=left)return;
+  const top=frame.top+pill.top,gap=10;
+  clockDock.style.setProperty('--shift-clock-bottom',Math.ceil(innerHeight-top+gap)+'px');
+  child.documentElement.style.setProperty('--ordering-dock-clearance',Math.ceil(frame.bottom-top+gap+dock.height+12)+'px');
+ }
+ window.addEventListener('resize',positionClockDock);
  function presentation(child){
   if(child!==current?.contentWindow&&child!==rosterPopup?.contentWindow)return;
+  positionClockDock();
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
   root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
   root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')));
