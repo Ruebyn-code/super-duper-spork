@@ -24,6 +24,9 @@ test('a total sales increase of 20 percent adds exactly 20 percent to last yearâ
  const f=await fixture(t,{current:12000});const report=await f.report(),day=report.projection.dailyProjections[4];assert.equal(day.holiday.growthPercent,20);assert.equal(day.amountCents,240000);assert.equal(report.projection.projectedSalesCents,312000);assert.equal(report.projection.budgetCents,87360);
  await f.day('2026-04-03',9000000);await f.day('2026-04-04',8000000);assert.equal((await f.report()).projection.dailyProjections[4].amountCents,240000);
 });
+test('automatic state calendars feed holiday forecasts without annual manual entries or payroll confirmation',async t=>{
+ const f=await fixture(t,{current:12000});f.state.companies[0].holidayCalendars=[];await fs.writeFile(path.join(f.dir,'locations.json'),JSON.stringify([{id:'shop',companyId:'company',publicHolidayState:'VIC'}]));await f.calendars();const file=path.join(f.dir,'award-compliance.json'),before=await fs.readFile(file,'utf8'),report=await f.report();assert.equal(report.projection.dailyProjections[4].amountCents,240000);assert.equal(report.projection.dailyProjections[4].holiday.growthPercent,20);assert.equal(await fs.readFile(file,'utf8'),before);assert.deepEqual(f.state.companies[0].holidayCalendars,[]);await fs.rm(file);assert.equal((await f.report()).projection.dailyProjections[4].amountCents,240000);await assert.rejects(fs.readFile(file),{code:'ENOENT'});await fs.writeFile(path.join(f.dir,'locations.json'),JSON.stringify([{id:'shop',companyId:'other-company',publicHolidayState:'VIC'}]));assert.equal((await f.report()).projection.dailyProjections[4].holiday,undefined);
+});
 test('unrounded year-on-year ratios round the final holiday amount to cents',async t=>{
  const f=await fixture(t,{current:10001,previous:30000,holiday:123456});const day=(await f.report()).projection.dailyProjections[4];assert.equal(day.amountCents,41156);assert.equal(day.holiday.growthPercent,-66.66);
 });

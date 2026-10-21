@@ -4,9 +4,10 @@ A stock ordering application with a searchable catalogue, supplier filters, edit
 
 ## Run
 
-Requires Node.js 22 or newer. No external packages are required.
+Requires Node.js 22 or newer. Install the pinned dependencies before running the app or tests.
 
 ```sh
+npm ci
 npm start
 ```
 
@@ -65,7 +66,7 @@ After scanning or uploading, **Price updates** automatically identifies the comp
 
 Press **Confirm price updates** to save the invoice in its weekly bundle and apply the displayed prices at every location in the company. There are no manual item selectors, price-entry fields or extra checkboxes. If nothing needs updating, the button is **Save invoice**. Applying prices still requires **Manage stock** and **Manage invoices**; other uploaders can save the invoice for an authorised stock manager. An invoice date is required for price updates. Prices remain unchanged until confirmation. Concurrent price, pack or SKU changes refresh the comparison automatically for a fresh confirmation. Older invoices cannot replace prices from newer invoices. Confirmations and audit history are saved together and retries cannot apply updates twice. Existing orders, stock counts and other companies stay unchanged. Reopening an invoice shows its price-update history; deleting it does not undo confirmed prices.
 
-Invoices are stored separately in **data/invoices/**. They do **not** update expenses, sales, Cost of goods, stock counts, placed orders, budgets or projections. Keep the existing **data** folder when updating the app to retain every weekly bundle. Bundled recognizer versions, source archives and licenses are documented in **public/vendor/invoice/README.md**; no npm installation is needed to use the scanner.
+Invoices are stored separately in **data/invoices/**. They do **not** update expenses, sales, Cost of goods, stock counts, placed orders, budgets or projections. Keep the existing **data** folder when updating the app to retain every weekly bundle. Bundled recognizer versions, source archives and licenses are documented in **public/vendor/invoice/README.md**; no additional OCR package installation is needed to use the scanner.
 
 ## Settings and permission levels
 
@@ -403,9 +404,13 @@ Sales projections, Home, Ordering and Cart show the ordering budget for the curr
 
 Shared sales persist in **data/location-sales/** under the location's ID and survive restarts, location renames and user reassignments. Previous **data/sales/** files are retained as historical data for their original locations. Keep the entire **data** folder when updating. Labels, fonts, and colours use the existing App edit controls and app theme.
 
-Public holidays in a location’s **reviewed public holiday calendars** use the same named holiday in the previous calendar year, even when its date moves. Save and confirm both years under **Settings → Award compliance → Public holidays**, using consistent names and distinct names for substitute holidays. The prior holiday’s saved revenue is adjusted by the total sales increase or decrease since that holiday: sales from the following day through the latest completed Melbourne day before the target holiday are compared with the same calendar dates one year earlier. Public holidays are included in those totals, while leap day is excluded to keep the dates comparable. For example, last year’s $2,000 holiday becomes $2,400 when comparable sales have risen 20%. The underlying ratio is used before rounding the result to cents. Weekly report revenue still takes precedence over Daily sales, including for last year’s holiday.
+Choose **State or territory** under **Admin → Locations → Edit location**, then **Save location**. All eight Australian states and territories are supported, with separate choices for each location. Public holidays fill automatically for past and future years (2000–2100), including movable Easter dates and substitute days; there is no annual date entry or API key. View the dates under **Settings → Award compliance → Public holidays**. Forecasts use these automatic dates without a payroll review. Reviewed location calendars take priority for that year, so existing local exceptions are preserved. To add regional or specially announced exceptions, review and save the location calendar there, keeping holiday names consistent between years. Native award costs still require an explicitly reviewed calendar; choosing a state does not certify payroll settings.
 
-Only the holiday day changes; normal days keep the four-week calculation. Sales, ordering budgets and roster forecasts share this adjustment, with Sunday ordering still using the upcoming week’s holiday dates and the same completed-history cutoff. The projection shows the holiday, prior date and sales-change percentage. Missing sales, incomplete comparison sales, a zero comparison denominator, an unreviewed prior calendar or ambiguous holiday names retain the normal forecast with an explanation. Saved sales, payroll settings and historical financial reports are never rewritten.
+Automatic calendars use the bundled [date-holidays 3.37.0](https://github.com/commenthol/date-holidays) rules, with ISC-licensed code and [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) calendar data; source rules and legislative references are included in the package. Calendar rules update with app releases. State dates can need regional exceptions or changes after special announcements.
+
+Holiday forecasts use the same named holiday in the previous calendar year, even when its date moves. The prior holiday’s saved revenue is adjusted by the total sales increase or decrease since that holiday: sales from the following day through the latest completed Melbourne day before the target holiday are compared with the same calendar dates one year earlier. Public holidays are included in those totals, while leap day is excluded to keep the dates comparable. For example, last year’s $2,000 holiday becomes $2,400 when comparable sales have risen 20%. The underlying ratio is used before rounding the result to cents. Weekly report revenue still takes precedence over Daily sales, including for last year’s holiday.
+
+Only the holiday day changes; normal days keep the four-week calculation. Sales, ordering budgets and roster forecasts share this adjustment, with Sunday ordering still using the upcoming week’s holiday dates and the same completed-history cutoff. The projection shows the holiday, prior date and sales-change percentage. Missing sales, incomplete comparison sales, a zero comparison denominator, missing prior holiday dates or ambiguous holiday names retain the normal forecast with an explanation. Saved sales, payroll settings and historical financial reports are never rewritten.
 
 ## Shared sign-in
 
