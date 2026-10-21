@@ -10,6 +10,7 @@ const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
 const accountEmailSettings=require('./account-email-settings');
+const aiAssistance=require('./ai-assistance');
 const newNetworkDefaults=require('./new-network-defaults');
 const {createPublicAssets}=require('./public-assets');
 const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
@@ -88,6 +89,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const prepLabelStore=prepLabels.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),allLocations:()=>auth.levels.locations(),now:communicationsNow});
   const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),people:()=>auth.directory(),roleLevels:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   const libraryStore=knowledgeLibrary.createStore(dataDir);
+  const aiStore=aiAssistance.createStore(dataDir,{fetchImpl,now:communicationsNow});
   const learningStore=learningCentre.createStore(dataDir,{library:libraryStore,people:async companyId=>{const[accounts,data,stores]=await Promise.all([auth.directory(),auth.levels.read(),auth.levels.locations()]);return accounts.map(account=>auth.levels.decorate(account,companyId,data,stores));},locations:actor=>locationStore.accessible(actor),roles:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   // Rich editors share private media URLs; article and training access follow their current audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:async(actor,record)=>await libraryStore.canReadMedia(actor,record)||await learningStore.canReadMedia(actor,record)});
@@ -204,6 +206,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(session&&!isSupport(session)){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
+      if(await aiAssistance.route({req,url:req.url,session,store:aiStore,body,json}))return;
       if(await opsManagement.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:opsStore,body,json,fail}))return;
       if(await learningCentre.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:learningStore,body,json,fail}))return;
       if(await knowledgeLibraryRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:libraryStore,body,json,fail}))return;
