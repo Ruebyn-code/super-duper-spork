@@ -31,7 +31,7 @@ window.createAppControls=({footer,toggle,wording,beforeOpen})=>{
   if(['/settings','/admin/settings'].includes(location.pathname))settingsLink.setAttribute('aria-current','page');else settingsLink.removeAttribute('aria-current');
  }
  function position(){
-  if(!opened())return;const button=anchor(),box=button.getBoundingClientRect(),upperEdge=box.top,viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=12,menuWidth=Math.min(272,width-edge*2),below=top+height-box.bottom-edge,above=upperEdge-top-edge,down=below>=Math.min(300,above),room=Math.max(80,down?below:above);
+  if(!opened())return;const button=anchor(),box=button.getBoundingClientRect(),upperEdge=box.top,viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=12,menuWidth=Math.min(232,width-edge*2),below=top+height-box.bottom-edge,above=upperEdge-top-edge,down=below>=Math.min(300,above),room=Math.max(80,down?below:above);
   menu.style.width=menuWidth+'px';menu.style.maxHeight=Math.min(440,room-6)+'px';menu.style.left=Math.max(left+edge,Math.min(box.right-menuWidth,left+width-menuWidth-edge))+'px';menu.style.top=down?(box.bottom+6)+'px':'auto';menu.style.bottom=down?'auto':Math.max(edge,innerHeight-upperEdge+6)+'px';
  }
  function close(restoreFocus=false){if(opened())menu.hidePopover();refresh();if(restoreFocus)anchor().focus({preventScroll:true});}
