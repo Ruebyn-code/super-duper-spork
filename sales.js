@@ -4,6 +4,7 @@ const {defaultTimeZone,calendar,dayNumber,dateLabel}=require('./par-levels');
 const {shift}=require('./stock-usage');
 const {compare}=require('./public/sales-performance');
 const orderCosts=require('./order-cost-period'),transferEffects=require('./stock-transfer-effects');
+const holidayProjections=require('./holiday-projections');
 const maximumDailyCents=1000000000;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
@@ -87,6 +88,11 @@ function orderingProjection(projection,orders,session,{transfers=[]}={}){
  const committed=isUpcoming?committedSpend(orders,session,weekStart,transfers):{spentCents:projection.spentCents,pricePending:projection.pricePending,orderCount:projection.orderCount,transferCostCents:projection.transferCostCents};
  return {...forecast,...committed,weekStart,weekEnd:shift(weekStart,6),isUpcoming,dailyProjections:projection.dailyProjections.map((day,index)=>({...day,date:shift(weekStart,index)})),remainingCents:projection.budgetCents===null||committed.pricePending?null:projection.budgetCents-committed.spentCents};
 }
+async function rosterProjection(dir,session,weekStart,{now=new Date()}={}){
+ const current=currentWeek(now),anchor=weekStart<current?weekStart:current,records=await projectionRecords(dir,session,[1,2,3,4].map(index=>shift(anchor,-7*index))),projection=require('./public/rostering-model').project(records,weekStart,now.valueOf());
+ const changes=await holidayProjections.adjustments(dir,session,{weekStarts:[weekStart],anchor,asOf:weekStart<current?weekStart:dateLabel(dayNumber(now,calendar(defaultTimeZone))),readRevenue:starts=>projectionRecords(dir,session,starts)});
+ return holidayProjections.apply(projection,changes,{dailyKey:'daily',amountKey:'salesCents'});
+}
 function allTimeTotals(records,orders,session){
  let salesCents=0,recordedDays=0,placedOrdersCents=0,orderCount=0,pricePending=false;
  for(const record of records){if(!belongs(record,session)||!Array.isArray(record.days))continue;for(const value of record.days){if(Number.isSafeInteger(value)&&value>=0){salesCents+=value;recordedDays++;}}}
@@ -153,7 +159,9 @@ function createStore(){
   const starts=[...new Set([selectedWeek||current,current,...[1,2,3,4].map(index=>shift(current,-7*index))])];
   const records=await Promise.all(starts.map(start=>read(dir,session,start)));
   const previousStarts=[1,2,3,4].map(index=>shift(current,-7*index)),forecast=await projectionRecords(dir,session,previousStarts,records),projection=calculate([...forecast,...records.filter(record=>!previousStarts.includes(record.weekStart))],orders,session,{now,transfers});
-  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection,orderingProjection:orderingProjection(projection,orders,session,{transfers})};
+  const ordering=orderingProjection(projection,orders,session,{transfers}),changes=await holidayProjections.adjustments(dir,session,{weekStarts:[...new Set([current,ordering.weekStart])],anchor:current,asOf:projection.today,readRevenue:starts=>projectionRecords(dir,session,starts)}),adjusted=holidayProjections.apply(projection,changes);
+  if(adjusted!==projection)adjusted.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:adjusted.dailyProjections,today:adjusted.today});
+  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:adjusted,orderingProjection:holidayProjections.apply(ordering,changes)};
  }
  async function history(dir,session){
   const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];
@@ -166,4 +174,4 @@ function createStore(){
  async function totals(dir,session,{orders=[],now=new Date(),transfers=[]}={}){return homeTotals(await history(dir,session),orders,session,{now,transfers});}
  return {save,saveDay,report,totals,history};
 }
-module.exports={read,projectionRecords,calculate,orderingProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
+module.exports={read,projectionRecords,calculate,orderingProjection,rosterProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

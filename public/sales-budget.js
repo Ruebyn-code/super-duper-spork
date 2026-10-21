@@ -20,7 +20,8 @@
   const period={start:dateLabel(projection.weekStart),end:dateLabel(projection.weekEnd)};
   if($('ordering-budget-period'))template($('ordering-budget-period'),upcoming?'Upcoming week · {start} – {end}':'Week · {start} – {end}',period);
   const label=projection.projectedSalesCents===null?'{weeks} of 4 complete sales weeks. Enter sales to calculate your budget.':projection.pricePending||cartPending?'Some items have prices pending. The remaining budget cannot be calculated yet.':remaining<0?(upcoming?'This cart would take you over the upcoming week’s budget.':'This cart would take you over this week’s budget.'):'Budget after this cart = weekly budget − allocated order costs − this cart.';
-  template($('ordering-budget-status'),upcoming?'Upcoming week’s budget, including Sunday orders and cost transfers. Forecast uses the last four completed sales weeks. '+label:label,{weeks:projection.weeksRecorded});
+  const holidayNote=(projection.dailyProjections||[]).some(day=>day.holiday?.status==='adjusted')?' Includes public-holiday forecasts based on last year’s matching holiday, adjusted for sales growth since the previous holiday.':'';
+  template($('ordering-budget-status'),(upcoming?'Upcoming week’s budget, including Sunday orders and cost transfers. Forecast uses the last four completed sales weeks. '+label:label)+holidayNote,{weeks:projection.weeksRecorded});
  }
  async function refresh(){
   if(document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
