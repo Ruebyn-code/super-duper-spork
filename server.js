@@ -344,6 +344,15 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const [accessible,companyList]=await Promise.all([locationStore.accessible(session,{allCompanies:true}),companyStore.accessible(session)]),available=(await Promise.all(accessible.map(async record=>can(await auth.forCompany(session,record.companyId),'reporting.view')?record:null))).filter(Boolean),names=new Map(companyList.map(company=>[company.id,company.name]));
         return json(200,{locations:available.map(location=>({...location,companyName:names.get(location.companyId)||''}))});
       }
+      if(['/api/reporting/training','/api/reporting/checklists'].includes(req.url)&&req.method==='GET'){
+        const params=Object.fromEntries(requestUrl.searchParams),period=reporting.range(params,new Date(communicationsNow())),ids=reporting.selectLocations(params.locations||session.locationId,await locationStore.accessible(session,{allCompanies:true}));
+        const contexts=await Promise.all(ids.map(async id=>companyStore.context(await locationStore.sessionContext(session,id))));
+        if(contexts.some(actor=>!can(actor,'reporting.view')))fail('Reporting access is required in every selected company.',403);
+        const kind=req.url.endsWith('/training')?'training':'checklists';
+        if(session.kiosk&&(contexts.some(actor=>actor.companyId!==session.companyId)||kind==='checklists'&&ids.some(id=>id!==session.locationId)))fail('This kiosk is assigned to another location.',403);
+        const result=await require('./reporting-operations')[kind](contexts,period,kind==='training'?learningStore:opsStore);
+        return json(200,{period,...result});
+      }
       if(req.url==='/api/reporting'&&req.method==='GET'){
         if(!can(session,'reporting.view'))fail('Reporting permission required.',403);
         const params=Object.fromEntries(requestUrl.searchParams),now=new Date();reporting.range(params,now);
@@ -354,7 +363,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
           const [history,entries]=await Promise.all([usageHistory(dataDir),Promise.all([...new Set(contexts.map(context=>context.companyId))].map(async id=>[id,await catalogueStore.read(id)]))]),catalogues=new Map(entries),reports=[];
           for(let offset=0;offset<contexts.length;offset+=8)reports.push(...await Promise.all(contexts.slice(offset,offset+8).map(async context=>{
             const records=await salesStore.history(dataDir,context),catalogue=catalogues.get(context.companyId),report=reporting.calculate(records,history.orders,history.counts,catalogue,context,params,{now,transfers:history.transfers});
-            report.details=await reportingDetails.build(dataDir,context,report.period,{...history,catalogue,store:weeklySalesReportStore,now,weekBasis:params.weekBasis});return report;
+            report.details=await reportingDetails.build(dataDir,context,report.period,{...history,catalogue,store:weeklySalesReportStore,now,weekBasis:params.weekBasis});report.capabilities={training:can(context,'learning.view')&&can(context,'learning.report'),checklists:can(context,'ops.view')};return report;
           })));
           return json(200,{period:reports[0].period,reports});
         }

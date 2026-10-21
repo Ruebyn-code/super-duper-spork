@@ -95,6 +95,8 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/assets/platforms/doordash.svg':'assets/platforms/doordash.svg',
   '/reporting':'reporting.html',
   '/reporting.js':'reporting.js',
+  '/reporting-progress.js':'reporting-progress.js',
+  '/reporting-progress-model.js':'reporting-progress-model.js',
   '/reporting-model.js':'reporting-model.js',
   '/reporting-detail-view.js':'reporting-detail-view.js',
   '/reporting-details.css':'reporting-details.css',

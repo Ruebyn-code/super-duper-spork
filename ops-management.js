@@ -140,6 +140,22 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const history=state.runs.filter(run=>allowed(run,actor,selected,state)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
   return{companyName:actor.companyName,today:today(),date:day,now:stamp(),locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(summary),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
+ async function report(actor,{start,end,locationId}){
+  const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
+  if(!selected.length||actor.kiosk&&locationId!==actor.locationId)fail('Location access required.',403);
+  date(start);date(end);const state=await read(),rows=[],current=now();
+  for(const run of state.runs.filter(run=>run.locationId===locationId&&allowed(run,actor,selected,state))){
+   const workDate=run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
+   if(workDate<start||workDate>end)continue;
+   const item=summary(run),dueAt=run.dueAt||plannerModel.deadline(run.dueDate,run.snapshot.planner?.dueTime);
+   rows.push({id:run.id,title:item.title,plannerName:run.plannerName||'',workDate,dueDate:run.dueDate,dueAt,status:run.status==='completed'?'completed':dueAt&&Date.parse(dueAt)<current?'overdue':'in-progress',answered:item.answered,stepCount:item.stepCount,percent:run.status==='completed'?100:Math.round(item.answered/Math.max(1,item.stepCount)*100),startedAt:run.createdAt,completedAt:run.completedAt,completedBy:run.completedBy||'',updatedBy:run.updatedBy||run.createdBy||'',kind:'saved'});
+  }
+  if(start<=today()&&end>=today()){
+   const dashboard=await list(actor,{date:today(),location:locationId});
+   for(const task of dashboard.tasks.filter(task=>!task.run&&task.type!=='on-demand'&&task.availability.opensAt<=stamp()))rows.push({id:task.plannerId+'|'+locationId+'|'+today(),title:task.title,plannerName:task.plannerName,workDate:today(),dueDate:task.dueDate,dueAt:task.dueAt,status:task.dueAt&&Date.parse(task.dueAt)<current?'overdue':'not-started',answered:0,stepCount:task.stepCount,percent:0,startedAt:null,completedAt:null,completedBy:'',updatedBy:'',kind:'scheduled'});
+  }
+  return{rows};
+ }
  function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
  async function saveTemplate(actor,input,id){
   need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
@@ -272,7 +288,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,saveTemplate,savePlanner,start,get,saveRun,upload,download};
+ return{list,report,saveTemplate,savePlanner,start,get,saveRun,upload,download};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
