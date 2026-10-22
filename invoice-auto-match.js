@@ -32,7 +32,7 @@ function factor(line,product,text){
 }
 function build(source,data,history=[]){
  const text=source.ocrText||'',rows=M.extract(text),empty={supplierId:null,lines:[],changes:[]};
- if(M.credit(text))return empty;
+ if(M.credit(text)||M.credit(source.originalOcrText))return empty;
  const name=supplierName(source.supplier),named=data.suppliers.filter(s=>name&&supplierName(s.name)===name);
  let supplier=named.length===1?named[0]:null;
  if(!supplier){const headings=text.split(/\r?\n/).slice(0,12).map(supplierName),found=data.suppliers.filter(s=>headings.includes(supplierName(s.name)));if(found.length===1)supplier=found[0];}

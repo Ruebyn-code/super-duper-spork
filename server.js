@@ -210,6 +210,22 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
+      if(req.url==='/api/invoices/intelligence'){
+        if(!session)fail('Sign in to read invoices with intelligence.',401);
+        if(req.method!=='POST')fail('Use POST to read an invoice with intelligence.',405);
+        if(!can(session,'invoices.view')||!can(session,'invoices.edit'))fail('Invoice editing permission required.',403);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const input=await body(req,6500000);if(!input||typeof input!=='object'||Array.isArray(input))fail('Choose an invoice scan.');
+        const checkInvoice=async actor=>{if(input.invoiceId){const record=await invoices.read(dataDir,actor,input.invoiceId);if(record.revision!==input.revision)fail('This invoice changed. Reopen it before reading it again.',409);}};
+        await checkInvoice(session);const result=await aiStore.generateInvoice(session,input);
+        const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
+        if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reading this invoice.',401);
+        if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
+        if(!can(current,'invoices.view')||!can(current,'invoices.edit'))fail('Invoice editing permission required.',403);
+        if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+        const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
+        await checkInvoice(current);return json(200,result);
+      }
       if(await aiAssistance.route({req,url:req.url,session,store:aiStore,body,json}))return;
       if(await opsManagement.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:opsStore,body,json,fail}))return;
       if(await learningCentre.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:learningStore,body,json,fail}))return;

@@ -73,6 +73,7 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   "/vendor/invoice/standard_fonts/FoxitSymbol.pfb":"vendor/invoice/standard_fonts/FoxitSymbol.pfb",
   "/vendor/invoice/standard_fonts/FoxitSerifItalic.pfb":"vendor/invoice/standard_fonts/FoxitSerifItalic.pfb",
   '/invoice-scanner.js':'invoice-scanner.js',
+  '/invoice-intelligence.js':'invoice-intelligence.js',
   '/invoice-reader.js':'invoice-reader.js',
   '/invoice-photo.js':'invoice-photo.js',
   '/invoice-scanner.css':'invoice-scanner.css',
