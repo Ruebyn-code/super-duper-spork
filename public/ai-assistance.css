@@ -55,3 +55,7 @@
 @media(max-width:380px){.ai-settings-grid{grid-template-columns:minmax(0,1fr)}.ai-draft-dialog .ai-dialog-actions{justify-content:stretch}.ai-dialog-actions button{flex:1}.ai-dialog-actions .ai-primary:last-child:not([hidden]){flex-basis:100%}}
 
 .ai-planner-preview{border:1px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;border-radius:9px;padding:10px;margin:8px 0}.ai-planner-preview p{font-size:12px;margin:4px 0;overflow-wrap:anywhere}
+.text-editor-toolbar .ai-writing-button{margin-left:auto;flex-shrink:0;min-height:36px;font-size:11px;padding:6px 9px}
+.ai-writing-dialog input,.ai-writing-dialog select{width:100%;min-width:0;margin:0}
+.ai-writing-dialog .ai-draft-preview textarea{min-height:140px}
+@media(max-width:720px){.text-editor-toolbar .ai-writing-button{min-height:40px}.ai-writing-dialog input,.ai-writing-dialog select{font-size:16px}}

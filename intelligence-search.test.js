@@ -19,7 +19,7 @@ test('ordinary search stays free; intelligence requires sign-in, CSRF, valid inp
  await app.settings();assert.equal((await app.api(app.staff,'/api/search?q=home')).intelligence.available,true);
  for(const value of [input('a'),input('x'.repeat(121)),input('bad\u0000query'),{query:'home',requestId:'invalid'},{}])assert.equal((await app.request(app.staff,'/api/search/intelligence','POST',value)).status,400);
  assert.equal((await app.request(app.staff,'/api/search/intelligence','POST',input('home'),{'X-CSRF-Token':''})).status,403);
- assert.equal((await app.request(app.staff,'/api/ai/status')).status,403);assert.equal((await app.request(app.staff,'/api/ai/settings')).status,403);
+ assert.equal((await app.request(app.staff,'/api/ai/status')).status,200);assert.equal((await app.request(app.staff,'/api/ai/settings')).status,403);
  assert.equal((await app.request(app.office,'/api/ai/drafts','POST',{kind:'search',prompt:'home',requestId:crypto.randomUUID()})).status,400);
  assert.equal(app.calls.length,0);
  }finally{await app.close();}});

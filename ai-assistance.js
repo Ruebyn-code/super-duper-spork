@@ -1,10 +1,10 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),questionSources=require('./ai-question-sources');
-const brandModel=require('./public/ai-brand-model');
+const brandModel=require('./public/ai-brand-model'),writing=require('./public/ai-writing-model');
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind)=>kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
+const canDraft=(actor,kind,scope)=>kind==='message'?can(actor,'comms.view')&&can(actor,'comms.chat'):kind==='post'?can(actor,'comms.view')&&(scope?can(actor,'comms.post.'+scope):can(actor,'comms.post.company')||can(actor,'comms.post.network')):kind==='article'?can(actor,'knowledge.view')&&(scope?can(actor,'knowledge.manage.'+scope):can(actor,'knowledge.manage.company')||can(actor,'knowledge.manage.network')):kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({...brandModel.defaults,revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -29,16 +29,16 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
  async function generate(actor,input,reportData){
-  if(!input||!['checklist','planners','course','questions','report','search'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+  if(!input||!['checklist','planners','course','questions','report','search',...writing.kinds].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>(writing.kinds.includes(input.kind)?24000:8000))fail('Describe the draft in up to 4,000 characters, with reference notes within the writing limit.');
   if(input.kind==='report'&&!reportData)fail('Generate reports through the scheduled reports builder.');
   if(input.kind==='search'&&!reportData?.pages?.length)fail('Use platform search to search with OpStack intelligence.');
-  if(!canDraft(actor,input.kind))fail('Builder permission required for this draft.',403);
-  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:input.kind==='search'?{pages:reportData.pages}:['checklist','planners'].includes(input.kind)?{today:new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()))}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
-  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:input.kind==='questions'?[parameters,source]:[])])).digest('hex');
+  if(!canDraft(actor,input.kind,input.scope))fail('Builder permission required for this draft.',403);
+  const parameters=writing.kinds.includes(input.kind)?writing.parameters(input):input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:input.kind==='search'?{pages:reportData.pages}:['checklist','planners'].includes(input.kind)?{today:new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()))}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
+  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:input.kind==='questions'?[parameters,source]:writing.kinds.includes(input.kind)?[parameters]:[])])).digest('hex');
   const pending=flights.get(key);if(pending){if(pending.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);return pending.promise;}
   const promise=perform();flights.set(key,{fingerprint,promise});try{return await promise;}finally{flights.delete(key);}
   async function perform(){
-   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(['checklist','planners'].includes(input.kind)?{currentDate:parameters.today}:{}),...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
+   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(writing.kinds.includes(input.kind)?{writingKind:input.kind,writingTask:parameters.mode}:{}),...(['checklist','planners'].includes(input.kind)?{currentDate:parameters.today}:{}),...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
    const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
    const reservation=await serial(companyId,async()=>{
@@ -80,7 +80,7 @@ async function route({req,url,session,store,body,json}){
   if(req.method==='GET'){json(200,await store.status(session));return true;}
   if(req.method!=='PUT')fail('Unsupported OpStack intelligence settings action.',405);
  }else{
-  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course')&&!canDraft(session,'report'))fail('Builder permission required.',403);
+  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course')&&!canDraft(session,'report')&&!writing.kinds.some(kind=>canDraft(session,kind)))fail('Builder permission required.',403);
   if(url==='/api/ai/status'){if(req.method!=='GET')fail('OpStack intelligence status is read-only.',405);json(200,await store.status(session));return true;}
   if(req.method!=='POST')fail('Use POST to generate an OpStack intelligence draft.',405);
  }

@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {fixture,reply,checklist,course,key}=require('./test-support/ai-assistance-fixture.cjs'),ai=require('./ai-assistance'),model=require('./ai-draft-model');
 const draft=(kind='checklist',extra={})=>({kind,requestId:crypto.randomUUID(),prompt:'Create a practical opening procedure.',notes:'Use approved company procedures.',...extra});
 test('AI settings preserve masked keys, enforce permissions and CSRF, and isolate companies without making paid calls',async()=>{const app=await fixture();try{
- assert.equal((await app.request(null,'/api/ai/status')).status,401);assert.equal((await app.request(app.staff,'/api/ai/status')).status,403);assert.equal((await app.request(app.staff,'/api/ai/settings')).status,403);
+ assert.equal((await app.request(null,'/api/ai/status')).status,401);assert.equal((await app.request(app.staff,'/api/ai/status')).status,200,'chat authors may read safe intelligence availability');assert.equal((await app.request(app.staff,'/api/ai/settings')).status,403);
  let current=await app.api(app.office,'/api/ai/settings');assert.equal(current.enabled,false);assert.equal(current.configured,false);assert(!JSON.stringify(current).includes('apiKey'));
  assert.equal((await app.request(app.office,'/api/ai/settings','PUT',{...current,enabled:true},{'X-CSRF-Token':''})).status,403);
  current=await app.settings();assert(current.configured);assert(!JSON.stringify(current).includes(key));assert.equal(app.calls.length,0);
