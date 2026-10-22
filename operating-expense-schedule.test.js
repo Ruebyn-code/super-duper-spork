@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const schedule=require('./operating-expense-schedule'),weekly=require('./weekly-sales-reports'),model=require('./public/weekly-sales-report');
 const actor={id:'office',username:'Office',companyId:'default',locationId:'shop'},bill=(extra={})=>({id:'marketing-bill',typeId:'electricity',totalCents:120000,weeks:2,startWeek:'2026-10-05',...extra});

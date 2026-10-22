@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const{test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto'),sales=require('./sales'),weekly=require('./weekly-sales-reports'),model=require('./public/weekly-sales-report'),rosterModel=require('./public/rostering-model'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 const now=new Date('2026-10-20T00:00:00Z'),current='2026-10-19',starts=['2026-10-12','2026-10-05','2026-09-28','2026-09-21'],actor={id:'office',username:'Office',companyId:'default',locationId:'shop'};
 const report=(weekStart,breakdown=model.blank(),extra={})=>({weekStart,revision:0,breakdown,labourCents:null,operatingExpensesCents:null,...extra});

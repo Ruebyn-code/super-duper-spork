@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin,saveUser}=require('./auth'),sales=require('./sales'),par=require('./par-levels'),{shift}=require('./stock-usage');
 async function fixture({beforeStart,fetchImpl,locationNow}={}){
@@ -95,7 +94,7 @@ test('multi-location users switch securely and retain separate data and location
   const admin=await app.login('admin'),north=(await app.request(admin,'/api/locations','POST',{name:'North'})).data,south=(await app.request(admin,'/api/locations','POST',{name:'South'})).data;
   const account=(await app.request(admin,'/api/accounts')).data.find(account=>account.username==='first');
   const assigned=await app.request(admin,'/api/accounts/'+account.id,'PUT',{username:'first',role:'user',locationId:north.id,locationIds:[north.id,south.id]});assert.equal(assigned.status,200);assert.deepEqual(assigned.data.locationIds,[north.id,south.id]);
-  const user=await app.login('first'),anotherSession=await app.login('first'),outsider=await app.login('third');assert.equal(user.session.locationId,north.id);assert.deepEqual(user.session.locations,[{id:north.id,name:'North'},{id:south.id,name:'South'}]);assert.equal(user.session.role,'user');assert.ok(user.session.locations.every(location=>Object.keys(location).length===2));
+  const user=await app.login('first'),anotherSession=await app.login('first'),outsider=await app.login('third');assert.equal(user.session.locationId,north.id);assert.deepEqual(user.session.locations,[{id:north.id,name:'North',setupPending:true},{id:south.id,name:'South',setupPending:true}]);assert.equal(user.session.role,'user');assert.ok(user.session.locations.every(location=>Object.keys(location).every(key=>['id','name','setupPending'].includes(key))));
   assert.equal((await app.request(null,'/api/session/location','PUT',{locationId:south.id})).status,401);
   assert.equal((await app.request(user,'/api/session/location','PUT',{locationId:south.id},{'X-CSRF-Token':''})).status,403);
   assert.equal((await app.request(user,'/api/session/location','PUT',{locationId:outsider.session.locationId})).status,403);

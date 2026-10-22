@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),crypto=require('node:crypto');
 const {shift}=require('./stock-usage');
 const reporting=require('./reporting'),details=require('./reporting-details'),weekly=require('./weekly-sales-reports'),weeklyModel=require('./public/weekly-sales-report'),model=require('./public/reporting-model'),schedule=require('./operating-expense-schedule'),invoices=require('./invoices');

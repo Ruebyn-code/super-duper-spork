@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const effects=require('./stock-transfer-effects'),usage=require('./stock-usage'),par=require('./par-levels'),sales=require('./sales'),weekly=require('./weekly-sales-reports'),overview=require('./weekly-sales-overview'),reporting=require('./reporting'),details=require('./reporting-details'),weeklyModel=require('./public/weekly-sales-report'),permissionModel=require('./permissions'),levels=require('./permission-levels');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth');

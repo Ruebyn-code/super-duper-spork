@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),appearance=require('./appearance'),fonts=require('./uploaded-fonts'),text=require('./interface-text'),overrides=require('./element-overrides'),{folder}=require('./company-customisations');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64'),image='data:image/png;base64,'+png.toString('base64');

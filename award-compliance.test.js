@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),awards=require('./award-compliance'),M=require('./public/rostering-model');
 const pack=(extra={})=>({schemaVersion:1,awardCode:'MA000003',label:'Fictional test rules — not legal values',sourceUrl:'https://awards.fairwork.gov.au/MA000003.html',effectiveFrom:'2026-10-01',effectiveTo:'2026-12-31',rules:[{kind:'minimum-engagement',value:180,clause:'Fictional test clause'}],...extra});

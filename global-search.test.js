@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),search=require('./global-search');
 async function fixture(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-search-'));await saveAdmin(dir,'Office','office-test-password');const server=createServer(dir,{fetchImpl:()=>{throw Error('External sending is disabled in search tests');}});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});});const base='http://127.0.0.1:'+server.address().port;

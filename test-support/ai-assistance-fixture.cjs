@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./location-setup-snooze.cjs');
 const fs=require('node:fs/promises'),assert=require('node:assert/strict');
 const {createServer}=require('../server'),{saveAdmin}=require('../auth');
 const key='sk-test-ai-secret-12345678901234567890',password='ai-test-password';

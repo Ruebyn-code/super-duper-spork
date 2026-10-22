@@ -107,8 +107,8 @@
    session=value;let changed=false;
    for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',session.locations,session.locationId]]){
     const select=document.getElementById(id);if(!select||!entries)continue;
-    if(JSON.stringify([...select.options].map(option=>[option.value,option.textContent]))!==JSON.stringify(entries.map(entry=>[entry.id,entry.name]))){
-     select.replaceChildren(...entries.map(entry=>{const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;return option;}));select.value=selected;select.disabled=entries.length<2;window.locationPickers?.refresh(select);changed=true;
+    if(JSON.stringify([...select.options].map(option=>[option.value,option.textContent,option.dataset.setupPending==='true']))!==JSON.stringify(entries.map(entry=>[entry.id,entry.name,Boolean(entry.setupPending)]))){
+     select.replaceChildren(...entries.map(entry=>{const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;option.dataset.setupPending=String(Boolean(entry.setupPending));return option;}));select.value=selected;select.disabled=entries.length<2;window.locationPickers?.refresh(select);changed=true;
      const arrow=select.closest('.location-switcher,.company-switcher')?.querySelector('.location-chevron');if(arrow)arrow.hidden=select.disabled;
     }
    }
@@ -147,7 +147,7 @@
     control.innerHTML='<svg class="location-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
     const label=document.createElement('span');label.id='sidebar-location-name';label.className='location-name';label.dataset.userText='';label.dataset.editId='sidebar-location-'+location.pathname.replace(/[^a-z0-9]/gi,'_');label.textContent=session.locationName;
     const arrow=document.createElement('span');arrow.className='location-chevron';arrow.setAttribute('aria-hidden','true');arrow.textContent='⌄';
-    const select=document.createElement('select');select.id='sidebar-location-select';select.setAttribute('aria-label',wording('Switch location'));for(const entry of session.locations||[{id:session.locationId,name:session.locationName}]){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;select.append(option);}select.value=session.locationId;select.disabled=select.options.length<2;arrow.hidden=select.disabled;
+    const select=document.createElement('select');select.id='sidebar-location-select';select.setAttribute('aria-label',wording('Switch location'));for(const entry of session.locations||[{id:session.locationId,name:session.locationName}]){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;option.dataset.setupPending=String(Boolean(entry.setupPending));select.append(option);}select.value=session.locationId;select.disabled=select.options.length<2;arrow.hidden=select.disabled;
     const status=document.createElement('p');status.className='location-switch-status';status.setAttribute('role','status');status.hidden=true;
     select.onchange=async()=>{const next=select.value;if(next===session.locationId)return;
      const before=new Event('before-location-switch',{cancelable:true});if(!window.dispatchEvent(before)){select.value=session.locationId;status.hidden=false;status.textContent=wording('Wait for saving to finish before switching locations.');return;}

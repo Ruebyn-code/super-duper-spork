@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const reporting=require('./reporting'),sales=require('./sales'),exporting=require('./public/reporting-export'),{createServer}=require('./server'),{saveAdmin}=require('./auth'),{shift}=require('./stock-usage');
 const now=new Date('2026-10-15T00:00:00Z'),actor={id:'member',locationId:'shop',companyId:'default',locationName:'Shop',companyName:'Company'},catalogue={suppliers:[{id:'supplier',name:'Supplier'}],products:[{id:'paper',name:'Paper',supplierId:'supplier',stockCountGroup:'packaging'}]};

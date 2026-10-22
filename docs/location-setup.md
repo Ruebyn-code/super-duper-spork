@@ -1,47 +1,47 @@
-# New location setup
+# Location setup
 
-Creating a location through the app or its API records the authenticated creator
-on that location. The initial location of a newly created company does the same.
-Existing locations and legacy account-location migrations are left unchanged.
+New locations retain their authenticated creator and saved setup checklist.
+Existing locations and legacy migrations stay unchanged. Unfinished setup never
+blocks platform access, including after a reminder expires. Existing completion
+and review records are preserved.
 
-Only the creator is blocked, across every location in that company. Colleagues,
-other companies and platform support are unaffected. The parent navigation shell
-opens the setup checklist on creation, navigation, sign-in or reload. Closing it
-or disabling JavaScript does not bypass the server's `428 LOCATION_SETUP` gate.
-Normal configuration APIs retain their existing permissions and remain available
-so setup can be finished; operational APIs remain blocked.
+Unfinished, accessible locations have a company-colour tint and “Setup in
+progress” in the Locations directory and shared location selector. These markers
+remain until an authorised manager explicitly finishes the validated checklist,
+and clear across tabs and reloads. Status metadata is filtered by current company
+and location access; it contains no sender keys, supplier contacts or payroll
+data.
 
-The seven automatic checks require saved location details/state, all seven days
-of trading hours (including explicitly closed days), a manager, an active team
-member, enabled sending credentials for the suppliers’ email/text routes (platform-only orders need no sending key), supplier delivery contacts and a priced
-stock catalogue. The five additional required tasks explicitly confirm review of
-rostering/labour, awards/payroll, checklist planners, training/induction and kiosk
-needs. These are setup reviews, not claims of payroll compliance, completed
-training/checklists or successful physical device operation. They do not create
-shifts, assignments, checklist runs, clock punches, orders or deliveries. Settings
-open through ordinary permission-checked editors for the new location. Authorised
-colleagues can open Setup checklist from the Locations directory and help finish
-reviews without being blocked themselves. Roles lacking a task's normal
-management grant must ask an authorised colleague to configure/review it.
+Creating a location opens a dismissible popup. Close and Escape return to the
+current page. An optional five-minute reminder uses the existing server-timed
+snooze record; it does not restrict access or hide the pending-location tint.
 
-Finish location setup rechecks all automatic requirements and all reviews. It
-requires location management, location/company access and the current checklist
-revision. Client-supplied completion flags are ignored. Completion and review
-attribution are saved atomically in `location-setup.json`; later routine settings
-edits do not reopen a completed onboarding checklist. Archiving an unused location
-removes it from the pending list under the existing archive rules.
+Every step opens an editor inside the popup. The existing forms run in isolated
+same-origin documents, with navigation hidden and their own checked location
+context. They reuse ordinary validation, permissions, CSRF, revisions, saving and
+private credential handling. Opening or saving a step never switches the main
+page’s selected location or navigates it into settings. Core location steps reuse
+the single Save settings action. Other modules retain their normal explicit
+save/autosave behavior. No orders, clock punches, checklist runs, training progress
+or paid requests are created merely by browsing setup.
 
-Snooze grants exactly five minutes to that creator in that company, measured by
-the server clock. It persists across tabs, sign-in and restarts, cannot be extended
-by retrying before expiry, and does not cover locations added after that snooze.
-At expiry the popup returns and operational APIs block again. Another explicit
-five-minute snooze is available. The browser rechecks on focus/visibility, after
-navigation, across tabs and periodically; a server-aligned timer also reopens the
-popup when the tab is idle. Required Comms reading takes precedence.
+Popup editors retain unfinished drafts when returning to the checklist, switching
+steps or closing the popup. Save or explicitly discard drafts before switching
+location/company or reloading. Polling and cross-tab updates do not rebuild an
+active editor. Current required Comms reading takes precedence, and existing
+authorisation and reading checks still apply to every editor API.
 
-The setup response contains task status and permission-aware editor links, never
-provider keys, supplier contact details or payroll data. Setup reads send no
-emails and make no provider calls. Automated tests use temporary data and fake
-credentials. Older feature fixtures explicitly invoke the normal snooze when
-their scenarios need access after adding a location; setup's dedicated tests use
-native requests to exercise the unsnoozed gate.
+Automatic tasks inspect saved state/territory, seven days of trading hours, a
+manager, team access, sending service, supplier delivery contacts and the stock
+catalogue. Sending credentials are required only for configured email/text
+routes; platform-only orders need no sending key. Five additional tasks require
+explicit review of rostering/labour, awards/payroll, checklist planners,
+training/induction and kiosk needs. Reviews are setup acknowledgements, not
+claims of payroll compliance, completed training or delivered physical prints.
+Finish location setup rechecks all tasks and the current revision before saving
+completion and attribution atomically in `location-setup.json`.
+
+Automated tests use isolated temporary data and fake credentials. They cover
+normal access with unfinished setup, reminders, highlights, completion, editor
+location isolation, permission checks and the popup interactions on phone, tablet
+and desktop.

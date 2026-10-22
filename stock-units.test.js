@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const template=require('./public/order-email-template'),{textOrder,dispatchOrder}=require('./order-delivery'),{createServer}=require('./server'),{saveAdmin,saveUser}=require('./auth');
 test('supplier item lines include unit amount and SKU when present and preserve legacy item formatting',()=>{

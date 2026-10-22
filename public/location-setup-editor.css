@@ -1,0 +1,21 @@
+html.setup-editor,html.setup-editor body{height:100%;min-height:0;margin:0;background:var(--theme-surface,#fff)}
+.setup-editor #app-sidebar,.setup-editor #app-subsidebar,.setup-editor .mobile-brand-header,.setup-editor .mobile-tabbar,.setup-editor .page-sidebar,.setup-editor .page-sidebar-layout>.page-sidebar,.setup-editor .admin-tabs,.setup-editor .admin-page>h1,.setup-editor .page-sidebar-toggle,.setup-editor #location-setup-banner{display:none!important}
+.setup-editor .app-shell{display:block!important;min-height:0!important;height:auto!important;padding:0!important}
+.setup-editor .app-page,.setup-editor main,.setup-editor .admin-content,.setup-editor .page-sidebar-content{width:100%!important;max-width:none!important;margin:0!important;padding:10px!important;box-sizing:border-box}
+.setup-editor[data-setup-task=details] body>.app-shell,.setup-editor[data-setup-task=hours] body>.app-shell,.setup-editor[data-setup-task=manager] body>.app-shell,.setup-editor[data-setup-task=sending] body>.app-shell{display:none!important}
+.setup-editor .location-settings-dialog{position:fixed;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;box-sizing:border-box;box-shadow:none!important;overflow:hidden}
+.setup-editor .location-settings-dialog[open]{display:flex!important;flex-direction:column}
+.setup-editor .location-settings-heading,.setup-editor .location-settings-tabs,.setup-editor .location-setup-directory-link{display:none!important}
+.setup-editor .location-settings-body{flex:1;min-height:0;overflow:auto;padding:12px}
+.setup-editor .location-settings-footer{flex:none;padding:10px 12px}
+.setup-editor .location-settings-dialog::backdrop{background:var(--theme-surface,#fff)}
+.setup-editor .locations-directory,.setup-editor .users-directory-heading,.setup-editor .admin-page>header,.setup-editor .rostering-page>header,.setup-editor .rostering-weekbar,.setup-editor .roster-panel-controls>h2{display:none!important}
+.setup-editor .page-sidebar-layout{display:block!important;grid-template-columns:1fr!important;padding:0!important}
+.setup-editor[data-setup-task=roster] .rostering-layout{display:block!important}
+.setup-editor[data-setup-task=roster] #phone-roster,.setup-editor[data-setup-task=roster] .roster-section-tabs{display:none!important}
+.setup-editor[data-setup-task=roster] #rostering-settings{display:block!important}
+.setup-editor[data-setup-task=roster] .roster-settings-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))!important}
+.setup-editor [hidden]{display:none!important}
+
+.setup-editor .location-settings-dialog{padding:0!important;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#172c3b)}
+.setup-editor .location-settings-body{padding:8px}.setup-editor #location-email-editor{margin:0;padding:6px;border:0;box-shadow:none;background:transparent}.setup-editor #location-email-editor>h2,.setup-editor #location-email-editor>h3{margin-top:0}

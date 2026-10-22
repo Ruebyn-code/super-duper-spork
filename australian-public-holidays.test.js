@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const holidays=require('./australian-public-holidays'),{createServer}=require('./server'),{saveAdmin,saveUser}=require('./auth');
 test('automatic Australian calendars have the correct state dates, movable Easter dates and observed days',()=>{

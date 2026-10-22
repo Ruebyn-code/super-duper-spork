@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const rules=require('./public/stock-order-rules'),usage=require('./stock-usage'),{createServer}=require('./server'),{saveAdmin,saveUser}=require('./auth');
 

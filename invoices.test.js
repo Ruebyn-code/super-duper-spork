@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),crypto=require('node:crypto'),path=require('node:path');
 const invoices=require('./invoices'),reader=require('./public/invoice-reader'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 const actor={id:'office',username:'Office',companyId:'default',locationId:'shop'},png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jw4kAAAAASUVORK5CYII=','base64');

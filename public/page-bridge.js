@@ -1,5 +1,6 @@
 (()=>{
  if(parent===window){const url=new URL(location.href);if(url.searchParams.has('__opstack_content')){url.searchParams.delete('__opstack_content');location.replace(url.href);}return;}
+ if(frameElement?.hasAttribute('data-location-setup-editor')){window.appEmbedded=true;window.appSetupEditor={task:frameElement.dataset.setupTask,locationId:frameElement.dataset.setupLocation};window.appRequiredReading=parent.appRequiredReading;window.appLocationSetup=parent.appLocationSetup;const original=window.fetch.bind(window);window.fetch=(input,options={})=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.origin===location.origin&&url.pathname.startsWith('/api/')){const headers=new Headers(options.headers||(input instanceof Request?input.headers:undefined));if(!headers.has('X-Location-Id'))headers.set('X-Location-Id',window.appSetupEditor.locationId);options={...options,headers};}return original(input,options);};document.documentElement.classList.add('setup-editor');document.documentElement.dataset.setupTask=window.appSetupEditor.task;const relay=event=>window.dispatchEvent(new CustomEvent('required-reading-changed',{detail:event.detail}));parent.addEventListener('required-reading-changed',relay);window.addEventListener('pagehide',()=>parent.removeEventListener('required-reading-changed',relay),{once:true});for(const name of ['pointerdown','keydown'])document.addEventListener(name,event=>{if(event.isTrusted)parent.appKioskSession?.activity();},true);return;}
  if(!parent.appShell)return;
  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'&&!document.querySelector('dialog[open]')){event.preventDefault();parent.appSearch?.focus();}});
  for(const name of ['pointerdown','keydown'])document.addEventListener(name,event=>{if(event.isTrusted)parent.appKioskSession?.activity();},true);
@@ -10,7 +11,7 @@
  window.appLocationSetup=parent.appLocationSetup;
  window.appShiftClock=parent.appShiftClock;
  window.appMessageBadge=parent.appMessageBadge;
- for(const name of ['required-reading-changed','shift-clock-updated']){
+ for(const name of ['required-reading-changed','shift-clock-updated','location-setup-changed']){
   const relay=event=>window.dispatchEvent(new CustomEvent(name,{detail:event.detail}));parent.addEventListener(name,relay);
   window.addEventListener('pagehide',()=>parent.removeEventListener(name,relay),{once:true});
  }

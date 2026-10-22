@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),os=require('node:os');
 const M=require('./public/home-greeting-model'),store=require('./home-greeting'),{saveAdmin}=require('./auth'),{createServer}=require('./server');
 test('Home greeting requires exactly one automatic account name and renders entered text literally',()=>{

@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const hours=require('./public/location-hours-model'),planner=require('./public/ops-planner-model'),sales=require('./sales'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 const daily=(open='9am',close='5pm')=>Array.from({length:7},()=>({open,close})),at=(date,time)=>planner.deadline(date,time);

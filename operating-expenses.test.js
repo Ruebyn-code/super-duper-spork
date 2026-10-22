@@ -1,4 +1,3 @@
-const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os');
 const model=require('./public/weekly-sales-report'),types=require('./operating-expense-types'),weekly=require('./weekly-sales-reports'),{createServer}=require('./server'),{saveAdmin}=require('./auth'),sales=require('./sales');
 const actor={id:'one',username:'Office',companyId:'default',locationId:'shop'};
