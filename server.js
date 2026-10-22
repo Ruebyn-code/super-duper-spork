@@ -10,7 +10,7 @@ const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
 const accountEmailSettings=require('./account-email-settings');
-const aiAssistance=require('./ai-assistance');
+const aiAssistance=require('./ai-assistance'),scheduledReports=require('./scheduled-reports');
 const newNetworkDefaults=require('./new-network-defaults');
 const {createPublicAssets}=require('./public-assets');
 const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config');
@@ -100,6 +100,8 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const awardStore=awardCompliance.createStore(dataDir,{people:()=>auth.directory(),locations:()=>auth.levels.locations(),now:rosteringNow,fetchImpl});
   const rosteringStore=rostering.createStore(dataDir,{unlockClockPin:(actor,input)=>auth.unlockClock(actor,input),authorizeClock:(actor,input)=>auth.authorizeClock(actor,input),clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:async actor=>(await locationStore.accessible(actor)).filter(shop=>!actor.kiosk||shop.id===actor.locationId),awards:awardStore,people:()=>auth.directory(),forecast:(actor,weekStart)=>sales.rosterProjection(dataDir,actor,weekStart,{now:new Date(rosteringNow())}),now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
+  const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
+  const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
   const manualParStore=manualPar.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];const chunks=[];let length=0;for await(const chunk of req){const bytes=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);length+=bytes.length;if(length>limit)fail('Request is too large.',413);chunks.push(bytes);}try{return JSON.parse(Buffer.concat(chunks,length).toString('utf8'));}catch{fail('Invalid JSON.');}}
@@ -206,6 +208,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(session&&!isSupport(session)){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
+      if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
       if(await aiAssistance.route({req,url:req.url,session,store:aiStore,body,json}))return;
       if(await opsManagement.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:opsStore,body,json,fail}))return;
       if(await learningCentre.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:learningStore,body,json,fail}))return;
@@ -569,7 +572,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       return json(404,{error:'Not found'});
     } catch(error) {json(error.status||500,{error:error.status?error.message:'Unable to save changes. Please try again.'});}
   });
-  server.networkServices={auth,locationStore,companyStore};return server;
+  server.networkServices={auth,locationStore,companyStore,reportStore};return server;
 }
 function createServer(dataDir=path.join(__dirname,'data'),options={}){return createPlatformServer(dataDir,{...options,publicOrigin:appOrigin(options.publicOrigin||'')},createNetworkServer);}
 if(require.main===module)(async()=>{

@@ -116,6 +116,10 @@ function createPlatformServer(root,options,createNetworkServer){
    req.opstackNetwork=network;return service(network).emit('request',req,res);
   }catch(error){if(!res.headersSent)json(error.status||500,{error:error.status?error.message:'Unable to complete the Opstack request. Please try again.'});else res.end();}
  });
+ let schedulerTimer,schedulerFlight,stopping=false;
+ server.runScheduledReports=()=>{if(stopping||options.migrationMode)return Promise.resolve({processed:0});if(schedulerFlight)return schedulerFlight;const task=(async()=>{let processed=0;for(const network of (await store.summary()).networks.filter(item=>item.active)){if(stopping)break;const result=await service(network).networkServices.reportStore.tick();processed+=result.processed;}return{processed};})();schedulerFlight=task;return task.finally(()=>{schedulerFlight=null;});};
+ server.on('listening',()=>{if(options.reportScheduler===false||options.migrationMode)return;const tick=()=>server.runScheduledReports().catch(()=>console.error('Scheduled report check failed; check report configuration and server storage.'));schedulerTimer=setInterval(tick,60000);schedulerTimer.unref();tick();});
+ server.on('close',()=>{stopping=true;clearInterval(schedulerTimer);});
  server.platformStore=store;return server;
 }
 module.exports={createPlatformServer};

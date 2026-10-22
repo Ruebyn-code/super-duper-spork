@@ -15,11 +15,12 @@
   ['awards.manage','Award compliance','Manage company award coverage, dated rule sets and employee award profiles','Settings'],['appearance.manage','App appearance','Change backgrounds, images, icons, layouts and the Home greeting','Settings'],['roles.manage','Permission levels','Create and edit company permission levels','Settings'],['locations.all','All company locations','Access every location within an accessible company','Location access'],['network.access','All companies','Access the whole company network; network role only','Network'],['roles.network','Network permission levels','Manage network-wide permission levels; network role only','Network']
  ].map(([id,name,description,group])=>({id,name,description,group}));
  definitions.push({id:'users.email.manage',name:'Edit user emails',description:'Change existing users’ sign-in emails within your hierarchy and location access',group:'Administration'});
+ definitions.push({id:'reports.manage',name:'Scheduled AI reports',description:'Preview and schedule AI reports for authorised users and permission levels',group:'Finance'});
  definitions.push({id:'ai.manage',name:'AI assistance settings',description:'Configure this company’s OpenAI key, enable AI drafting and set estimated usage limits',group:'Settings'});
  definitions.push({id:'account-email.manage',name:'Account invitation email',description:'Configure the one shared sender for account setup emails across Opstack; network role only',group:'Network'});
  const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network','comms.post.network','knowledge.manage.network','rostering.budget.network','account-email.manage'];
  const work=['learning.view','learning.complete','prep.view','prep.print','ops.view','ops.complete','rostering.view','rostering.clock','rostering.availability','rostering.leave','knowledge.view','comms.view','comms.chat','home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
- const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'learning.manage','learning.assign','learning.report','ops.manage','transfers.view','transfers.send','transfers.receive','reporting.view','users.manage','devices.manage','rostering.manage','rostering.approve','rostering.costs','rostering.budget.location','rostering.leave.approve']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
+ const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'learning.manage','learning.assign','learning.report','ops.manage','transfers.view','transfers.send','transfers.receive','reporting.view','reports.manage','users.manage','devices.manage','rostering.manage','rostering.approve','rostering.costs','rostering.budget.location','rostering.leave.approve']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
  function can(account,key){if(!account)return false;const permissions=account.permissions||defaults.find(role=>role.id===account.role)?.permissions||[],network=account.networkPermissions||permissions;if(key==='roles.manage'&&network.includes('roles.network'))return true;return(networkKeys.includes(key)?network:permissions).includes(key);}
  const any=(account,permissions)=>permissions.some(key=>can(account,key));
  const level=account=>account?.roleLevel??defaults.find(role=>role.id===account?.role)?.level??0;
@@ -32,12 +33,14 @@
  const learningKeys=['learning.view','learning.complete','learning.manage','learning.assign','learning.report'];
  const deviceKeys=['devices.manage'];
  const aiKeys=['ai.manage'];
+ const reportKeys=['reports.manage'];
  const prepKeys=['prep.view','prep.print','prep.manage'];
  const opsKeys=['ops.view','ops.complete','ops.manage'];
  const dependencies={...Object.fromEntries(learningKeys.filter(key=>key!=='learning.view').map(key=>[key,'learning.view'])),'prep.print':'prep.view','prep.manage':'prep.view','ops.complete':'ops.view','ops.manage':'ops.view',...Object.fromEntries(rosteringKeys.filter(key=>key!=='rostering.view').map(key=>[key,'rostering.view'])),'knowledge.manage.company':'knowledge.view','knowledge.manage.network':'knowledge.view','comms.chat':'comms.view','comms.post.company':'comms.view','comms.post.network':'comms.view','comms.require':'comms.view','transfers.send':'transfers.view','transfers.receive':'transfers.view','orders.place':'orders.view','counts.edit':'counts.view','sales.edit':'sales.view','finances.edit':'finances.view','invoices.edit':'invoices.view','roles.network':'roles.manage','network.access':'locations.all'};
  dependencies['rostering.leave.confidential']='rostering.leave.approve';
+ dependencies['reports.manage']='reporting.view';
  dependencies['users.email.manage']='users.manage';
  const awardKeys=['awards.manage'],leaveKeys=['rostering.leave','rostering.leave.approve','rostering.leave.confidential'];
  const userEmailKeys=['users.email.manage','account-email.manage'];
- const api={aiKeys,deviceKeys,learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
+ const api={reportKeys,aiKeys,deviceKeys,learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
 })(globalThis);

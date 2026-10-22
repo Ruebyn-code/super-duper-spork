@@ -3,7 +3,7 @@ const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),ques
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind)=>can(actor,kind==='checklist'?'ops.view':'learning.view')&&can(actor,kind==='checklist'?'ops.manage':'learning.manage');
+const canDraft=(actor,kind)=>kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,kind==='checklist'?'ops.view':'learning.view')&&can(actor,kind==='checklist'?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -24,15 +24,16 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   if(next.enabled&&!next.apiKey)fail('Add an OpenAI API key before enabling AI drafting.');
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
- async function generate(actor,input){
-  if(!input||!['checklist','course','questions'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+ async function generate(actor,input,reportData){
+  if(!input||!['checklist','course','questions','report'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+  if(input.kind==='report'&&!reportData)fail('Generate reports through the scheduled reports builder.');
   if(!canDraft(actor,input.kind))fail('Builder permission required for this draft.',403);
-  const parameters=input.kind==='questions'?questionSources.parameters(input):null,source=parameters?await questionSources.resolve(actor,input.source,library):null;
-  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(parameters?[parameters,source]:[])])).digest('hex');
+  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
+  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:parameters?[parameters,source]:[])])).digest('hex');
   const pending=flights.get(key);if(pending){if(pending.fingerprint!==fingerprint)fail('This AI request reference was already used.',409);return pending.promise;}
   const promise=perform();flights.set(key,{fingerprint,promise});try{return await promise;}finally{flights.delete(key);}
   async function perform(){
-   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(parameters?{...parameters,sources:source.items}:{})})}];
+   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(source?{...parameters,sources:source.items}:{}),...(reportData?{reportData}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
    const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192;
    const reservation=await serial(companyId,async()=>{
@@ -64,7 +65,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
    if(errorMessage)fail(errorMessage,502);return generated;
   }
  }
- return{status,save,generate};
+ return{status,save,generate,generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data)};
 }
 async function route({req,url,session,store,body,json}){
  if(!['/api/ai/status','/api/ai/settings','/api/ai/drafts'].includes(url))return false;
@@ -74,7 +75,7 @@ async function route({req,url,session,store,body,json}){
   if(req.method==='GET'){json(200,await store.status(session));return true;}
   if(req.method!=='PUT')fail('Unsupported AI settings action.',405);
  }else{
-  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course'))fail('Builder permission required.',403);
+  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course')&&!canDraft(session,'report'))fail('Builder permission required.',403);
   if(url==='/api/ai/status'){if(req.method!=='GET')fail('AI status is read-only.',405);json(200,await store.status(session));return true;}
   if(req.method!=='POST')fail('Generate an AI draft with POST.',405);
  }
