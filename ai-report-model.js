@@ -1,4 +1,4 @@
-const fail=()=>{throw Object.assign(Error('AI returned an incomplete report. Preview again or adjust the report instructions.'),{status:502});};
+const fail=()=>{throw Object.assign(Error('OpStack intelligence returned an incomplete report. Preview again or adjust the report instructions.'),{status:502});};
 const text=(value,max)=>{if(typeof value!=='string'||!value.trim()||value.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value))fail();return value.trim();};
 const string={type:'string'},object=properties=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false}),array=items=>({type:'array',items});
 const schema=object({title:string,overview:string,sections:array(object({heading:string,summary:string,factIds:array(string)})),actions:array(string)});

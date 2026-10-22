@@ -1,5 +1,5 @@
 const crypto=require('node:crypto');
-const fail=()=>{throw Object.assign(Error('AI returned an incomplete draft. Generate a new draft or adjust your instructions.'),{status:502});};
+const fail=()=>{throw Object.assign(Error('OpStack intelligence returned an incomplete draft. Generate a new draft or adjust your instructions.'),{status:502});};
 const text=(value,max,required=true)=>{if(typeof value!=='string'||value.length>max||required&&!value.trim()||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value))fail();return value.trim();};
 const list=(value,min,max)=>{if(!Array.isArray(value)||value.length<min||value.length>max)fail();return value;};
 const string={type:'string'},object=properties=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false}),array=items=>({type:'array',items});
