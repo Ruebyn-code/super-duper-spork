@@ -153,6 +153,7 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/scheduled-reports.js':'scheduled-reports.js',
   '/scheduled-reports.css':'scheduled-reports.css',
   '/ai-assistance.css':'ai-assistance.css',
+  '/ai-brand.css':'ai-brand.css',
   '/ai-settings.js':'ai-settings.js',
   '/page-density.css':'page-density.css',
   '/top-navigation.css':'top-navigation.css',
