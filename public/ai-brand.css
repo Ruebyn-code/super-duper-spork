@@ -5,29 +5,39 @@
 :root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::before{content:"";display:inline-block;width:14px;height:14px;margin-inline-end:7px;vertical-align:-2px;background:currentColor;mask:var(--ai-spark) center/contain no-repeat}
 :root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):hover:enabled{background:var(--ai-gradient);color:var(--ai-on-gradient);filter:none;box-shadow:0 2px 5px #0f172a26}
 :root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):focus-visible{outline:3px solid var(--ai-focus);outline-offset:3px}
-.ai-draft-dialog,.scheduled-dialog{border:1px solid var(--theme-line,#d3dfea);background:var(--theme-surface,#fff);box-shadow:0 20px 64px #0f172a30}
-.ai-draft-dialog .ai-dialog-heading,.scheduled-dialog .scheduled-heading{background:var(--ai-tint);color:var(--theme-text,#182b3a);border-bottom-color:var(--theme-line,#d3dfea)}
-.ai-dialog-heading h2,.scheduled-heading h2{display:flex;align-items:center;gap:9px;color:var(--theme-text,#182b3a);font-family:Arial,Helvetica,sans-serif;font-weight:600;letter-spacing:0}
-.ai-dialog-heading h2::before,.scheduled-heading h2::before{content:"";width:20px;height:20px;flex:0 0 20px;background:var(--ai-gradient);mask:var(--ai-spark) center/contain no-repeat}
-.ai-draft-dialog .ai-dialog-close,.scheduled-dialog .scheduled-close{background:var(--theme-surface,#fff);color:var(--theme-muted,#627383);border-color:var(--theme-line,#d3dfea);box-shadow:none}
-.ai-draft-dialog .ai-dialog-close:hover,.scheduled-dialog .scheduled-close:hover{background:var(--ai-tint);color:var(--theme-text,#182b3a)}
+.ai-draft-dialog,.scheduled-dialog,.ai-settings,.settings-hub .settings-option[data-permission="ai.manage"]{border:2px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box}
+.ai-draft-dialog,.scheduled-dialog{box-shadow:0 20px 64px #0f172a30}
+.ai-draft-dialog .ai-dialog-heading,.scheduled-dialog .scheduled-heading,.ai-settings>h2{background:var(--ai-gradient);color:var(--ai-on-gradient);border:0}
+.ai-draft-dialog .ai-dialog-heading,.scheduled-dialog .scheduled-heading{flex-wrap:nowrap}
+.ai-dialog-heading h2,.scheduled-heading h2,.ai-settings>h2{display:flex;align-items:center;gap:9px;color:var(--ai-on-gradient);font-family:Arial,Helvetica,sans-serif;font-weight:600;letter-spacing:0}
+.ai-dialog-heading h2,.scheduled-heading h2{flex:1;min-width:0}
+.ai-dialog-heading h2::before,.scheduled-heading h2::before,.ai-settings>h2::before{content:"";width:20px;height:20px;flex:0 0 20px;background:currentColor;mask:var(--ai-spark) center/contain no-repeat}
+.ai-draft-dialog .ai-dialog-close,.scheduled-dialog .scheduled-close{background:#ffffff14;color:var(--ai-on-gradient);border-color:#ffffff70;box-shadow:none}
+.ai-draft-dialog .ai-dialog-close:hover,.scheduled-dialog .scheduled-close:hover{background:#ffffff26;color:var(--ai-on-gradient);filter:none}
 .ai-draft-dialog :is(input,textarea,select,button,summary):focus-visible,.ai-settings :is(input,textarea,button,summary):focus-visible,.scheduled-dialog :is(input,textarea,select,button,summary):focus-visible{outline-color:var(--ai-focus)}
+.ai-draft-dialog .ai-dialog-heading .ai-dialog-close:focus-visible,.scheduled-dialog .scheduled-heading .scheduled-close:focus-visible{outline-color:var(--ai-on-gradient)}
 .ai-draft-dialog input[type=checkbox],.ai-settings input[type=checkbox],.scheduled-dialog input[type=checkbox]{accent-color:var(--ai-accent)}
 .ai-draft-dialog summary,.ai-settings summary,.scheduled-dialog details summary{color:var(--ai-text)}
 .ai-source-buttons button[aria-pressed=true],.scheduled-tabs button[aria-selected=true]{background:var(--ai-tint);color:var(--ai-text);border-color:var(--ai-line);font-weight:600;box-shadow:none}
 .ai-source-buttons button[aria-pressed=true]:hover,.scheduled-tabs button[aria-selected=true]:hover{background:var(--ai-tint);color:var(--ai-text)}
 .ai-question-preview>small:first-child{display:inline-block;background:var(--ai-tint);color:var(--ai-text);border:1px solid var(--ai-line);padding:3px 8px;border-radius:6px;font-weight:600;letter-spacing:0}
-.ai-draft-preview h3,.scheduled-report h3,.ai-settings>h2{border-bottom:2px solid transparent;border-image:var(--ai-gradient) 1;padding-bottom:8px}
-.ai-settings{border:1px solid var(--theme-line,#d3dfea);border-radius:14px;padding:16px;background:var(--theme-surface,#fff);box-shadow:none}
-.ai-settings .ai-settings-usage{border:1px solid var(--ai-line);background:var(--ai-tint);box-shadow:none}
-.settings-hub .settings-option[data-permission="ai.manage"]{border-color:var(--ai-line);background:var(--theme-surface,#fff);box-shadow:0 1px 3px #0f172a0a}
+.ai-draft-preview :is(h3,h4),.scheduled-report :is(h3,h4),.ai-draft-dialog details>summary,.ai-settings details>summary,.scheduled-dialog details>summary,.ai-question-types>legend,.scheduled-choice-group>legend,.scheduled-card>.scheduled-row,.scheduled-card>strong{border-bottom:2px solid transparent;border-image:var(--ai-gradient) 1;padding-bottom:6px}
+.scheduled-card>strong{display:block}
+.ai-source-list,.ai-question-types,.ai-source-text,.scheduled-card,.scheduled-choice-group,.ai-settings .ai-settings-usage,:is(.ai-draft-dialog,.scheduled-dialog) .app-select-menu:popover-open{border:1px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box}
+.ai-settings{--ai-panel-padding:16px;border-radius:14px;padding:var(--ai-panel-padding);box-shadow:none}
+.ai-settings>h2{margin:calc(-1 * var(--ai-panel-padding)) calc(-1 * var(--ai-panel-padding)) 14px;padding:12px var(--ai-panel-padding);border-radius:11px 11px 0 0}
+.ai-settings .ai-settings-usage{background:var(--ai-tint) padding-box,linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;box-shadow:none}
+.settings-hub .settings-option[data-permission="ai.manage"]{box-shadow:0 1px 3px #0f172a0a}
 .settings-hub .settings-option[data-permission="ai.manage"]:hover{box-shadow:0 3px 10px #0f172a14}
 .settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon{background:var(--ai-gradient);color:var(--ai-on-gradient);box-shadow:none}
 .settings-hub .settings-option[data-permission="ai.manage"] .icon-detail{stroke:var(--ai-on-gradient)}
 /* Only the highlight moves; controls, text and hit targets stay still. */
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary),.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon{position:relative;overflow:hidden;isolation:isolate}
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-130%);animation:ai-shimmer 7s ease-in-out infinite}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary),.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon,.ai-dialog-heading,.scheduled-heading,.ai-settings>h2{position:relative;overflow:hidden;isolation:isolate}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after,.ai-dialog-heading::after,.scheduled-heading::after,.ai-settings>h2::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-130%);animation:ai-shimmer 7s ease-in-out infinite}
+.ai-settings,.settings-hub .settings-option[data-permission="ai.manage"]{position:relative}
+.ai-draft-dialog::before,.scheduled-dialog::before,.ai-settings::before,.settings-hub .settings-option[data-permission="ai.manage"]::before{content:"";position:absolute;inset:-2px;z-index:1;padding:2px;border-radius:inherit;pointer-events:none;background:linear-gradient(110deg,transparent 30%,#ffffff70 48%,transparent 66%) -150% 0/300% 100%;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;animation:ai-border-shimmer 7s ease-in-out infinite}
 :root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):disabled::after{animation:none}
 @keyframes ai-shimmer{0%,18%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
-@media(max-width:720px){.ai-settings{padding:12px}}
-@media(prefers-reduced-motion:reduce){:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){transition:none}:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after{animation:none}}
+@keyframes ai-border-shimmer{0%,18%{background-position:150% 0}55%,100%{background-position:-150% 0}}
+@media(max-width:720px){.ai-settings{--ai-panel-padding:12px}}
+@media(prefers-reduced-motion:reduce){:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){transition:none}:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after,.ai-dialog-heading::after,.scheduled-heading::after,.ai-settings>h2::after,.ai-draft-dialog::before,.scheduled-dialog::before,.ai-settings::before,.settings-hub .settings-option[data-permission="ai.manage"]::before{animation:none}}
