@@ -25,13 +25,25 @@ The compact **Set schedule** popup uses four checklist-type cards, a single recu
 Choose:
 
 - **Checklist type**: **Recurring** repeats on a schedule; **On-demand** can be started manually and repeatedly; **Once off** has one occurrence per location; **Unscheduled** keeps the configuration out of the team's checklist list.
-- **When it happens** for recurring checklists: Daily, Weekly, Fortnightly, Monthly or Yearly. Daily can use selected weekdays. New weekly and fortnightly schedules repeat from the configured start date, every 7 or 14 days. Monthly schedules retain the start day, clamping to the final day of shorter months; yearly schedules similarly clamp a 29 February anniversary to 28 February in non-leap years.
+- **When it happens** for recurring checklists: Hourly, Daily, Weekly, Fortnightly, Monthly or Yearly. Hourly and Daily can use selected weekdays. New weekly and fortnightly schedules repeat from the configured start date, every 7 or 14 days. Monthly schedules retain the start day, clamping to the final day of shorter months; yearly schedules similarly clamp a 29 February anniversary to 28 February in non-leap years.
 - **Start date** and **Checklist start time**: an occurrence becomes available from its first scheduled day/time. Start time belongs to the chosen recurrence, rather than changing the date anchor each day. An optional end date stops new occurrences.
 - **Due time** and **Due day**: choose the day relative to the start, including Next day for an overnight deadline. Existing weekly schedules retain their original calendar-week identity and due day when unrelated settings are edited.
-- **Active from / Active until**: daily opening and closing hours for new starts. Blank opening uses the checklist start time, or midnight. A closing time before opening continues overnight. Leave both blank for no daily hour restriction; the scheduled start time still applies. The server uses its Melbourne clock and rejects attempts to bypass a window by selecting an earlier date. Work already started remains available to finish after the window closes.
+- **Active from / Active until**: daily opening and closing hours for new starts. Blank opening uses the checklist start time, or midnight. A closing time before opening continues overnight. Leave both blank for no daily hour restriction; the scheduled start time still applies. The server uses its Melbourne clock and rejects attempts to bypass a window by selecting an earlier date. Work already started remains available in History to finish after the window closes; its expired card leaves Active.
 - Optional **In-app reminder**, **Priority**, **Planner instructions** and **Active planner**. Reminders mark incomplete cards Due soon before the deadline and Overdue after it, while Ops management is open; no background emails or push notifications are sent. Pausing stops new occurrences without deleting records.
 
 The preview shows upcoming dates. Melbourne daylight-saving gaps move a skipped time to the first real minute after it; repeated clock times use the later occurrence. Daily overnight windows retain the previous day's occurrence after midnight until closing.
+
+## Hourly repeats and the Active list
+
+Choose **Recurring → Repeat → Hourly** for a separate checklist every hour within the planned active window. It works with fixed times and location trading hours. For example, 9:30 am–12:00 pm produces 9:30–10:30, 10:30–11:30 and 11:30–12:00 occurrences. Each has its own saved answers and completion record; completing one does not complete the next. Each occurrence is due and finishes at the next hour or the planner’s **Active until**, whichever is earlier. A reminder can be up to one hour before that finish. Choose repeat weekdays as needed.
+
+Intelligence understands requests such as “make this checklist repeat hourly during trading hours, plus a separate closing planner”. One Hourly planner handles all its hourly occurrences; separate instructions can generate several different planner drafts for the same checklist. Review and activate the paused suggestions as usual.
+
+**Active** shows a checklist only during its planned start/finish window. Weekly, fortnightly, monthly, yearly and once-off planners appear on their scheduled start day, rather than staying visible throughout the recurrence period. **Due day** sets the deadline and does not extend Active visibility. The finish is **Active until**, or the trading-hour end; when no fixed finish is set, it is midnight at the end of the planned day. Explicit overnight windows keep their original work/trading date until their next-day finish.
+
+Cards disappear automatically when their finish passes, whether completed, unfinished or never started. Started records remain in **History** and can be resumed there; nothing is automatically completed or deleted. A reader already open at the boundary retains its answers and focus. New runs save their opening and finish instants, so later schedule/hour edits do not change their finish. Older records without these instants use their saved planner configuration without rewriting history.
+
+The list refreshes at the next scheduled boundary and quietly rechecks while browsing. It does not reload open checklists or builder drafts. Viewing or refreshing never starts a run. Hourly intervals follow elapsed time through Melbourne daylight-saving changes, with distinct records for repeated clock hours and no nonexistent spring-forward hour.
 
 ## Use location trading hours
 
@@ -43,7 +55,7 @@ The existing Melbourne clock and daylight-saving conversion apply. Checklists be
 
 ## Create planners with OpStack intelligence
 
-In a saved checklist’s **Planner** stage, choose **OpStack intelligence planners**. Describe the recurrence and timing, for example “daily opening checks 30 minutes before opening, due at opening, plus closing checks due 30 minutes after closing”. A new checklist intelligence request can also ask for planner drafts together with the steps. Up to four planners can be suggested.
+In a saved checklist’s **Planner** stage, choose **OpStack intelligence planners**. Describe the recurrence and timing, for example “daily opening checks 30 minutes before opening, due at opening, plus closing checks due 30 minutes after closing”. A new checklist intelligence request can also ask for planner drafts together with the steps. Up to twelve planners can be suggested, including several schedules for the same checklist.
 
 Review the preview. **Add paused planners** adds suggestions to an existing checklist; **Open draft in builder** saves a new checklist with any suggested paused planners. Generation and cancelling the preview create nothing. Existing planners remain unchanged. Partial saves can be retried without duplicates. Review each new planner’s dates, timing, **Locations** and **Assignees**, then enable **Active planner** when ready. The initial location is the current location; intelligence never chooses location or permission IDs and does not receive saved trading hours. Normal checklist authoring access and the shared company intelligence budget apply.
 

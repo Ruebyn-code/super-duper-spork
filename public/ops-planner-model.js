@@ -8,7 +8,7 @@
   let start=day,end=day,key=day,due=day;
   if(kind==='manual'){key=null;due=plan.dueTime||plan.tradingHours?.due?day:null;}
   else if(kind==='once'){start=s.startDate;end=s.endDate||null;key='once';due=start;}
-  else if(kind==='daily'){if(s.days&&!s.days.includes(weekday(day)))return null;}
+  else if(kind==='daily'||kind==='hourly'){if(s.days&&!s.days.includes(weekday(day)))return null;}
   else if(kind==='weekly'&&s.anchor!=='start'){start=monday(day);key=start;end=shift(start,6);due=shift(start,(s.weekday||7)-1);}
   else if(['weekly','fortnightly'].includes(kind)){const span=kind==='weekly'?7:14,n=Math.floor((Date.parse(day+'T00:00:00Z')-Date.parse(s.startDate+'T00:00:00Z'))/(span*86400000));start=shift(s.startDate,n*span);end=shift(start,span-1);key=start;due=end;}
   else if(kind==='monthly'||kind==='yearly'){const months=kind==='monthly'?1:12,parts=day.split('-').map(Number),first=s.startDate.split('-').map(Number);let index=Math.floor(((parts[0]-first[0])*12+parts[1]-first[1])/months);if(monthDate(s.startDate,index*months)>day)index--;start=monthDate(s.startDate,index*months);end=shift(monthDate(s.startDate,(index+1)*months),-1);key=start;due=end;}
@@ -40,37 +40,64 @@
  }
  function due(plan,slot,hours){
   if(!slot)return{dueDate:null,dueTime:null,dueAt:null};
+  if(slot.hourEndsAt){const wall=local(Date.parse(slot.hourEndsAt));return{dueAt:slot.hourEndsAt,dueDate:wall.slice(0,10),dueTime:wall.slice(11,16)};}
   if(!plan.tradingHours?.due)return{dueDate:slot.dueDate,dueTime:plan.dueTime||null,dueAt:deadline(slot.dueDate,plan.dueTime)};
   const dueAt=tradingPoint(plan.tradingHours.due,slot.dueDate,hours),wall=dueAt?local(Date.parse(dueAt)):null;
   return{dueAt,dueDate:wall?wall.slice(0,10):slot.dueDate,dueTime:wall?wall.slice(11,16):null};
  }
- function availability(plan,slot,now=Date.now(),hours){
+ function activeWindow(plan,slot,hours){
   if(!slot)return{allowed:false,reason:'This checklist is not scheduled for this date.'};
-  if(plan.tradingHours){const window=tradingWindow(plan,slot.tradingDate||slot.startDate,hours);if(window.allowed===false)return window;return{...window,allowed:now>=Date.parse(window.opensAt)&&now<Date.parse(window.closesAt),reason:now<Date.parse(window.opensAt)?'This checklist has not started yet.':now>=Date.parse(window.closesAt)?'This checklist is outside its active hours.':undefined};}
-  const release=deadline(slot.startDate,plan.startTime||'00:00');if(now<Date.parse(release))return{allowed:false,reason:'This checklist has not started yet.',opensAt:release};
-  if(!plan.startTime&&!plan.activeFrom&&!plan.activeUntil)return{allowed:true,opensAt:release};
-  const wall=local(now),today=wall.slice(0,10),clock=wall.slice(11,16),from=plan.activeFrom||plan.startTime||'00:00',until=plan.activeUntil||null,overnight=Boolean(until&&until<from),activeDay=overnight&&clock<until?shift(today,-1):today;
-  if(activeDay<slot.startDate||slot.endDate&&activeDay>slot.endDate)return{allowed:false,reason:'This checklist is outside its active dates.'};
-  if(plan.schedule.endDate&&activeDay>plan.schedule.endDate)return{allowed:false,reason:'This checklist is outside its active dates.'};
-  if(!plan.activeFrom&&!plan.activeUntil)return{allowed:true,opensAt:release};
-  const opens=deadline(activeDay,from),closes=deadline(overnight?shift(activeDay,1):activeDay,until);
-  if(now<Date.parse(opens)||now>=Date.parse(closes))return{allowed:false,reason:'This checklist is outside its active hours.',opensAt:opens,closesAt:closes};
-  return{allowed:true,opensAt:opens,closesAt:closes};
+  if(slot.hourStartsAt&&slot.hourEndsAt)return{opensAt:slot.hourStartsAt,closesAt:slot.hourEndsAt};
+  if(plan.tradingHours)return tradingWindow(plan,slot.startDate,hours);
+  const day=slot.startDate,from=plan.activeFrom||plan.startTime||'00:00',until=plan.activeUntil,opensAt=new Date(Math.max(Date.parse(deadline(day,from)),Date.parse(deadline(day,plan.startTime||'00:00')))).toISOString(),closesAt=until?deadline(until<from?shift(day,1):day,until):deadline(shift(day,1),'00:00');
+  if(closesAt<=opensAt)return{allowed:false,reason:'The active window ends before this checklist starts.',opensAt,closesAt};
+  return{opensAt,closesAt};
+ }
+ function visible(window,now=Date.now()){return Boolean(window&&window.allowed!==false&&window.opensAt&&window.closesAt&&now>=Date.parse(window.opensAt)&&now<Date.parse(window.closesAt));}
+ function availability(plan,slot,now=Date.now(),hours){
+  const window=activeWindow(plan,slot,hours);if(window.allowed===false)return window;
+  return{...window,allowed:visible(window,now),reason:now<Date.parse(window.opensAt)?'This checklist has not started yet.':now>=Date.parse(window.closesAt)?'This checklist is outside its active hours.':undefined};
+ }
+ function hourlySlot(plan,day,now,hours){
+  const candidates=[];
+  for(const offset of day===local(now).slice(0,10)?[-2,-1,0,1]:[0]){
+   const date=shift(day,offset),base=period(plan,date);if(!base)continue;const window=activeWindow(plan,base,hours);if(!visible(window,now))continue;
+   const index=Math.floor((now-Date.parse(window.opensAt))/3600000),hourStartsAt=new Date(Date.parse(window.opensAt)+index*3600000).toISOString(),hourEndsAt=new Date(Math.min(Date.parse(hourStartsAt)+3600000,Date.parse(window.closesAt))).toISOString();
+   candidates.push({...base,key:date+'@'+hourStartsAt,tradingDate:date,hourStartsAt,hourEndsAt});
+  }
+  return candidates.sort((a,b)=>b.hourStartsAt.localeCompare(a.hourStartsAt))[0]||null;
+ }
+ function nextChange(plan,day,now,hours){
+  let next=null;for(const offset of [-2,-1,0,1]){const slot=period(plan,shift(day,offset));if(!slot)continue;const window=activeWindow(plan,slot,hours);if(window.allowed===false)continue;for(const at of [window.opensAt,window.closesAt])if(at&&Date.parse(at)>now&&(!next||at<next))next=at;}
+  if(plan.schedule.kind==='hourly'){const slot=hourlySlot(plan,day,now,hours);if(slot&&(!next||slot.hourEndsAt<next))next=slot.hourEndsAt;}
+  return next;
+ }
+ function hourlyPreview(plan,day,hours,limit=4){
+  const slot=period({...plan,active:true},day);if(!slot)return[];const window=activeWindow(plan,slot,hours);if(window.allowed===false)return[];const result=[];
+  for(let at=Date.parse(window.opensAt);at<Date.parse(window.closesAt)&&result.length<Math.min(72,limit);at+=3600000)result.push({opensAt:new Date(at).toISOString(),closesAt:new Date(Math.min(at+3600000,Date.parse(window.closesAt))).toISOString()});return result;
  }
  function occurrence(plan,day,now=Date.now(),hours){
+  if(plan.schedule.kind==='hourly')return hourlySlot(plan,day,now,hours);
   if(plan.tradingHours){
    if(day===local(now).slice(0,10)){
-    const candidates=[];for(const offset of [-2,-1,0,1]){const tradingDate=shift(day,offset),slot=period(plan,tradingDate);if(!slot)continue;const value={...slot,tradingDate},window=availability(plan,value,now,hours);if(window.allowed)candidates.push({slot:value,opensAt:window.opensAt});}
+    const candidates=[];for(const offset of [-2,-1,0,1]){const tradingDate=shift(day,offset),slot=period(plan,tradingDate);if(!slot)continue;const value={...slot,tradingDate:slot.startDate},window=availability(plan,value,now,hours);if(window.allowed)candidates.push({slot:value,opensAt:window.opensAt});}
     if(candidates.length)return candidates.sort((a,b)=>b.opensAt.localeCompare(a.opensAt))[0].slot;
    }
-   const slot=period(plan,day);return slot&&!hours?.[weekday(day)-1]?.closed?{...slot,tradingDate:day}:null;
+   const slot=period(plan,day);return slot&&!hours?.[weekday(day)-1]?.closed?{...slot,tradingDate:slot.startDate}:null;
   }
   const wall=local(now),from=plan.activeFrom||plan.startTime||'00:00';
   if(day===wall.slice(0,10)&&plan.activeUntil&&plan.activeUntil<from&&wall.slice(11,16)<plan.activeUntil){const previous=period(plan,shift(day,-1));if(previous&&availability(plan,previous,now).allowed)return previous;}
   return period(plan,day);
  }
  function timing(dueAt,reminderMinutes,now=Date.now()){if(!dueAt)return null;const left=Date.parse(dueAt)-now;return left<0?'overdue':reminderMinutes>0&&left<=reminderMinutes*60000?'soon':null;}
- function upcoming(plan,from,limit=4,hours){const dates=[],s=plan.schedule;if(!plan.active||['manual','unscheduled'].includes(s.kind)||type(plan)==='unscheduled')return dates;let day=from>s.startDate?from:s.startDate;for(let n=0;n<1600&&dates.length<limit;n++){const slot=period(plan,day),window=plan.tradingHours&&slot?tradingWindow(plan,day,hours):null;if(slot&&(!window||window.allowed!==false)&&!dates.includes(slot.dueDate)&&slot.dueDate>=from)dates.push(slot.dueDate);if(s.endDate&&day>=s.endDate||s.kind==='once')break;day=slot?.endDate&&s.kind!=='daily'&&!plan.tradingHours?shift(slot.endDate,1):shift(day,1);}return dates;}
+ function upcoming(plan,from,limit=4,hours){
+  const dates=[],s=plan.schedule;if(!plan.active||['manual','unscheduled'].includes(s.kind)||type(plan)==='unscheduled')return dates;
+  let day=from>s.startDate?from:s.startDate;for(let n=0;n<1600&&dates.length<limit;n++){
+   const slot=period(plan,day),window=plan.tradingHours&&slot?activeWindow(plan,slot,hours):null;
+   if(slot&&(!window||window.allowed!==false)&&!dates.includes(slot.startDate)&&slot.startDate>=from)dates.push(slot.startDate);
+   if(s.endDate&&day>=s.endDate||s.kind==='once')break;day=slot?.endDate&&!['daily','hourly'].includes(s.kind)?shift(slot.endDate,1):shift(day,1);
+  }return dates;
+ }
  function pointLabel(point){if(!point)return'No time set';const minutes=Math.abs(point.offsetMinutes);return point.anchor+(minutes?' '+minutes+' min '+(point.offsetMinutes<0?'before':'after'):'');}
- const api={period,occurrence,availability,type,deadline,due,tradingPoint,tradingWindow,pointLabel,timing,upcoming,shift,monday,weekday,zone,local,monthDate};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsPlannerModel=api;
+ const api={period,occurrence,availability,activeWindow,visible,nextChange,hourlyPreview,type,deadline,due,tradingPoint,tradingWindow,pointLabel,timing,upcoming,shift,monday,weekday,zone,local,monthDate};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsPlannerModel=api;
 })(globalThis);
