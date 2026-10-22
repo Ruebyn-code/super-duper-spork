@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const model=require('./public/layout-model'),layouts=require('./layouts'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 test('saved layout markup retains stable identities, scripts, fields and unknown nodes when moving cards',()=>{

@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),M=require('./public/rostering-model'),availability=require('./staff-availability'),leave=require('./leave'),permissions=require('./permissions'),levels=require('./permission-levels');
 const now=()=>Date.parse('2026-10-16T13:00:00Z'),days=status=>Array.from({length:7},()=>({status})),actor={id:'member',username:'Member',role:'user',companyId:'default',locationId:'store',locationIds:['store']};

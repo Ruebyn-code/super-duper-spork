@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const model=require('./public/home-layout-model'),elements=require('./element-overrides'),styles=require('./public/appearance-style');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth');

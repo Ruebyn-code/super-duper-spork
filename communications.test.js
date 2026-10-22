@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),model=require('./permissions');
 async function fixture(){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ordering-comms-'));await saveAdmin(dir,'Office','office-test-password');let server,base,time=Date.parse('2026-10-15T12:00:00Z');async function start(){server=createServer(dir,{communicationsNow:()=>time,fetchImpl:()=>{throw Error('No external sending in tests');}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base='http://127.0.0.1:'+server.address().port;}await start();

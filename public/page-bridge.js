@@ -7,6 +7,7 @@
  window.appEmbedded=true;
  if(frameElement?.hasAttribute('data-phone-roster-popup')){window.appPhoneRosterPopup=true;document.documentElement.classList.add('phone-roster-popup');}
  window.appRequiredReading=parent.appRequiredReading;
+ window.appLocationSetup=parent.appLocationSetup;
  window.appShiftClock=parent.appShiftClock;
  window.appMessageBadge=parent.appMessageBadge;
  for(const name of ['required-reading-changed','shift-clock-updated']){
@@ -17,7 +18,7 @@
  // this focus event can replace a button between pointer-down and click.
  window.addEventListener('focus',event=>{if(event.target===window&&event.isTrusted)event.stopImmediatePropagation();},true);
  const originalFetch=window.fetch.bind(window);
- window.fetch=async(...args)=>{const response=await originalFetch(...args);if(response.status===401)parent.appKioskSession?.check();if(response.status===428)parent.appRequiredReading?.check();return response;};
+ window.fetch=async(...args)=>{const response=await originalFetch(...args);if(response.status===401)parent.appKioskSession?.check();if(response.status===428){parent.appRequiredReading?.check();parent.appLocationSetup?.check();}return response;};
  document.addEventListener('pointerdown',()=>parent.appNavigation?.dismissTransient());
  document.addEventListener('click',event=>{
   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;

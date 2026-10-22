@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const sales=require('./sales'),{shift}=require('./stock-usage');
 const actor={id:'person',companyId:'company',locationId:'shop'},anchor='2026-03-30',now=new Date('2026-04-03T04:00:00Z');

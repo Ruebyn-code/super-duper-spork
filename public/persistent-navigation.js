@@ -5,7 +5,7 @@
  const routes=new Set(['/home','/','/cart','/stock-count','/stock-transfers','/sales','/reporting','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/admin/appearance/signin','/admin/appearance/setup','/email-settings','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels']);
  const root=document.documentElement,area=document.createElement('div'),placeholder=document.createElement('div');
  area.className='shell-page-area';area.dataset.layoutUi='';placeholder.className='shell-page-placeholder';placeholder.inert=true;
- for(const child of [...page.childNodes])if(!child.classList?.contains('mobile-brand-header'))placeholder.append(child);
+ for(const child of [...page.childNodes])if(!child.classList?.contains('mobile-brand-header')&&child.id!=='location-setup-banner')placeholder.append(child);
  area.append(placeholder);page.append(area);root.classList.add('persistent-shell');
  const loading=document.createElement('div');loading.className='shell-loading-bar';loading.hidden=true;loading.setAttribute('aria-hidden','true');
  const error=document.createElement('div');error.className='shell-navigation-error';error.hidden=true;error.dataset.layoutUi='';
@@ -119,7 +119,7 @@
    if(editing&&!appAccess.can('appearance.manage',session))document.getElementById('app-edit-toggle')?.click();
    area.setAttribute('aria-busy','false');loading.hidden=true;error.hidden=true;
    setAddress(url,mode,session);presentation(child);await syncEdit(frame);
-   window.appRequiredReading?.check();window.appMessageBadge?.refresh();
+   window.appRequiredReading?.check();window.appLocationSetup?.check();window.appMessageBadge?.refresh();
   }catch(problem){
    if(frame!==current){frame.remove();if(pending===frame)pending=null;}
    fail('This page could not load. Your current page is still open.');

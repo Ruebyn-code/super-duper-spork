@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const {createServer}=require('./server'),{saveAdmin,createAuth}=require('./auth'),{currentWeek}=require('./sales');
 async function fixture(){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ordering-permissions-'));await saveAdmin(dir,'office','test-office-password');let server,url;

@@ -44,6 +44,8 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/communications.js':'communications.js',
   '/communications.css':'communications.css',
   '/required-reading.js':'required-reading.js',
+  '/location-setup.js':'location-setup.js',
+  '/location-setup.css':'location-setup.css',
   '/required-reading.css':'required-reading.css',
   "/vendor/invoice/CORE-LICENSE.txt":"vendor/invoice/CORE-LICENSE.txt",
   "/vendor/invoice/pdf.worker.min.mjs":"vendor/invoice/pdf.worker.min.mjs",

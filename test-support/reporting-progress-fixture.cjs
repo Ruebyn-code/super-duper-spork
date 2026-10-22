@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('../test-support/location-setup-snooze.cjs');
 const fs=require('node:fs/promises'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const {createServer}=require('../server'),{saveAdmin}=require('../auth'),weekly=require('../weekly-sales-reports');
 module.exports=async function fixture(){

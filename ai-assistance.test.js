@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {fixture,reply,checklist,course,key}=require('./test-support/ai-assistance-fixture.cjs'),ai=require('./ai-assistance'),model=require('./ai-draft-model');
 const draft=(kind='checklist',extra={})=>({kind,requestId:crypto.randomUUID(),prompt:'Create a practical opening procedure.',notes:'Use approved company procedures.',...extra});

@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
 const weekly=require('./public/weekly-sales-report'),{createStore,validate}=require('./weekly-sales-reports'),sales=require('./sales'),{shift}=require('./stock-usage'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 const platformFees=()=>({uberEats:{feesCents:109496,marketingCents:32520,refundsCents:8945},doorDash:{feesCents:25041,marketingCents:15962,refundsCents:7508}});

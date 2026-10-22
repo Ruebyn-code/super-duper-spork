@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs/promises'),path=require('node:path');
 const {setup,paragraph,heading}=require('./test-support/deep-search-fixture.cjs'),model=require('./public/knowledge-search-model');
 const query='how to make gourmet souvlaki',input=()=>({query,requestId:crypto.randomUUID()});

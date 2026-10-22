@@ -44,6 +44,7 @@ const sales=require('./sales');
 const weeklySalesReports=require('./weekly-sales-reports'),weeklySalesImport=require('./weekly-sales-import'),weeklySalesOverview=require('./weekly-sales-overview'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
 const reporting=require('./reporting'),reportingDetails=require('./reporting-details');
 const locations=require('./locations');
+const locationSetup=require('./location-setup');
 const invoices=require('./invoices'),invoicePrices=require('./invoice-prices');
 const communications=require('./communications'),communicationRoutes=require('./communications-routes');
 const opsManagement=require('./ops-management');
@@ -95,6 +96,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   // Rich editors share private media URLs; article and training access follow their current audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:async(actor,record)=>await libraryStore.canReadMedia(actor,record)||await learningStore.canReadMedia(actor,record)});
   const catalogueStore=catalogues.createStore(dataDir,menu);
+  const locationSetupStore=locationSetup.createStore(dataDir,{locations:locationStore,auth,catalogues:catalogueStore,now:locationNow});
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
   const salesStore=sales.createStore();
@@ -206,7 +208,18 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
+      if(req.url.startsWith('/api/location-setup')){
+        if(!session)fail('Sign-in required.',401);
+        if(req.method==='GET'&&req.url==='/api/location-setup')return json(200,await locationSetupStore.status(session,requestUrl.searchParams.get('location')));
+        if(req.method!=='POST')fail('Unsupported setup action.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const action={'/api/location-setup/snooze':'snooze','/api/location-setup/review':'review','/api/location-setup/complete':'complete'}[req.url];
+        if(!action)fail('Setup action not found.',404);
+        if(action!=='snooze'&&!isSupport(session)){const required=await communicationStore.required(session);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+        const input=await body(req);return json(200,await locationSetupStore[action](session,input));
+      }
       if(session&&!isSupport(session)){const exempt=['/api/session','/api/login','/api/logout','/api/communications/required'].includes(req.url)||(req.method==='GET'&&/^\/api\/communications\/media\/[a-f0-9-]+$/i.test(req.url))||/^\/api\/communications\/posts\/[a-f0-9-]+\/(read|snooze)$/i.test(req.url);if((req.url.startsWith('/api/')&&!exempt)||(req.method==='GET'&&privatePages.includes(req.url))){requiredReading=await communicationStore.required(session);if(requiredReading.due.length){if(req.url.startsWith('/api/'))return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required:requiredReading});if(req.url!=='/communications'){res.writeHead(303,{Location:'/communications?returnTo='+encodeURIComponent(requestUrl.pathname+requestUrl.search)+'#required'});return res.end();}}}}
+      if(session&&!isSupport(session)&&req.url.startsWith('/api/')&&!locationSetup.setupRequest(req.url,req.method)){const setup=await locationSetupStore.gate(session);if(setup.blocked)return json(428,{error:'Complete location setup or snooze it for five minutes before continuing.',code:'LOCATION_SETUP',setup});}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
@@ -324,7 +337,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const input=await body(req),target=await companyStore.switchLocation(session,input?.companyId);await auth.selectLocation(session,target.id,id=>locationStore.get(id,{active:true}));return json(200,{companyId:input.companyId,locationId:target.id});
       }
       if(req.url==='/api/companies'&&req.method==='GET')return json(200,await companyStore.list(session));
-      if(req.url==='/api/companies'&&req.method==='POST'){if(!can(session,'network.access'))fail('Network access is required to create a company.',403);return json(201,await companyStore.create(await body(req)));}
+      if(req.url==='/api/companies'&&req.method==='POST'){if(!can(session,'network.access'))fail('Network access is required to create a company.',403);return json(201,await companyStore.create(await body(req),{setupCreatorId:session.id}));}
       const companyRoute=req.url.match(/^\/api\/companies\/([a-zA-Z0-9-]+)$/);if(companyRoute&&req.method==='PUT'){if(!can(await auth.forCompany(session,companyRoute[1]),'companies.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyRoute[1]))fail('You do not have access to this company.',403);return json(200,await companyStore.update(companyRoute[1],await body(req)));}
       if(req.url==='/api/locations'&&req.method==='GET'){
         const all=requestUrl.searchParams.get('all')==='true',companyList=await companyStore.list(session),records=(await Promise.all((await locationStore.list()).filter(record=>all||record.companyId===session.companyId).map(async record=>{const context=await auth.forCompany(session,record.companyId);return canAccessLocation(context,record)&&canAny(context,['users.manage','locations.manage','email.manage','companies.manage'])&&(!record.archived||can(context,'locations.manage'))?record:null;}))).filter(Boolean);
@@ -354,7 +367,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       const managerRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/managers$/);
       if(managerRoute){const store=await locationStore.get(managerRoute[1]),context=await auth.forCompany(session,store.companyId);if(!canAccessLocation(context,store))fail('Location not found.',404);if(req.method==='GET')return json(200,await auth.locationManagers(context,store.id));if(req.method==='PUT')return json(200,await auth.assignLocationManagers(context,store.id,await body(req)));}
-      if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId}));}
+      if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId},{setupCreatorId:session.id}));}
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
       if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);return json(200,await locationStore.update(locationRoute[1],await body(req)));}
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
@@ -593,10 +606,10 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const sidebarPage=pageMarkup.includes('id="app-sidebar"'),source=scopedAsset(sidebarPage?'/sidebar-logo':'/logo'),branded=(sidebarPage?hasSidebarLogo:hasLogo)?pageMarkup.replace(/(<a class="brand"[^>]*>)[\s\S]*?<\/a>/g,'$1<img src="'+source+'" alt="Opstack" class="app-logo"></a>'):pageMarkup;
         const kioskScripts=sidebarPage&&kioskStaff&&!embeddedContent?'<script>document.documentElement.classList.add("kiosk-lock-pending")</script><script src="/kiosk-session.js" defer></script><link rel="stylesheet" href="/kiosk-session.css">':'';
         const clockScripts=sidebarPage&&session&&!isSupport(session)&&can(session,'rostering.clock')?'<script src="/clock-model.js" defer></script><script src="/shift-clock.js" defer></script><link rel="stylesheet" href="/shift-clock.css">':'';
-        const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/wording-model.js" defer></script><script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css">'+clockScripts+'<script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script><script src="/section-resize.js" defer></script>');
+        const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/wording-model.js" defer></script><script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/location-setup.js" defer></script><link rel="stylesheet" href="/location-setup.css"><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css">'+clockScripts+'<script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script><script src="/section-resize.js" defer></script>');
         const copyMarkup=wordingModel.annotate(arrangedScripts,interfaceText.labels);
         const markup=layoutModel.renderMarkup(editParts.renderImages(editParts.renderIcons(editParts.annotate(copyMarkup,file),overrides),overrides),layout.groups);
-        const bootstrap=JSON.stringify({aiBrand,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
+        const bootstrap=JSON.stringify({aiBrand,locationSetup:session&&!isSupport(session)?await locationSetupStore.status(session):null,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
         const fontUrl='/fonts/Opsilon-xRj8m.ttf?v='+font.etag.slice(1,-1);
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix)||id.startsWith('type:'))).map(([,entry])=>entry.font)]);

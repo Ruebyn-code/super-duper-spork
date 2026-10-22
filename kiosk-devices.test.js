@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin}=require('./auth'),policy=require('./kiosk-policy'),permissions=require('./permissions');
 async function fixture(){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-kiosks-'));await saveAdmin(dir,'Office','office-test-password');let server,base,time=Date.parse('2026-10-20T12:00:00+11:00');

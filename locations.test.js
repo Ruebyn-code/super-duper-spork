@@ -1,3 +1,4 @@
+const {fetchWithSetupSnooze:fetch}=require('./test-support/location-setup-snooze.cjs');
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {createServer}=require('./server'),{saveAdmin,saveUser}=require('./auth'),sales=require('./sales'),par=require('./par-levels'),{shift}=require('./stock-usage');
 async function fixture({beforeStart,fetchImpl,locationNow}={}){
