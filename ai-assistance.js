@@ -1,23 +1,27 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),questionSources=require('./ai-question-sources');
+const brandModel=require('./public/ai-brand-model');
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 const canDraft=(actor,kind)=>kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
-const defaults=()=>({revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
+const defaults=()=>({...brandModel.defaults,revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
 function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
  function file(companyId){if(typeof companyId!=='string'||! /^[a-zA-Z0-9-]{1,100}$/.test(companyId))fail('Choose a valid company.');return path.join(dir,'ai-assistance',companyId+'.json');}
  async function read(companyId){try{return{...defaults(),...JSON.parse(await fs.readFile(file(companyId),'utf8'))};}catch(error){if(error.code==='ENOENT')return defaults();fail('OpStack intelligence settings could not be read. Ask Head Office to check the saved configuration.',503);}}
  async function write(companyId,value){const target=file(companyId),temporary=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temporary,JSON.stringify(value),{mode:0o600});await fs.rename(temporary,target);}finally{await fs.rm(temporary,{force:true});}}
  function serial(companyId,work){const key=file(companyId),task=(queues.get(key)||Promise.resolve()).then(work),settled=task.catch(()=>{});queues.set(key,settled);return task.finally(()=>{if(queues.get(key)===settled)queues.delete(key);});}
- function summary(companyId,value){const records=value.requests.filter(r=>r.month===month(now())),spent=records.reduce((sum,r)=>sum+r.costMicros,0);return{companyId,revision:value.revision,enabled:value.enabled,configured:Boolean(value.apiKey),model:MODEL,budgetCents:value.budgetCents,draftLimit:value.draftLimit,inputUsdPerMillion:value.inputUsdPerMillion,outputUsdPerMillion:value.outputUsdPerMillion,month:month(now()),usedDrafts:records.length,estimatedUsedMicros:spent,remainingDrafts:Math.max(0,value.draftLimit-records.length),remainingMicros:Math.max(0,value.budgetCents*10000-spent)};}
+ function summary(companyId,value){const records=value.requests.filter(r=>r.month===month(now())),spent=records.reduce((sum,r)=>sum+r.costMicros,0);return{...brandModel.settings(value),companyId,revision:value.revision,enabled:value.enabled,configured:Boolean(value.apiKey),model:MODEL,budgetCents:value.budgetCents,draftLimit:value.draftLimit,inputUsdPerMillion:value.inputUsdPerMillion,outputUsdPerMillion:value.outputUsdPerMillion,month:month(now()),usedDrafts:records.length,estimatedUsedMicros:spent,remainingDrafts:Math.max(0,value.draftLimit-records.length),remainingMicros:Math.max(0,value.budgetCents*10000-spent)};}
+ async function brand(companyId){try{const value=await read(companyId);return{companyId,revision:value.revision,...brandModel.settings(value)};}catch{return{companyId,revision:0,...brandModel.defaults};}}
  async function status(actor){return summary(actor.companyId,await read(actor.companyId));}
  function save(actor,input){return serial(actor.companyId,async()=>{
   const current=await read(actor.companyId);if(!input||input.revision!==current.revision)fail('OpStack intelligence settings changed. Reload before saving.',409);
   if(typeof input.enabled!=='boolean'||!Number.isInteger(input.budgetCents)||input.budgetCents<50||input.budgetCents>100000||!Number.isInteger(input.draftLimit)||input.draftLimit<1||input.draftLimit>1000)fail('Choose a monthly USD budget from $0.50–$1,000 and 1–1,000 requests.');
   const next={...current,enabled:input.enabled,budgetCents:input.budgetCents,draftLimit:input.draftLimit,revision:current.revision+1};
+  if(Object.hasOwn(input,'palette')){if(!brandModel.validPalette(input.palette))fail('Choose one of the five intelligence colours.');next.palette=input.palette;}
+  if(Object.hasOwn(input,'tintDepth')){if(!brandModel.validDepth(input.tintDepth))fail('Choose a tint depth from 100% to 160% in steps of 10%.');next.tintDepth=input.tintDepth;}
   for(const key of ['inputUsdPerMillion','outputUsdPerMillion']){const value=input[key]??current[key];if(!Number.isFinite(value)||value<=0||value>1000)fail('Enter positive token prices up to $1,000 per million tokens.');next[key]=value;}
   if(input.clearKey===true)next.apiKey='';
   if(input.apiKey!==undefined){if(typeof input.apiKey!=='string'||input.apiKey.length>1000)fail('Enter a valid OpenAI API key.');const key=input.apiKey.trim();if(key){if(!/^sk-[\x21-\x7e]{16,997}$/.test(key))fail('Enter a valid OpenAI API key.');next.apiKey=key;}}
@@ -66,7 +70,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
    if(errorMessage)fail(errorMessage,502);return generated;
   }
  }
- return{status,save,generate,generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
+ return{status,brand,save,generate,generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
 }
 async function route({req,url,session,store,body,json}){
  if(!['/api/ai/status','/api/ai/settings','/api/ai/drafts'].includes(url))return false;

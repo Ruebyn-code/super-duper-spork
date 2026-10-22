@@ -1,6 +1,6 @@
 // Content documents retain their own script lifecycle. The parent owns the
 // persistent navigation, required-reading gate and shared shift clock.
-const shellScripts=new Set(['kiosk-session','network-context','theme-colours','theme','location-picker','company-context','edit-parts','appearance-style','permission-model','access','formatted-text','required-reading','message-badge','clock-model','shift-clock','layout-model','app-layout','branding','interactions','navigation-groups','app-controls','navigation','wording-model','interface-text','element-overrides','app-editor']);
+const shellScripts=new Set(['ai-brand-model','ai-brand','kiosk-session','network-context','theme-colours','theme','location-picker','company-context','edit-parts','appearance-style','permission-model','access','formatted-text','required-reading','message-badge','clock-model','shift-clock','layout-model','app-layout','branding','interactions','navigation-groups','app-controls','navigation','wording-model','interface-text','element-overrides','app-editor']);
 const parentOnly=new Set(['kiosk-session','required-reading','message-badge','clock-model','shift-clock','navigation-groups','app-controls','navigation']);
 function render(markup,embedded){
   let filtered=markup.replace(/<script\b[^>]*\bsrc="\/([a-z0-9-]+)\.js"[^>]*><\/script>/g,(tag,name)=>embedded?(parentOnly.has(name)?'':tag):(shellScripts.has(name)?tag:''));

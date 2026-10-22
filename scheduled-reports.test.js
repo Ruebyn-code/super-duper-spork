@@ -47,3 +47,11 @@ test('Existing default report managers gain the new grant while customised permi
 test('Multiple report emails are paced for the provider and keep recipient addresses separate',async()=>{let previous=0;const app=await setup({fetchImpl:async(url,options)=>{if(url.includes('openai'))return reply(reportReply(JSON.parse(JSON.parse(options.body).messages[1].content)));const current=Date.now(),status=current-previous<500?429:200;previous=current;return new Response('{}',{status});}});try{
  const other=await app.api(app.office,'/api/accounts','POST',{username:'Second recipient',password:'ai-test-password',role:'franchisee',companyId:'default',locationId:app.location});await app.api(app.office,'/api/accounts/'+other.id,'PUT',{username:other.username,email:'second@example.test',role:'franchisee',companyId:'default',locationId:app.location,preserveRole:true});await app.api(app.office,'/api/reporting/ai/schedules','POST',app.input({roleIds:['franchisee']}));app.setTime('2026-10-25T22:01:00Z');await app.server.runScheduledReports();assert.equal(emails(app).length,2);for(const call of emails(app)){const body=JSON.parse(call.options.body);assert.equal(body.to.length,1);assert(!Object.hasOwn(body,'cc'));assert(!Object.hasOwn(body,'bcc'));}const inbox=await app.api(app.office,'/api/reporting/ai');assert(inbox.inbox[0].deliveries.every(delivery=>delivery.status==='sent'));assert.equal(generated(app).length,1);
  }finally{await app.close();}});
+
+test('scheduled report emails use the current company intelligence palette and tint without charging for appearance changes',async()=>{
+ const app=await setup();try{
+  await app.settings({palette:'ocean',tintDepth:160});assert.equal(app.calls.length,0);
+  await app.api(app.office,'/api/reporting/ai/schedules','POST',app.input());app.setTime('2026-10-25T22:01:00Z');await app.server.runScheduledReports();
+  const sent=emails(app);assert.equal(sent.length,1);const email=JSON.parse(sent[0].options.body),look=require('./public/ai-brand-model').email({palette:'ocean',tintDepth:160});assert(email.html.includes(look.gradient));assert(email.html.includes('background-color:'+look.fallback));assert(email.html.includes('Space Grotesk'));assert.equal(generated(app).length,1);
+ }finally{await app.close();}
+});
