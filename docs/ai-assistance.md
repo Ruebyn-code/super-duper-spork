@@ -1,5 +1,7 @@
 # OpStack intelligence
 
+**Home daily briefing:** Home shows permission-scoped live figures and a **Generate today’s briefing** action. Viewing or refreshing figures makes no provider request. Explicit generation uses the same company key and limits; commentary references server-calculated facts, with real source links and no automatic operational actions. Reopening reuses only an unchanged briefing for the same person, selected location, permissions and Melbourne date. See [Home dashboard](home-dashboard.md) for coverage and source rules.
+
 Open **Settings → OpStack intelligence** in the intended company. Head Office has access by default; custom roles can be granted **OpStack intelligence settings** without gaining course or checklist authoring permissions. Each company keeps its own key and usage limits, including when hosted inside an Opstack network.
 
 Add an OpenAI API key with access to **GPT-4.1 mini**, choose an estimated monthly budget in **USD** and a maximum number of intelligence requests, enable drafting, and save. The default budget is US$10 and the default request limit is 100. Saving settings makes no provider request. A blank key field keeps the saved key; disable AI and select Remove to delete it. Keys are saved only in private server data files with mode 0600, and are never included in API responses or browser storage. Protect server data and backups as credentials.

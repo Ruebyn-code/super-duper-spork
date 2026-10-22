@@ -103,6 +103,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
   const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
+  const homeIntelligenceSources=require('./home-intelligence').createSources({dir:dataDir,sales:salesStore,ops:opsStore,learning:learningStore,communications:communicationStore,locations:locationStore,invoices,now:communicationsNow});
   const manualParStore=manualPar.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];const chunks=[];let length=0;for await(const chunk of req){const bytes=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);length+=bytes.length;if(length>limit)fail('Request is too large.',413);chunks.push(bytes);}try{return JSON.parse(Buffer.concat(chunks,length).toString('utf8'));}catch{fail('Invalid JSON.');}}
@@ -210,6 +211,23 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
+      if(req.url==='/api/home/intelligence'){
+        if(!session)fail('Sign in to view your daily briefing.',401);if(!can(session,'home.view'))fail('Home viewing permission required.',403);
+        if(!['GET','POST'].includes(req.method))fail('Unsupported daily briefing action.',405);
+        if(req.method==='POST'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const source=await homeIntelligenceSources.collect(session),status=await aiStore.status(session);
+        const response=async(actor,data,result)=>({ ...data,ai:{available:status.enabled&&status.configured,remainingDrafts:status.remainingDrafts,remainingMicros:status.remainingMicros,canManage:can(actor,'ai.manage')},briefing:result?{requestId:result.requestId,draft:result.draft}:null});
+        if(req.method==='GET')return json(200,await response(session,source,await aiStore.cachedHome(session,source.version)));
+        const input=await body(req,4000);if(!input||input.version!==source.version)fail('Your Home figures changed. Refresh them before generating a briefing.',409);
+        const result=await aiStore.generateHome(session,input,source);
+        const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
+        if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again to view the briefing.',401);
+        if(current.companyId!==session.companyId||current.locationId!==session.locationId||!can(current,'home.view'))fail('Your location or access changed. Refresh Home.',409);
+        if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+        const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
+        const fresh=await homeIntelligenceSources.collect(current);if(fresh.version!==source.version)fail('Your Home figures changed while generating. Refresh them before trying again.',409);
+        return json(200,{...await response(current,fresh,result),ai:{available:true,remainingDrafts:config.remainingDrafts,remainingMicros:config.remainingMicros,canManage:can(current,'ai.manage')}});
+      }
       if(req.url==='/api/invoices/intelligence'){
         if(!session)fail('Sign in to read invoices with intelligence.',401);
         if(req.method!=='POST')fail('Use POST to read an invoice with intelligence.',405);

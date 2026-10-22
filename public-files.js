@@ -80,6 +80,8 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/':'index.html',
   '/home':'home.html',
   '/home.js':'home.js',
+  '/home-intelligence.js':'home-intelligence.js',
+  '/home-intelligence.css':'home-intelligence.css',
   '/cart':'cart.html',
   '/cart-popup.js':'cart-popup.js',
   '/cart-popup.css':'cart-popup.css',
