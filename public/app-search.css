@@ -23,3 +23,15 @@
 .app-search-panel .app-search-heading{gap:8px;padding:5px 8px;font-size:11px}
 .app-search-panel .app-search-heading button{padding:4px 8px}
 @media(pointer:coarse){.app-search-panel .app-search-heading button{min-width:44px;min-height:44px}}
+
+/* Keep intelligence actions and the input visible while results scroll. */
+.app-search-panel{display:flex;flex-direction:column;overflow:hidden}
+.app-search-panel>.app-search-heading,.app-search-panel>#app-search-input,.app-search-intelligence,.app-search-status{flex-shrink:0}
+#app-search-results{min-height:0;overflow:auto;overscroll-behavior:contain}
+.app-search-intelligence{display:grid;gap:5px;padding:8px 10px 2px}
+.app-search-intelligence[hidden]{display:none!important}
+.app-search-intelligence button{width:100%;min-height:36px;margin:0;padding:8px 10px;font:600 12px Arial,sans-serif}
+.app-search-hint{margin:0;font:11px/1.4 Arial,sans-serif;color:var(--theme-muted,#64748b)}
+@media(pointer:coarse){.app-search-intelligence button{min-height:44px}}
+
+.app-search-short .app-search-hint{display:none}

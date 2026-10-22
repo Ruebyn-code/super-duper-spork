@@ -224,8 +224,26 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(management&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie',`admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(req)?'; Secure':''}`);return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
-      if(req.url==='/api/search'&&req.method==='GET'){
-        const providers={},query=requestUrl.searchParams.get('q')||'',filtered=(docs,terms)=>docs.filter(doc=>globalSearch.matches(doc.title+' '+doc.text,terms)),link=(route,q,hash='')=>route+'?q='+encodeURIComponent(q)+hash;
+      if(['/api/search','/api/search/intelligence'].includes(req.url)){
+        const intelligent=req.url==='/api/search/intelligence';
+        if(req.method!==(intelligent?'POST':'GET'))fail('Unsupported search action.',405);
+        let query=requestUrl.searchParams.get('q')||'',plan;
+        if(intelligent){
+          if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+          const input=await body(req,2000);query=input?.query;
+          await globalSearch.search(session,query);
+          if(query.trim().length<2)fail('Enter at least two characters to search with intelligence.');query=query.trim();
+          const pages=globalSearch.pagesFor(session).map(({id,title,text})=>({id,title,description:text}));
+          plan=(await aiStore.generateSearch(session,{query,requestId:input.requestId},pages)).draft;
+          // The paid call can take time. Recheck identity, scope and gates before reading records.
+          const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
+          if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before searching.',401);
+          if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed. Search again.',409);
+          session=current;
+          if(!isSupport(session)){const required=await communicationStore.required(session);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+          const config=await aiStore.status(session);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
+        }
+        const providers={},filtered=(docs,terms)=>docs.filter(doc=>globalSearch.matches(doc.title+' '+doc.text,terms)),link=(route,q,hash='')=>route+'?q='+encodeURIComponent(q)+hash;
         if(canAny(session,['orders.view','counts.view','stock.manage','suppliers.manage']))providers.Stock=async(q,terms)=>{const catalogue=await readCatalogue(),stockRoute=can(session,'orders.view')?'/':can(session,'stock.manage')?'/admin':'/stock-count',canStock=canAny(session,['orders.view','stock.manage','counts.view']);return filtered([...(canStock?catalogue.products:[]).map(p=>({id:'stock:'+p.id,type:'Stock',title:p.name,text:[p.sku,p.unitAmount,catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,p.category].filter(Boolean).join(' · '),url:stockRoute==='/admin'?'/admin?product='+p.id+'#stock':stockRoute==='/stock-count'&&!can(session,'counts.edit')?'/api/catalogue':link(stockRoute,p.sku||p.name),...(stockRoute==='/stock-count'&&!can(session,'counts.edit')?{action:'stock'}:{})})),...catalogue.suppliers.map(s=>({id:'supplier:'+s.id,type:'Suppliers',title:s.name,text:'Supplier catalogue',url:can(session,'orders.view')?link('/',s.name):can(session,'suppliers.manage')?'/admin#suppliers':link(stockRoute,s.name)}))],terms);};
         if(can(session,'knowledge.view'))providers['Knowledge Library']=(q,terms)=>libraryStore.search(session,terms);
         if(can(session,'comms.view'))providers.Comms=(q,terms)=>communicationStore.search(session,terms);
@@ -236,7 +254,10 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(canAny(session,['users.manage','locations.manage','email.manage','companies.manage']))providers.Locations=async(q,terms)=>filtered((await locationStore.accessible(session)).filter(s=>s.companyId===session.companyId).map(s=>({id:'location:'+s.id,type:'Locations',title:s.name,text:'Company location',url:link('/admin/accounts',s.name,'#locations')})),terms);
         if(can(session,'home.view')&&can(session,'invoices.view'))providers.Invoices=(q,terms)=>invoices.search(dataDir,session,terms);
         if(can(session,'orders.view'))providers.Orders=async(q,terms)=>filtered((await usageHistory(dataDir)).orders.filter(order=>order.requestOwnerId===session.id&&belongs(order,session,'requestOwnerId')).map(o=>({id:'order:'+o.id,type:'Orders',title:'Order '+o.id,text:[o.createdAt?.slice(0,10),o.notes,...o.items.map(p=>p.name+' '+(p.sku||'')+' '+(p.supplier||''))].filter(Boolean).join(' · '),url:'/api/orders/'+o.id,action:'order'})),terms);
-        return json(200,await globalSearch.search(session,query,providers));
+        if(intelligent)return json(200,await globalSearch.intelligentSearch(session,query,plan,providers));
+        const result=await globalSearch.search(session,query,providers);
+        let available=false;try{const config=await aiStore.status(session);available=config.enabled&&config.configured;}catch{}
+        return json(200,{...result,intelligence:{available}});
       }
       if(req.url==='/api/kiosk-devices'&&req.method==='GET')return json(200,{...await kioskStore.list(session,await locationStore.list()),network:network.slug||'default'});
       if(req.url==='/api/kiosk-devices'&&req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(201,await kioskStore.create(session,await body(req)));}

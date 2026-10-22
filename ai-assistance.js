@@ -3,7 +3,7 @@ const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),ques
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind)=>kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,kind==='checklist'?'ops.view':'learning.view')&&can(actor,kind==='checklist'?'ops.manage':'learning.manage');
+const canDraft=(actor,kind)=>kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,kind==='checklist'?'ops.view':'learning.view')&&can(actor,kind==='checklist'?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -16,7 +16,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
  async function status(actor){return summary(actor.companyId,await read(actor.companyId));}
  function save(actor,input){return serial(actor.companyId,async()=>{
   const current=await read(actor.companyId);if(!input||input.revision!==current.revision)fail('OpStack intelligence settings changed. Reload before saving.',409);
-  if(typeof input.enabled!=='boolean'||!Number.isInteger(input.budgetCents)||input.budgetCents<50||input.budgetCents>100000||!Number.isInteger(input.draftLimit)||input.draftLimit<1||input.draftLimit>1000)fail('Choose a monthly USD budget from $0.50–$1,000 and 1–1,000 drafts.');
+  if(typeof input.enabled!=='boolean'||!Number.isInteger(input.budgetCents)||input.budgetCents<50||input.budgetCents>100000||!Number.isInteger(input.draftLimit)||input.draftLimit<1||input.draftLimit>1000)fail('Choose a monthly USD budget from $0.50–$1,000 and 1–1,000 requests.');
   const next={...current,enabled:input.enabled,budgetCents:input.budgetCents,draftLimit:input.draftLimit,revision:current.revision+1};
   for(const key of ['inputUsdPerMillion','outputUsdPerMillion']){const value=input[key]??current[key];if(!Number.isFinite(value)||value<=0||value>1000)fail('Enter positive token prices up to $1,000 per million tokens.');next[key]=value;}
   if(input.clearKey===true)next.apiKey='';
@@ -25,35 +25,36 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
  async function generate(actor,input,reportData){
-  if(!input||!['checklist','course','questions','report'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+  if(!input||!['checklist','course','questions','report','search'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
   if(input.kind==='report'&&!reportData)fail('Generate reports through the scheduled reports builder.');
+  if(input.kind==='search'&&!reportData?.pages?.length)fail('Use platform search to search with OpStack intelligence.');
   if(!canDraft(actor,input.kind))fail('Builder permission required for this draft.',403);
-  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
+  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:input.kind==='search'?{pages:reportData.pages}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
   const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:parameters?[parameters,source]:[])])).digest('hex');
   const pending=flights.get(key);if(pending){if(pending.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);return pending.promise;}
   const promise=perform();flights.set(key,{fingerprint,promise});try{return await promise;}finally{flights.delete(key);}
   async function perform(){
-   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(source?{...parameters,sources:source.items}:{}),...(reportData?{reportData}:{})})}];
+   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
-   const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192;
+   const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
    const reservation=await serial(companyId,async()=>{
     const settings=await read(companyId),previous=settings.requests.find(r=>r.id===input.requestId);
-    if(previous){if(previous.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);if(previous.result)return{cached:previous.result};fail('This request has already been counted. Its result is unavailable; generate a new draft if needed.',409);}
-    if(!settings.enabled||!settings.apiKey)fail('OpStack intelligence drafting is not configured. Ask Head Office to enable it in Settings → OpStack intelligence.',503);
-    const usage=summary(companyId,settings),reserved=cost(inputBound,OUTPUT_LIMIT,settings);
-    if(usage.remainingDrafts<1||usage.remainingMicros<reserved)fail('The company’s OpStack intelligence limit has been reached, or the remaining budget is too small for another draft. Check OpStack intelligence settings.',429);
+    if(previous){if(previous.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);if(previous.result)return{cached:previous.result};fail('This request has already been counted. Its result is unavailable; submit a new request if needed.',409);}
+    if(!settings.enabled||!settings.apiKey)fail('OpStack intelligence is not configured. Ask Head Office to enable it in Settings → OpStack intelligence.',503);
+    const usage=summary(companyId,settings),reserved=cost(inputBound,outputLimit,settings);
+    if(usage.remainingDrafts<1||usage.remainingMicros<reserved)fail('The company’s OpStack intelligence limit has been reached, or the remaining budget is too small for another request. Check OpStack intelligence settings.',429);
     const record={id:input.requestId,fingerprint,month:month(now()),actorId:actor.id,createdAt:new Date(now()).toISOString(),state:'pending',costMicros:reserved};settings.requests.push(record);
     const cutoff=new Date(now());cutoff.setUTCMonth(cutoff.getUTCMonth()-3);settings.requests=settings.requests.filter(r=>r.createdAt>=cutoff.toISOString());await write(companyId,settings);return{settings,reserved};
    });
    if(reservation.cached)return reservation.cached;
    let usage,generated,errorMessage;
    try{
-    const response=await fetchImpl('https://api.openai.com/v1/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(60000),headers:{Authorization:'Bearer '+reservation.settings.apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages,max_completion_tokens:OUTPUT_LIMIT,store:false,response_format:{type:'json_schema',json_schema:{name:'opstack_'+input.kind,strict:true,schema:draftModel.schemas[input.kind]}}})});
-    if(!response.ok){if(response.status===401)fail('OpenAI rejected the API key. Check OpStack intelligence settings.',502);if(response.status===429)fail('OpenAI is rate-limited or has no available credit. Check your OpenAI billing and try a new draft later.',502);fail('OpenAI could not generate this draft. Try a new draft later.',502);}
-    const raw=await response.text();if(Buffer.byteLength(raw)>500000)fail('The OpStack intelligence response was too large. Ask for a shorter draft.',502);const result=JSON.parse(raw);usage=result.usage;
-    const choice=result.choices?.[0];if(choice?.finish_reason!=='stop'||choice.message?.refusal||typeof choice.message?.content!=='string')fail('OpStack intelligence could not complete this draft. Ask for a shorter or clearer draft.',502);
+    const response=await fetchImpl('https://api.openai.com/v1/chat/completions',{method:'POST',redirect:'error',signal:AbortSignal.timeout(60000),headers:{Authorization:'Bearer '+reservation.settings.apiKey,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,messages,max_completion_tokens:outputLimit,store:false,response_format:{type:'json_schema',json_schema:{name:'opstack_'+input.kind,strict:true,schema:draftModel.schemas[input.kind]}}})});
+    if(!response.ok){if(response.status===401)fail('OpenAI rejected the API key. Check OpStack intelligence settings.',502);if(response.status===429)fail('OpenAI is rate-limited or has no available credit. Check your OpenAI billing and try a new request later.',502);fail('OpenAI could not complete this request. Try a new request later.',502);}
+    const raw=await response.text();if(Buffer.byteLength(raw)>500000)fail('The OpStack intelligence response was too large. Ask for a shorter request.',502);const result=JSON.parse(raw);usage=result.usage;
+    const choice=result.choices?.[0];if(choice?.finish_reason!=='stop'||choice.message?.refusal||typeof choice.message?.content!=='string')fail('OpStack intelligence could not complete this request. Ask for a shorter or clearer request.',502);
     generated={companyId,kind:input.kind,requestId:input.requestId,draft:draftModel.normalize(input.kind,JSON.parse(choice.message.content),parameters),...(source?{source:{type:source.type,references:source.references,characters:source.characters}}:{})};
-   }catch(error){errorMessage=error.status===502?error.message:'The OpStack intelligence request could not be completed. No automatic retry was made; check your connection or try a new draft.';}
+   }catch(error){errorMessage=error.status===502?error.message:'The OpStack intelligence request could not be completed. No automatic retry was made; check your connection or try a new request.';}
    await serial(companyId,async()=>{
     const settings=await read(companyId),record=settings.requests.find(r=>r.id===input.requestId);if(!record)fail('OpStack intelligence usage record is unavailable.',503);
     const validUsage=Number.isSafeInteger(usage?.prompt_tokens)&&usage.prompt_tokens>=0&&Number.isSafeInteger(usage?.completion_tokens)&&usage.completion_tokens>=0;
@@ -65,7 +66,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
    if(errorMessage)fail(errorMessage,502);return generated;
   }
  }
- return{status,save,generate,generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data)};
+ return{status,save,generate,generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
 }
 async function route({req,url,session,store,body,json}){
  if(!['/api/ai/status','/api/ai/settings','/api/ai/drafts'].includes(url))return false;

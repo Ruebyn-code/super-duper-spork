@@ -16,7 +16,7 @@
  ].map(([id,name,description,group])=>({id,name,description,group}));
  definitions.push({id:'users.email.manage',name:'Edit user emails',description:'Change existing users’ sign-in emails within your hierarchy and location access',group:'Administration'});
  definitions.push({id:'reports.manage',name:'Scheduled OpStack intelligence reports',description:'Preview and schedule OpStack intelligence reports for authorised users and permission levels',group:'Finance'});
- definitions.push({id:'ai.manage',name:'OpStack intelligence settings',description:'Configure this company’s OpenAI key, enable OpStack intelligence drafting and set estimated usage limits',group:'Settings'});
+ definitions.push({id:'ai.manage',name:'OpStack intelligence settings',description:'Configure this company’s OpenAI key, enable OpStack intelligence and set estimated usage limits',group:'Settings'});
  definitions.push({id:'account-email.manage',name:'Account invitation email',description:'Configure the one shared sender for account setup emails across Opstack; network role only',group:'Network'});
  const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network','comms.post.network','knowledge.manage.network','rostering.budget.network','account-email.manage'];
  const work=['learning.view','learning.complete','prep.view','prep.print','ops.view','ops.complete','rostering.view','rostering.clock','rostering.availability','rostering.leave','knowledge.view','comms.view','comms.chat','home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
