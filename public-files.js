@@ -4,6 +4,7 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/accept-invite.js':'accept-invite.js',
   '/page-bridge.js':'page-bridge.js',
   '/app-search.js':'app-search.js',
+  '/knowledge-search-model.js':'knowledge-search-model.js',
   '/app-search.css':'app-search.css',
   '/persistent-navigation.css':'persistent-navigation.css',
   '/favicon.png':'assets/branding/opstack-icon.png',

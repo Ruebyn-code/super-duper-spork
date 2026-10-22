@@ -51,15 +51,23 @@ async function search(actor,query,providers={}){
   const entries=Object.entries(providers),results=await Promise.allSettled(entries.map(([,load])=>Promise.resolve().then(()=>load(q,terms))));
   results.forEach((result,index)=>{if(result.status==='fulfilled')documents.push(...result.value);else failures.push(entries[index][0]);});
  }
- const found=documents.filter(doc=>matches(doc.title+' '+(doc.text||''),terms)).map(doc=>({id:doc.id,type:doc.type,title:String(doc.title).slice(0,200),snippet:snippet(doc.text,terms),url:doc.url,...(doc.action?{action:doc.action}:{}),score:normalize(doc.title)===normalize(q)?100:matches(doc.title,terms)?80:doc.type==='Pages'?25:40})).sort((a,b)=>b.score-a.score||a.type.localeCompare(b.type)||a.title.localeCompare(b.title));
+ const found=documents.filter(doc=>doc.searchMatch||matches(doc.title+' '+(doc.text||''),terms)).map(doc=>({id:doc.id,type:doc.type,title:String(doc.title).slice(0,200),snippet:snippet(doc.text,terms),url:doc.url,...(doc.action?{action:doc.action}:{}),...(doc.searchMatch?{searchMatch:doc.searchMatch,preview:doc.preview,target:doc.target}:{}),score:doc.searchMatch?doc.searchMatch.score:normalize(doc.title)===normalize(q)?100:matches(doc.title,terms)?80:doc.type==='Pages'?25:40})).sort((a,b)=>b.score-a.score||a.type.localeCompare(b.type)||a.title.localeCompare(b.title));
  const counts=new Map(),results=[];for(const {score,...doc} of found){const count=counts.get(doc.type)||0;if(count>=10||results.length>=60)continue;counts.set(doc.type,count+1);results.push(doc);}
- return{query:q,results,total:found.length,hasMore:found.length>results.length,unavailable:failures};
+ return{query:q,destinationId:destinationFor(results,results.filter(result=>normalize(result.title)===normalize(q)).map(result=>result.id)),results,total:found.length,hasMore:found.length>results.length,unavailable:failures};
+}
+function destinationFor(results,pageIds=[]){
+ const articles=results.filter(result=>result.searchMatch).sort((a,b)=>b.searchMatch.score-a.searchMatch.score),best=articles[0],second=articles[1];
+ if(best?.searchMatch.clear&&best.searchMatch.score>=80&&(!second||best.searchMatch.score-second.searchMatch.score>=20))return best.id;
+ const pages=results.filter(result=>pageIds.includes(result.id)&&result.type==='Pages');
+ return pages.length===1&&(!best||best.searchMatch.score<60)&&!['page:library','page:learning','page:comms'].includes(pages[0].id)?pages[0].id:null;
 }
 async function intelligentSearch(actor,query,plan,providers){
  const queries=[...new Set([query,...plan.queries])],batches=await Promise.all(queries.map(value=>search(actor,value,providers))),selected=new Set(plan.pageIds),found=new Map();
  for(const page of pagesFor(actor).filter(page=>selected.has(page.id)))found.set(page.id,{id:page.id,type:page.type,title:page.title,snippet:snippet(page.text,[]),url:page.url});
  for(const batch of batches)for(const result of batch.results)if(!found.has(result.id))found.set(result.id,result);
- const counts=new Map(),results=[];for(const result of found.values()){const count=counts.get(result.type)||0;if(count>=10||results.length>=60)continue;counts.set(result.type,count+1);results.push(result);}
- return{query,results,total:found.size,hasMore:found.size>results.length||batches.some(batch=>batch.hasMore),unavailable:[...new Set(batches.flatMap(batch=>batch.unavailable))],intelligence:{available:true,queries:plan.queries}};
+ const ordered=[...found.values()].sort((a,b)=>(b.searchMatch?.score||0)-(a.searchMatch?.score||0));
+ const counts=new Map(),results=[];for(const result of ordered){const count=counts.get(result.type)||0;if(count>=10||results.length>=60)continue;counts.set(result.type,count+1);results.push(result);}
+ const destination=destinationFor(results,[...selected]);
+ return{query,destinationId:destination,results,total:found.size,hasMore:found.size>results.length||batches.some(batch=>batch.hasMore),unavailable:[...new Set(batches.flatMap(batch=>batch.unavailable))],intelligence:{available:true,queries:plan.queries}};
 }
 module.exports={search,intelligentSearch,pagesFor,matches,snippet};

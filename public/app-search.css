@@ -26,12 +26,22 @@
 
 /* Keep intelligence actions and the input visible while results scroll. */
 .app-search-panel{display:flex;flex-direction:column;overflow:hidden}
-.app-search-panel>.app-search-heading,.app-search-panel>#app-search-input,.app-search-intelligence,.app-search-status{flex-shrink:0}
+.app-search-panel>.app-search-heading,.app-search-status{flex-shrink:0}
 #app-search-results{min-height:0;overflow:auto;overscroll-behavior:contain}
-.app-search-intelligence{display:grid;gap:5px;padding:8px 10px 2px}
-.app-search-intelligence[hidden]{display:none!important}
-.app-search-intelligence button{width:100%;min-height:36px;margin:0;padding:8px 10px;font:600 12px Arial,sans-serif}
 .app-search-hint{margin:0;font:11px/1.4 Arial,sans-serif;color:var(--theme-muted,#64748b)}
-@media(pointer:coarse){.app-search-intelligence button{min-height:44px}}
 
 .app-search-short .app-search-hint{display:none}
+
+/* Intelligence is the search field, with one inline submit action. */
+.app-search-field{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.app-search-submit{display:grid;place-items:center;flex:0 0 32px;width:32px;min-width:32px;min-height:34px;margin:0;padding:0;border:1px solid #ffffff66;border-radius:8px;background:#ffffff14;color:#fff;font:20px Arial,sans-serif;box-shadow:none}
+.app-search-submit:hover:enabled{background:#ffffff26;color:#fff;filter:none;transform:none}
+.app-search-submit:disabled{opacity:.5}
+.app-search-panel>.app-search-field{flex-shrink:0}
+.app-search-panel>.app-search-hint{padding:6px 10px 0;flex-shrink:0}
+.app-search-section{font-weight:600;color:var(--ai-text,#4f46e5)!important}
+.app-search-excerpt{white-space:pre-line;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.app-search-preview-media{display:flex;align-items:center;gap:8px;margin-top:4px}
+.app-search-preview-media img{width:96px;height:72px;object-fit:cover;border-radius:7px}
+.app-search-video-badge{padding:5px 7px;border:1px solid var(--ai-line,#6366f12e);border-radius:6px;color:var(--ai-text,#4f46e5)!important;font-size:11px}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){.app-search-control>.app-search-field{display:none}.app-search-panel>.app-search-field{margin:7px 8px;padding:2px 4px 2px 8px;border-radius:10px;min-width:0}.app-search-panel .app-search-field #app-search-input{width:100%;margin:0;padding:6px 0;border:0;border-radius:0;background:transparent;color:#fff;min-width:0}.app-search-panel .app-search-field .app-search-submit{flex-basis:40px;width:40px;min-width:40px;min-height:40px}}

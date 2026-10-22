@@ -2,6 +2,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {can}=require('./permissions'),formattedText=require('./public/formatted-text'),mediaFiles=require('./communication-media');
 const queues=new Map(),uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+const knowledgeSearch=require('./public/knowledge-search-model');
 const permission=scope=>scope==='network'?'knowledge.manage.network':'knowledge.manage.company';
 function createStore(dir,{now=Date.now}={}){
  const file=path.join(dir,'knowledge-library.json'),media=mediaFiles.createStore(dir),stamp=()=>new Date(now()).toISOString();
@@ -17,6 +18,7 @@ function createStore(dir,{now=Date.now}={}){
  async function categories(actor){needRead(actor);return{categories:categoryViews(await read(),actor)};}
  async function list(actor,{type='all',scope='all',category='all',q='',page='1'}={}){needRead(actor);if(!['all','policy','information'].includes(type)||!['all','company','network'].includes(scope)||typeof category!=='string'||!['all','uncategorised'].includes(category)&&!uuid.test(category)||typeof q!=='string'||q.length>180||!/^\d+$/.test(String(page))||!Number.isSafeInteger(Number(page))||Number(page)<1)fail('Choose valid library filters.');const query=q.trim().toLowerCase(),state=await read(),all=state.articles.filter(article=>visible(article,actor)&&(type==='all'||article.type===type)&&(scope==='all'||article.scope===scope)&&(category==='all'||(category==='uncategorised'?!article.categoryId:article.categoryId===category))&&(!query||(article.title+' '+article.body+' '+(state.categories.find(item=>item.id===article.categoryId)?.name||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||a.title.localeCompare(b.title)),pages=Math.max(1,Math.ceil(all.length/25)),selected=Math.min(Number(page),pages);return{articles:all.slice((selected-1)*25,selected*25).map(article=>view(article,actor,state,false)),categories:categoryViews(state,actor),page:selected,pages,total:all.length};}
  async function search(actor,terms){needRead(actor);const state=await read(),{matches}=require('./global-search');return state.articles.filter(article=>visible(article,actor)).map(article=>({id:'article:'+article.id,type:'Knowledge Library',title:article.title,text:[article.body,state.categories.find(c=>c.id===article.categoryId)?.name].filter(Boolean).join(' '),url:'/knowledge-library#article-'+article.id})).filter(doc=>matches(doc.title+' '+doc.text,terms));}
+ async function deepSearch(actor,query,expansions=[]){needRead(actor);const state=await read();return state.articles.filter(article=>visible(article,actor)).map(article=>knowledgeSearch.document(article,query,expansions)).filter(Boolean).sort((a,b)=>b.searchMatch.score-a.searchMatch.score||a.title.localeCompare(b.title));}
  async function get(actor,id){needRead(actor);const state=await read();return view(find(state,actor,id),actor,state);}
  async function saveCategory(actor,input,id){return mutate(state=>{
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Enter category details.');const previous=id?state.categories.find(item=>item.id===id&&visible(item,actor)):null;if(id&&!previous)fail('Category not found.',404);const scope=previous?.scope||input.scope;if(!['company','network'].includes(scope))fail('Choose the company or entire network.');needWrite(actor,scope);if(previous&&input.revision!==previous.revision)fail('This category changed. Reload it before saving.',409);
@@ -37,6 +39,6 @@ function createStore(dir,{now=Date.now}={}){
  });}
  async function remove(actor,id,input){return mutate(state=>{const article=find(state,actor,id);needWrite(actor,article.scope);if(input?.revision!==article.revision)fail('This article changed. Reload it before deleting.',409);state.articles.splice(state.articles.indexOf(article),1);return{removed:true};});}
  async function uploadMedia(actor,input){needRead(actor);if(!can(actor,'knowledge.manage.company')&&!can(actor,'knowledge.manage.network'))fail('Library publishing permission required.',403);return media.save(actor,input);}
- return{search,list,get,save,remove,uploadMedia,canReadMedia,categories,saveCategory,removeCategory};
+ return{search,deepSearch,list,get,save,remove,uploadMedia,canReadMedia,categories,saveCategory,removeCategory};
 }
 module.exports={createStore};
