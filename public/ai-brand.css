@@ -1,28 +1,33 @@
-/* Shared AI identity. Keep the exact gradient independent of company colours. */
-:root{--ai-gradient:linear-gradient(135deg, #00D4FF 0%, #6366F1 50%, #A855F7 100%);--ai-ink:#02040a;--ai-accent:#6366f1;--ai-text:#4f46e5;--ai-focus:#4f46e5}
-:root[data-theme=dark]{--ai-text:#b8bbff;--ai-focus:#b8bbff}
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){background:var(--ai-gradient);color:var(--ai-ink);border-color:transparent;font-weight:700;text-shadow:none;box-shadow:inset 0 1px 0 #ffffff55,0 3px 12px #6366f12b;transition:box-shadow .16s ease,transform .16s ease}
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::before{content:"";display:inline-block;width:14px;height:14px;margin-inline-end:7px;vertical-align:-2px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2 2.7 7.3L22 12l-7.3 2.7L12 22l-2.7-7.3L2 12l7.3-2.7L12 2ZM4 1l.8 2.2L7 4l-2.2.8L4 7l-.8-2.2L1 4l2.2-.8L4 1Z'/%3E%3C/svg%3E") center/contain no-repeat}
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):hover:enabled{background:var(--ai-gradient);color:var(--ai-ink);transform:translateY(-1px);box-shadow:inset 0 1px 0 #ffffff70,0 5px 20px #6366f147,0 0 12px #00d4ff24}
-:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):active:enabled{transform:translateY(0)}
+/* Shared AI identity: calm surfaces, a rich gradient and a slow moving sheen. */
+:root{--ai-gradient:linear-gradient(135deg, #0E7490 0%, #4F46E5 50%, #7C3AED 100%);--ai-on-gradient:#fff;--ai-accent:#6366f1;--ai-text:#4f46e5;--ai-focus:#4f46e5;--ai-line:#6366f12e;--ai-tint:linear-gradient(135deg,#0e749008 0%,#4f46e50a 50%,#7c3aed0d 100%);--ai-spark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2 2.7 7.3L22 12l-7.3 2.7L12 22l-2.7-7.3L2 12l7.3-2.7L12 2ZM4 1l.8 2.2L7 4l-2.2.8L4 7l-.8-2.2L1 4l2.2-.8L4 1Z'/%3E%3C/svg%3E")}
+:root[data-theme=dark]{--ai-text:#c4b5fd;--ai-focus:#c4b5fd;--ai-line:#a5b4fc38;--ai-tint:linear-gradient(135deg,#0e74901a 0%,#4f46e51f 50%,#7c3aed24 100%)}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){background:var(--ai-gradient);color:var(--ai-on-gradient);border-color:transparent;border-radius:10px;font-weight:600;text-shadow:none;transform:none;filter:none;box-shadow:0 1px 2px #0f172a1a;transition:box-shadow .16s ease}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::before{content:"";display:inline-block;width:14px;height:14px;margin-inline-end:7px;vertical-align:-2px;background:currentColor;mask:var(--ai-spark) center/contain no-repeat}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):hover:enabled{background:var(--ai-gradient);color:var(--ai-on-gradient);filter:none;box-shadow:0 2px 5px #0f172a26}
 :root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):focus-visible{outline:3px solid var(--ai-focus);outline-offset:3px}
-.ai-draft-dialog,.scheduled-dialog{border:1px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;box-shadow:0 24px 80px #070b274d,0 0 28px #6366f12e}
-.ai-draft-dialog .ai-dialog-heading,.scheduled-dialog .scheduled-heading{background:linear-gradient(90deg,#ffffff18 1px,transparent 1px) 0 0/24px 100%,var(--ai-gradient);color:var(--ai-ink);border-bottom-color:transparent}
-.ai-dialog-heading h2,.scheduled-heading h2{color:var(--ai-ink);font-family:Arial,Helvetica,sans-serif;font-weight:700;letter-spacing:.02em}
-.ai-draft-dialog .ai-dialog-close,.scheduled-dialog .scheduled-close{background:#ffffff26;color:var(--ai-ink);border-color:#02040a40;box-shadow:inset 0 1px 0 #ffffff30}
-.ai-draft-dialog .ai-dialog-close:hover,.scheduled-dialog .scheduled-close:hover{background:#ffffff4d}
+.ai-draft-dialog,.scheduled-dialog{border:1px solid var(--theme-line,#d3dfea);background:var(--theme-surface,#fff);box-shadow:0 20px 64px #0f172a30}
+.ai-draft-dialog .ai-dialog-heading,.scheduled-dialog .scheduled-heading{background:var(--ai-tint);color:var(--theme-text,#182b3a);border-bottom-color:var(--theme-line,#d3dfea)}
+.ai-dialog-heading h2,.scheduled-heading h2{display:flex;align-items:center;gap:9px;color:var(--theme-text,#182b3a);font-family:Arial,Helvetica,sans-serif;font-weight:600;letter-spacing:0}
+.ai-dialog-heading h2::before,.scheduled-heading h2::before{content:"";width:20px;height:20px;flex:0 0 20px;background:var(--ai-gradient);mask:var(--ai-spark) center/contain no-repeat}
+.ai-draft-dialog .ai-dialog-close,.scheduled-dialog .scheduled-close{background:var(--theme-surface,#fff);color:var(--theme-muted,#627383);border-color:var(--theme-line,#d3dfea);box-shadow:none}
+.ai-draft-dialog .ai-dialog-close:hover,.scheduled-dialog .scheduled-close:hover{background:var(--ai-tint);color:var(--theme-text,#182b3a)}
 .ai-draft-dialog :is(input,textarea,select,button,summary):focus-visible,.ai-settings :is(input,textarea,button,summary):focus-visible,.scheduled-dialog :is(input,textarea,select,button,summary):focus-visible{outline-color:var(--ai-focus)}
 .ai-draft-dialog input[type=checkbox],.ai-settings input[type=checkbox],.scheduled-dialog input[type=checkbox]{accent-color:var(--ai-accent)}
 .ai-draft-dialog summary,.ai-settings summary,.scheduled-dialog details summary{color:var(--ai-text)}
-.ai-source-buttons button[aria-pressed=true],.scheduled-tabs button[aria-selected=true]{background:var(--ai-gradient);color:var(--ai-ink);border-color:transparent;font-weight:700;box-shadow:inset 0 1px 0 #ffffff55}
-.ai-source-buttons button[aria-pressed=true]:hover,.scheduled-tabs button[aria-selected=true]:hover{background:var(--ai-gradient);color:var(--ai-ink)}
-.ai-question-preview>small:first-child{display:inline-block;background:var(--ai-gradient);color:var(--ai-ink);padding:3px 8px;border-radius:6px;font-weight:700;letter-spacing:.02em}
-.ai-draft-preview h3,.scheduled-report h3,.ai-settings>h2{border-bottom:3px solid transparent;border-image:var(--ai-gradient) 1;padding-bottom:8px}
-.ai-settings{border:1px solid transparent;border-radius:14px;padding:16px;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;box-shadow:0 6px 24px #6366f112}
-.ai-settings .ai-settings-usage{border:1px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;box-shadow:0 0 16px #6366f10d}
-.settings-hub .settings-option[data-permission="ai.manage"]{border-color:transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;box-shadow:0 5px 22px #6366f11a}
-.settings-hub .settings-option[data-permission="ai.manage"]:hover{box-shadow:0 8px 28px #6366f133}
-.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon{background:var(--ai-gradient);color:var(--ai-ink);box-shadow:inset 0 1px 0 #ffffff55,0 2px 10px #6366f12b}
-.settings-hub .settings-option[data-permission="ai.manage"] .icon-detail{stroke:var(--ai-ink)}
+.ai-source-buttons button[aria-pressed=true],.scheduled-tabs button[aria-selected=true]{background:var(--ai-tint);color:var(--ai-text);border-color:var(--ai-line);font-weight:600;box-shadow:none}
+.ai-source-buttons button[aria-pressed=true]:hover,.scheduled-tabs button[aria-selected=true]:hover{background:var(--ai-tint);color:var(--ai-text)}
+.ai-question-preview>small:first-child{display:inline-block;background:var(--ai-tint);color:var(--ai-text);border:1px solid var(--ai-line);padding:3px 8px;border-radius:6px;font-weight:600;letter-spacing:0}
+.ai-draft-preview h3,.scheduled-report h3,.ai-settings>h2{border-bottom:2px solid transparent;border-image:var(--ai-gradient) 1;padding-bottom:8px}
+.ai-settings{border:1px solid var(--theme-line,#d3dfea);border-radius:14px;padding:16px;background:var(--theme-surface,#fff);box-shadow:none}
+.ai-settings .ai-settings-usage{border:1px solid var(--ai-line);background:var(--ai-tint);box-shadow:none}
+.settings-hub .settings-option[data-permission="ai.manage"]{border-color:var(--ai-line);background:var(--theme-surface,#fff);box-shadow:0 1px 3px #0f172a0a}
+.settings-hub .settings-option[data-permission="ai.manage"]:hover{box-shadow:0 3px 10px #0f172a14}
+.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon{background:var(--ai-gradient);color:var(--ai-on-gradient);box-shadow:none}
+.settings-hub .settings-option[data-permission="ai.manage"] .icon-detail{stroke:var(--ai-on-gradient)}
+/* Only the highlight moves; controls, text and hit targets stay still. */
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary),.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon{position:relative;overflow:hidden;isolation:isolate}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-130%);animation:ai-shimmer 7s ease-in-out infinite}
+:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):disabled::after{animation:none}
+@keyframes ai-shimmer{0%,18%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
 @media(max-width:720px){.ai-settings{padding:12px}}
-@media(prefers-reduced-motion:reduce){:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){transition:none}:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):hover:enabled{transform:none}}
+@media(prefers-reduced-motion:reduce){:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary){transition:none}:root button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after,.settings-hub .settings-option[data-permission="ai.manage"] .settings-option-icon::after{animation:none}}
