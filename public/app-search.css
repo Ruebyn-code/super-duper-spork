@@ -14,7 +14,6 @@
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  .mobile-brand-header .account-menu-footer.app-search-account{flex:0 0 96px;width:96px;min-width:96px}
  .app-search-control{flex:0 0 44px;padding:0;gap:0}
- .app-search-control>.app-search-icon{display:none}
  .app-search-toggle{display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:44px;margin:0;padding:0;border:0;border-radius:12px 0 0 12px;background:transparent;color:inherit;box-shadow:none}
  .app-search-toggle:focus-visible{outline:2px solid var(--primary);outline-offset:-3px}
  .app-search-panel #app-search-input{display:block;width:calc(100% - 16px);height:44px;min-height:44px;margin:6px 8px;padding:6px 8px;font-size:16px;border:1px solid var(--theme-line,#dce5ed);border-radius:8px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a)}

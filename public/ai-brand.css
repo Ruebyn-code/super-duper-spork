@@ -46,10 +46,12 @@
 
 .app-search-panel .app-search-heading>span{display:flex;align-items:center;gap:7px}.app-search-panel .app-search-heading>span::before{content:"";width:16px;height:16px;flex:0 0 16px;background:currentColor;mask:var(--ai-spark) center/contain no-repeat}
 
-/* Search uses a gentle intelligence tint over an opaque theme surface. */
-.app-search-control,.app-search-panel>.app-search-field{position:relative;isolation:isolate;background:var(--ai-tint),var(--theme-surface,#fff);color:var(--ai-text)}
+/* Search has a deeper intelligence tint without changing other AI surfaces. */
+.app-search-control,.app-search-panel>.app-search-field{--ai-search-tint:linear-gradient(135deg,#0e749024 0%,#4f46e52e 50%,#7c3aed38 100%);--ai-text:#4338ca;position:relative;isolation:isolate;background:var(--ai-search-tint),var(--theme-surface,#fff);color:var(--ai-text)}
+:root[data-theme=dark] :is(.app-search-control,.app-search-panel>.app-search-field){--ai-search-tint:linear-gradient(135deg,#0e749038 0%,#4f46e547 50%,#7c3aed57 100%);--ai-text:#c4b5fd}
+.app-search-field>.app-search-icon{margin-inline-end:4px}
 .app-search-control{border-radius:12px 0 0 12px;overflow:hidden}
-.app-search-control #app-search-input,.app-search-panel .app-search-field #app-search-input{color:var(--theme-text,#182b3a)}
+.app-search-control #app-search-input,.app-search-panel .app-search-field #app-search-input{color:var(--theme-text,#182b3a);outline:0}
 .app-search-control #app-search-input::placeholder,.app-search-panel .app-search-field #app-search-input::placeholder{color:var(--ai-text);opacity:1}
 .app-search-control:focus-within,.app-search-panel>.app-search-field:focus-within{box-shadow:inset 0 0 0 2px var(--ai-focus)}
 .app-search-control::after,.app-search-panel>.app-search-field::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-130%);animation:ai-shimmer 7s ease-in-out infinite}
