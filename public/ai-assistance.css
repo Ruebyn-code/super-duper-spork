@@ -17,6 +17,24 @@
 .ai-draft-preview h4{font-size:16px;margin:16px 0 8px}
 .ai-draft-preview p{white-space:pre-wrap;margin:6px 0 12px;line-height:1.6}
 .ai-draft-preview ol{padding-left:22px}
+.ai-question-preview{padding:10px 0;border-top:1px solid var(--theme-line,#d3dfea);overflow-wrap:anywhere}
+.ai-question-preview>small,.ai-question-preview>strong{display:block;margin:0 0 5px}
+.ai-question-preview>small{font:12px/1.5 Arial,sans-serif;color:var(--theme-primary-text,var(--primary))}
+.ai-question-preview ul{padding-left:20px;margin:6px 0}
+.ai-source-buttons,.ai-source-pagination{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.ai-source-buttons [aria-pressed=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));border-color:var(--theme-primary-text,var(--primary));color:var(--theme-primary-text,var(--primary))}
+.ai-source-list{max-height:190px;overflow:auto;overscroll-behavior:contain;border:1px solid var(--theme-line,#d3dfea);border-radius:8px;padding:6px;margin:8px 0}
+.ai-questions-dialog .ai-choice{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:32px;margin:0;padding:5px;font-weight:500;line-height:1.4;overflow-wrap:anywhere;cursor:pointer}
+.ai-questions-dialog .ai-choice input{width:18px;height:18px;flex:0 0 18px;margin:0;accent-color:var(--primary)}
+.ai-question-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;border:1px solid var(--theme-line,#d3dfea);border-radius:8px;padding:8px;margin:10px 0;min-width:0}
+.ai-question-types legend{font:600 12px/1.5 Arial,sans-serif;padding:0 5px}
+.ai-questions-dialog input:not([type=checkbox]){margin:0;min-width:0;max-width:100%;font-size:14px}
+.ai-questions-dialog input[type=number]{max-width:110px}
+.ai-selected-article{display:flex;align-items:center;gap:8px;justify-content:space-between;font:12px/1.4 Arial,sans-serif;border-bottom:1px solid var(--theme-line,#d3dfea);padding:6px 0;overflow-wrap:anywhere}
+.ai-selected-article>span{min-width:0}.ai-selected-article>button{flex-shrink:0}
+.ai-source-text{font:12px/1.6 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto;padding:10px;border:1px solid var(--theme-line,#d3dfea);border-radius:8px}
+.ai-question-settings{margin:0}
+@media(max-width:720px){.ai-question-types{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-questions-dialog .ai-choice{min-height:40px}.ai-questions-dialog input:not([type=checkbox]){font-size:16px;min-height:40px}.ai-source-buttons button{flex:1;font-size:11px;padding:7px}.ai-source-list{max-height:170px}}
 .ai-draft-dialog .ai-dialog-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;width:100%;max-width:none;margin:0;padding:12px 16px;border-top:1px solid var(--theme-line,#d3dfea);flex-shrink:0}
 .ai-draft-dialog button,.ai-settings button,.ai-create-button{font-size:12px;min-height:36px;padding:8px 12px}
 .ai-draft-dialog .ai-dialog-close{padding:0;min-height:40px}

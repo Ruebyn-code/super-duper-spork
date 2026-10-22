@@ -146,6 +146,8 @@ module.exports={'/order-review.js':'order-review.js','/order-review.css':'order-
   '/app.js':'app.js',
   '/style.css':'style.css',
   '/ai-assistance.js':'ai-assistance.js',
+  '/ai-question-tools.js':'ai-question-tools.js',
+  '/ai-questions.js':'ai-questions.js',
   '/ai-assistance.css':'ai-assistance.css',
   '/ai-settings.js':'ai-settings.js',
   '/page-density.css':'page-density.css',

@@ -89,7 +89,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const prepLabelStore=prepLabels.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),allLocations:()=>auth.levels.locations(),now:communicationsNow});
   const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),people:()=>auth.directory(),roleLevels:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   const libraryStore=knowledgeLibrary.createStore(dataDir);
-  const aiStore=aiAssistance.createStore(dataDir,{fetchImpl,now:communicationsNow});
+  const aiStore=aiAssistance.createStore(dataDir,{fetchImpl,now:communicationsNow,library:libraryStore});
   const learningStore=learningCentre.createStore(dataDir,{library:libraryStore,people:async companyId=>{const[accounts,data,stores]=await Promise.all([auth.directory(),auth.levels.read(),auth.levels.locations()]);return accounts.map(account=>auth.levels.decorate(account,companyId,data,stores));},locations:actor=>locationStore.accessible(actor),roles:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   // Rich editors share private media URLs; article and training access follow their current audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:async(actor,record)=>await libraryStore.canReadMedia(actor,record)||await learningStore.canReadMedia(actor,record)});
@@ -102,7 +102,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const manualParStore=manualPar.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
-  async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
+  async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];const chunks=[];let length=0;for await(const chunk of req){const bytes=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);length+=bytes.length;if(length>limit)fail('Request is too large.',413);chunks.push(bytes);}try{return JSON.parse(Buffer.concat(chunks,length).toString('utf8'));}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
   const publicAssets=createPublicAssets(path.join(__dirname,'public'),publicFiles),asset=publicAssets.read;
   const platformDir=path.join(platformDataDir,'platform-appearance');

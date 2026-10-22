@@ -1,5 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
-const {can}=require('./permissions'),draftModel=require('./ai-draft-model');
+const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),questionSources=require('./ai-question-sources');
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
@@ -7,7 +7,7 @@ const canDraft=(actor,kind)=>can(actor,kind==='checklist'?'ops.view':'learning.v
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
-function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now}={}){
+function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
  function file(companyId){if(typeof companyId!=='string'||! /^[a-zA-Z0-9-]{1,100}$/.test(companyId))fail('Choose a valid company.');return path.join(dir,'ai-assistance',companyId+'.json');}
  async function read(companyId){try{return{...defaults(),...JSON.parse(await fs.readFile(file(companyId),'utf8'))};}catch(error){if(error.code==='ENOENT')return defaults();fail('AI settings could not be read. Ask Head Office to check the saved configuration.',503);}}
  async function write(companyId,value){const target=file(companyId),temporary=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temporary,JSON.stringify(value),{mode:0o600});await fs.rename(temporary,target);}finally{await fs.rm(temporary,{force:true});}}
@@ -25,13 +25,14 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now}={}){
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
  async function generate(actor,input){
-  if(!input||!['checklist','course'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+  if(!input||!['checklist','course','questions'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
   if(!canDraft(actor,input.kind))fail('Builder permission required for this draft.',403);
-  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||''])).digest('hex');
+  const parameters=input.kind==='questions'?questionSources.parameters(input):null,source=parameters?await questionSources.resolve(actor,input.source,library):null;
+  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(parameters?[parameters,source]:[])])).digest('hex');
   const pending=flights.get(key);if(pending){if(pending.fingerprint!==fingerprint)fail('This AI request reference was already used.',409);return pending.promise;}
   const promise=perform();flights.set(key,{fingerprint,promise});try{return await promise;}finally{flights.delete(key);}
   async function perform(){
-   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||''})}];
+   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(parameters?{...parameters,sources:source.items}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
    const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192;
    const reservation=await serial(companyId,async()=>{
@@ -50,7 +51,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now}={}){
     if(!response.ok){if(response.status===401)fail('OpenAI rejected the API key. Check AI assistance settings.',502);if(response.status===429)fail('OpenAI is rate-limited or has no available credit. Check your OpenAI billing and try a new draft later.',502);fail('OpenAI could not generate this draft. Try a new draft later.',502);}
     const raw=await response.text();if(Buffer.byteLength(raw)>500000)fail('The AI response was too large. Ask for a shorter draft.',502);const result=JSON.parse(raw);usage=result.usage;
     const choice=result.choices?.[0];if(choice?.finish_reason!=='stop'||choice.message?.refusal||typeof choice.message?.content!=='string')fail('AI could not complete this draft. Ask for a shorter or clearer draft.',502);
-    generated={companyId,kind:input.kind,requestId:input.requestId,draft:draftModel.normalize(input.kind,JSON.parse(choice.message.content))};
+    generated={companyId,kind:input.kind,requestId:input.requestId,draft:draftModel.normalize(input.kind,JSON.parse(choice.message.content),parameters),...(source?{source:{type:source.type,references:source.references,characters:source.characters}}:{})};
    }catch(error){errorMessage=error.status===502?error.message:'The AI request could not be completed. No automatic retry was made; check your connection or try a new draft.';}
    await serial(companyId,async()=>{
     const settings=await read(companyId),record=settings.requests.find(r=>r.id===input.requestId);if(!record)fail('AI usage record is unavailable.',503);
@@ -78,6 +79,6 @@ async function route({req,url,session,store,body,json}){
   if(req.method!=='POST')fail('Generate an AI draft with POST.',405);
  }
  if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
- const input=await body(req,80000);json(200,url==='/api/ai/settings'?await store.save(session,input):await store.generate(session,input));return true;
+ const input=await body(req,400000);json(200,url==='/api/ai/settings'?await store.save(session,input):await store.generate(session,input));return true;
 }
 module.exports={createStore,route,MODEL,month};
