@@ -46,12 +46,15 @@
 
 .app-search-panel .app-search-heading>span{display:flex;align-items:center;gap:7px}.app-search-panel .app-search-heading>span::before{content:"";width:16px;height:16px;flex:0 0 16px;background:currentColor;mask:var(--ai-spark) center/contain no-repeat}
 
-/* The persistent search field and phone icon carry the same intelligence identity. */
-.app-search-control,.app-search-panel>.app-search-field{position:relative;isolation:isolate;background:var(--ai-gradient);color:var(--ai-on-gradient)}
+/* Search uses a gentle intelligence tint over an opaque theme surface. */
+.app-search-control,.app-search-panel>.app-search-field{position:relative;isolation:isolate;background:var(--ai-tint),var(--theme-surface,#fff);color:var(--ai-text)}
 .app-search-control{border-radius:12px 0 0 12px;overflow:hidden}
-.app-search-control #app-search-input,.app-search-control #app-search-input::placeholder,.app-search-panel .app-search-field #app-search-input::placeholder{color:var(--ai-on-gradient);opacity:1}
-.app-search-control:focus-within{box-shadow:inset 0 0 0 2px #ffffffcc}
+.app-search-control #app-search-input,.app-search-panel .app-search-field #app-search-input{color:var(--theme-text,#182b3a)}
+.app-search-control #app-search-input::placeholder,.app-search-panel .app-search-field #app-search-input::placeholder{color:var(--ai-text);opacity:1}
+.app-search-control:focus-within,.app-search-panel>.app-search-field:focus-within{box-shadow:inset 0 0 0 2px var(--ai-focus)}
 .app-search-control::after,.app-search-panel>.app-search-field::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,#ffffff12 48%,transparent 66%);transform:translateX(-130%);animation:ai-shimmer 7s ease-in-out infinite}
 .app-search-panel>.app-search-field{overflow:hidden}
-.app-search-submit:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+#app-sidebar.top-navigation .app-search-control .app-search-submit,.app-search-submit{background:var(--ai-tint);color:var(--ai-text);border:1px solid var(--ai-line);padding:0}
+#app-sidebar.top-navigation .app-search-control .app-search-submit:hover:enabled,.app-search-submit:hover:enabled{background:color-mix(in srgb,var(--ai-accent) 14%,var(--theme-surface,#fff));color:var(--ai-text)}
+.app-search-submit:focus-visible,.app-search-toggle:focus-visible{outline:2px solid var(--ai-focus);outline-offset:-3px}
 @media(prefers-reduced-motion:reduce){.app-search-control::after,.app-search-panel>.app-search-field::after{animation:none}}
