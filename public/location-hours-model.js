@@ -10,13 +10,13 @@
   for(const offset of [-1,0]){const day=week[(index+offset+7)%7];if(!day||day.closed)continue;const date=time.shiftDate(today,offset),span=period(day),opensAt=planner.deadline(date,day.open),closesAt=planner.deadline(time.shiftDate(date,span.overnight?1:0),day.close);if(opensAt&&closesAt&&epoch>=Date.parse(opensAt)&&epoch<Date.parse(closesAt))return{...base,state:'open',opensAt,closesAt,tradingDate:date};}
   return{...base,state:week[index]?'closed':'unknown'};
  }
- // Keep a closing entry available after closing, until the next opening or
- // midnight at the end of the closing date. Overnight sales retain their opening date.
+ // Daytime entries last until midnight; overnight entries end at their actual
+ // closing time, without carrying into another trading day.
  function salesEntry(value,now=Date.now(),archived=false){
   const epoch=new Date(now).getTime();if(!Number.isFinite(epoch))fail('Choose a valid sales entry time.');if(archived)return null;
   const week=normalize(value),today=time.today(epoch),index=(new Date(today+'T12:00:00Z').getUTCDay()+6)%7,periods=[];
   for(const offset of [-1,0,1]){const day=week[(index+offset+7)%7];if(!day||day.closed)continue;const tradingDate=time.shiftDate(today,offset),closingDate=time.shiftDate(tradingDate,period(day).overnight?1:0),opensAt=planner.deadline(tradingDate,day.open),closesAt=planner.deadline(closingDate,day.close);periods.push({tradingDate,opensAt,closesAt,closingDate});}
-  for(const item of periods){const next=periods.find(next=>next.tradingDate>item.tradingDate);item.expiresAt=new Date(Math.min(Date.parse(planner.deadline(time.shiftDate(item.closingDate,1),'00:00')),next?Date.parse(next.opensAt):Infinity)).toISOString();}
+  for(const item of periods){const next=periods.find(next=>next.tradingDate>item.tradingDate),end=Math.max(Date.parse(planner.deadline(time.shiftDate(item.tradingDate,1),'00:00')),Date.parse(item.closesAt));item.expiresAt=new Date(Math.min(end,next?Date.parse(next.opensAt):Infinity)).toISOString();}
   const current=periods.filter(item=>Date.parse(item.opensAt)<=epoch&&epoch<Date.parse(item.expiresAt)).at(-1)||periods.find(item=>item.tradingDate===today&&epoch<Date.parse(item.opensAt));if(!current)return null;const expiresAt=current.expiresAt;
   const availableAt=new Date(Math.max(Date.parse(current.opensAt),Date.parse(current.closesAt)-3600000)).toISOString();
   return{tradingDate:current.tradingDate,opensAt:current.opensAt,closesAt:current.closesAt,availableAt,expiresAt,available:epoch>=Date.parse(availableAt)};

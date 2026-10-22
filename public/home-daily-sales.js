@@ -10,8 +10,8 @@
  async function api(method='GET',body){const response=await fetch('/api/home-daily-sales',{method,headers:{'Content-Type':'application/json','X-CSRF-Token':actor.csrf,...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'Unable to load daily sales.'),{status:response.status});return result;}
  function apply(result){
   latest=result;clockOffset=Date.parse(result.checkedAt)-Date.now();clearTimeout(wake);
-  const entry=result.entry;if(entry&&!entry.available){const delay=Date.parse(entry.availableAt)-(Date.now()+clockOffset);if(delay>0)wake=setTimeout(refresh,Math.min(delay+50,2147483647));}
-  if(dirty||busy||document.activeElement===input){
+  const entry=result.entry;if(entry){const delay=Date.parse(entry.available?entry.expiresAt:entry.availableAt)-(Date.now()+clockOffset);if(delay>0)wake=setTimeout(refresh,Math.min(delay+50,2147483647));}
+  if(dirty||busy||document.activeElement===input&&entry?.available&&entry.tradingDate===current?.entry?.tradingDate){
    expired=!entry?.available||entry.tradingDate!==current?.entry?.tradingDate;
    if(expired){message('This entry period has ended. Use Daily sales history to enter this date.');$('home-daily-sales-reload').hidden=true;}
    else if(entry.revision!==current?.entry?.revision){message('Sales have changed in another tab. Your entry is kept here; reload saved sales before making a correction.');$('home-daily-sales-reload').hidden=false;}

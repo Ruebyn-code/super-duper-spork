@@ -8,15 +8,25 @@ test('Home daily sales appears exactly one hour before closing, remains after cl
 });
 test('overnight Home sales retains Sunday and its week after midnight; closed days and 24-hour trading are respected',()=>{
  const schedule=daily('11am','4am');assert.equal(hours.salesEntry(schedule,at('2026-10-19','02:59')).available,false);let entry=hours.salesEntry(schedule,at('2026-10-19','03:00'));assert.equal(entry.available,true);assert.equal(entry.tradingDate,'2026-10-18');assert.equal(entry.closesAt,at('2026-10-19','04:00'));
- assert.equal(hours.salesEntry(schedule,at('2026-10-19','10:59')).available,true);assert.equal(hours.salesEntry(schedule,at('2026-10-19','11:00')).available,false);
- schedule[0]={closed:true};entry=hours.salesEntry(schedule,at('2026-10-19','04:30'));assert.equal(entry.available,true);assert.equal(entry.tradingDate,'2026-10-18');assert.equal(hours.salesEntry(schedule,at('2026-10-20','00:00')).available,false);
+ assert.equal(entry.expiresAt,at('2026-10-19','04:00'));assert.equal(hours.salesEntry(schedule,at('2026-10-19','03:59')).available,true);assert.equal(hours.salesEntry(schedule,at('2026-10-19','04:00')).available,false);assert.equal(hours.salesEntry(schedule,at('2026-10-19','11:00')).available,false);
+ schedule[0]={closed:true};assert.equal(hours.salesEntry(schedule,at('2026-10-19','04:00')),null);assert.equal(hours.salesEntry(schedule,at('2026-10-20','00:00')).available,false);
  const allDay=daily('11am','11am');assert.equal(hours.salesEntry(allDay,at('2026-10-20','09:59')).available,false);assert.equal(hours.salesEntry(allDay,at('2026-10-20','10:00')).available,true);assert.equal(hours.salesEntry(allDay,at('2026-10-20','11:00')).available,false);
  // A short trading period starts its entry at opening rather than showing it while closed.
  assert.equal(hours.salesEntry(daily('4:30pm','5pm'),at('2026-10-20','16:29')).available,false);assert.equal(hours.salesEntry(daily('4:30pm','5pm'),at('2026-10-20','16:30')).available,true);
 });
+test('midnight and later closing entries expire at closing rather than the next opening or following midnight',()=>{
+ for(const close of ['00:00','00:30','04:00']){
+  const schedule=daily('11:00',close),closing=at('2026-10-19',close),before=new Date(Date.parse(closing)-1),entry=hours.salesEntry(schedule,before);
+  assert.equal(entry.available,true);assert.equal(entry.tradingDate,'2026-10-18');assert.equal(entry.expiresAt,closing);
+  for(const instant of [closing,at('2026-10-19','10:59'),at('2026-10-19','11:00')])assert.equal(hours.salesEntry(schedule,instant).available,false,close+' at '+instant);
+  const nextClose=at('2026-10-20',close),next=hours.salesEntry(schedule,new Date(Date.parse(nextClose)-3600000));assert.equal(next.available,true);assert.equal(next.tradingDate,'2026-10-19');
+  schedule[0]={closed:true};assert.equal(hours.salesEntry(schedule,closing),null,'No stale entry on a closed next day');
+ }
+});
 test('closing reminders use an elapsed hour and the shared Melbourne daylight-saving policy',()=>{
  const schedule=daily('11am','2:30am');let entry=hours.salesEntry(schedule,'2026-04-05T02:29:59+11:00');assert.equal(entry.available,false);entry=hours.salesEntry(schedule,'2026-04-05T02:30:00+11:00');assert.equal(entry.available,true);assert.equal(entry.closesAt,'2026-04-04T16:30:00.000Z');assert.equal(entry.tradingDate,'2026-04-04');
- entry=hours.salesEntry(schedule,'2026-10-04T01:59:59+10:00');assert.equal(entry.available,true);assert.equal(entry.closesAt,'2026-10-03T16:00:00.000Z');assert.equal(Date.parse(entry.closesAt)-Date.parse(entry.availableAt),3600000);assert.throws(()=>hours.salesEntry(schedule,'invalid'),e=>e.status===400);
+ assert.equal(entry.expiresAt,entry.closesAt);assert.equal(hours.salesEntry(schedule,entry.expiresAt).available,false);
+ entry=hours.salesEntry(schedule,'2026-10-04T01:59:59+10:00');assert.equal(entry.available,true);assert.equal(entry.closesAt,'2026-10-03T16:00:00.000Z');assert.equal(entry.expiresAt,entry.closesAt);assert.equal(hours.salesEntry(schedule,entry.expiresAt).available,false);assert.equal(Date.parse(entry.closesAt)-Date.parse(entry.availableAt),3600000);assert.throws(()=>hours.salesEntry(schedule,'invalid'),e=>e.status===400);
 });
 test('single-day saves preserve the other six days, legacy history, zeroes, concurrency and idempotent retries',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'home-sales-store-')),actor={id:'member',locationId:'shop',legacyAccountIds:['original']};
@@ -38,7 +48,13 @@ test('Home daily sales API enforces its trading date, window, permissions, locat
   assert.equal((await request(staff,route,'PUT',input,{'X-CSRF-Token':''})).status,403);assert.equal((await request(staff,route,'PUT',{...input,date:'2026-10-19'})).status,409);assert.equal((await request(staff,route,'PUT',input,{'X-Location-Id':office.session.locationId})).status,403);assert.equal((await request(staff,route,'PUT',{...input,amountCents:1.5})).status,400);
   const saved=await request(staff,route,'PUT',input);assert.equal(saved.status,200);assert.equal(saved.data.entry.amountCents,123456);assert.equal(saved.data.entry.revision,1);assert.equal((await request(staff,route,'PUT',input)).data.entry.revision,1);const week=(await request(staff,'/api/sales?week=2026-10-12')).data.record;assert.deepEqual(week.days,[null,null,null,null,null,null,123456]);
   assert.equal((await request(staff,'/api/sales','PUT',{weekStart:week.weekStart,revision:1,days:[800,...week.days.slice(1)]})).status,200);assert.equal((await request(staff,route,'PUT',{...input,amountCents:0,revision:1})).status,409);const revised=await request(staff,route,'PUT',{...input,amountCents:0,revision:2});assert.equal(revised.status,200);assert.equal((await request(staff,'/api/sales?week=2026-10-12')).data.record.days[0],800);assert.equal(revised.data.entry.amountCents,0);
-  now=Date.parse('2026-10-19T04:30:00+11:00');assert.equal((await request(staff,route)).data.entry.available,true);now=Date.parse('2026-10-19T11:00:00+11:00');assert.equal((await request(staff,route)).data.entry.available,false);assert.equal((await request(staff,route,'PUT',{...input,revision:3})).status,409);
+  now=Date.parse('2026-10-19T03:59:59+11:00');assert.equal((await request(staff,route)).data.entry.available,true);now=Date.parse('2026-10-19T04:00:00+11:00');assert.equal((await request(staff,route)).data.entry.available,false);assert.equal((await request(staff,route,'PUT',{...input,revision:3})).status,409);assert.equal((await request(staff,'/api/sales?week=2026-10-12')).data.record.days[6],0);
+  now=Date.parse('2026-10-19T11:00:00+11:00');assert.equal((await request(staff,route)).data.entry.available,false);
+  for(const close of ['00:00','00:30']){
+   assert.equal((await request(office,'/api/locations/'+shop.id,'PUT',{name:shop.name,tradingHours:daily('11:00',close)})).status,200);
+   const closing=at('2026-10-19',close);now=Date.parse(closing)-1;const beforeClose=(await request(staff,route)).data.entry;assert.equal(beforeClose.available,true);assert.equal(beforeClose.tradingDate,'2026-10-18');assert.equal(beforeClose.amountCents,0);assert.equal(beforeClose.expiresAt,closing);
+   now=Date.parse(closing);assert.equal((await request(staff,route)).data.entry.available,false);assert.equal((await request(staff,route,'PUT',{...input,revision:3,amountCents:500})).status,409);assert.equal((await request(staff,'/api/sales?week=2026-10-12')).data.record.days[6],0);
+  }
   const catalogue=(await request(office,'/api/permission-levels')).data,roleResult=await request(office,'/api/permission-levels','POST',{name:'Read sales',scope:'company',level:10,permissions:['home.view','sales.view'],revision:catalogue.revision});assert.equal(roleResult.status,201);const role=roleResult.data.levels.find(r=>r.name==='Read sales');const createdReader=await request(office,'/api/accounts','POST',{username:'Reader',password:'test-user-password',role:role.id,companyId:'default',locationId:shop.id});assert.equal(createdReader.status,201,JSON.stringify(createdReader.data));const reader=await login('Reader');assert.equal((await request(reader,route)).status,403);assert.equal((await request(reader,route,'PUT',input)).status,403);
  }finally{if(server)await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
