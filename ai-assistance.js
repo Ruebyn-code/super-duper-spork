@@ -3,7 +3,7 @@ const {can}=require('./permissions'),draftModel=require('./ai-draft-model'),ques
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind)=>kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,kind==='checklist'?'ops.view':'learning.view')&&can(actor,kind==='checklist'?'ops.manage':'learning.manage');
+const canDraft=(actor,kind)=>kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -25,16 +25,16 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
  async function generate(actor,input,reportData){
-  if(!input||!['checklist','course','questions','report','search'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
+  if(!input||!['checklist','planners','course','questions','report','search'].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>8000)fail('Describe the draft in up to 4,000 characters, with up to 8,000 characters of reference notes.');
   if(input.kind==='report'&&!reportData)fail('Generate reports through the scheduled reports builder.');
   if(input.kind==='search'&&!reportData?.pages?.length)fail('Use platform search to search with OpStack intelligence.');
   if(!canDraft(actor,input.kind))fail('Builder permission required for this draft.',403);
-  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:input.kind==='search'?{pages:reportData.pages}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
-  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:parameters?[parameters,source]:[])])).digest('hex');
+  const parameters=input.kind==='questions'?questionSources.parameters(input):input.kind==='report'?{facts:reportData.facts}:input.kind==='search'?{pages:reportData.pages}:['checklist','planners'].includes(input.kind)?{today:new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()))}:null,source=input.kind==='questions'?await questionSources.resolve(actor,input.source,library):null;
+  const companyId=actor.companyId,key=file(companyId)+':'+input.requestId,fingerprint=crypto.createHash('sha256').update(JSON.stringify([actor.id,input.kind,input.prompt,input.notes||'',...(reportData?[reportData]:input.kind==='questions'?[parameters,source]:[])])).digest('hex');
   const pending=flights.get(key);if(pending){if(pending.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);return pending.promise;}
   const promise=perform();flights.set(key,{fingerprint,promise});try{return await promise;}finally{flights.delete(key);}
   async function perform(){
-   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
+   const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(['checklist','planners'].includes(input.kind)?{currentDate:parameters.today}:{}),...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
    const inputBound=Buffer.byteLength(JSON.stringify(messages))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
    const reservation=await serial(companyId,async()=>{

@@ -53,3 +53,5 @@
 .ai-draft-dialog [hidden],.ai-settings [hidden],.ai-create-button[hidden]{display:none!important}
 @media(max-width:720px){.ai-draft-dialog button,.ai-create-button,.ai-settings button{min-height:40px}.ai-draft-dialog textarea,.ai-settings input:not([type=checkbox]){font-size:16px}.ai-dialog-body{padding:12px}.ai-draft-dialog .ai-dialog-heading,.ai-draft-dialog .ai-dialog-actions{padding:10px 12px}.ai-dialog-heading h2{font-size:18px}.ai-settings-grid{gap:8px}.ai-settings .ai-settings-grid label{min-width:0}}
 @media(max-width:380px){.ai-settings-grid{grid-template-columns:minmax(0,1fr)}.ai-draft-dialog .ai-dialog-actions{justify-content:stretch}.ai-dialog-actions button{flex:1}.ai-dialog-actions .ai-primary:last-child:not([hidden]){flex-basis:100%}}
+
+.ai-planner-preview{border:1px solid transparent;background:linear-gradient(var(--theme-surface,#fff),var(--theme-surface,#fff)) padding-box,var(--ai-gradient) border-box;border-radius:9px;padding:10px;margin:8px 0}.ai-planner-preview p{font-size:12px;margin:4px 0;overflow-wrap:anywhere}

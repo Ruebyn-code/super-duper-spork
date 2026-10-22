@@ -33,6 +33,20 @@ Choose:
 
 The preview shows upcoming dates. Melbourne daylight-saving gaps move a skipped time to the first real minute after it; repeated clock times use the later occurrence. Daily overnight windows retain the previous day's occurrence after midnight until closing.
 
+## Use location trading hours
+
+In **Planners → Timing**, choose **Location trading hours** instead of **Fixed times**. Set **Available from**, **Active until** and optional **Due at** to Opening time or Closing time, with a minute offset. Negative minutes mean before; positive minutes mean after. For example, Available from Opening −30, Active until Closing +0 and Due at Opening +0 makes opening checks available 30 minutes before each location opens and due at opening. Closing checks can use Closing −30 through Closing +60, due Closing +30.
+
+Each assigned location uses its own saved **Location settings → Trading hours**, including different hours on each weekday. Closed trading days are skipped. Missing hours or a window whose end precedes its start prevent new starts and show an explanation; the app never invents hours. An overnight closing, or a 24-hour day with matching opening/closing times, closes on the following date. Offsets can cross midnight and retain the opening trading date. Due day still refers to the scheduled date; use Same day for a deadline relative to that trading day’s overnight closing.
+
+The existing Melbourne clock and daylight-saving conversion apply. Checklists become available at the configured start; a user explicitly opens one to start its record. Merely viewing the list does not create runs. Changing trading hours changes future availability and deadlines, while existing runs retain their saved due instant and planner configuration and remain available through their record/history. Fixed schedules remain available without intelligence or an API key.
+
+## Create planners with OpStack intelligence
+
+In a saved checklist’s **Planner** stage, choose **OpStack intelligence planners**. Describe the recurrence and timing, for example “daily opening checks 30 minutes before opening, due at opening, plus closing checks due 30 minutes after closing”. A new checklist intelligence request can also ask for planner drafts together with the steps. Up to four planners can be suggested.
+
+Review the preview. **Add paused planners** adds suggestions to an existing checklist; **Open draft in builder** saves a new checklist with any suggested paused planners. Generation and cancelling the preview create nothing. Existing planners remain unchanged. Partial saves can be retried without duplicates. Review each new planner’s dates, timing, **Locations** and **Assignees**, then enable **Active planner** when ready. The initial location is the current location; intelligence never chooses location or permission IDs and does not receive saved trading hours. Normal checklist authoring access and the shared company intelligence budget apply.
+
 ## Locations group
 
 Choose the locations using this planner. Only accessible locations in the selected company can be added. Existing assignments outside a manager's access are never silently removed. Users still need current location access to view, start, save or upload to its checklists.
