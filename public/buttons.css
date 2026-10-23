@@ -95,6 +95,12 @@
   flex-shrink: 0;
 }
 
+/* Older search buttons omit SVG dimensions; use the same icon size as the rest. */
+:root body .search-toggle > svg:not([width]):not([height]) {
+  width: 18px;
+  height: 18px;
+}
+
 /* Select triggers are field controls, with the same height as toolbar actions.
    Retain their input typography (including the phone's 16px font). */
 :root body .location-select-trigger:not(.company-logo-trigger) {
