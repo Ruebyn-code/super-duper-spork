@@ -1,0 +1,158 @@
+/* Shared action sizing. Page styles keep their colours, fonts and layouts.
+   Dimensions win over older page-specific sizes. Company typography overrides
+   are loaded afterwards. Content and canvas controls keep their own geometry. */
+:root {
+  --button-height: 40px;
+  --button-font-size: 12px;
+  --button-line-height: 18px;
+  --button-padding-block: 10px;
+  --button-padding-inline: 12px;
+  --button-radius: 9px;
+  --button-toolbar-size: 32px;
+}
+
+:root body :is(button, input[type="submit"], input[type="reset"], input[type="button"], a.submit, .order-delivery-actions a):not(:where(
+  [hidden], [data-button-layout="custom"],
+  .ops-task-open, .ops-on-demand-choice, .ops-plan-types > button,
+  .ops-checklist-groups > button, .learning-plan-groups > button,
+  .labels-card-open, .labels-on-label-field,
+  .report-chart-week, .report-sort,
+  .home-section-choice, .home-quick-link-choice,
+  .learning-library-choice, .learning-outline-choice,
+  .learning-sort-grip, .learning-preview-block-grip,
+  .roster-board-day, .roster-cell-add, .roster-day-add,
+  .roster-cell button, .roster-day-lane button, .roster-shift,
+  .roster-shift-grip, .roster-delete-button, .phone-roster-handle,
+  .conversation-link, .conversation-person, .conversation-pin,
+  .location-select-trigger, .location-picker-option, .select-option-group,
+  .company-logo-trigger, .page-sidebar-link, .sidebar-toggle, .sidebar-signout,
+  #app-sidebar button, .mobile-tabbar button, .mobile-navigation-menu button,
+  .toolbar-toggle, .account-menu-item, .app-search-toggle, .app-search-submit,
+  .cart-pill, .invoice-launcher, .shift-clock-dock, .shift-clock-key,
+  .shift-clock-actions button, .kiosk-keypad button,
+  .text-editor-toolbar button, .label-format-group button, .editor-block-controls button
+)) {
+  box-sizing: border-box;
+  min-height: var(--button-height) !important;
+  min-width: var(--button-height);
+  height: auto !important;
+  padding: var(--button-padding-block) var(--button-padding-inline) !important;
+  border-radius: var(--button-radius) !important;
+  font-size: var(--button-font-size) !important;
+  line-height: var(--button-line-height) !important;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+/* Square icon actions match the neighbouring text actions. */
+:root body button:is(
+  .search-toggle, .date-toggle, .admin-edit-button,
+  .user-edit-toggle, .location-edit-toggle, .company-edit-toggle,
+  .rostering-icon-button, .roster-copy-icon, .roster-edit-button,
+  .roster-dialog-close, .phone-roster-icon, .phone-roster-close,
+  .invoice-icon-button, .library-close, .library-category-toggle,
+  .communication-dialog-close, .user-profile-close, .shift-clock-close,
+  .ai-dialog-close, .scheduled-close, .permission-dialog-close,
+  .location-settings-close, .order-review-close, .labels-card-more,
+  .report-location-close, #report-columns-close, #report-drilldown-close,
+  #report-locations-close, #labels-print-close,
+  .weekly-platform-close, .console-icon-button,
+  #ops-close-run, #ops-planner-close, #ops-preview-toggle, #ops-filter-toggle,
+  #app-editor-close, #subsidebar-close, #labels-item-close,
+  #overview-previous, #overview-next, #conversation-back,
+  #learning-refresh, #transfer-refresh, #labels-reload, #report-refresh,
+  .quantity button, .labels-copy-stepper button, .cart-popup-heading button,
+  .labels-dialog-heading button, .label-field-heading button,
+  .emoji-picker-heading button, .rostering-week-arrows > button,
+  .ops-day-nav > button, .ops-on-demand-heading > button,
+  .operating-type-actions > button, .console-month-control > button
+):not([hidden]):not(.date-toggle:has(> span:not(.visually-hidden))) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--button-height) !important;
+  min-width: var(--button-height) !important;
+  height: var(--button-height) !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+}
+
+:root body :is(a.submit, .order-delivery-actions a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Select triggers are field controls, with the same height as toolbar actions.
+   Retain their input typography (including the phone's 16px font). */
+:root body .location-select-trigger:not(.company-logo-trigger) {
+  min-height: var(--button-height) !important;
+  height: auto !important;
+  padding-block: 8px !important;
+  line-height: 22px !important;
+}
+:root body :is(.search-field, .date-control):has(> button) {
+  min-height: var(--button-height);
+  height: auto;
+}
+:root body .library-types button {
+  flex: 1 0 auto;
+}
+:root body button:is(.ai-create-button, .ai-primary, .ai-action, .scheduled-primary):not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+:root body button:is(.ai-create-button, .ai-primary, .ai-action, .scheduled-primary)::before {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  :root body #ops-on-demand:not([hidden]) {
+    width: var(--button-height) !important;
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  :root body .profile-photo-controls {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}
+
+/* Rich-text and label-format tools share one compact toolbar size. */
+:root body :is(.text-editor-toolbar, .label-format-group, .editor-block-controls) button:not([hidden]) {
+  min-height: var(--button-toolbar-size) !important;
+  height: auto !important;
+  padding: 6px 8px !important;
+  font-size: var(--button-font-size);
+  line-height: var(--button-line-height) !important;
+}
+:root body :is(.text-editor-toolbar .text-format-button, .label-format-group button):not([hidden]) {
+  width: var(--button-toolbar-size) !important;
+  height: var(--button-toolbar-size) !important;
+  padding: 5px !important;
+}
+
+:root body :is(.count-actions, .admin-form-actions, .admin-editor-actions,
+  .ops-actions, .ops-settings-footer, .learning-actions, .roster-form-actions,
+  .roster-dialog-actions, .library-dialog-actions, .communication-dialog-actions,
+  .ai-dialog-actions, .order-review-actions, .profile-photo-controls,
+  .labels-actions, .email-template-save-actions) {
+  align-items: center;
+  gap: 8px;
+}
+:root body :is(.count-actions, .admin-form-actions, .admin-editor-actions,
+  .ops-actions, .ops-settings-footer, .learning-actions, .roster-form-actions,
+  .roster-dialog-actions, .library-dialog-actions, .communication-dialog-actions,
+  .ai-dialog-actions, .order-review-actions, .profile-photo-controls,
+  .labels-actions, .email-template-save-actions) > button {
+  margin-block: 0 !important;
+}
+
+@media (pointer: coarse) {
+  :root { --button-toolbar-size: 40px; }
+}
