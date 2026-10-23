@@ -22,6 +22,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  rostering.classList.add('roster-navigation-link');const rosterBeta=document.createElement('span');rosterBeta.className='navigation-beta-badge';rosterBeta.dataset.localWording='Beta';rosterBeta.textContent='Beta';rosterBeta.setAttribute('aria-hidden','true');rostering.append(rosterBeta);
  const ordersMenu=menuFor('ordering','Ordering');
  ordersMenu.append(fresh(ordering,'/','Catalogue','catalogue'));
+ const history=fresh(ordering,'/order-history','Order history','order-history');history.dataset.permission='orders.view';ordersMenu.append(history);
  if(cartCount){cartCount.hidden=true;cartCount.style.display='none';cartCount.setAttribute('aria-hidden','true');cartCount.dataset.layoutUi='';sidebar.append(cartCount);}cart?.remove();
  moveMenu(segment(ordersMenu,'Stock','count-pages'),menus.get('count'));
  const transfers=fresh(count,'/stock-transfers','Stock transfers','stock-transfers');transfers.dataset.permission='transfers.view';transfers.querySelector('svg')?.replaceChildren();transfers.querySelector('svg').innerHTML='<path d="M3 7h16l-4-4M21 17H5l4 4"/><g class="icon-detail"><path d="M19 7l-4 4M5 17l4-4"/></g>';ordersMenu.append(transfers);

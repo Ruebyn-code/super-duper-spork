@@ -29,6 +29,7 @@ const {validateDelivery,providerStatus,deliveryConfigurationIssue,dispatchOrder}
 const deliverySettings=require('./delivery-settings');
 const orderEmailTemplates=require('./order-email-templates');
 const {splitBySupplier}=require('./supplier-orders');
+const orderHistory=require('./order-history');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
 const wordingModel=require('./public/wording-model');
@@ -210,7 +211,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/order-history','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
       if(req.url.startsWith('/api/location-setup')){
         if(!session)fail('Sign-in required.',401);
@@ -601,6 +602,14 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(collection==='suppliers'&&c.products.some(p=>p.supplierId===id))fail('Remove this supplier’s stock before removing the supplier.');
         c[collection]=c[collection].filter(item=>item.id!==id);return {removed:true};
       }));}
+      if(req.url==='/api/order-history'){
+        if(req.method==='GET')return json(200,await orderHistory.list(dataDir,session,requestUrl.searchParams,{reader:usageHistory}));
+        if(req.method!=='POST')fail('Unsupported history action.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const saved=await orderHistory.save(dataDir,session,await body(req,160000),await readCatalogue());return json(saved.created?201:200,saved.order);
+      }
+      const historyOrderRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})$/i);
+      if(historyOrderRoute){if(req.method!=='GET')fail('Saved history entries cannot be edited.',405);return json(200,await orderHistory.get(dataDir,session,historyOrderRoute[1]));}
       const savedOrderRoute=req.url.match(/^\/api\/orders\/([a-f0-9-]{36})$/i);
       if(req.method==='GET'&&savedOrderRoute){
         let record;try{record=JSON.parse(await fs.readFile(path.join(dataDir,savedOrderRoute[1]+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('Order not found.',404);throw error;}

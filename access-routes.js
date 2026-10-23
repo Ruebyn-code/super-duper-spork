@@ -17,6 +17,7 @@ function apiPermission(url,method){
  if(url.startsWith('/api/hourly-sales'))return[read?'sales.view':'sales.edit'];
  if(url==='/api/sales')return[read?'sales.view':'sales.edit'];
  if(['/api/weekly-sales-reports','/api/weekly-sales-overview','/api/operating-expense-types','/api/operating-expense-schedule'].includes(url))return[read?'finances.view':'finances.edit'];
+ if(url.startsWith('/api/order-history'))return[read?'orders.view':'orders.place'];
  if(url.startsWith('/api/orders'))return[read?'orders.view':'orders.place'];
  if(url.startsWith('/api/products'))return['stock.manage'];
  if(url.startsWith('/api/suppliers'))return['suppliers.manage'];
@@ -31,6 +32,6 @@ function apiPermission(url,method){
  return null;
 }
 function pagePermission(url){
- return({'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
+ return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
 }
 module.exports={apiPermission,pagePermission};

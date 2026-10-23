@@ -192,3 +192,62 @@ body:not(.comms-conversation-open) .app-page .communications-page{padding-top:16
  .settings-hub .permission-level-grid{grid-template-columns:minmax(0,1fr)}
  .permission-dialog form{padding:12px}
 }
+
+/* Ordering and stock take put the working controls close to the page title. */
+.ordering-page.compact-page .hero{margin:0 0 8px;padding:0;border:0}
+.ordering-page .hero>.stock-workspace-heading,
+.stock-count-page .stock-workspace-heading{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;width:100%;margin:0 0 8px}
+:is(.ordering-page,.stock-count-page) .stock-workspace-heading>h1{flex:1;min-width:0;margin:0;font-size:24px;line-height:1.25}
+.stock-workspace-heading .stock-history-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 10px;border:1px solid var(--theme-line,#dce5ed);border-radius:9px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));font-size:12px;line-height:22px;text-decoration:none}
+.stock-workspace-help{max-width:100%;margin:0;font-size:12px}
+.stock-workspace-help>summary{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px;color:var(--theme-primary-text,var(--primary));font-size:11px;line-height:22px;list-style:none;border-radius:9px;cursor:pointer}
+.stock-workspace-help>summary::-webkit-details-marker{display:none}
+.stock-workspace-help>summary:hover{background:var(--theme-primary-soft,#edf6ff)}
+.stock-workspace-help>summary:focus-visible,.stock-history-link:focus-visible{outline:2px solid var(--theme-primary-text,var(--primary));outline-offset:2px}
+.stock-workspace-help[open]{flex-basis:100%}
+.stock-workspace-help[open]>summary{justify-content:flex-start}
+.stock-workspace-help-body{padding:10px 12px;border:1px solid var(--theme-line,#dce5ed);border-radius:9px;background:var(--theme-surface,#fff)}
+:is(.ordering-page,.stock-count-page) .stock-workspace-help-body :is(p,.info){margin:4px 0;font-size:11px;line-height:1.5}
+.ordering-page .ordering-budget{padding:8px 10px;margin-bottom:8px}
+.ordering-page .ordering-budget-heading{gap:4px 10px}
+.ordering-page .ordering-budget-heading h2{font-size:14px}
+.ordering-page .ordering-budget p{margin:4px 0 0;font-size:10px;line-height:1.4}
+.ordering-page .ordering-budget-metrics{margin-top:6px;gap:6px 10px}
+.ordering-page .ordering-budget-metrics span{font-size:10px;line-height:1.35}
+.ordering-page .ordering-budget-metrics strong{font-size:16px;margin-top:2px;line-height:1.3}
+.ordering-page .catalogue-toolbar{margin-bottom:6px;gap:6px 10px}
+.ordering-page .catalogue-toolbar h2{font-size:16px}
+.ordering-page #filters{margin:4px 0 6px;padding-bottom:2px}
+.ordering-page :is(#par-period,#stock-take-status){margin:2px 0;font-size:10px;line-height:1.4}
+.ordering-page .par-explanation{margin:4px 0 8px;font-size:11px}
+.ordering-page #load-status:empty{margin:0}
+.app-page .stock-count-page.compact-page{padding-top:12px}
+.stock-count-page.compact-page>.management{padding:12px}
+.stock-count-page .management>:is(#count-message,#count-loading){margin:4px 0;font-size:11px;line-height:1.4}
+.stock-count-page .management>:is(#count-message,#count-loading):empty{margin:0}
+.stock-count-page .stocktake-toolbar{margin:4px 0 6px;gap:6px 8px}
+.stock-count-page .stocktake-search-tools{gap:6px}
+.stock-count-page .stocktake-search-tools .count-progress{font-size:10px;padding:4px 6px}
+.stock-count-page .supplier-filters{margin-bottom:4px;padding-bottom:2px}
+@media(max-width:640px){
+ :is(.ordering-page,.stock-count-page) .stock-workspace-heading>h1{font-size:22px}
+ .stock-workspace-help>summary{width:40px;padding:0}
+ .stock-workspace-help>summary>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .stock-workspace-help[open]>summary{width:auto;padding:0 8px;justify-content:flex-start}
+ .stock-workspace-help[open]>summary>span{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+ .ordering-page .ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 8px}
+ .ordering-page .catalogue-toolbar .menu-heading{flex:1}
+ .ordering-page .catalogue-actions{width:auto;flex:none;margin-left:auto;gap:6px}
+ .ordering-page .catalogue-actions:has(.search-open){flex-basis:100%;width:100%}
+ .ordering-page .catalogue-actions:has(.search-open) .catalogue-search{flex:1;min-width:0}
+ .stock-count-page .stocktake-toolbar{align-items:center}
+ .stock-count-page .stocktake-search-tools{flex:1;justify-content:flex-end}
+ .stock-count-page .stocktake-toolbar:has(.search-open) .stocktake-search-tools{flex-basis:100%;justify-content:flex-start}
+}
+@media(max-width:640px){
+ .ordering-page .catalogue-view button{--button-padding-inline:0;min-width:40px;width:40px}
+ .ordering-page .catalogue-view button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .stock-count-page .stocktake-search-tools{flex-wrap:nowrap}
+ .stock-count-page .stocktake-search-tools .count-progress{max-width:100px;line-height:1.3;text-align:center}
+ .stock-count-page .stocktake-search-tools .catalogue-search.search-open{flex:1;min-width:0;max-width:100%}
+}
