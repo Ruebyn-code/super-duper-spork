@@ -37,6 +37,7 @@
 #app-sidebar.top-navigation #admin-link,#app-sidebar.top-navigation #admin-link>.main-sidebar-nav{display:contents;margin:0!important;padding:0;border:0;background:transparent}
 #app-sidebar.top-navigation #admin-link>h2{display:none}
 #app-sidebar.top-navigation>.secondary-sidebar{position:static;inset:auto;display:flex;align-items:center;gap:16px;width:auto;max-width:none;height:auto;min-height:0;max-height:none;overflow:visible;margin:0;padding:6px 16px;border:0;border-top:1px solid var(--line);border-radius:0;background-color:color-mix(in srgb,var(--primary) 3%,var(--theme-surface,white));box-shadow:none;z-index:auto;animation:none}
+#app-sidebar.top-navigation>.secondary-sidebar[data-active-group=ordering]{position:absolute;inset:100% 0 auto;border-bottom:1px solid var(--line);box-shadow:0 10px 22px #182b3a18;z-index:1}
 .top-navigation .secondary-sidebar .subsidebar-heading{display:contents;margin:0}
 .top-navigation .secondary-sidebar .subsidebar-heading h2{flex:0 1 auto;max-width:180px;margin:0;font-size:12px;line-height:1.4;letter-spacing:.02em}
 .top-navigation .secondary-sidebar #subsidebar-close{order:3;flex:0 0 32px;width:32px;height:36px;padding:8px;margin:0}

@@ -21,6 +21,8 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  const rostering=document.createElement('a');rostering.href='/rostering';rostering.dataset.sidebarName='Rostering';rostering.dataset.editId=prefix+'-rostering';rostering.dataset.permission='rostering.view';rostering.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18"/><g class="icon-detail"><path d="m8 15 2 2 5-5M17 15h1"/></g></svg><span class="sidebar-label" data-interface-label="Rostering">Rostering</span>';
  rostering.classList.add('roster-navigation-link');const rosterBeta=document.createElement('span');rosterBeta.className='navigation-beta-badge';rosterBeta.dataset.localWording='Beta';rosterBeta.textContent='Beta';rosterBeta.setAttribute('aria-hidden','true');rostering.append(rosterBeta);
  const ordersMenu=menuFor('ordering','Ordering');
+ const newCount=menus.get('count')?.querySelector('a[href="/stock-count#new"]');
+ if(newCount){const title=newCount.querySelector('.submenu-label');if(title){title.textContent='Stock count';title.dataset.localWording='Stock count';}ordersMenu.append(newCount);}
  ordersMenu.append(fresh(ordering,'/','Catalogue','catalogue'));
  const history=fresh(ordering,'/order-history','Order history','order-history');history.dataset.permission='orders.view';ordersMenu.append(history);
  if(cartCount){cartCount.hidden=true;cartCount.style.display='none';cartCount.setAttribute('aria-hidden','true');cartCount.dataset.layoutUi='';sidebar.append(cartCount);}cart?.remove();
