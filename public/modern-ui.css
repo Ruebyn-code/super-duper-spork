@@ -130,20 +130,8 @@
     letter-spacing: -.01em;
   }
 
-  /* Keep the shared 40px buttons and the centred search/date frames intact. */
-  :root body :is(#filters, .supplier-filters, .catalogue-view) button:is(.active, [aria-pressed=true]) {
-    background-color: color-mix(in srgb, var(--primary) 9%, var(--theme-surface, #fff));
-    border-color: color-mix(in srgb, var(--primary) 24%, var(--theme-line, #dfe6ef));
-    color: var(--ui-primary-text);
-  }
-
-  :root body button:is(.submit, .admin-create-button, .library-primary, .learning-primary,
-    .ops-primary, .directory-create):not(.ai-primary, .ai-create-button, .ai-action, .scheduled-primary) {
-    box-shadow: 0 2px 5px color-mix(in srgb, var(--primary) 12%, transparent);
-  }
-
   :root body .app-page main :is(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=file]),
-    textarea, .app-select-trigger):not(.ai-settings *, .ai-draft-dialog *, .scheduled-dialog *,
+    textarea):not(.ai-settings *, .ai-draft-dialog *, .scheduled-dialog *,
     .learning-canvas *, .label-designer *, .shift-clock-dialog *, [aria-invalid=true], :invalid) {
     border-color: var(--theme-line, #dfe6ef);
   }

@@ -245,8 +245,6 @@ body:not(.comms-conversation-open) .app-page .communications-page{padding-top:16
  .stock-count-page .stocktake-toolbar:has(.search-open) .stocktake-search-tools{flex-basis:100%;justify-content:flex-start}
 }
 @media(max-width:640px){
- .ordering-page .catalogue-view button{--button-padding-inline:0;min-width:40px;width:40px}
- .ordering-page .catalogue-view button>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
  .stock-count-page .stocktake-search-tools{flex-wrap:nowrap}
  .stock-count-page .stocktake-search-tools .count-progress{max-width:100px;line-height:1.3;text-align:center}
  .stock-count-page .stocktake-search-tools .catalogue-search.search-open{flex:1;min-width:0;max-width:100%}
