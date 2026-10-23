@@ -46,7 +46,7 @@
 }
 
 /* Square icon actions match the neighbouring text actions. */
-:root body button:is(
+:root body button:where(
   .search-toggle, .date-toggle, .admin-edit-button,
   .user-edit-toggle, .location-edit-toggle, .company-edit-toggle,
   .rostering-icon-button, .roster-copy-icon, .roster-edit-button,
@@ -145,12 +145,63 @@
   align-items: center;
   gap: 8px;
 }
-:root body :is(.count-actions, .admin-form-actions, .admin-editor-actions,
-  .ops-actions, .ops-settings-footer, .learning-actions, .roster-form-actions,
-  .roster-dialog-actions, .library-dialog-actions, .communication-dialog-actions,
-  .ai-dialog-actions, .order-review-actions, .profile-photo-controls,
-  .labels-actions, .email-template-save-actions) > button {
+/* Stretch each action to its flex/grid line, including wrapped labels. Titles
+   and status text keep their existing alignment; new flex lines size separately. */
+:root body :is(
+  .button-row, .count-actions, .stock-actions,
+  .admin-form-actions, .admin-editor-actions, .ops-actions,
+  .ops-card-actions, .ops-settings-footer, .ops-settings-tabs,
+  .ops-builder-stages, .ops-editor-toolbar, .learning-actions,
+  .learning-canvas-toolbar, .learning-builder-stages, .learning-workspace-mobile-tabs,
+  .roster-actions, .roster-form-actions, .roster-dialog-actions,
+  .timesheet-actions, .library-dialog-actions, .library-heading-actions,
+  .library-types, .library-views, .library-pagination,
+  .communication-dialog-actions, .communications-actions, .communication-post-actions,
+  .communication-pagination, .ai-dialog-actions, .ai-source-buttons,
+  .ai-source-pagination, .order-review-actions, .order-delivery-actions,
+  .profile-photo-controls, .labels-actions, .labels-heading-actions,
+  .email-template-save-actions, .email-template-actions, .scheduled-actions,
+  .scheduled-tabs, .home-board-toolbar, .home-config-actions,
+  .catalogue-view, .pagination, .overview-mode,
+  .overview-quarter-controls, .report-shortcuts, .report-location-actions,
+  .award-actions, .console-actions, .transfer-dialog-actions,
+  .transfer-pagination, .label-format-toolbar, .label-style-toolbar,
+  .text-editor-toolbar, .editor-block-controls
+) > :is(button, a.submit, .order-delivery-actions a):not([hidden]):not([data-button-layout="custom"]) {
+  align-self: stretch !important;
+  height: auto !important;
   margin-block: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Nested action groups must fill the same line as their neighbouring actions. */
+:root body :is(.ops-editor-toolbar, .learning-canvas-toolbar) > :is(.ops-builder-stages, .learning-actions) {
+  align-self: stretch !important;
+}
+/* Labels add height above the field. Keep these actions at the input edge. */
+:root body :is(
+  .button-row, .count-actions, .stock-actions,
+  .admin-form-actions, .admin-editor-actions, .ops-actions,
+  .ops-card-actions, .ops-settings-footer, .ops-settings-tabs,
+  .ops-builder-stages, .ops-editor-toolbar, .learning-actions,
+  .learning-canvas-toolbar, .learning-builder-stages, .learning-workspace-mobile-tabs,
+  .roster-actions, .roster-form-actions, .roster-dialog-actions,
+  .timesheet-actions, .library-dialog-actions, .library-heading-actions,
+  .library-types, .library-views, .library-pagination,
+  .communication-dialog-actions, .communications-actions, .communication-post-actions,
+  .communication-pagination, .ai-dialog-actions, .ai-source-buttons,
+  .ai-source-pagination, .order-review-actions, .order-delivery-actions,
+  .profile-photo-controls, .labels-actions, .labels-heading-actions,
+  .email-template-save-actions, .email-template-actions, .scheduled-actions,
+  .scheduled-tabs, .home-board-toolbar, .home-config-actions,
+  .catalogue-view, .pagination, .overview-mode,
+  .overview-quarter-controls, .report-shortcuts, .report-location-actions,
+  .award-actions, .console-actions, .transfer-dialog-actions,
+  .transfer-pagination, .label-format-toolbar, .label-style-toolbar,
+  .text-editor-toolbar, .editor-block-controls
+):has(> label, > .date-edit) > :is(button, a.submit, .order-delivery-actions a):not([hidden]):not([data-button-layout="custom"]) {
+  align-self: end !important;
 }
 
 @media (pointer: coarse) {
