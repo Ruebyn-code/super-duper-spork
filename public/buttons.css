@@ -33,6 +33,11 @@
   .text-editor-toolbar button, .label-format-group button, .editor-block-controls button
 )) {
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
   min-height: var(--button-height) !important;
   min-width: var(--button-height);
   height: auto !important;
@@ -85,6 +90,11 @@
   justify-content: center;
 }
 
+/* Keep icons at their intended size when a label wraps on a narrow button. */
+:root body :is(button, a.submit, .order-delivery-actions a) > svg {
+  flex-shrink: 0;
+}
+
 /* Select triggers are field controls, with the same height as toolbar actions.
    Retain their input typography (including the phone's 16px font). */
 :root body .location-select-trigger:not(.company-logo-trigger) {
@@ -107,6 +117,7 @@
 }
 :root body button:is(.ai-create-button, .ai-primary, .ai-action, .scheduled-primary)::before {
   flex-shrink: 0;
+  margin-inline-end: 0;
 }
 
 @media (max-width: 640px) {
@@ -125,6 +136,11 @@
 
 /* Rich-text and label-format tools share one compact toolbar size. */
 :root body :is(.text-editor-toolbar, .label-format-group, .editor-block-controls) button:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
   min-height: var(--button-toolbar-size) !important;
   height: auto !important;
   padding: 6px 8px !important;
