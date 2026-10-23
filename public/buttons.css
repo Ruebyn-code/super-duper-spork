@@ -103,9 +103,14 @@
   padding-block: 8px !important;
   line-height: 22px !important;
 }
-:root body :is(.search-field, .date-control):has(> button) {
-  min-height: var(--button-height);
+/* The visible frame must contain the 40px toggle plus its two 1px borders.
+   Keep date buttons with a label at their natural width. */
+:root body :is(.catalogue-search, .date-control):has(> :is(.search-toggle, .date-toggle)) {
+  min-height: calc(var(--button-height) + 2px);
   height: auto;
+}
+:root body :is(.catalogue-search:not(.search-open), .date-control:not(.date-open)):not(:has(> .date-toggle > span:not(.visually-hidden))) {
+  width: calc(var(--button-height) + 2px);
 }
 :root body .library-types button {
   flex: 1 0 auto;
