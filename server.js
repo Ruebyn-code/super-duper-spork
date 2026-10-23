@@ -176,6 +176,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       let session=kioskCookie?kioskStaff?.actor||null:req.url==='/kiosk'?null:await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
       const setupTask=requestUrl.searchParams.get('__opstack_setup');
+      if(req.url==='/location-setup-step'&&!setupTask)fail('Open this editor from the location setup popup.',400);
       if(setupTask){if(!session)fail('Sign-in required.',401);if(req.method!=='GET'||!embeddedContent)fail('Open this editor from the setup popup.',400);const target=requestUrl.searchParams.get('setupLocation');if(kioskCookie&&target!==kioskDevice.locationId)fail('This kiosk is assigned to another location.',403);session=await companyStore.context(await locationStore.sessionContext(session,target));await locationSetupStore.editor(session,target,setupTask,req.url);}
       const customisationRoutes=['/logo','/sidebar-logo','/appearance','/interface-text','/element-overrides','/font-library','/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/layouts','/api/layout','/api/home-dashboard','/api/home-greeting'];
       const authPage=['/login','/setup','/accept-invite','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url),fontAsset=req.url.startsWith('/uploaded-fonts/'),settingsPage=['/admin/settings','/settings'].includes(req.url);
@@ -214,8 +215,29 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/order-history','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
+      const setupStepRoute=req.url.match(/^\/api\/location-setup\/steps\/([a-zA-Z0-9-]+)\/(team|par|devices)$/);
+      if(setupStepRoute){
+        if(!session)fail('Sign-in required.',401);const[,id,task]=setupStepRoute;
+        if(session.locationId!==id)fail('The setup location changed. Reopen this step.',409);
+        const step=await locationSetupStore.editor(session,id,task,'/location-setup-step');
+        if(!isSupport(session)){const required=await communicationStore.required(session);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+        const base={locationId:id,locationName:session.locationName,companyId:session.companyId};
+        if(req.method==='GET'){
+          if(task==='team'){const[users,roles,state]=await Promise.all([auth.list(session),auth.permissionLevels(session),locationSetupStore.status(session,id)]);return json(200,{...base,selectedUserId:state.locations.find(l=>l.id===id)?.firstUserId||null,users:users.filter(u=>!u.invitation).map(u=>({id:u.id,username:u.username})),roles:roles.levels.filter(r=>r.assignable).map(r=>({id:r.id,name:r.name}))});}
+          if(task==='par'){const[catalogue,manual]=await Promise.all([readCatalogue(),manualParStore.read(dataDir,id)]),levels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels:manual});return json(200,{...base,products:catalogue.products.filter(p=>!p.archived).map(p=>({id:p.id,name:p.name,sku:p.sku||'',unitAmount:p.unitAmount||'',supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name||'',manualLevel:levels.levels[p.id]?.manualLevel??null,automatic:levels.levels[p.id]?.source==='usage',level:levels.levels[p.id]?.level??null}))});}
+          return json(200,{...base,network:network.slug||'default'});
+        }
+        if(req.method!=='POST'||task==='par')fail('Unsupported setup action.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const input=await body(req);if(!input||typeof input!=='object'||Array.isArray(input))fail('Enter the setup details.');if(input.locationId!==undefined&&input.locationId!==id||input.companyId!==undefined&&input.companyId!==session.companyId)fail('The setup company or location changed.',409);
+        if(task==='devices')return json(201,await kioskStore.create(session,{name:input.name,locationId:id,features:['app'],requestId:input.requestId}));
+        let user;if(input.mode==='existing')user=await auth.addLocation(session,input.userId,id,target=>locationStore.get(target,{active:true}));
+        else if(input.mode==='new')user=await auth.create(session,{username:input.username,password:input.password,phoneNumber:input.phoneNumber,role:input.role,roleScope:'company',companyId:session.companyId,locationId:id,locationIds:[id]},target=>locationStore.get(target,{active:true}));
+        else fail('Choose a new or existing user.');
+        await locationSetupStore.firstUser(session,id,user.id);return json(200,{saved:true,user:{id:user.id,username:user.username}});
+      }
       if(req.url.startsWith('/api/location-setup')){
         if(!session)fail('Sign-in required.',401);
         if(req.method==='GET'&&req.url==='/api/location-setup')return json(200,await locationSetupStore.status(session,requestUrl.searchParams.get('location')));
@@ -390,7 +412,9 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(managerRoute){const store=await locationStore.get(managerRoute[1]),context=await auth.forCompany(session,store.companyId);if(!canAccessLocation(context,store))fail('Location not found.',404);if(req.method==='GET')return json(200,await auth.locationManagers(context,store.id));if(req.method==='PUT')return json(200,await auth.assignLocationManagers(context,store.id,await body(req)));}
       if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId},{setupCreatorId:session.id}));}
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
-      if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);return json(200,await locationStore.update(locationRoute[1],await body(req)));}
+      if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);const input=await body(req),task=req.headers['x-location-setup-task'];
+        if(task){const field={details:'name',state:'publicHolidayState',hours:'tradingHours'}[task];if(!field)fail('Choose a valid location setup field.');if(session.locationId!==target.id)fail('The setup location changed.',409);await locationSetupStore.editor(session,target.id,task,'/admin/accounts');if(!input||!Object.hasOwn(input,field))fail('Enter this setup field.');return json(200,await locationStore.update(target.id,{[field]:input[field]},{partial:true}));}
+        return json(200,await locationStore.update(locationRoute[1],input));}
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
       if(req.url==='/api/account-email-settings'){
         if(await platformStore?.enabled())fail('Manage account setup emails in the Opstack owner console.',403);

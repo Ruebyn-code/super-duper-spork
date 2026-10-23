@@ -31,15 +31,32 @@ location/company or reloading. Polling and cross-tab updates do not rebuild an
 active editor. Current required Comms reading takes precedence, and existing
 authorisation and reading checks still apply to every editor API.
 
-Automatic tasks inspect saved state/territory, seven days of trading hours, a
-manager, team access, sending service, supplier delivery contacts and the stock
-catalogue. Sending credentials are required only for configured email/text
-routes; platform-only orders need no sending key. Five additional tasks require
-explicit review of rostering/labour, awards/payroll, checklist planners,
-training/induction and kiosk needs. Reviews are setup acknowledgements, not
-claims of payroll compliance, completed training or delivered physical prints.
-Finish location setup rechecks all tasks and the current revision before saving
-completion and attribution atomically in `location-setup.json`.
+The checklist has exactly eight tasks, in this order:
+
+1. **Location name** — edit the name in the popup.
+2. **Location state** — choose the Australian state or territory used for automatic public holidays.
+3. **Trading hours** — save all seven days, including explicit closed days.
+4. **Location manager** — assign an eligible existing user through the normal manager editor.
+5. **First user** — create an account with a username, password, assignable permission level and optional phone number, or select an existing active user. Existing-user selection adds only the required location access and preserves their original default location, other memberships, roles, credentials and phone/PIN. Users who already have access need no account change. The chosen first user is saved explicitly; a manager assignment alone does not choose it.
+6. **Ordering sending email** — save the sender and API key and enable automatic supplier emails. Credentials remain masked. This checks saved configuration without sending a test order or verifying the provider key.
+7. **Manual par level entry** — enter initial whole-unit pars for the location's stock. Zero is valid. The popup supports search and partial saves; it reuses ordinary per-item par writes and retains unfinished values if a save fails. Automatic pars from completed usage remain read-only and count as ready. Stock counts and orders are never created by this step.
+8. **Kiosk device** — show only a new-device form fixed to this location. It has no location picker, device list or management actions for other kiosks. Adding a device supplies a single-use pairing code/link; the new record counts as added while awaiting physical pairing. Creation retries retain the same device, refresh an unpaired device's code and never expose credential hashes or internal retry references. Pair it on the physical device to enable PIN sign-in.
+
+First-user, par and kiosk editors use `GET /api/location-setup/steps/:locationId/:task`
+with the setup location explicitly selected in `X-Location-Id`. First-user and
+kiosk writes use POST on the same endpoint with CSRF; par writes reuse the
+ordinary stock endpoint. Every request rechecks task permissions, current
+location/company access, required Comms reading and unfinished setup. The editor
+page can only be opened inside the authenticated setup popup. Read responses
+include only the data needed for that step. Name, state and hours saves update
+only that task's field, so retained drafts cannot overwrite other completed steps.
+
+Tasks update automatically from saved data. The former supplier, catalogue,
+roster, payroll, checklist and training review rows are no longer required.
+Existing completed locations and stored historical review records stay intact.
+Finish location setup rechecks all eight tasks and the current revision before
+saving completion and attribution atomically in `location-setup.json`. Unsaved
+editor drafts must be saved or discarded before finishing setup.
 
 Automated tests use isolated temporary data and fake credentials. They cover
 normal access with unfinished setup, reminders, highlights, completion, editor
