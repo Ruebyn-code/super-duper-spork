@@ -45,7 +45,8 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
    const scanned=input.kind==='invoice'?reportData.invoice:input.kind==='hourly-sales'?reportData.hourlySales:null;
    if(scanned)messages[1].content=[{type:'text',text:JSON.stringify(input.kind==='invoice'?{ocrText:scanned.ocrText,selectedPages:scanned.images.map(page=>page.page)}:{sourceText:scanned.sourceText,selectedPages:scanned.images.map(page=>page.page)})},...scanned.images.map(page=>({type:'image_url',image_url:{url:'data:'+page.mime+';base64,'+page.data,detail:'high'}}))];
    // GPT-4.1 mini caps image patches; 8,192 tokens per bounded page is conservative.
-   const inputBound=(scanned?Buffer.byteLength(JSON.stringify([messages[0],{role:'user',content:messages[1].content[0].text}]))+scanned.images.length*8192:Buffer.byteLength(JSON.stringify(messages)))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
+   // Hourly reports copy up to 31 days of printed ranges; reserve room for those labels.
+   const inputBound=(scanned?Buffer.byteLength(JSON.stringify([messages[0],{role:'user',content:messages[1].content[0].text}]))+scanned.images.length*8192:Buffer.byteLength(JSON.stringify(messages)))+8192,outputLimit=input.kind==='search'?1000:input.kind==='hourly-sales'?24000:OUTPUT_LIMIT;
    const reservation=await serial(companyId,async()=>{
     const settings=await read(companyId),previous=settings.requests.find(r=>r.id===input.requestId);
     if(previous){if(previous.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);if(previous.result)return{cached:previous.result};fail('This request has already been counted. Its result is unavailable; submit a new request if needed.',409);}

@@ -3,3 +3,5 @@
 @media(max-width:600px){.hourly-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.hourly-metrics strong{font-size:clamp(.8rem,3.6vw,1rem);white-space:nowrap;overflow-wrap:normal}.hourly-metrics>div:last-child{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}.hourly-metrics>div:last-child strong{margin:0}.hourly-metrics>div:last-child span{font-size:.72rem}}
 
 .hourly-import-dialog .ai-dialog-actions>.ai-message{flex:1 0 100%;margin:0 0 4px;font-size:.78rem;line-height:1.4;overflow-wrap:anywhere}.hourly-import-dialog .ai-dialog-actions>.ai-message:empty{display:none}
+
+.hourly-chart-column small{white-space:nowrap}.hourly-chart-column:has(small:not(:empty)){position:relative}.hourly-chart-column small:not(:empty){position:relative;left:50%;width:max-content;transform:translateX(-50%)}.hourly-chart-column:last-child small:not(:empty){left:auto;right:0;transform:none}
