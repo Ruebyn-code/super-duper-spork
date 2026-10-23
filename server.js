@@ -609,11 +609,16 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const saved=await orderHistory.save(dataDir,session,await body(req,160000),await readCatalogue());return json(saved.created?201:200,saved.order);
       }
       const historyOrderRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})$/i);
-      if(historyOrderRoute){if(req.method!=='GET')fail('Saved history entries cannot be edited.',405);return json(200,await orderHistory.get(dataDir,session,historyOrderRoute[1]));}
+      if(historyOrderRoute){
+        if(req.method==='GET')return json(200,await orderHistory.get(dataDir,session,historyOrderRoute[1]));
+        if(req.method!=='DELETE')fail('Saved history entries cannot be edited.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        return json(200,await orderHistory.remove(dataDir,session,historyOrderRoute[1],await body(req)));
+      }
       const savedOrderRoute=req.url.match(/^\/api\/orders\/([a-f0-9-]{36})$/i);
       if(req.method==='GET'&&savedOrderRoute){
         let record;try{record=JSON.parse(await fs.readFile(path.join(dataDir,savedOrderRoute[1]+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')fail('Order not found.',404);throw error;}
-        if(record.requestOwnerId!==session.id||!belongs(record,session,'requestOwnerId'))fail('Order not found.',404);
+        if(record.status==='deleted'||record.requestOwnerId!==session.id||!belongs(record,session,'requestOwnerId'))fail('Order not found.',404);
         if(requestUrl.searchParams.get('deliverySetup')==='true'&&record.delivery?.some(result=>result.status==='not_configured')){
           const [catalogue,env]=await Promise.all([readCatalogue(),deliverySettings.deliveryEnvironment(dataDir,session.locationId)]);
           record.delivery=record.delivery.map(result=>{
@@ -629,14 +634,14 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const requestId=input?.requestId;
         if(requestId!==undefined&&!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId))fail('Invalid request identifier.');
         const fingerprint=crypto.createHash('sha256').update(JSON.stringify(input)).digest('hex');
-        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
+        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
         if(requestId)order.id=requestId;order.companyId=session.companyId;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
-        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
+        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
         const templateSettings=await orderEmailTemplates.read(dataDir,session.companyId);
         order.delivery=await dispatchOrder(order,catalogue.suppliers,{env:{...await deliverySettings.deliveryEnvironment(dataDir,session.locationId),...(templateSettings.revision?{ORDER_EMAIL_TEMPLATE:templateSettings.template}:{})},fetchImpl});
         const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);

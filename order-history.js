@@ -4,7 +4,7 @@ const calendar=require('./public/rostering-model');
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const uuidFile=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.json$/i;
 function fail(message,status=400){throw Object.assign(Error(message),{status});}
-function scope(record,actor){return record?.status==='requested'&&Array.isArray(record.items)&&(record.companyId?record.companyId===actor.companyId:actor.companyId==='default')&&belongs(record,actor,'requestOwnerId');}
+function scope(record,actor,status='requested'){return record?.status===status&&Array.isArray(record.items)&&(record.companyId?record.companyId===actor.companyId:actor.companyId==='default')&&belongs(record,actor,'requestOwnerId');}
 function date(value){if(typeof value!=='string'||!/^20\d\d-\d\d-\d\d$/.test(value))fail('Choose a valid order date from 2000 onwards.');calendar.date(value);return value;}
 function text(value,max,label){if(value===undefined)return '';if(typeof value!=='string'||value.length>max||/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value))fail('Enter a valid '+label+'.');return value.trim();}
 function placedDate(record){return record.source==='manual_history'?record.orderDate:calendar.today(Date.parse(record.createdAt));}
@@ -20,7 +20,24 @@ async function list(dir,actor,params,{reader,now=Date.now()}={}){
  const suppliers=[...new Map(records.flatMap(r=>r.items.map(i=>[i.supplierId,{id:i.supplierId,name:i.supplier||'Supplier removed'}]))).values()].sort((a,b)=>a.name.localeCompare(b.name));
  const filtered=records.filter(r=>{const day=placedDate(r);return(!from||day>=from)&&(!to||day<=to)&&(!supplier||r.items.some(i=>i.supplierId===supplier))&&(!query||[r.id,r.reference,r.name,r.notes,...r.items.flatMap(i=>[i.name,i.sku,i.supplier])].filter(Boolean).join(' ').toLowerCase().includes(query));}).sort((a,b)=>placedDate(b).localeCompare(placedDate(a))||String(b.recordedAt||b.createdAt).localeCompare(String(a.recordedAt||a.createdAt))||b.id.localeCompare(a.id));
  const pageSize=25,pages=Math.max(1,Math.ceil(filtered.length/pageSize)),current=Math.min(page,pages);
- return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.place'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
+ return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.place'),canDelete:can(actor,'orders.place'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
+}
+const removals=new Map();
+async function remove(dir,actor,id,input,{now=Date.now()}={}){
+ if(!can(actor,'orders.view')||!can(actor,'orders.place'))fail('Order placing permission required to delete a past order.',403);
+ if(input?.companyId!==actor.companyId||input?.locationId!==actor.locationId)fail('The selected location changed. Reopen the order before deleting it.',409);
+ if(!uuidFile.test(id+'.json'))fail('Order not found.',404);
+ const target=path.join(dir,id+'.json'),operation=(removals.get(target)||Promise.resolve()).then(async()=>{
+  const record=await read(dir,id);if(!scope(record,actor)&&!scope(record,actor,'deleted'))fail('Order not found.',404);
+  if(record.status==='deleted')return{removed:true,id};
+  if(record.delivery?.some(result=>result.status==='pending'))fail('This order is still being sent. Wait for sending to finish before deleting it.',409);
+  // Retain the UUID and private audit so retries cannot recreate or resend it.
+  const deleted={...record,status:'deleted',deletedAt:new Date(now).toISOString(),deletedById:actor.id,deletedBy:actor.username},temp=target+'.'+crypto.randomUUID()+'.tmp';
+  try{await fs.writeFile(temp,JSON.stringify(deleted,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}
+  return{removed:true,id};
+ });
+ const queued=operation.catch(()=>{});removals.set(target,queued);
+ try{return await operation;}finally{if(removals.get(target)===queued)removals.delete(target);}
 }
 function normalize(input,actor,now){
  if(!input||typeof input!=='object'||Array.isArray(input))fail('Enter the past order details.');
@@ -45,4 +62,4 @@ async function save(dir,actor,input,catalogue,{now=Date.now()}={}){
  try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});try{await fs.link(temp,target);}catch(error){if(error.code!=='EEXIST')throw error;return replay(await read(dir,id));}}finally{await fs.rm(temp,{force:true});}
  return{created:true,order:detail(record)};
 }
-module.exports={get,list,save};
+module.exports={get,list,save,remove};

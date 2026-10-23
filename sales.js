@@ -74,7 +74,7 @@ function calculate(records,orders,session,{now=new Date(),transfers=[]}={}){
 function committedSpend(orders,session,weekStart,transfers=[]){
  const formatter=calendar(defaultTimeZone),seen=new Set();let spentCents=0,pricePending=false,orderCount=0;
  for(const order of orders){
-  if(!order||!belongs(order,session,'requestOwnerId')||seen.has(order.id)||!Array.isArray(order.items)||!Number.isSafeInteger(order.total)||order.total<0)continue;
+  if(!order||order.status==='deleted'||!belongs(order,session,'requestOwnerId')||seen.has(order.id)||!Array.isArray(order.items)||!Number.isSafeInteger(order.total)||order.total<0)continue;
   const period=orderCosts.dates(order,formatter);if(period?.costWeekStart!==weekStart)continue;
   seen.add(order.id);spentCents+=order.total;orderCount++;if(order.pricePending)pricePending=true;
  }
