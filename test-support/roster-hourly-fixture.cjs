@@ -1,0 +1,17 @@
+const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {createServer}=require('../server'),{saveAdmin}=require('../auth'),M=require('../public/rostering-model');
+const password='roster-hourly-test-password',week='2026-10-19',tradingHours=Array.from({length:7},()=>({closed:false,open:'11:00',close:'04:00'}));
+async function fixture({seed=true,partialDate,zero=false}={}){
+ const dir=await fs.mkdtemp('/tmp/opstack-roster-hourly-');await saveAdmin(dir,'Office',password);let now=Date.parse('2026-10-23T02:00:00Z'),calls=0;
+ const server=createServer(dir,{rosteringNow:()=>now,salesNow:()=>now,communicationsNow:()=>now,locationNow:()=>now,fetchImpl:async()=>{calls++;throw Error('No external requests in roster forecast tests.');}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base='http://127.0.0.1:'+server.address().port;
+ async function request(actor,url,method='GET',body,headers={}){const r=await fetch(base+url,{method,headers:{'Content-Type':'application/json',...actor?.headers,...headers},...(body?{body:JSON.stringify(body)}:{})});return{status:r.status,data:await r.json()};}
+ async function api(actor,url,method='GET',body,headers){const r=await request(actor,url,method,body,headers);assert(r.status>=200&&r.status<300,JSON.stringify(r));return r.data;}
+ async function login(username){const r=await fetch(base+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});assert.equal(r.status,200);const actor={headers:{Cookie:r.headers.get('set-cookie').split(';')[0]}};actor.session=await api(actor,'/api/session');actor.headers['X-CSRF-Token']=actor.session.csrf;return actor;}
+ const office=await login('Office'),location=office.session.locationId;await api(office,'/api/locations/'+location,'PUT',{name:'Office',tradingHours});await api(office,'/api/accounts','POST',{username:'Staff',password,role:'user',locationId:location});const staff=await login('Staff');
+ if(seed){const days=[];for(let i=1;i<=4;i++){const start=M.shiftDate(week,-i*7);await api(office,'/api/sales','PUT',{weekStart:start,revision:0,days:Array(7).fill(zero?0:10000)});for(let day=0;day<7;day++){const date=M.shiftDate(start,day),hours=Array.from({length:24},(_,h)=>zero?0:h===11?2500:h===18?6000:h===1?1500:0);if(date===partialDate)hours[2]=null;days.push({date,hours,reportedTotalCents:zero?0:10000});}}
+  const folder=path.join(dir,'weekly-sales-reports',location);await fs.mkdir(folder,{recursive:true});await fs.writeFile(path.join(folder,'2026-10-12.json'),JSON.stringify({companyId:office.session.companyId,locationId:location,weekStart:'2026-10-12',breakdown:{tillSales:Array(7).fill(zero?0:20000),uberEats:Array(7).fill(0),doorDash:Array(7).fill(0)}}));
+  const state=await api(office,'/api/hourly-sales?date='+week);await api(office,'/api/hourly-sales/confirm','POST',{requestId:crypto.randomUUID(),revision:state.revision,hoursHash:state.hoursHash,sourceName:'private-source-not-for-rosters.csv',sourceLocation:'Office',basis:'trading',fullDays:false,mode:'fill',days});
+ }
+ return{dir,base,office,staff,location,request,api,login,setTime:value=>now=Date.parse(value),calls:()=>calls,close:async()=>{await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}};
+}
+module.exports={fixture,password,week,tradingHours};

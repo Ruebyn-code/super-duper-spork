@@ -1,5 +1,7 @@
 # Project instructions
 
+- Rosters show read-only hourly forecasts under their existing sales/budget summary permissions. Reuse `hourly-sales.forecast` with the same daily projection and historical cutoff, reading hourly history once per dashboard and exposing only forecast aggregates and trading hours. Never expose raw imports, payroll settings or hourly actuals to roster-only viewers. Keep missing versus zero, cent totals and holiday/yearly-growth adjustments exact. The compact roster panel follows Day/Team dates, allows trading-date selection in Week/My roster, marks overnight hours +1 day in AM/PM and preserves shift drafts, view selection, phone popup behaviour and current button styles. Forecast reads never save, publish or call intelligence.
+
 - Install pinned dependencies with `npm ci` before running or testing the app. The Docker build installs production dependencies from `package-lock.json`.
 
 - Test every change before committing or pushing, including follow-up fixes and small adjustments. Run relevant checks for the affected behavior and run `npm test` before delivering code changes.

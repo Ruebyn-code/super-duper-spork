@@ -74,6 +74,7 @@
   phoneSection.value=section||'roster';$('phone-roster-shifts').hidden=!roster;phonePanelHost.hidden=roster;
   dialog.querySelector('.phone-roster-tabs').hidden=!roster;$('phone-roster-location').textContent=session?.locationName||'';
   if(!roster){$('phone-roster-caption').textContent={timesheets:'Timesheets',availability:'Your availability',leave:'Leave requests'}[section]||'';if(data){$('phone-roster-date-label').textContent=date(week)+' – '+date(data.weekEnd);$('phone-roster-date').value=week;for(const id of ['previous','next'])$('phone-roster-'+id).setAttribute('aria-label',(id==='previous'?'Previous':'Next')+' week');}}
+  renderHourlySales();
   if(open){dialog.hidden=false;if(!dialog.open)dialog.showModal();}
   else if(!phoneRosterClosing){if(dialog.open)dialog.close();dialog.hidden=true;}
  }
@@ -96,6 +97,10 @@
   card.dataset.phoneShift=shift.id;positionColour(card,shift.position,shift.positionColor);card.setAttribute('aria-label',day.textContent+' · '+(shift.position||'No position')+' · '+M.formatTimeInput(shift.start)+' – '+M.formatTimeInput(shift.end)+(shift.overnight?' · ends next day':''));
   position.title=shift.position||'No position';position.setAttribute('aria-label',position.title);times.append(user(node('span',M.formatTimeInput(shift.start))),user(node('span',M.formatTimeInput(shift.end))));if(shift.overnight)times.append(node('small','+1'));
   person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);window.publicHolidayMarkers?.mark(day,shift.date);return wrap;
+ }
+ function renderHourlySales(){
+  const phone=phoneViewport.matches;
+  window.rosterHourlySales?.render({before:phone?$('phone-roster-shifts'):$('roster-days'),projection:data?.summary?.projection,weekStart:week,fixedDate:phone?(phoneRosterScope==='team'?phoneRosterDay:null):(rosterView==='day'?rosterDay:null),phone,hidden:section!=='roster'||appRequiredReading.blocked});
  }
  function renderPhoneRoster(){
   syncPhoneRosterMode();if(!data||!phoneViewport.matches)return;
@@ -607,6 +612,7 @@
  $('phone-roster-next').onclick=()=>selectPhoneRosterDate(M.shiftDate(section!=='roster'||phoneRosterScope==='mine'?week:phoneRosterDay,section!=='roster'||phoneRosterScope==='mine'?7:1));
  $('phone-roster-date').onchange=event=>selectPhoneRosterDate(event.target.value);
  phoneViewport.addEventListener('change',async()=>{if(!session)return;await flushRosterEdits();placePhonePanels();renderSidebar();if(phoneViewport.matches&&section==='settings')showPhoneSection('roster');else{syncPhoneRosterMode();if(data)renderSection();}});
+ window.addEventListener('storage',event=>{if(session&&['opstack-hourly-sales-'+session.dataScope,'souvlaki-sales-updated-'+(session.dataScope||session.id),'souvlaki-weekly-report-updated-'+session.dataScope].includes(event.key)&&!rosterInteractionActive()&&section==='roster')load(false,true);});
  window.addEventListener('hashchange',view);window.addEventListener('required-reading-changed',event=>{const restored=requiredReadingWasBlocked&&!event.detail.blocked;requiredReadingWasBlocked=event.detail.blocked;syncPhoneRosterMode();if(restored&&session){if(section)load(false,true);else view();}});window.addEventListener('shift-clock-updated',()=>{if(session&&section==='timesheets')load(false,true);});window.addEventListener('focus',()=>{if(session&&!rosterSaving&&!rosterInteractionActive()&&['roster','timesheets'].includes(section))load(false,true);});$('logout').onclick=async()=>{if(!await flushRosterEdits())return;const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(response.ok)location.href=companyLoginUrl();};
  (async()=>{try{const response=await fetch('/api/session');session=await response.json();if(!session.csrf){location.href=companyLoginUrl();return;}appAccess.apply(session);$('rostering-location').textContent=session.locationName+' · '+session.companyName;try{const saved=localStorage.getItem('opstack-roster-view:'+session.id+':'+session.companyId);if(['staff','stacked','day'].includes(saved))rosterView=saved;}catch{}renderSidebar();await appRequiredReading.ready;requiredReadingWasBlocked=appRequiredReading.blocked;view();}catch(error){status(error.message);}})();
 })();
