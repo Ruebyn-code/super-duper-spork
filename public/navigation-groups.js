@@ -26,7 +26,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  moveMenu(segment(ordersMenu,'Stock','count-pages'),menus.get('count'));
  const transfers=fresh(count,'/stock-transfers','Stock transfers','stock-transfers');transfers.dataset.permission='transfers.view';transfers.querySelector('svg')?.replaceChildren();transfers.querySelector('svg').innerHTML='<path d="M3 7h16l-4-4M21 17H5l4 4"/><g class="icon-detail"><path d="M19 7l-4 4M5 17l4-4"/></g>';ordersMenu.append(transfers);
  const management=segment(ordersMenu,'Manage stock','stock-management');management.setAttribute('data-head-office-only','');moveMenu(management,menus.get('stock'));
- const salesMenu=menuFor('sales','Sales');moveMenu(salesMenu,menus.get('sales'));
+ const salesMenu=menuFor('sales','Sales');moveMenu(salesMenu,menus.get('sales'));if(!salesMenu.querySelector('a[href="/sales#hourly"]')){const hourly=fresh(sales,'/sales#hourly','Hourly sales','hourly-sales');hourly.dataset.permission='sales.view';salesMenu.append(hourly);}
  if(reporting)reporting.setAttribute('data-user-manager-only','');
  const adminMenu=menuFor('admin','Admin');adminMenu.setAttribute('data-user-manager-only','');moveMenu(adminMenu,menus.get('accounts'));
  // Settings retain their own options, separate from the Admin category.

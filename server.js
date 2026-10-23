@@ -40,7 +40,7 @@ const stockCountGroups=require('./public/stock-count-groups');
 const manualPar=require('./manual-par');
 const stockUsage=require('./stock-usage');
 const stockTransfers=require('./stock-transfers');
-const sales=require('./sales');
+const sales=require('./sales'),hourlySales=require('./hourly-sales'),hourlySalesModel=require('./hourly-sales-model');
 const weeklySalesReports=require('./weekly-sales-reports'),weeklySalesImport=require('./weekly-sales-import'),weeklySalesOverview=require('./weekly-sales-overview'),operatingExpenseTypes=require('./operating-expense-types'),operatingExpenseSchedule=require('./operating-expense-schedule');
 const reporting=require('./reporting'),reportingDetails=require('./reporting-details');
 const locations=require('./locations');
@@ -99,7 +99,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const locationSetupStore=locationSetup.createStore(dataDir,{locations:locationStore,auth,catalogues:catalogueStore,now:locationNow});
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
-  const salesStore=sales.createStore();
+  const salesStore=sales.createStore(),hourlySalesStore=hourlySales.createStore(dataDir,{now:salesNow});
   const awardStore=awardCompliance.createStore(dataDir,{people:()=>auth.directory(),locations:()=>auth.levels.locations(),now:rosteringNow,fetchImpl});
   const rosteringStore=rostering.createStore(dataDir,{unlockClockPin:(actor,input)=>auth.unlockClock(actor,input),authorizeClock:(actor,input)=>auth.authorizeClock(actor,input),clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:async actor=>(await locationStore.accessible(actor)).filter(shop=>!actor.kiosk||shop.id===actor.locationId),awards:awardStore,people:()=>auth.directory(),forecast:(actor,weekStart)=>sales.rosterProjection(dataDir,actor,weekStart,{now:new Date(rosteringNow())}),now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
@@ -436,6 +436,30 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.url==='/api/home-totals'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.totals(dataDir,session,{orders:history.orders,transfers:history.transfers}));
+      }
+      if(req.url.startsWith('/api/hourly-sales')){
+        if(!can(session,'sales.view'))fail('Sales viewing permission required.',403);
+        const location=await locationStore.status(session.locationId,salesNow()),hoursHash=hourlySales.hoursHash(location.tradingHours);
+        if(req.url==='/api/hourly-sales'&&req.method==='GET')return json(200,{...await hourlySalesStore.report(session,requestUrl.searchParams.get('date')||new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(salesNow()))),tradingHours:location.tradingHours,hoursHash});
+        if(!can(session,'sales.edit'))fail('Sales editing permission required.',403);
+        if(req.method!=='POST')fail('Use POST for hourly report imports.',405);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const input=await body(req,7000000);
+        if(req.url==='/api/hourly-sales/prepare')return json(200,hourlySalesModel.prepare(input));
+        if(req.url==='/api/hourly-sales/preview')return json(200,await hourlySalesStore.review(session,input,location.tradingHours));
+        if(req.url==='/api/hourly-sales/confirm')return json(200,await hourlySalesStore.save(session,input,location.tradingHours));
+        if(req.url==='/api/hourly-sales/intelligence'){
+          const result=await aiStore.generateHourlySales(session,input);
+          const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
+          if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reviewing this report.',401);
+          if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
+          if(!can(current,'sales.view')||!can(current,'sales.edit'))fail('Sales editing permission required.',403);
+          if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+          const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
+          const freshLocation=await locationStore.status(current.locationId,salesNow()),state=await hourlySalesStore.read(current);
+          return json(200,{...result,locationId:current.locationId,revision:state.revision,hoursHash:hourlySales.hoursHash(freshLocation.tradingHours)});
+        }
+        fail('Hourly sales action not found.',404);
       }
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);

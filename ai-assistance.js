@@ -4,7 +4,7 @@ const brandModel=require('./public/ai-brand-model'),writing=require('./public/ai
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind,scope)=>kind==='invoice'?can(actor,'invoices.view')&&can(actor,'invoices.edit'):kind==='message'?can(actor,'comms.view')&&can(actor,'comms.chat'):kind==='post'?can(actor,'comms.view')&&(scope?can(actor,'comms.post.'+scope):can(actor,'comms.post.company')||can(actor,'comms.post.network')):kind==='article'?can(actor,'knowledge.view')&&(scope?can(actor,'knowledge.manage.'+scope):can(actor,'knowledge.manage.company')||can(actor,'knowledge.manage.network')):kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
+const canDraft=(actor,kind,scope)=>kind==='hourly-sales'?can(actor,'sales.view')&&can(actor,'sales.edit'):kind==='invoice'?can(actor,'invoices.view')&&can(actor,'invoices.edit'):kind==='message'?can(actor,'comms.view')&&can(actor,'comms.chat'):kind==='post'?can(actor,'comms.view')&&(scope?can(actor,'comms.post.'+scope):can(actor,'comms.post.company')||can(actor,'comms.post.network')):kind==='article'?can(actor,'knowledge.view')&&(scope?can(actor,'knowledge.manage.'+scope):can(actor,'knowledge.manage.company')||can(actor,'knowledge.manage.network')):kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({...brandModel.defaults,revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -29,7 +29,8 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   await write(actor.companyId,next);return summary(actor.companyId,next);
  });}
  async function generate(actor,input,reportData){
-  if(!input||!['checklist','planners','course','questions','report','search','invoice',...writing.kinds].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>(writing.kinds.includes(input.kind)?24000:8000))fail('Describe the draft in up to 4,000 characters, with reference notes within the writing limit.');
+  if(!input||!['checklist','planners','course','questions','report','search','invoice','hourly-sales',...writing.kinds].includes(input.kind)||!uuid(input.requestId)||typeof input.prompt!=='string'||!input.prompt.trim()||input.prompt.length>4000||typeof(input.notes??'')!=='string'||(input.notes||'').length>(writing.kinds.includes(input.kind)?24000:8000))fail('Describe the draft in up to 4,000 characters, with reference notes within the writing limit.');
+  if(input.kind==='hourly-sales'&&!reportData?.hourlySales)fail('Use the hourly sales importer to read a report with intelligence.');
   if(input.kind==='invoice'&&!reportData?.invoice)fail('Use the invoice scanner to read an invoice with intelligence.');
   if(input.kind==='report'&&!reportData)fail('Generate reports through the scheduled reports builder.');
   if(input.kind==='search'&&!reportData?.pages?.length)fail('Use platform search to search with OpStack intelligence.');
@@ -41,9 +42,10 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
   async function perform(){
    const messages=[{role:'system',content:draftModel.instruction(input.kind)},{role:'user',content:JSON.stringify({requirements:input.prompt,referenceNotes:input.notes||'',...(writing.kinds.includes(input.kind)?{writingKind:input.kind,writingTask:parameters.mode}:{}),...(['checklist','planners'].includes(input.kind)?{currentDate:parameters.today}:{}),...(source?{...parameters,sources:source.items}:{}),...(reportData?input.kind==='search'?{pages:reportData.pages}:{reportData}:{})})}];
    // UTF-8 byte length plus per-message overhead is a conservative token bound.
-   if(input.kind==='invoice')messages[1].content=[{type:'text',text:JSON.stringify({ocrText:reportData.invoice.ocrText,selectedPages:reportData.invoice.images.map(page=>page.page)})},...reportData.invoice.images.map(page=>({type:'image_url',image_url:{url:'data:'+page.mime+';base64,'+page.data,detail:'high'}}))];
+   const scanned=input.kind==='invoice'?reportData.invoice:input.kind==='hourly-sales'?reportData.hourlySales:null;
+   if(scanned)messages[1].content=[{type:'text',text:JSON.stringify(input.kind==='invoice'?{ocrText:scanned.ocrText,selectedPages:scanned.images.map(page=>page.page)}:{sourceText:scanned.sourceText,selectedPages:scanned.images.map(page=>page.page)})},...scanned.images.map(page=>({type:'image_url',image_url:{url:'data:'+page.mime+';base64,'+page.data,detail:'high'}}))];
    // GPT-4.1 mini caps image patches; 8,192 tokens per bounded page is conservative.
-   const inputBound=(input.kind==='invoice'?Buffer.byteLength(JSON.stringify([messages[0],{role:'user',content:messages[1].content[0].text}]))+reportData.invoice.images.length*8192:Buffer.byteLength(JSON.stringify(messages)))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
+   const inputBound=(scanned?Buffer.byteLength(JSON.stringify([messages[0],{role:'user',content:messages[1].content[0].text}]))+scanned.images.length*8192:Buffer.byteLength(JSON.stringify(messages)))+8192,outputLimit=input.kind==='search'?1000:OUTPUT_LIMIT;
    const reservation=await serial(companyId,async()=>{
     const settings=await read(companyId),previous=settings.requests.find(r=>r.id===input.requestId);
     if(previous){if(previous.fingerprint!==fingerprint)fail('This OpStack intelligence request reference was already used.',409);if(previous.result)return{cached:previous.result};fail('This request has already been counted. Its result is unavailable; submit a new request if needed.',409);}
@@ -73,7 +75,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
    if(errorMessage)fail(errorMessage,502);return generated;
   }
  }
- return{status,brand,save,generate,generateInvoice:(actor,input)=>generate(actor,{kind:'invoice',requestId:input.requestId,prompt:'Transcribe this invoice for review.'},{invoice:invoiceIntelligence.source(input),locationId:actor.locationId,invoiceId:input.invoiceId||null,revision:input.revision||null}),generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
+ return{status,brand,save,generate,generateHourlySales:(actor,input)=>generate(actor,{kind:'hourly-sales',requestId:input.requestId,prompt:'Extract hourly sales for review.'},{hourlySales:require('./hourly-sales-model').source(input),locationId:actor.locationId}),generateInvoice:(actor,input)=>generate(actor,{kind:'invoice',requestId:input.requestId,prompt:'Transcribe this invoice for review.'},{invoice:invoiceIntelligence.source(input),locationId:actor.locationId,invoiceId:input.invoiceId||null,revision:input.revision||null}),generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
 }
 async function route({req,url,session,store,body,json}){
  if(!['/api/ai/status','/api/ai/settings','/api/ai/drafts'].includes(url))return false;
@@ -83,7 +85,7 @@ async function route({req,url,session,store,body,json}){
   if(req.method==='GET'){json(200,await store.status(session));return true;}
   if(req.method!=='PUT')fail('Unsupported OpStack intelligence settings action.',405);
  }else{
-  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course')&&!canDraft(session,'report')&&!writing.kinds.some(kind=>canDraft(session,kind))&&!canDraft(session,'invoice'))fail('Builder permission required.',403);
+  if(!can(session,'ai.manage')&&!canDraft(session,'checklist')&&!canDraft(session,'course')&&!canDraft(session,'report')&&!writing.kinds.some(kind=>canDraft(session,kind))&&!canDraft(session,'invoice')&&!canDraft(session,'hourly-sales'))fail('Builder permission required.',403);
   if(url==='/api/ai/status'){if(req.method!=='GET')fail('OpStack intelligence status is read-only.',405);json(200,await store.status(session));return true;}
   if(req.method!=='POST')fail('Use POST to generate an OpStack intelligence draft.',405);
  }
