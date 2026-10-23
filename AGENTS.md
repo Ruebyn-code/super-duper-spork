@@ -7,6 +7,10 @@
 - For interface or navigation changes, also check the affected interactions in desktop and phone browsers, including relevant permission levels.
 - Use isolated temporary data for tests so existing accounts, settings and orders are preserved.
 
+- User profile photos are private, network-scoped files. Allow self-service in the account profile and manager edits through the existing all-location/hierarchy checks. Keep square local previews and explicit Save photo, revision conflicts, initials fallbacks, authenticated company/chat audience reads and private no-store responses. Preserve sessions, permissions, clock PINs and other form drafts; never save photos while choosing/previewing, and remove the photo when its account is deleted. See `docs/profile-photos.md`.
+
+- Active checklist cards may complete one checkbox response directly through an explicit tick. Retain native idempotent starts, audience/active-window checks, serial answer revisions, server step activity and immutable completion; reading cards never starts or completes work. Other response types and multiple responses keep their normal reader. Ordering category density is scoped to `public/ordering-cards.css`: keep product names, images, prices, quantities, stock/par recommendations, grid/list views, cart confirmation and touch targets usable.
+
 - New location setup is non-blocking. Keep unfinished locations tinted and labelled in the directory and shared selector until explicit, validated completion. Steps edit inside the setup popup using isolated permission-checked forms, without changing the main page, selected location or drafts. Preserve required Comms reading, scope checks, private provider keys, saved reviews, completion revisions and optional five-minute reminders. Setup status must never block operational APIs or create operational records. See `docs/location-setup.md`.
 
 - The user-facing name for all AI features is “OpStack intelligence”, including builder actions, questions, reports, settings, permissions and report emails. Keep OpenAI provider/key/billing references accurate and preserve existing API paths, data keys and permission IDs.

@@ -194,6 +194,8 @@ Everyone must sign in. Ordering accounts can browse stock and submit requests; H
 
 ## Accounts and permissions
 
+Add or change your profile photo through **Account menu → User profile → Choose photo → Save photo**. Managers can update photos in the Users editor. Saved photos appear in the account menu, Users and direct messages; absent photos use initials. See [Profile photos](docs/profile-photos.md).
+
 On a fresh installation, start the app with `npm start` and open it on the same computer at http://localhost:3000. The app shows first-time setup: choose a Head Office username and a password of at least 12 characters. Once an account exists, first-time setup is locked. Existing Head Office and user accounts from earlier versions are preserved automatically.
 
 Sign in with a Head Office account and open **Admin → Users**. Choose **Ordering manager**, **Franchisee** or **Head Office**. Ordering managers can order, enter sales and save stock counts. Franchisees can do the same and create, edit or remove users at their assigned locations. Head Office has full access, including all active locations, location email, suppliers, stock and app settings. Select **Create user** at the top of the Users list to add a user. Select the pencil beside a user to edit their username, permission level, allowed locations, default location or password directly below their row. Leave the password blank to keep it. You can remove accounts, but at least one Head Office account must remain. Changing a user’s location access, default location, credentials or permissions invalidates that account’s active sessions immediately. Sessions also expire after eight hours or a server restart.
@@ -229,6 +231,8 @@ After sign-in, every user opens **Home**. The greeting appears first, followed b
 The primary-tinted search field is joined to the left of the blue account dropdown on desktop and phones. Search pages, stock/SKUs, suppliers, library article text, visible posts and conversations (including older messages), course summaries, assigned training, checklists, labels, authorised user/location records, your saved orders and the selected location’s invoice text. Results follow the current account, network, company, location and permission levels. Searching does not mark Comms read, start work, confirm prices or change records. Select a result to open it; saved orders open read-only details. Use **Ctrl+K** / **Command+K**, arrow keys and Enter, or Escape to dismiss. Search results refresh as you type and the header remains mounted across page changes.
 
 ## Ordering and cart
+
+Ordering category cards use compact thumbnails, spacing and product details while retaining prices, quantity controls, par, stock count and recommendations in both grid and list views.
 
 Open the bottom-left **Cart** pill in the Ordering catalogue to review supplier groups, change quantities and add notes without leaving your selected category. The pill shows units and the estimated total, including pending prices, and stays above phone navigation. Cart is no longer listed in the second navigation bar; the Ordering icon still shows its quantity. Close with **×**, Escape or the backdrop; dismissal waits during submission. Cart shortcuts and the old `/cart` address open this same popup. Carts remain separate for each user and location.
 

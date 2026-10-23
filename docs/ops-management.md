@@ -35,6 +35,8 @@ The preview shows upcoming dates. Melbourne daylight-saving gaps move a skipped 
 
 ## Hourly repeats and the Active list
 
+A checklist with exactly one checkbox response shows a completion tick directly on its Active card. Press it to confirm that step and complete the checklist without opening the reader. The normal audience, active-window, completion permission, revision and saved timestamp rules still apply. Instructions and sections do not count as responses. A text, number, selection, photo or signature step still opens normally to collect its answer, as do checklists with multiple responses. Completed ticks stay green and cannot reopen completed answers for editing.
+
 Choose **Recurring → Repeat → Hourly** for a separate checklist every hour within the planned active window. It works with fixed times and location trading hours. For example, 9:30 am–12:00 pm produces 9:30–10:30, 10:30–11:30 and 11:30–12:00 occurrences. Each has its own saved answers and completion record; completing one does not complete the next. Each occurrence is due and finishes at the next hour or the planner’s **Active until**, whichever is earlier. A reminder can be up to one hour before that finish. Choose repeat weekdays as needed.
 
 Intelligence understands requests such as “make this checklist repeat hourly during trading hours, plus a separate closing planner”. One Hourly planner handles all its hourly occurrences; separate instructions can generate several different planner drafts for the same checklist. Review and activate the paused suggestions as usual.
