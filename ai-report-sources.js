@@ -31,7 +31,7 @@ function createSources({dir,auth,locations,companies,catalogues,history,sales,we
     }
    }
    if(spec.topics.includes('rankings'))for(const row of progress.financeRankings(reports,'profitCents'))add('rankings',shops.find(shop=>shop.id===row.id),'Profit ranking (complete figures only)',row.rank);
-   notes.push('Daily sales and placed order costs use the exact selected dates. Sunday orders are allocated to the following Monday. Financial sales and profit use saved complete Monday–Sunday weeks ending within the selected dates; missing sales or costs remain unknown. Platform fees and invoice totals do not change profit.');
+   notes.push('Daily sales and placed order costs use the exact selected dates. Sunday orders are allocated to the following Monday. Financial sales and profit use saved complete Monday–Sunday weeks ending within the selected dates; missing sales or costs remain unknown. Cost of goods uses saved invoice totals including GST for each bundle week, plus net cost transfers; no invoices means zero and missing invoice totals mean unknown costs. Placed orders are separate, and platform fees do not change profit.');
    if(spec.topics.includes('stock'))notes.push('Stock usage uses complete Sunday–Saturday cycles and the next Sunday count; only the first ten stock items and suppliers in the normal report order are included. Missing or negative cycles need checking.');
   }
   for(const kind of ['training','checklists'])if(spec.topics.includes(kind)){

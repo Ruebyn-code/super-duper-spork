@@ -48,13 +48,14 @@ test('financial reports, budget, Home averages and quarter overview reconcile tr
  const dir=await fs.mkdtemp('/tmp/stock-transfer-finance-');try{
   const store=weekly.createStore(),transfers=[transfer()],orders=[{id:'purchase',createdAt:'2026-10-12T01:00:00Z',status:'requested',locationId:'source',total:2600,items:[{id:'rice',quantity:4,price:650}]}],records=[{weekStart:'2026-10-12',locationId:'source',days:Array(7).fill(10000)}];
   for(const actor of [source,target])await store.save(dir,actor,saved('2026-10-12'));
+  const purchaseInvoice=await require('./test-support/invoice-fixture.cjs').save(dir,source,'2026-10-12',2600);
   const from=await store.report(dir,source,'2026-10-12',{orders,transfers,now}),to=await store.report(dir,target,'2026-10-12',{orders,transfers,now});assert.equal(from.weeklyOrders.totalCents,2600);assert.equal(from.stockCosts.totalCents,0);assert.equal(from.profit.amountCents,70000);assert.equal(to.stockCosts.totalCents,2600);assert.equal(to.profit.amountCents,67400);assert.equal(from.stockCosts.totalCents+to.stockCosts.totalCents,2600);assert.equal(to.weeklyOrders.orderCount,0);
   const home=sales.homeTotals(records,orders,source,{now,transfers});assert.equal(home.placedOrdersCents,2600);assert.equal(home.quarterPlacedOrdersCents,2600);assert.equal(home.quarterStockCostCents,0);assert.equal(home.averages.weeklyCostCents,0);assert.equal(home.expensePercent,0);
   const budget=sales.calculate([],orders,source,{now:new Date('2026-10-13T01:00:00Z'),transfers});assert.equal(budget.spentCents,0);assert.equal(budget.transferCostCents,-2600);assert.equal(budget.orderCount,1);
   const selected={start:'2026-10-12',end:'2026-10-18'},catalogue={products:[product],suppliers:[{id:'supplier',name:'Supplier'}]},report=reporting.calculate(records,orders,[],catalogue,source,selected,{now,transfers});assert.equal(report.summary.orderCostCents,0);assert.equal(report.summary.orderCount,1);assert.equal(report.suppliers.reduce((sum,row)=>sum+row.orderCostCents,0),0);
   const detailed=await details.build(dir,source,report.period,{orders,transfers,catalogue,store,now});assert.equal(detailed.finance[0].costOfGoodsCents,0);assert.equal(detailed.finance[0].profitCents,70000);assert.equal(detailed.transfers[0].totalCents,-2600);assert.equal(detailed.financialTransfers[0].totalCents,-2600);assert.equal(detailed.transfers[0].costDate,'2026-10-12');
   const result=await overview.build(dir,source,{quarter:'2026-Q4'},{orders,transfers,store,now});assert.equal(result.rows.find(row=>row.weekStart==='2026-10-12').costOfGoodsPercent,0);assert.equal(result.rows.find(row=>row.weekStart==='2026-10-12').profitCents,70000);
-  const negative=await store.report(dir,source,'2026-10-12',{transfers,now});assert.equal(negative.stockCosts.totalCents,-2600);assert.equal(negative.profit.amountCents,72600);
+  await require('./invoices').remove(dir,source,purchaseInvoice.id,purchaseInvoice.revision);const negative=await store.report(dir,source,'2026-10-12',{transfers,now});assert.equal(negative.stockCosts.totalCents,-2600);assert.equal(negative.profit.amountCents,72600);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 

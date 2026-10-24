@@ -20,7 +20,7 @@ test('invoice validation rejects spoofed files, traversal, invalid dates and amo
   const results=await Promise.allSettled([invoices.create(dir,actor,input()),invoices.create(dir,actor,input())]);assert.equal(results.filter(row=>row.status==='fulfilled').length,1);assert.equal((await invoices.list(dir,actor)).bundles[0].count,1);await assert.rejects(invoices.list(dir,{...actor,locationId:'../outside'}),error=>error.status===403);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
-test('invoice API enforces sign-in, CSRF and location membership for originals and bundles, and never changes weekly expenses or sales',async()=>{
+test('invoice API enforces sign-in, CSRF and location membership for originals and bundles, without rewriting saved weekly expense entries or Daily sales',async()=>{
  const dir=await fs.mkdtemp('/tmp/invoice-api-');await saveAdmin(dir,'Office','test-office-password');const server=createServer(dir,{fetchImpl:()=>{throw Error('Unexpected supplier sending');}});await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  async function login(username){const response=await fetch(url+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:'test-office-password'})}),cookie=response.headers.get('set-cookie').split(';')[0],session=await(await fetch(url+'/api/session',{headers:{Cookie:cookie}})).json();return {session,headers:{Cookie:cookie,'X-CSRF-Token':session.csrf,'Content-Type':'application/json'}};}
  async function request(user,route,method='GET',body,extra={}){return fetch(url+route,{method,headers:{...user?.headers,...extra},body:body===undefined?undefined:JSON.stringify(body)});}

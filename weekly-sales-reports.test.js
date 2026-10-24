@@ -66,14 +66,14 @@ test('weekly reports persist separately by location and protect concurrent detai
   for(const change of [{weekStart:'2026-10-11'},{weekStart:'2026-02-30'},{weekStart:'../../outside'},{revision:-1},{breakdown:[]},{breakdown:{...input().breakdown,other:[]}},{breakdown:{...input().breakdown,cash:[1]}},{breakdown:{...input().breakdown,tillSales:Array(7).fill(-1)}},{breakdown:{...input().breakdown,cash:Array(7).fill(1.1)}},{breakdown:{...input().breakdown,cash:Array(7).fill('1')}},{labourCents:-1},{operatingExpensesCents:Infinity}])assert.throws(()=>validate({...input(),...change}),error=>error.status===400);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
-test('weekly overview costs use only placed orders at the selected location and Melbourne weeks with Sunday costs allocated forward',async()=>{
+test('weekly order references retain location and Sunday allocation while invoice-only costs ignore order prices',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'weekly-report-costs-'));try{
   const order=(id,createdAt,extra={})=>({id,createdAt,locationId:'shop',status:'requested',total:100,items:[{price:100}],...extra});
   const orders=[order('before','2026-10-03T13:59:59Z',{pricePending:true}),order('sunday','2026-10-04T12:59:59Z'),order('opening','2026-10-04T13:00:00Z'),order('opening','2026-10-04T13:00:00Z'),order('closing','2026-10-11T12:59:59Z'),order('next','2026-10-11T13:00:00Z'),order('draft','2026-10-06T00:00:00Z',{status:'draft'}),order('other','2026-10-06T00:00:00Z',{locationId:'other'})];
   const store=createStore();assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).weeklyOrders,{totalCents:200,pricePending:false,orderCount:2});
-  await store.save(dir,actor,input());assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).profit,{amountCents:-444863,state:'loss',reason:null});
+  await store.save(dir,actor,input());assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).profit,{amountCents:-444663,state:'loss',reason:null});
   orders.push(order('pending','2026-10-06T00:00:00Z',{items:[{price:null}]}));assert.equal((await store.report(dir,actor,'2026-10-05',{orders})).weeklyOrders.pricePending,true);
-  assert.deepEqual((await store.report(dir,actor,'2026-10-05',{orders})).profit,{amountCents:null,state:'unavailable',reason:'prices'});
+  const report=await store.report(dir,actor,'2026-10-05',{orders});assert.deepEqual(report.profit,{amountCents:-444663,state:'loss',reason:null});assert.equal(report.stockCosts.totalCents,0);assert.equal(report.stockCosts.invoiceCount,0);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 test('weekly sales feed projections by day while Daily sales and Home records remain separate',async()=>{

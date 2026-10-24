@@ -32,7 +32,7 @@
  function move(offset){const [year,q]=quarter.split('-Q').map(Number),index=year*4+q-1+offset;quarter=Math.floor(index/4)+'-Q'+(index%4+1);load();}
  $('overview-previous').onclick=()=>move(-1);$('overview-next').onclick=()=>move(1);$('overview-current').onclick=()=>{quarter=data?.period.currentQuarter||'';load();};
  const visible=()=>location.hash==='#overview';
- window.addEventListener('hashchange',()=>{if(visible())load();});window.addEventListener('focus',()=>{if(visible()&&!busy)load();});window.addEventListener('storage',event=>{if(visible()&&!busy&&/^souvlaki-(weekly-report|operating-expenses|usage)-updated-/.test(event.key||''))load();});window.addEventListener('interface-text-updated',render);
+ window.addEventListener('hashchange',()=>{if(visible())load();});window.addEventListener('focus',()=>{if(visible()&&!busy)load();});window.addEventListener('storage',event=>{if(visible()&&!busy&&/^souvlaki-(weekly-report|operating-expenses|usage|invoices)-updated-/.test(event.key||''))load();});window.addEventListener('interface-text-updated',render);
  setInterval(()=>{if(visible()&&!busy&&!document.hidden)load();},60000);
  render();(async()=>{try{const response=await fetch('/api/session',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}}),session=await response.json();locationName=session.locationName||'';if(visible())await load();}catch(error){$('overview-message').textContent=error.message;}})();
 })();

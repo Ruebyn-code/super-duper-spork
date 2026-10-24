@@ -1,7 +1,7 @@
 const sales=require('./sales'),weekly=require('./public/weekly-sales-report');
 const {calendar,defaultTimeZone,dayNumber,dateLabel}=require('./par-levels'),{shift}=require('./stock-usage');
 const orderCosts=require('./order-cost-period');
-const schedules=require('./operating-expense-schedule'),types=require('./operating-expense-types');
+const schedules=require('./operating-expense-schedule'),types=require('./operating-expense-types'),invoices=require('./invoices');
 const fields=['salesCents','costOfGoodsPercent','labourPercent','opExPercent','roPercent','profitCents','profitPercent'];
 function invalid(){const error=Error('Choose Quarter or Year to date and a valid quarter (for example 2026-Q4).');error.status=400;throw error;}
 function date(year,month,day){return new Date(Date.UTC(year,month,day)).toISOString().slice(0,10);}
@@ -28,7 +28,7 @@ const percent=(cost,revenue)=>cost!==null&&revenue>0?cost/revenue*100:null;
 function row(report,currentWeek,throughDate,fromDate){
  const {record}=report,weeklyOrders=report.stockCosts||report.weeklyOrders;let breakdown=record.breakdown;
  if(throughDate)breakdown=Object.fromEntries(weekly.fields.map(field=>[field,record.breakdown[field].map((value,index)=>shift(record.weekStart,index)>throughDate||shift(record.weekStart,index)<fromDate?null:value)]));
- const summary=weekly.calculate(breakdown),revenue=summary.totals.sales,goods=weeklyOrders.pricePending?null:weeklyOrders.totalCents,costs={stockOrdersCents:weeklyOrders.supplierOrdersCents??goods,stockTransferCents:weeklyOrders.transferCents||0,pricePending:weeklyOrders.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents},profit=weekly.profit(revenue,costs);
+ const summary=weekly.calculate(breakdown),revenue=summary.totals.sales,goods=weeklyOrders.pricePending?null:weeklyOrders.totalCents,costs={stockOrdersCents:weeklyOrders.invoiceCents??weeklyOrders.supplierOrdersCents??goods,stockTransferCents:weeklyOrders.transferCents||0,pricePending:weeklyOrders.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents},profit=weekly.profit(revenue,costs);
  return {weekStart:record.weekStart,weekEnd:shift(record.weekStart,6),recordedDays:summary.recordedDays,completed:record.weekStart<currentWeek&&summary.recordedDays===7,salesCents:revenue,costOfGoodsPercent:percent(goods,revenue),labourPercent:percent(record.labourCents,revenue),opExPercent:percent(record.operatingExpensesCents,revenue),roPercent:percent(record.roCents,revenue),profitCents:profit.amountCents,profitPercent:percent(profit.amountCents,revenue),profitState:profit.state,pricePending:weeklyOrders.pricePending};
 }
 function average(rows){
@@ -41,9 +41,9 @@ function average(rows){
 async function build(dir,session,params={}, {orders=[],transfers=[],store=salesReportStore(),now=new Date()}={}){
  const selected=period(params,now),currentWeek=sales.currentWeek(now),formatter=calendar(defaultTimeZone),groups=new Map();
  for(const order of orders){const period=orderCosts.dates(order,formatter);if(!period)continue;const start=period.costWeekStart;if(!groups.has(start))groups.set(start,[]);groups.get(start).push({...order,_overviewDate:period.costDate});}
- const [schedule,catalogue]=await Promise.all([schedules.read(dir,session),types.read(dir,session)]);
+ const [schedule,catalogue,invoiceBundles]=await Promise.all([schedules.read(dir,session),types.read(dir,session),invoices.list(dir,session)]);
  async function collect(range){const starts=weeks(range,{includePartial:selected.mode==='ytd'}),result=[];for(let offset=0;offset<starts.length;offset+=8)result.push(...await Promise.all(starts.slice(offset,offset+8).map(async start=>{
-  const relevant=(groups.get(start)||[]).filter(order=>selected.mode!=='ytd'||order._overviewDate>=range.startDate&&order._overviewDate<=range.endDate),report=await store.report(dir,session,start,{orders:relevant,transfers:transfers.filter(transfer=>selected.mode!=='ytd'||orderCosts.dates({createdAt:transfer.receivedAt},formatter)?.costDate<=range.endDate&&orderCosts.dates({createdAt:transfer.receivedAt},formatter)?.costDate>=range.startDate),now,operatingScheduleSnapshot:schedule,expenseTypesSnapshot:catalogue});return row(report,currentWeek,selected.mode==='ytd'?range.endDate:null,range.startDate);
+  const relevant=(groups.get(start)||[]).filter(order=>selected.mode!=='ytd'||order._overviewDate>=range.startDate&&order._overviewDate<=range.endDate),report=await store.report(dir,session,start,{orders:relevant,transfers:transfers.filter(transfer=>selected.mode!=='ytd'||orderCosts.dates({createdAt:transfer.receivedAt},formatter)?.costDate<=range.endDate&&orderCosts.dates({createdAt:transfer.receivedAt},formatter)?.costDate>=range.startDate),now,operatingScheduleSnapshot:schedule,expenseTypesSnapshot:catalogue,invoiceBundlesSnapshot:invoiceBundles});return row(report,currentWeek,selected.mode==='ytd'?range.endDate:null,range.startDate);
  })));return result;}
  const rows=await collect(selected),previousRows=await collect(selected.previous);
  return {period:selected,rows,average:average(rows),previousAverage:average(previousRows),currentWeek,timeZone:defaultTimeZone};

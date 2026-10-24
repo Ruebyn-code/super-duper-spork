@@ -26,24 +26,24 @@ test('Sunday cost dates use Melbourne calendar boundaries, including both DST ch
  assert.equal(costs.dates({createdAt:'invalid'}),null);assert.equal(costs.dates({}),null);
 });
 
-test('weekly costs, supplier cards, profit, budget, quarter averages and overview allocate each placed order exactly once',async()=>{
+test('order references, supplier cards, budgets and Home retain Sunday allocation while invoice-only financial costs exclude orders',async()=>{
  const dir=await fs.mkdtemp('/tmp/order-cost-weeks-');try{
   const store=weekly.createStore();for(const start of ['2026-10-05','2026-10-12'])await store.save(dir,actor,saved(start));
   const source=fixtures(),orders=[...source,source[2],order('draft',source[2].createdAt,9999,{status:'draft'}),order('hidden',source[2].createdAt,9999,{locationId:'other'})],before=JSON.stringify(orders);
   const first=await store.report(dir,actor,'2026-10-05',{orders,now}),second=await store.report(dir,actor,'2026-10-12',{orders,now});
   assert.deepEqual(first.stockOrders.map(row=>row.id),['previous-sunday','saturday']);assert.deepEqual(second.stockOrders.map(row=>row.id),['sunday-start','sunday-end','monday']);
-  assert.equal(first.weeklyOrders.totalCents,300);assert.equal(second.weeklyOrders.totalCents,1200);assert.equal(first.profit.amountCents,6700);assert.equal(second.profit.amountCents,5800);
+  assert.equal(first.weeklyOrders.totalCents,300);assert.equal(second.weeklyOrders.totalCents,1200);assert.equal(first.profit.amountCents,7000);assert.equal(second.profit.amountCents,7000);
   assert.equal(model.stockSupplierCosts(first.stockOrders)[0].totalCents,300);assert.equal(model.stockSupplierCosts(second.stockOrders)[0].totalCents,1200);
   assert.equal(second.stockOrders[0].createdAt,source[2].createdAt);assert.equal(second.stockOrders[0].placedDate,'2026-10-11');assert.equal(second.stockOrders[0].costDate,'2026-10-12');
   const records=['2026-10-05','2026-10-12'].map(weekStart=>({locationId:'shop',weekStart,days:Array(7).fill(1000)}));
   // Budget history and current-week performance keep their existing sales periods.
   const projection=sales.calculate(records,source,actor,{now:new Date('2026-10-17T23:00:00Z')});assert.equal(projection.weekStart,'2026-10-12');assert.equal(projection.orderCostWeekStart,'2026-10-19');assert.equal(projection.spentCents,1200);
   const home=sales.homeTotals(records,orders,actor,{now});assert.equal(home.placedOrdersCents,1500);assert.equal(home.quarterPlacedOrdersCents,1500);assert.equal(home.averages.weeklyCostCents,750);
-  const result=await overview.build(dir,actor,{quarter:'2026-Q4'},{orders,store,now});assert.equal(result.rows.find(row=>row.weekStart==='2026-10-05').costOfGoodsPercent,300/7000*100);assert.equal(result.rows.find(row=>row.weekStart==='2026-10-12').profitCents,5800);
+  const result=await overview.build(dir,actor,{quarter:'2026-Q4'},{orders,store,now});assert.equal(result.rows.find(row=>row.weekStart==='2026-10-05').costOfGoodsPercent,0);assert.equal(result.rows.find(row=>row.weekStart==='2026-10-12').profitCents,7000);
   const pending=order('pending','2026-10-18T01:00:00Z',0,{pricePending:true,items:[{id:'stock',quantity:1,price:null}]});
   assert.equal((await store.report(dir,actor,'2026-10-12',{orders:[...orders,pending]})).weeklyOrders.pricePending,false);
   await store.save(dir,actor,saved('2026-10-19'));
-  assert.equal((await store.report(dir,actor,'2026-10-19',{orders:[...orders,pending]})).profit.reason,'prices');assert.equal(JSON.stringify(orders),before);
+  assert.equal((await store.report(dir,actor,'2026-10-19',{orders:[...orders,pending]})).profit.reason,null);assert.equal(JSON.stringify(orders),before);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 
@@ -52,7 +52,7 @@ test('Reporting date filters and financial detail reconcile by cost date while e
   const store=weekly.createStore();for(const start of ['2026-10-05','2026-10-12'])await store.save(dir,actor,saved(start));const orders=fixtures();
   for(const [start,end,expected,ids] of [['2026-10-05','2026-10-11',300,['previous-sunday','saturday']],['2026-10-12','2026-10-18',1200,['sunday-start','sunday-end','monday']]]){
    const report=reporting.calculate([],orders,[],catalogue,actor,{start,end},{now});report.details=await details.build(dir,actor,report.period,{orders,store,now,catalogue});
-   assert.equal(report.summary.orderCostCents,expected);assert.equal(report.suppliers[0].orderCostCents,expected);assert.equal(report.details.finance[0].costOfGoodsCents,expected);assert.deepEqual(report.details.orderLines.map(row=>row.orderId),ids);
+   assert.equal(report.summary.orderCostCents,expected);assert.equal(report.suppliers[0].orderCostCents,expected);assert.equal(report.details.finance[0].costOfGoodsCents,0);assert.deepEqual(report.details.orderLines.map(row=>row.orderId),ids);
    assert.deepEqual(report.details.financialOrderLines.map(row=>row.orderId),ids);assert.equal(report.details.orderLines.reduce((sum,row)=>sum+row.totalCents,0),expected);
    const columns=reportModel.views['order-lines'].columns,rows=reportModel.rows([report],'order-lines'),exportRows=[columns.map(col=>col.label),...rows.map(row=>columns.map(col=>row[col.key]))],csv=require('./public/reporting-export').csv(exportRows);
    assert.ok(csv.includes('"Cost date"'));assert.ok(csv.includes('"Order date"'));
@@ -67,7 +67,7 @@ test('Sunday costs move across quarter and year boundaries without changing cumu
   for(const [createdAt,oldNow,newNow,weekStart] of [['2018-09-30T01:00:00Z','2018-09-30T02:00:00Z','2018-10-02T01:00:00Z','2018-10-01'],['2023-12-31T01:00:00Z','2023-12-31T02:00:00Z','2024-01-02T01:00:00Z','2024-01-01']]){
    const orders=[order('boundary',createdAt,600)],old=sales.homeTotals([],orders,actor,{now:new Date(oldNow)}),next=sales.homeTotals([],orders,actor,{now:new Date(newNow)});assert.equal(old.quarterPlacedOrdersCents,0);assert.equal(next.quarterPlacedOrdersCents,600);assert.equal(old.placedOrdersCents,next.placedOrdersCents);
    const store=weekly.createStore();await store.save(dir,actor,saved(weekStart));
-   const selected=await overview.build(dir,actor,{mode:'ytd'},{orders,store,now:new Date(newNow)}),selectedWeek=selected.rows.find(row=>row.weekStart===weekStart);assert.equal(selectedWeek.costOfGoodsPercent,600/2000*100);
+   const selected=await overview.build(dir,actor,{mode:'ytd'},{orders,store,now:new Date(newNow)}),selectedWeek=selected.rows.find(row=>row.weekStart===weekStart);assert.equal(selectedWeek.costOfGoodsPercent,0);
    const report=await weekly.createStore().report(dir,actor,weekStart,{orders});assert.equal(report.weeklyOrders.totalCents,600);
    assert.equal(reporting.calculate([],orders,[],catalogue,actor,{preset:'quarter'},{now:new Date(oldNow)}).summary.orderCostCents,0);assert.equal(reporting.calculate([],orders,[],catalogue,actor,{preset:'quarter'},{now:new Date(newNow)}).summary.orderCostCents,600);
   }
