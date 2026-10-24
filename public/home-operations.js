@@ -25,5 +25,5 @@
   }catch{if(profile()==='staff')clear();else if(last)note.textContent='Unable to refresh today’s projections. Refresh Home to try again.';}
   finally{loading=false;if(queued){queued=false;refresh();}}
  }
- window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('storage',event=>{if(/souvlaki-(sales|weekly-report|hourly-sales)-updated-/.test(event.key||''))refresh();});setInterval(refresh,30000);refresh();
+ window.addEventListener('hourly-sales-imported',event=>{if(event.detail.locationId===actor?.locationId&&event.detail.companyId===actor?.companyId)refresh();}); window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('storage',event=>{if(/souvlaki-(sales|weekly-report|hourly-sales)-updated-/.test(event.key||''))refresh();});setInterval(refresh,30000);refresh();
 })();

@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),panel=$('home-daily-sales'),form=$('home-daily-sales-form'),input=$('home-daily-sales-amount');if(!panel)return;
+ const $=id=>document.getElementById(id),panel=$('home-daily-sales'),form=$('home-daily-sales-form'),input=$('home-daily-sales-amount'),hourly=$('home-hourly-upload');if(!panel)return;
  const number=cents=>new Intl.NumberFormat('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(cents/100),date=value=>new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
  const clock=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:'Australia/Melbourne'}).format(new Date(value));
  let actor,current,latest,dirty=false,busy=false,loading=false,wake,clockOffset=0,expired=false;
@@ -7,7 +7,7 @@
  const label=(node,text)=>{node.textContent=typeof interfaceLabel==='function'?interfaceLabel(text):text;window.appWording?.label(node,text);};
  const message=text=>label($('home-daily-sales-message'),text);
  function cents(){const value=input.value.replace(/[$,\s]/g,'');if(!/^\d+(?:\.\d{1,2})?$/.test(value))return null;const parts=value.split('.'),amount=Number(parts[0])*100+Number((parts[1]||'').padEnd(2,'0'));return Number.isSafeInteger(amount)&&amount<=1000000000?amount:null;}
- function controls(){form.setAttribute('aria-busy',String(busy));input.disabled=busy;$('home-daily-sales-save').disabled=busy||expired;$('home-daily-sales-discard').hidden=!dirty;$('home-daily-sales-discard').disabled=busy;$('home-daily-sales-reload').disabled=busy;}
+ function controls(){hourly.hidden=!active();hourly.disabled=busy||expired||!current?.entry?.available;form.setAttribute('aria-busy',String(busy));input.disabled=busy;$('home-daily-sales-save').disabled=busy||expired;$('home-daily-sales-discard').hidden=!dirty;$('home-daily-sales-discard').disabled=busy;$('home-daily-sales-reload').disabled=busy;}
  async function api(method='GET',body){const response=await fetch('/api/home-daily-sales',{method,headers:{'Content-Type':'application/json','X-CSRF-Token':actor.csrf,...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'Unable to load daily sales.'),{status:response.status});return result;}
  function apply(result){
   if(!active()){panel.hidden=true;return;}latest=result;clockOffset=Date.parse(result.checkedAt)-Date.now();clearTimeout(wake);
@@ -36,8 +36,9 @@
  });
  $('home-daily-sales-discard').onclick=()=>{if(busy)return;dirty=false;input.blur();if(latest)apply(latest);refresh();};
  $('home-daily-sales-reload').onclick=async()=>{if(!active()||busy||loading)return;loading=true;try{const result=await api();dirty=false;input.blur();apply(result);}catch(error){message(error.message);}finally{loading=false;}};
+ hourly.onclick=()=>{if(!active()||busy||expired||!current?.entry?.available)return;window.hourlySalesUpload.open({actor,report:{date:current.entry.tradingDate},trigger:hourly,available:active,onSaved:({text})=>{const status=$('home-hourly-message');status.textContent=text;status.hidden=false;const link=document.createElement('a');link.href='/sales#hourly';link.textContent='View hourly sales';status.append(' ',link);refresh();}});};
  function guard(event){if(!active()||!busy&&!dirty)return;event.preventDefault();if(event.type==='beforeunload')event.returnValue='';message(busy?'Saving sales…':'Save daily sales or discard changes before leaving.');}
- window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)actor=event.detail.actor;if(!active()){panel.hidden=true;clearTimeout(wake);}else refresh();});
+ window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)actor=event.detail.actor;if(!active()){panel.hidden=true;clearTimeout(wake);}else refresh();controls();});
  window.addEventListener('beforeunload',guard);window.addEventListener('before-location-switch',guard);
  window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(actor?.dataScope||actor?.id))refresh();});setInterval(refresh,30000);

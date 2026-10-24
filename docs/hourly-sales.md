@@ -2,6 +2,8 @@
 
 Open **Sales → Hourly sales** or choose **View hourly sales projections** in Projection & budget. Select a Melbourne trading date to compare projected and reported sales by clock hour. Uploading hourly reports does not change Daily sales, Weekly report, order budgets, roster schedules or financial totals.
 
+The **Daily sales** reminder on Manager Home also offers **Scan hourly sales report** while that trading day’s entry is available. It opens the same OpStack intelligence uploader directly on Home, with the location and trading date pinned as context. CSV/Excel, PDF and photos follow the same review and explicit **Submit hourly sales** process below. A save confirms the imported dates and offers **View hourly sales**; the Home hourly forecasts refresh. Scanning does not fill or save the Daily sales total, and an unsaved daily amount stays intact. The action requires Home and sales editing access, stays hidden on Staff Home and does not change access to Sales elsewhere.
+
 Choose **OpStack intelligence · Upload report**. Sales viewing and editing permissions are required to import; viewers can read saved hours and forecasts. Company intelligence must already be enabled with a saved OpenAI key, budget and request allowance.
 
 1. Choose a CSV/XLSX export (up to 5 MB), PDF, JPEG, PNG or WebP photo/screenshot. Reports support up to 31 dated days per read. For a PDF, choose up to three page numbers from 1–20. Longer reports can be imported in groups.
