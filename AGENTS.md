@@ -1,5 +1,7 @@
 # Project instructions
 
+- The Locations directory defaults to Active locations, with archived locations in a separate permission-checked menu. Each view is one continuous list sectioned by saved state/territory, alphabetical within sections, with State not set last. Keep search/filter options and counts within the selected active/archive view, direct links to archived settings, restore actions, setup highlights, saved settings and native archive restrictions intact. Do not replace state sections with separate state menus.
+
 - Rosters show read-only hourly forecasts under their existing sales/budget summary permissions. Reuse `hourly-sales.forecast` with the same daily projection and historical cutoff, reading hourly history once per dashboard and exposing only forecast aggregates and trading hours. Never expose raw imports, payroll settings or hourly actuals to roster-only viewers. Keep missing versus zero, cent totals and holiday/yearly-growth adjustments exact. The compact roster panel follows Day/Team dates, allows trading-date selection in Week/My roster, marks overnight hours +1 day in AM/PM and preserves shift drafts, view selection, phone popup behaviour and current button styles. Forecast reads never save, publish or call intelligence.
 
 - Install pinned dependencies with `npm ci` before running or testing the app. The Docker build installs production dependencies from `package-lock.json`.

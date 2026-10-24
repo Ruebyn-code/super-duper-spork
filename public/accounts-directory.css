@@ -38,6 +38,16 @@
 .admin-page [data-compact-directory] .users-results{font-size:10px;margin:7px 0 0!important}
 .admin-page [data-compact-directory]>:is(#location-message,#account-message):empty{display:none}
 
+/* One location list per view, with state sections. */
+.locations-scope-menu{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.locations-scope-menu[hidden]{display:none!important}
+.admin-page .locations-scope-menu button{margin:0;padding:6px 10px;font-size:11px;line-height:1.4}
+.admin-page .locations-scope-menu button[aria-pressed=true]{background:var(--theme-primary-soft,#edf6ff);border-color:var(--primary);color:var(--theme-primary-text,var(--primary))}
+.admin-page .locations-table .location-state-heading>th{padding:10px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));text-align:left;border-bottom:1px solid var(--theme-line,#dce5ed)}
+.admin-page .locations-table .location-state-heading h2{display:inline;margin:0;font-size:13px;line-height:1.4;letter-spacing:normal}
+.location-state-heading span{margin-left:8px;font-size:11px;font-weight:400;color:var(--theme-muted,#526574)}
+@media(max-width:600px){.locations-directory>.users-directory-heading{flex-wrap:wrap;align-items:flex-start}.locations-directory>.users-directory-heading>.users-company{flex:1 0 100%}.locations-scope-menu{width:100%;align-items:stretch}.admin-page .locations-scope-menu button{flex:1;min-width:0;padding:7px 9px}.locations-table .location-state-heading,.locations-table .location-state-heading>th{display:block;width:100%;box-sizing:border-box}}
+
 /* Native dialog provides keyboard focus containment; only the body scrolls. */
 html.location-settings-open,html.location-settings-open body{overflow:hidden}
 .admin-page .location-settings-dialog{width:min(800px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-text,#21384a);box-shadow:0 18px 70px #10273540;overflow:hidden}
