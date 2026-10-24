@@ -154,14 +154,14 @@ test('one company email template serves every location, stays isolated and respe
  try{
   const admin=await app.login('admin'),first=await app.login('first'),second=await app.login('second'),route='/api/order-email-template',defaults=require('./public/order-email-template').defaults;
   assert.equal((await app.request(null,route)).status,401);assert.deepEqual((await app.request(admin,route)).data,{template:defaults,revision:0});
-  const template={subject:'{{location}} / {{supplier}}',body:'Hello {{supplier}},\n\n{{items}}\n\n{{notes}}\nThank you, {{requested_by}}\nReference: {{order_reference}}'};
+  const template={subject:'{{company}} / {{location}} / {{supplier}}',body:'{{company}}\nHello {{supplier}},\n\n{{items}}\n\n{{notes}}\nThank you, {{requested_by}}\nReference: {{order_reference}}'};
   const saved=await app.request(admin,route,'PUT',{template,revision:0});assert.equal(saved.status,200);assert.deepEqual(saved.data.template,template);assert.equal(saved.data.revision,1);
   for(const actor of [first,second]){assert.equal((await app.request(actor,route)).status,403);assert.equal((await app.request(actor,route,'PUT',{template,revision:1})).status,403);}
   assert.equal((await app.request(admin,route,'PUT',{template,revision:1},{'X-CSRF-Token':''})).status,403);
   assert.equal((await app.request(admin,route,'PUT',{template:{subject:'Order',body:'No item list'},revision:1})).status,400);assert.deepEqual((await app.request(admin,route)).data.template,template);
   const other=await app.request(admin,'/api/companies','POST',{name:'Other company',locationName:'Other store'});assert.equal(other.status,201);const otherHeader={'X-Location-Id':other.data.locationId};
   assert.deepEqual((await app.request(admin,route,'GET',undefined,otherHeader)).data,{template:defaults,revision:0});
-  const otherTemplate={subject:'Other company: {{location}}',body:'Company B\n{{items}}'};assert.equal((await app.request(admin,route,'PUT',{template:otherTemplate,revision:0},otherHeader)).status,200);assert.deepEqual((await app.request(admin,route)).data.template,template);
+  const otherTemplate={subject:'{{company}}: {{location}}',body:'{{company}}\n{{items}}'};assert.equal((await app.request(admin,route,'PUT',{template:otherTemplate,revision:0},otherHeader)).status,200);assert.deepEqual((await app.request(admin,route)).data.template,template);
   assert.equal((await app.request(first,route,'GET',undefined,otherHeader)).status,403);
   for(const actor of [first,second]){
    const settings={ORDER_FROM_EMAIL:actor.session.username+'@example.com',RESEND_API_KEY:'private-'+actor.session.username+'-key',DELIVERY_EMAIL_ENABLED:true};
@@ -169,9 +169,19 @@ test('one company email template serves every location, stays isolated and respe
    const summary=await app.request(admin,'/api/locations/'+actor.session.locationId+'/email');assert.ok(!JSON.stringify(summary).includes(settings.RESEND_API_KEY));assert.ok(!Object.hasOwn(summary.data,'template'));
   }
   await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
-  for(const actor of [first,second]){const order=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:2}],notes:'Please deliver Monday.'});assert.equal(order.status,201);}
-  assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),['first / Office Supplies','second / Office Supplies']);
+  for(const actor of [first,second]){
+   const input={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:2}],notes:'Please deliver Monday.',companyName:'Forged company',companyId:other.data.id};
+   const order=await app.request(actor,'/api/orders','POST',input);assert.equal(order.status,201);assert.equal(order.data.companyName,admin.session.companyName);assert.equal(order.data.companyId,admin.session.companyId);
+   assert.equal((await app.request(actor,'/api/orders','POST',input)).status,200);
+  }
+  assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),[admin.session.companyName+' / first / Office Supplies',admin.session.companyName+' / second / Office Supplies']);
   for(const [index,email] of sent.entries()){assert.match(email.text,/2 × A4 copy paper/);assert.match(email.text,new RegExp('Thank you, '+['first','second'][index]));assert.doesNotMatch(email.text.replace(/^Reference:.*$/m,''),/\$(?:6\.50|13\.00)\b|\b650\b/);}
+  const supplier=await app.request(admin,'/api/suppliers','POST',{name:'Other supplier'},otherHeader);assert.equal(supplier.status,201);
+  assert.equal((await app.request(admin,'/api/suppliers/'+supplier.data.id,'PUT',{delivery:{method:'email',contact:'other-supplier@example.com'}},otherHeader)).status,200);
+  const product=await app.request(admin,'/api/products','POST',{name:'Other item',supplierId:supplier.data.id,price:3,stock:0},otherHeader);assert.equal(product.status,201);
+  assert.equal((await app.request(admin,'/api/locations/'+other.data.locationId+'/email','PUT',{ORDER_FROM_EMAIL:'other@example.com',RESEND_API_KEY:'fake-other-key',DELIVERY_EMAIL_ENABLED:true})).status,200);
+  const otherOrder=await app.request(admin,'/api/orders','POST',{items:[{id:product.data.id,quantity:1}],companyName:admin.session.companyName},otherHeader);assert.equal(otherOrder.status,201);assert.equal(otherOrder.data.companyName,'Other company');
+  assert.equal(sent.length,3);assert.equal(sent[2].subject,'Other company: Other store');assert.equal(sent[2].text,'Other company\n1 × Other item');assert.equal(sent[2].from,'other@example.com');assert.deepEqual(sent[2].to,['other-supplier@example.com']);
   const competing=await Promise.all([app.request(admin,route,'PUT',{template:defaults,revision:1}),app.request(admin,route,'PUT',{template:defaults,revision:1})]);assert.deepEqual(competing.map(reply=>reply.status).sort(),[200,409]);
   await app.restart();const after=await app.login('admin');const record=(await app.request(after,route)).data;assert.deepEqual(record.template,defaults);assert.equal(record.revision,2);assert.deepEqual((await app.request(after,route,'GET',undefined,otherHeader)).data.template,otherTemplate);
  }finally{await app.close();}
