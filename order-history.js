@@ -30,7 +30,7 @@ async function remove(dir,actor,id,input,{now=Date.now()}={}){
  const target=path.join(dir,id+'.json'),operation=(removals.get(target)||Promise.resolve()).then(async()=>{
   const record=await read(dir,id);if(!scope(record,actor)&&!scope(record,actor,'deleted'))fail('Order not found.',404);
   if(record.status==='deleted')return{removed:true,id};
-  if(record.delivery?.some(result=>result.status==='pending'))fail('This order is still being sent. Wait for sending to finish before deleting it.',409);
+  if(record.delivery?.some(result=>result.status==='pending')||record.confirmation?.status==='pending')fail('This order is still being sent. Wait for sending to finish before deleting it.',409);
   // Retain the UUID and private audit so retries cannot recreate or resend it.
   const deleted={...record,status:'deleted',deletedAt:new Date(now).toISOString(),deletedById:actor.id,deletedBy:actor.username},temp=target+'.'+crypto.randomUUID()+'.tmp';
   try{await fs.writeFile(temp,JSON.stringify(deleted,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}

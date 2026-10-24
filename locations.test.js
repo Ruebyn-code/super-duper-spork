@@ -52,9 +52,9 @@ test('location sender settings are admin-only and every member uses that locatio
  assert.equal((await app.request(admin,'/api/locations/'+shop.id+'/email','PUT',{DELIVERY_EMAIL_ENABLED:true},{'X-CSRF-Token':''})).status,403);
  await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
  const body={requestId:crypto.randomUUID(),locationId:warehouse.id,locationName:'Spoofed name',items:[{id:'paper',quantity:2}]};const firstOrder=await app.request(first,'/api/orders','POST',body);assert.equal(firstOrder.status,201);assert.equal(firstOrder.data.locationId,shop.id);assert.equal(firstOrder.data.locationName,'Shop');assert.equal(firstOrder.data.delivery[0].status,'submitted');
- assert.equal((await app.request(first,'/api/orders','POST',body)).status,200);assert.equal(calls.length,1);assert.equal((await app.request(second,'/api/orders','POST',body)).status,409);
- await app.request(second,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});await app.request(third,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});assert.deepEqual(calls.map(call=>JSON.parse(call.body).from),['shop@example.com','shop@example.com','warehouse@example.com']);assert.match(JSON.parse(calls[0].body).text,/Location: Shop/);assert.ok(!JSON.parse(calls[0].body).text.includes('Spoofed'));assert.equal(calls[0].headers.Authorization,calls[1].headers.Authorization);assert.notEqual(calls[0].headers.Authorization,calls[2].headers.Authorization);
- await app.assign(admin,'first',warehouse.id);const moved=await app.login('first');assert.equal((await app.request(moved,'/api/orders','POST',body)).status,409);assert.equal(calls.length,3);
+ assert.equal((await app.request(first,'/api/orders','POST',body)).status,200);assert.equal(calls.length,2);assert.equal((await app.request(second,'/api/orders','POST',body)).status,409);
+ await app.request(second,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});await app.request(third,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});assert.deepEqual(calls.map(call=>JSON.parse(call.body).from),['shop@example.com','shop@example.com','shop@example.com','shop@example.com','warehouse@example.com','warehouse@example.com']);assert.match(JSON.parse(calls[0].body).text,/Location: Shop/);assert.ok(!JSON.parse(calls[0].body).text.includes('Spoofed'));assert.equal(calls[0].headers.Authorization,calls[2].headers.Authorization);assert.notEqual(calls[0].headers.Authorization,calls[4].headers.Authorization);
+ await app.assign(admin,'first',warehouse.id);const moved=await app.login('first');assert.equal((await app.request(moved,'/api/orders','POST',body)).status,409);assert.equal(calls.length,6);
  // Older account-addressed settings routes resolve to the assigned location rather than individual senders.
  assert.equal((await app.request(admin,'/api/accounts/'+second.session.id+'/email')).data.values.ORDER_FROM_EMAIL,'shop@example.com');
  }finally{await app.close();}
@@ -65,7 +65,7 @@ test('a saved unsent Mernda order can check current sending setup without resend
   const admin=await app.login('admin'),mernda=(await app.request(admin,'/api/locations','POST',{name:'Mernda'})).data;
   await app.assign(admin,'first',mernda.id);const actor=await app.login('first'),other=await app.login('second'),settings='/api/locations/'+mernda.id+'/email';
   assert.equal((await app.request(admin,settings,'PUT',{ORDER_FROM_EMAIL:'mernda@example.com',RESEND_API_KEY:'private-mernda-test-key',DELIVERY_EMAIL_ENABLED:true})).status,200);
-  const input={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:1}]},saved=await app.request(actor,'/api/orders','POST',input);assert.equal(saved.status,201);assert.match(saved.data.delivery[0].message,/No delivery method/);assert.equal(calls.length,0);
+  const input={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:1}]},saved=await app.request(actor,'/api/orders','POST',input);assert.equal(saved.status,201);assert.match(saved.data.delivery[0].message,/No delivery method/);assert.equal(calls.length,1);
   const file=path.join(app.dir,saved.data.id+'.json'),original=await fs.readFile(file,'utf8');assert.deepEqual((await app.request(actor,'/api/orders/'+saved.data.id)).data,saved.data);
   let current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.match(current.data.delivery[0].configurationMessage,/No delivery method/);
   await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'email',contact:'supplier@example.com'}});
@@ -73,9 +73,9 @@ test('a saved unsent Mernda order can check current sending setup without resend
   current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.match(current.data.delivery[0].configurationMessage,/Mernda: automatic supplier emails are switched off/);
   await app.request(admin,settings,'PUT',{DELIVERY_EMAIL_ENABLED:true});
   current=await app.request(actor,'/api/orders/'+saved.data.id+'?deliverySetup=true');assert.equal(current.status,200);assert.equal(current.data.delivery[0].status,'not_configured');assert.match(current.data.delivery[0].configurationMessage,/settings for Mernda are complete/);assert.match(current.data.delivery[0].configurationMessage,/has not been retried/);
-  assert.ok(!JSON.stringify(current.data).includes('private-mernda-test-key'));assert.equal(await fs.readFile(file,'utf8'),original);assert.equal(calls.length,0);
-  assert.equal((await app.request(other,'/api/orders/'+saved.data.id+'?deliverySetup=true')).status,404);assert.equal((await app.request(actor,'/api/orders','POST',input)).status,200);assert.equal(calls.length,0);
-  const sent=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});assert.equal(sent.data.delivery[0].status,'submitted');assert.equal(calls.length,1);assert.equal(JSON.parse(calls[0].body).from,'mernda@example.com');
+  assert.ok(!JSON.stringify(current.data).includes('private-mernda-test-key'));assert.equal(await fs.readFile(file,'utf8'),original);assert.equal(calls.length,1);
+  assert.equal((await app.request(other,'/api/orders/'+saved.data.id+'?deliverySetup=true')).status,404);assert.equal((await app.request(actor,'/api/orders','POST',input)).status,200);assert.equal(calls.length,1);
+  const sent=await app.request(actor,'/api/orders','POST',{items:[{id:'paper',quantity:1}]});assert.equal(sent.data.delivery[0].status,'submitted');assert.equal(calls.length,3);assert.equal(JSON.parse(calls[0].body).from,'mernda@example.com');
  }finally{await app.close();}
 });
 test('location assignments and archives validate safely and preserve last-admin protection',async()=>{
@@ -111,7 +111,7 @@ test('multi-location users switch securely and retain separate data and location
   // An already-open tab carries its displayed location, even after another tab switches.
   const oldTab={'X-Location-Id':north.id};assert.equal((await app.request(user,'/api/session','GET',undefined,oldTab)).data.locationId,north.id);assert.equal((await app.request(user,'/api/sales','GET',undefined,oldTab)).data.record.days[0],100);assert.equal((await app.request(user,'/api/sales','PUT',{weekStart:week,days:Array(7).fill(200),revision:1},oldTab)).data.locationId,north.id);
   assert.equal((await app.request(user,'/api/orders','POST',{items:[{id:'paper',quantity:2}]},oldTab)).data.locationId,north.id);assert.equal((await app.request(user,'/api/sales')).data.record.days[0],900);
-  assert.deepEqual(calls.map(call=>call.from),['north@example.com','south@example.com','north@example.com']);assert.deepEqual(calls.map(call=>call.subject),['Stock order for North','Stock order for South','Stock order for North']);
+  assert.deepEqual(calls.map(call=>call.from),['north@example.com','north@example.com','south@example.com','south@example.com','north@example.com','north@example.com']);assert.deepEqual(calls.filter(call=>!call.subject.startsWith('Order confirmation · ')).map(call=>call.subject),['Stock order for North','Stock order for South','Stock order for North']);
   assert.equal((await app.request(user,'/api/session/location','PUT',{locationId:north.id})).status,200);assert.equal((await app.request(user,'/api/catalogue')).data.products.find(product=>product.id==='paper').ordering.stockCount,11);
  }finally{await app.close();}
 });
@@ -150,7 +150,7 @@ test('location directory exposes only sender summaries and account-addressed ema
 });
 
 test('one company email template serves every location, stays isolated and respects email permissions',async()=>{
- const sent=[],app=await fixture({fetchImpl:async(url,options)=>{sent.push(JSON.parse(options.body));return {ok:true};}});
+ const sent=[],confirmations=[],app=await fixture({fetchImpl:async(url,options)=>{(options.headers['Idempotency-Key'].startsWith('order-confirmation-')?confirmations:sent).push(JSON.parse(options.body));return {ok:true};}});
  try{
   const admin=await app.login('admin'),first=await app.login('first'),second=await app.login('second'),route='/api/order-email-template',defaults=require('./public/order-email-template').defaults;
   assert.equal((await app.request(null,route)).status,401);assert.deepEqual((await app.request(admin,route)).data,{template:defaults,revision:0});
@@ -174,14 +174,14 @@ test('one company email template serves every location, stays isolated and respe
    const order=await app.request(actor,'/api/orders','POST',input);assert.equal(order.status,201);assert.equal(order.data.companyName,admin.session.companyName);assert.equal(order.data.companyId,admin.session.companyId);
    assert.equal((await app.request(actor,'/api/orders','POST',input)).status,200);
   }
-  assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),[admin.session.companyName+' / first / Office Supplies',admin.session.companyName+' / second / Office Supplies']);
+  assert.equal(confirmations.length,2);assert.deepEqual(confirmations.map(email=>email.to),[['first@example.com'],['second@example.com']]);assert.equal(sent.length,2);assert.deepEqual(sent.map(email=>email.from),['first@example.com','second@example.com']);assert.deepEqual(sent.map(email=>email.subject),[admin.session.companyName+' / first / Office Supplies',admin.session.companyName+' / second / Office Supplies']);
   for(const [index,email] of sent.entries()){assert.match(email.text,/2 × A4 copy paper/);assert.match(email.text,new RegExp('Thank you, '+['first','second'][index]));assert.doesNotMatch(email.text.replace(/^Reference:.*$/m,''),/\$(?:6\.50|13\.00)\b|\b650\b/);}
   const supplier=await app.request(admin,'/api/suppliers','POST',{name:'Other supplier'},otherHeader);assert.equal(supplier.status,201);
   assert.equal((await app.request(admin,'/api/suppliers/'+supplier.data.id,'PUT',{delivery:{method:'email',contact:'other-supplier@example.com'}},otherHeader)).status,200);
   const product=await app.request(admin,'/api/products','POST',{name:'Other item',supplierId:supplier.data.id,price:3,stock:0},otherHeader);assert.equal(product.status,201);
   assert.equal((await app.request(admin,'/api/locations/'+other.data.locationId+'/email','PUT',{ORDER_FROM_EMAIL:'other@example.com',RESEND_API_KEY:'fake-other-key',DELIVERY_EMAIL_ENABLED:true})).status,200);
   const otherOrder=await app.request(admin,'/api/orders','POST',{items:[{id:product.data.id,quantity:1}],companyName:admin.session.companyName},otherHeader);assert.equal(otherOrder.status,201);assert.equal(otherOrder.data.companyName,'Other company');
-  assert.equal(sent.length,3);assert.equal(sent[2].subject,'Other company: Other store');assert.equal(sent[2].text,'Other company\n1 × Other item');assert.equal(sent[2].from,'other@example.com');assert.deepEqual(sent[2].to,['other-supplier@example.com']);
+  assert.equal(confirmations.length,3);assert.deepEqual(confirmations[2].to,['other@example.com']);assert.equal(sent.length,3);assert.equal(sent[2].subject,'Other company: Other store');assert.equal(sent[2].text,'Other company\n1 × Other item');assert.equal(sent[2].from,'other@example.com');assert.deepEqual(sent[2].to,['other-supplier@example.com']);
   const competing=await Promise.all([app.request(admin,route,'PUT',{template:defaults,revision:1}),app.request(admin,route,'PUT',{template:defaults,revision:1})]);assert.deepEqual(competing.map(reply=>reply.status).sort(),[200,409]);
   await app.restart();const after=await app.login('admin');const record=(await app.request(after,route)).data;assert.deepEqual(record.template,defaults);assert.equal(record.revision,2);assert.deepEqual((await app.request(after,route,'GET',undefined,otherHeader)).data.template,otherTemplate);
  }finally{await app.close();}
@@ -195,11 +195,11 @@ test('location SMS setup stays private, sends once and restores only the owner�
   const before=await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8');assert.equal((await app.request(admin,route,'PUT',{...settings,TWILIO_ACCOUNT_SID:'invalid'})).status,400);assert.equal(await fs.readFile(path.join(app.dir,'location-email',id+'.json'),'utf8'),before);
   assert.equal((await app.request(admin,route,'PUT',{ORDER_FROM_EMAIL:'changed@example.com',DELIVERY_EMAIL_ENABLED:true})).status,200);const kept=(await app.request(admin,route)).data;assert.equal(kept.secrets.TWILIO_AUTH_TOKEN,true);assert.equal(kept.enabled.DELIVERY_SMS_ENABLED,true);
   assert.equal((await app.request(admin,'/api/suppliers/office','PUT',{delivery:{method:'sms',contact:'0400 123 456'}})).status,200);assert.equal((await app.request(admin,'/api/suppliers/packaging','PUT',{delivery:{method:'platform',platform:'albconnect',contact:'https://albconnect.com.au/storefront/'}})).status,200);
-  const body={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:2},{id:'boxes',quantity:1}]},saved=await app.request(first,'/api/orders','POST',body);assert.equal(saved.status,201);assert.deepEqual(saved.data.delivery.map(delivery=>delivery.status),['submitted','action_required']);assert.equal(calls.length,1);assert.equal(new URLSearchParams(calls[0].body).get('From'),'+61400111222');assert.ok(!JSON.stringify(saved).includes(settings.TWILIO_AUTH_TOKEN));
-  const handoff=saved.data.delivery[1].handoff;assert.match(handoff.text,/1 × Shipping boxes/);assert.ok(!handoff.text.includes('copy paper'));assert.ok(!handoff.text.includes('2800'));assert.equal((await app.request(first,'/api/orders','POST',body)).status,200);assert.equal(calls.length,1);
+  const body={requestId:crypto.randomUUID(),items:[{id:'paper',quantity:2},{id:'boxes',quantity:1}]},saved=await app.request(first,'/api/orders','POST',body);assert.equal(saved.status,201);assert.deepEqual(saved.data.delivery.map(delivery=>delivery.status),['submitted','action_required']);assert.equal(calls.length,2);assert.equal(new URLSearchParams(calls[0].body).get('From'),'+61400111222');assert.ok(!JSON.stringify(saved).includes(settings.TWILIO_AUTH_TOKEN));
+  const handoff=saved.data.delivery[1].handoff;assert.match(handoff.text,/1 × Shipping boxes/);assert.ok(!handoff.text.includes('copy paper'));assert.ok(!handoff.text.includes('2800'));assert.equal((await app.request(first,'/api/orders','POST',body)).status,200);assert.equal(calls.length,2);
   assert.equal((await app.request(first,'/api/orders/'+saved.data.id)).status,200);assert.equal((await app.request(second,'/api/orders/'+saved.data.id)).status,404);await app.assign(admin,'second',id);const teammate=await app.login('second');assert.equal((await app.request(teammate,'/api/orders/'+saved.data.id)).status,404);
   const elsewhere=(await app.request(admin,'/api/locations','POST',{name:'Another branch'})).data;assert.equal((await app.request(admin,'/api/orders/'+saved.data.id,'GET',undefined,{'X-Location-Id':elsewhere.id})).status,404);
-  await app.restart();const after=await app.login('first');const restored=(await app.request(after,'/api/orders/'+saved.data.id)).data;assert.deepEqual(restored.delivery[1].handoff,handoff);assert.equal(calls.length,1);
+  await app.restart();const after=await app.login('first');const restored=(await app.request(after,'/api/orders/'+saved.data.id)).data;assert.deepEqual(restored.delivery[1].handoff,handoff);assert.equal(calls.length,2);
   const office=await app.login('admin');assert.equal((await app.request(office,route)).data.secrets.TWILIO_AUTH_TOKEN,true);assert.equal((await app.request(office,'/api/locations/'+second.session.locationId+'/email')).data.secrets.TWILIO_AUTH_TOKEN,false);
  }finally{await app.close();}
 });

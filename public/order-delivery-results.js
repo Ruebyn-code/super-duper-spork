@@ -16,6 +16,7 @@
    }
    panel.append(card);
   }
+  if(order.confirmation){const confirmation=order.confirmation,card=node('article',undefined,'order-delivery-card order-confirmation-card'),header=node('div',undefined,'order-delivery-heading'),labels={submitted:'Accepted by sending service',not_configured:'Not sent',failed:'Sending failed',unconfirmed:'Submission unconfirmed',pending:'Processing unconfirmed'},badge=node('span',labels[confirmation.status]||'Not confirmed','order-delivery-badge');card.dataset.confirmationStatus=confirmation.status;badge.dataset.state=confirmation.status;header.append(node('h3','Order confirmation'),badge);card.append(header,node('p',confirmation.message,'small'));panel.append(card);}
   if(key)try{localStorage.setItem(key,order.id);}catch{}
  }
  window.orderDeliveryResults={show,async init(account){session=account;key='opstack-order-delivery-'+session.id+'-'+session.locationId;let id;try{id=localStorage.getItem(key);}catch{}if(!id||!/^[a-f0-9-]{36}$/i.test(id))return;const current=version;try{const response=await fetch('/api/orders/'+id+'?deliverySetup=true',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(response.status===404){if(version===current)localStorage.removeItem(key);return;}if(!response.ok)return;const order=await response.json();if(version===current)show(order);}catch{}}};

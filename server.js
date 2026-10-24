@@ -27,7 +27,7 @@ const companies=require('./companies'),catalogues=require('./catalogue-store'),c
 const {defaults,validateSettings,saveAppearance,readAppearance}=require('./appearance');
 const {validateDelivery,providerStatus,deliveryConfigurationIssue,dispatchOrder}=require('./order-delivery');
 const deliverySettings=require('./delivery-settings');
-const orderEmailTemplates=require('./order-email-templates');
+const orderEmailTemplates=require('./order-email-templates'),orderConfirmation=require('./order-confirmation');
 const {splitBySupplier}=require('./supplier-orders');
 const orderHistory=require('./order-history');
 const interfaceText=require('./interface-text');
@@ -665,13 +665,17 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
-        if(requestId)order.id=requestId;order.companyId=session.companyId;order.companyName=session.companyName;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        if(requestId)order.id=requestId;order.companyId=session.companyId;order.companyName=session.companyName;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.confirmation={status:'pending',message:'Confirmation email is still processing or unconfirmed. Check the sending service before retrying.'};order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
         try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
         const templateSettings=await orderEmailTemplates.read(dataDir,session.companyId);
-        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env:{...await deliverySettings.deliveryEnvironment(dataDir,session.locationId),...(templateSettings.revision?{ORDER_EMAIL_TEMPLATE:templateSettings.template}:{})},fetchImpl});
-        const target=path.join(dataDir,`${order.id}.json`);const temp=target+'.tmp';await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);
+        const env={...await deliverySettings.deliveryEnvironment(dataDir,session.locationId),...(templateSettings.revision?{ORDER_EMAIL_TEMPLATE:templateSettings.template}:{})};
+        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env,fetchImpl});
+        const target=path.join(dataDir,`${order.id}.json`);
+        const persist=async()=>{const temp=target+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}};
+        // Persist supplier outcomes and the pending confirmation before any receipt call.
+        await persist();order.confirmation=await orderConfirmation.send(order,{env,fetchImpl,networkId:network.id});await persist();
         return json(201,order);
       }
 
