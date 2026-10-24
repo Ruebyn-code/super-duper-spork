@@ -1,0 +1,18 @@
+const {can,homeDashboard}=require('./permissions'),time=require('./public/rostering-model'),hours=require('./public/location-hours-model'),hourlySales=require('./hourly-sales');
+const amount=value=>Number.isSafeInteger(value)&&value>=0;
+const canView=actor=>homeDashboard(actor)==='manager'&&can(actor,'home.view')&&can(actor,'sales.view');
+function context(location,now){const epoch=new Date(now).getTime(),calendarDate=time.today(epoch),status=hours.status(location.tradingHours,epoch,location.archived),date=status.tradingDate||calendarDate,day=hours.normalize(location.tradingHours)[(new Date(date+'T12:00:00Z').getUTCDay()+6)%7],openingHour=day&&!day.closed?Number(day.open.slice(0,2)):0;return{epoch,calendarDate,date,weekStart:time.monday(date),status,day,openingHour,hour:Number(time.localParts(epoch).time.slice(0,2))};}
+function calculate(actor,{location,now=Date.now(),projection,hourly,budget}){
+ if(!canView(actor))throw Object.assign(Error('Manager Home and daily sales viewing permission are required.'),{status:403});
+ const ctx=context(location,now),day=projection.daily.find(day=>day.date===ctx.date),salesCents=amount(day?.salesCents)?day.salesCents:null,forecast=hourlySales.forecast(hourly,ctx.date,projection),weights=projection.daily.map(day=>day.salesCents);let labourCents=null,budgetReason=null;
+ if(!budget||!amount(budget.value)||!['fixed','percent'].includes(budget.mode))budgetReason='A labour budget has not been configured for this location.';
+ else if(budget.mode==='percent'){if(salesCents!==null)labourCents=Number((BigInt(salesCents)*BigInt(budget.value)+5000n)/10000n);else budgetReason='Daily sales projections are needed to calculate the labour budget.';}
+ else if(weights.length===7&&weights.every(amount)){const allocated=hourlySales.allocate(budget.value,weights);labourCents=allocated?.[(new Date(ctx.date+'T12:00:00Z').getUTCDay()+6)%7]??null;if(labourCents===null)budgetReason='A positive weekly sales forecast is needed to divide the fixed weekly labour budget.';}
+ else budgetReason='Complete weekly sales projections are needed to divide the fixed weekly labour budget.';
+ const labourHours=labourCents!==null&&forecast.hours?hourlySales.allocate(labourCents,forecast.hours):null,order=Array.from({length:24},(_,i)=>(ctx.openingHour+i)%24),open=ctx.status.state==='open';let through=order.indexOf(ctx.hour);if(ctx.calendarDate>ctx.date&&ctx.hour===ctx.openingHour)through=23;
+ const indices=open?order.slice(0,through+1):[],sum=values=>open&&values?indices.reduce((total,hour)=>total+values[hour],0):null,dayOffset=ctx.calendarDate>ctx.date?1:0;
+ const current={hour:ctx.hour,endHour:(ctx.hour+1)%24,dayOffset,endDayOffset:dayOffset+(ctx.hour===23?1:0),salesCents:open&&forecast.hours?forecast.hours[ctx.hour]:null,labourCents:open&&labourHours?labourHours[ctx.hour]:null,throughSalesCents:sum(forecast.hours),throughLabourCents:sum(labourHours)};
+ const rows=indices.map(hour=>({hour,endHour:(hour+1)%24,dayOffset:hour<ctx.openingHour?1:0,salesCents:forecast.hours?.[hour]??null,labourCents:labourHours?.[hour]??null,current:hour===ctx.hour}));
+ return{locationId:actor.locationId,companyId:actor.companyId,locationName:location.name||actor.locationName,date:ctx.date,calendarDate:ctx.calendarDate,checkedAt:new Date(ctx.epoch).toISOString(),timeZone:time.timeZone,state:ctx.status.state,day:{salesCents,labourCents},current,rows,forecastMethod:forecast.method,salesReason:forecast.reason,budgetReason,hourReason:open?null:ctx.status.state==='unknown'?'Set this location’s trading hours to show the current trading hour.':'The location is currently outside its trading hours.',rosterHref:can(actor,'rostering.view')?'/rostering#roster':null};
+}
+module.exports={canView,context,calculate};

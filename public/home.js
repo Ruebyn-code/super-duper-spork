@@ -2,6 +2,7 @@
  const $=id=>document.getElementById(id);
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  const money=value=>value===null?wording('Price pending'):new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
+ const managerHome=()=>window.homeProfile?.profile!=='staff'&&document.body.dataset.homeDashboard!=='staff';
  let session,catalogue,totals,cartKey='',loading=false,refreshAgain=false;
  let locationInfo,locationClockOffset=0;function tradingStatus(){if(!locationInfo)return;const value=locationHoursModel.status(locationInfo.tradingHours,Date.now()+locationClockOffset),badge=$('home-trading-status');badge.dataset.state=value.state;badge.textContent={open:'Open',closed:'Closed',unknown:'Hours not set'}[value.state];badge.title=value.closesAt?'Closes '+new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hour:'numeric',minute:'2-digit'}).format(new Date(value.closesAt)):'Based on Melbourne trading hours';$('home-location-managers').textContent=locationInfo.managers.length?'Managers: '+locationInfo.managers.map(p=>p.username).join(', '):'';}
  setInterval(()=>{if(!document.hidden)tradingStatus();},30000);
@@ -21,6 +22,7 @@
  function renderTotals(){
   if(typeof interfaceLabel==='function')template($('home-totals-heading'),'Location totals');
   if(session)$('home-totals-location').textContent=session.locationName||'';
+  if(!managerHome()){totals=null;for(const id of ['home-total-sales','home-total-orders','home-total-expense','home-average-sales','home-average-cost','home-average-expense'])$(id).textContent='—';return;}
   if(!totals)return;
   $('home-totals-status').toggleAttribute('data-home-error',Boolean(totals.quarterPricePending));$('home-averages-status').toggleAttribute('data-home-error',Boolean(totals.averages?.pricePending));
   $('home-total-sales').textContent=money(totals.salesCents);
@@ -53,10 +55,11 @@
  }
  async function refresh(){
   if(!session||document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
-  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),appAccess.can('home.view')?api('/api/home-totals'):Promise.resolve(null),appAccess.can('home.view')?api('/api/location-status'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=results[1].value;if(results[2].status==='fulfilled'&&results[2].value){locationInfo=results[2].value;locationClockOffset=Date.parse(locationInfo.tradingStatus.checkedAt)-Date.now();}render();if(results[1].status==='rejected'){$('home-totals-status').setAttribute('data-home-error','');$('home-averages-status').setAttribute('data-home-error','');template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
+  try{const results=await Promise.allSettled([appAccess.any(['orders.view','counts.view','stock.manage','suppliers.manage'])?api('/api/catalogue'):Promise.resolve(null),managerHome()&&appAccess.can('home.view',session)?api('/api/home-totals'):Promise.resolve(null),appAccess.can('home.view')?api('/api/location-status'):Promise.resolve(null)]);if(results[0].status==='fulfilled')catalogue=results[0].value;if(results[1].status==='fulfilled')totals=managerHome()?results[1].value:null;if(results[2].status==='fulfilled'&&results[2].value){locationInfo=results[2].value;locationClockOffset=Date.parse(locationInfo.tradingStatus.checkedAt)-Date.now();}render();if(results[1].status==='rejected'){$('home-totals-status').setAttribute('data-home-error','');$('home-averages-status').setAttribute('data-home-error','');template($('home-totals-status'),'Unable to load location totals. Try again shortly.');template($('home-averages-status'),'Unable to load quarter averages. Try again shortly.');}$('home-status').textContent=results[0].status==='fulfilled'?'':wording('Unable to load your dashboard. Use the navigation to open a page.');}
   catch{template($('home-status'),'Unable to load your dashboard. Use the navigation to open a page.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
+ window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)session=event.detail.actor;render();refresh();});
  $('logout').onclick=async()=>{try{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(!response.ok)throw Error();location.href=companyLoginUrl();}catch{template($('home-status'),'Please sign in again.');}};
  window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)))refresh();});
  window.addEventListener('focus',()=>{renderCart();refresh();});window.addEventListener('pageshow',event=>{renderCart();if(event.persisted)refresh();});

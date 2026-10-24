@@ -21,6 +21,8 @@
  const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network','comms.post.network','knowledge.manage.network','rostering.budget.network','account-email.manage'];
  const work=['learning.view','learning.complete','prep.view','prep.print','ops.view','ops.complete','rostering.view','rostering.clock','rostering.availability','rostering.leave','knowledge.view','comms.view','comms.chat','home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
  const defaults=[{id:'user',name:'Ordering manager',level:10,scope:'network',permissions:work},{id:'franchisee',name:'Franchisee',level:50,scope:'network',permissions:[...work,'learning.manage','learning.assign','learning.report','ops.manage','transfers.view','transfers.send','transfers.receive','reporting.view','reports.manage','users.manage','devices.manage','rostering.manage','rostering.approve','rostering.costs','rostering.budget.location','rostering.leave.approve']},{id:'admin',name:'Head Office',level:100,scope:'network',permissions:keys}];
+ const homeDashboards=['staff','manager'];
+ const homeDashboard=account=>account?.homeDashboard==='staff'?'staff':'manager';
  function can(account,key){if(!account)return false;const permissions=account.permissions||defaults.find(role=>role.id===account.role)?.permissions||[],network=account.networkPermissions||permissions;if(key==='roles.manage'&&network.includes('roles.network'))return true;return(networkKeys.includes(key)?network:permissions).includes(key);}
  const any=(account,permissions)=>permissions.some(key=>can(account,key));
  const level=account=>account?.roleLevel??defaults.find(role=>role.id===account?.role)?.level??0;
@@ -42,5 +44,5 @@
  dependencies['users.email.manage']='users.manage';
  const awardKeys=['awards.manage'],leaveKeys=['rostering.leave','rostering.leave.approve','rostering.leave.confidential'];
  const userEmailKeys=['users.email.manage','account-email.manage'];
- const api={reportKeys,aiKeys,deviceKeys,learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
+ const api={homeDashboards,homeDashboard,reportKeys,aiKeys,deviceKeys,learningKeys,prepKeys,opsKeys,userEmailKeys,transferKeys,leaveKeys,awardKeys,definitions,keys,networkKeys,defaults,can,any,level,grants,canAssign,dependencies,communicationKeys,knowledgeKeys,rosteringKeys};if(typeof module==='object'&&module.exports)module.exports=api;else root.permissionModel=api;
 })(globalThis);

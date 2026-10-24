@@ -33,7 +33,7 @@ const orderHistory=require('./order-history');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
 const wordingModel=require('./public/wording-model');
-const homeBoard=require('./home-board'),homeGreeting=require('./home-greeting');
+const homeBoard=require('./home-board'),homeGreeting=require('./home-greeting'),homeOperations=require('./home-operations');
 const layouts=require('./layouts'),layoutModel=require('./public/layout-model');
 const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');const editParts=require('./public/edit-parts');
@@ -208,7 +208,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
       const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change);
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await homeGreeting.read(customisations.folder(dataDir,session.companyId),(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}')).text,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,photoUrl:(await photoStore.describe(session.id)).photoUrl,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:kioskCookie?[{id:session.companyId,name:session.companyName}]:await companyStore.accessible(session),locations:kioskCookie?[{id:session.locationId,name:session.locationName}]:(await locationSetupStore.decorate(await locationStore.accessible(session))).map(({id,name,setupPending})=>({id,name,...(setupPending?{setupPending:true}:{})})),dataScope:session.dataScope,canMigrateBrowserData:kioskCookie?false:session.canMigrateBrowserData,...(kioskStaff?{kiosk:{deviceId:kioskDevice.id,deviceName:kioskDevice.name,sessionId:kioskStaff.sessionId,expiresAt:kioskStaff.expiresAt}}:{})}:{role:'user'});
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await homeGreeting.read(customisations.folder(dataDir,session.companyId),(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}')).text,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,photoUrl:(await photoStore.describe(session.id)).photoUrl,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:kioskCookie?[{id:session.companyId,name:session.companyName}]:await companyStore.accessible(session),locations:kioskCookie?[{id:session.locationId,name:session.locationName}]:(await locationSetupStore.decorate(await locationStore.accessible(session))).map(({id,name,setupPending})=>({id,name,...(setupPending?{setupPending:true}:{})})),dataScope:session.dataScope,canMigrateBrowserData:kioskCookie?false:session.canMigrateBrowserData,...(kioskStaff?{kiosk:{deviceId:kioskDevice.id,deviceName:kioskDevice.name,sessionId:kioskStaff.sessionId,expiresAt:kioskStaff.expiresAt}}:{})}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==requestOrigin(req))fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
@@ -345,8 +345,9 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       if(req.url==='/api/home-dashboard'){
         if(platformAppearance)fail('Home sections belong to a company.',400);
-        if(req.method==='GET')return json(200,await homeBoard.read(customisationDir));
-        if(req.method==='PUT')return json(200,await homeBoard.save(customisationDir,await body(req,64000)));
+        const dashboard=requestUrl.searchParams.get('dashboard')||session.homeDashboard||'manager';if(!['staff','manager'].includes(dashboard))fail('Choose Staff or Manager Home.');if(dashboard!==(session.homeDashboard||'manager')&&(!can(session,'appearance.manage')||session.homeDashboard==='staff'))fail('This Home dashboard is not available.',403);
+        if(req.method==='GET')return json(200,await homeBoard.read(customisationDir,dashboard));
+        if(req.method==='PUT')return json(200,await homeBoard.save(customisationDir,await body(req,64000),dashboard));
         fail('Unsupported Home action.',405);
       }
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
@@ -395,6 +396,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       }
       if(req.url==='/api/location-status'&&req.method==='GET'){if(!can(session,'home.view'))fail('Home viewing permission required.',403);return json(200,await locationStore.status(session.locationId,locationNow()));}
       if(req.url==='/api/home-daily-sales'){
+        if(session.homeDashboard==='staff')fail('Sales entry is not shown on Staff Home. Use Daily sales if your permissions allow it.',403);
         if(!can(session,'home.view'))fail('Home viewing permission required.',403);
         if(!['GET','PUT'].includes(req.method)){res.setHeader('Allow','GET, PUT');fail('Unsupported daily sales action.',405);}
         if(req.method==='PUT'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
@@ -477,7 +479,14 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const history=await usageHistory(dataDir),seen=new Set();
         return json(200,history.orders.filter(order=>order.requestOwnerId===session.id&&sales.allTimeTotals([],[order],session).orderCount&&!seen.has(order.id)&&seen.add(order.id)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).slice(0,8).map(order=>({id:order.id,createdAt:order.createdAt,totalCents:order.total,pricePending:Boolean(order.pricePending||order.items.some(item=>item?.price===null)),units:order.items.reduce((sum,item)=>sum+(Number(item?.quantity)||0),0)})));
       }
+      if(req.url==='/api/home-operations'&&req.method==='GET'){
+        if(!homeOperations.canView(session))fail('Manager Home and daily sales viewing permission are required.',403);
+        const now=locationNow(),location=await locationStore.status(session.locationId,now),target=homeOperations.context(location,now);
+        const [projection,hourly,budget]=await Promise.all([sales.rosterProjection(dataDir,session,target.weekStart,{now:new Date(now)}),hourlySalesStore.read(session),rosteringStore.homeBudget(session)]);
+        return json(200,homeOperations.calculate(session,{now,location,projection,hourly,budget}));
+      }
       if(req.url==='/api/home-totals'&&req.method==='GET'){
+        if(session.homeDashboard==='staff')fail('Sales totals are not shown on Staff Home.',403);
         const history=await usageHistory(dataDir);
         return json(200,await salesStore.totals(dataDir,session,{orders:history.orders,transfers:history.transfers}));
       }
@@ -683,7 +692,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       const file=publicFiles[req.url];
       const contentType=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.css')?'text/css':file.endsWith('.ttf')?'font/ttf':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.png')?'image/png':/\.(?:gz|pfb)$/.test(file)?'application/octet-stream':file.endsWith('.txt')||file.endsWith('.md')?'text/plain; charset=utf-8':'text/javascript';
       if(file.endsWith('.html')){
-        const layoutPage=file.replace(/\.html$/,''),[rawMarkup,appearance,text,overrides,font,hasLogo,hasSidebarLogo,fontLibrary,layout,icon,aiBrand]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8'),currentAppearance(customisationDir,platformAppearance&&!sharedAppearance),interfaceText.read(customisationDir),elementOverrides.read(customisationDir),asset('fonts/Opsilon-xRj8m.ttf'),readLogo(customisationDir).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readLogo(customisationDir,true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readFontLibrary(),layouts.page(customisationDir,layoutPage),asset('assets/branding/opstack-icon.png'),session&&!platformAppearance?aiStore.brand(appearanceCompany.id):{companyId:appearanceCompany.id,revision:0,...aiBrandModel.defaults}]);
+        const layoutPage=file.replace(/\.html$/,''),[rawMarkup,appearance,text,overrides,font,hasLogo,hasSidebarLogo,fontLibrary,layout,icon,aiBrand]=await Promise.all([fs.readFile(path.join(__dirname,'public',file),'utf8').then(markup=>file==='home.html'?markup.replace('<body','<body data-home-dashboard="'+(session?.homeDashboard||'manager')+'"'):markup),currentAppearance(customisationDir,platformAppearance&&!sharedAppearance),interfaceText.read(customisationDir),elementOverrides.read(customisationDir),asset('fonts/Opsilon-xRj8m.ttf'),readLogo(customisationDir).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readLogo(customisationDir,true).then(()=>true,error=>{if(error.code==='ENOENT')return false;throw error;}),readFontLibrary(),layouts.page(customisationDir,layoutPage),asset('assets/branding/opstack-icon.png'),session&&!platformAppearance?aiStore.brand(appearanceCompany.id):{companyId:appearanceCompany.id,revision:0,...aiBrandModel.defaults}]);
         const authPreview=req.url.startsWith('/admin/appearance/');const previewToolbar='<div id="admin-edit-controls" class="auth-preview-toolbar" data-copy-editor><strong>Page preview</strong><a href="'+scopedAsset('/admin/settings')+'#sign-in">Back to settings</a><button id="app-edit-toggle" type="button" aria-pressed="false"><span class="sidebar-edit-label">App edit</span></button><p id="app-edit-status" role="status" class="visually-hidden"></p></div>';
         const networkSeed=await newNetworkDefaults.snapshot(dataDir),companySeed=await newNetworkDefaults.companySnapshot(dataDir,appearanceCompany.id),networkAppearanceDefaults=companySeed?newNetworkDefaults.files(companySeed)['appearance.json']:null;
         const welcomeMarkup=req.url==='/login'?newNetworkDefaults.welcome(rawMarkup,networkSeed):rawMarkup;
@@ -696,7 +705,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/wording-model.js" defer></script><script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/location-setup.js" defer></script><link rel="stylesheet" href="/location-setup.css"><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css">'+clockScripts+'<script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script><script src="/section-resize.js" defer></script>');
         const copyMarkup=wordingModel.annotate(arrangedScripts,interfaceText.labels);
         const markup=layoutModel.renderMarkup(editParts.renderImages(editParts.renderIcons(editParts.annotate(copyMarkup,file),overrides),overrides),layout.groups);
-        const bootstrap=JSON.stringify({aiBrand,locationSetup:session&&!isSupport(session)?await locationSetupStore.status(session):null,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
+        const bootstrap=JSON.stringify({aiBrand,locationSetup:session&&!isSupport(session)?await locationSetupStore.status(session):null,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
         const fontUrl='/fonts/Opsilon-xRj8m.ttf?v='+font.etag.slice(1,-1);
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix)||id.startsWith('type:'))).map(([,entry])=>entry.font)]);

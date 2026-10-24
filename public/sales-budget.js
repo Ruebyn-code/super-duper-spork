@@ -1,12 +1,13 @@
 (()=>{
  if(!appAccess.can('sales.view')){document.getElementById('ordering-budget')?.classList.add('access-denied');document.querySelector('.ordering-sales-budget')?.classList.add('access-denied');return;}
+ const active=()=>document.body?.dataset?.homeDashboard!=='staff';
  const panel=document.getElementById('ordering-budget');if(!panel)return;
  const $=id=>document.getElementById(id),money=value=>value===null?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
  let session,projection,currentProjection,loading=false,refreshAgain=false,cart={total:0,pricePending:false};
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  function render(){
-  if(!projection)return;window.salesPerformanceView?.render(currentProjection);
+  if(!active()){projection=null;currentProjection=null;return;}if(!projection)return;window.salesPerformanceView?.render(currentProjection);
   $('ordering-projected-sales').textContent=money(projection.projectedSalesCents);$('ordering-week-budget').textContent=money(projection.budgetCents);
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';
@@ -24,11 +25,12 @@
   template($('ordering-budget-status'),(upcoming?'Upcoming week’s budget, including Sunday orders and cost transfers. Forecast uses the last four completed sales weeks. '+label:label)+holidayNote,{weeks:projection.weeksRecorded});
  }
  async function refresh(){
-  if(document.hidden)return;if(loading){refreshAgain=true;return;}loading=true;
+  if(document.hidden||!active())return;if(loading){refreshAgain=true;return;}loading=true;
   try{const response=await fetch('/api/sales',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(!response.ok)throw Error('Unable to load sales budget.');const report=await response.json();currentProjection=report.projection;projection=report.orderingProjection||report.projection;render();}
   catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');}
   finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
+ window.addEventListener('home-dashboard-access',()=>{if(!active()){projection=null;currentProjection=null;}else refresh();});
  window.addEventListener('ordering-cart-updated',event=>{cart=event.detail;render();});
  window.addEventListener('sales-budget-updated',refresh);window.addEventListener('weekly-sales-imported',refresh);window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('interface-text-updated',render);
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-weekly-report-updated-'+session?.dataScope)refresh();});
