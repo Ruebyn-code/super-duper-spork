@@ -8,7 +8,7 @@ window.createAppSearch=({footer,trigger,beforeOpen})=>{
  const heading=node('div',undefined,'app-search-heading'),caption=node('span','OpStack intelligence'),closeButton=node('button','×');closeButton.type='button';closeButton.setAttribute('aria-label','Close search');heading.append(caption,closeButton);
  const status=node('p','','app-search-status'),list=node('div');status.setAttribute('role','status');status.setAttribute('aria-live','polite');list.id='app-search-results';list.setAttribute('role','listbox');list.setAttribute('aria-label','Search results');const hint=node('p','Search articles, images, videos and pages. Press Enter to open a clear match.','app-search-hint');hint.id='app-search-hint';input.setAttribute('aria-describedby',hint.id);panel.append(heading,hint,status,list);document.body.append(panel);
  let actor,scope='',timer,request,version=0,selected=-1,links=[],restoring=false,opening=false,intelligenceAvailable=null,thinking=false,searchRef=null;
- const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),searchButton=node('button',undefined,'app-search-toggle');
+ const kiosk=document.documentElement.classList.contains('kiosk-app'),mobile=matchMedia(kiosk?'not all':'(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),searchButton=node('button',undefined,'app-search-toggle');
  searchButton.type='button';searchButton.setAttribute('aria-label','Search');searchButton.setAttribute('aria-controls',panel.id);searchButton.setAttribute('aria-expanded','false');searchButton.disabled=true;searchButton.append(icon.cloneNode(true));host.prepend(searchButton);
  function layout(){if(mobile.matches)heading.after(field);else host.append(field);searchButton.hidden=!mobile.matches;position();}
  mobile.addEventListener('change',layout);
@@ -16,8 +16,8 @@ window.createAppSearch=({footer,trigger,beforeOpen})=>{
  const opened=()=>!panel.hidden;layout();
  function position(){
   if(!opened())return;
-  const box=footer.getBoundingClientRect(),viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=10,w=Math.min(420,width-edge*2),below=Math.max(top+edge,box.bottom+7),y=top+height-below-edge<260?top+edge:below,available=Math.max(100,Math.min(480,top+height-y-edge));
-  panel.style.width=w+'px';panel.style.left=Math.max(left+edge,Math.min(box.right-w,left+width-w-edge))+'px';panel.style.top=y+'px';panel.style.maxHeight=available+'px';panel.classList.toggle('app-search-short',available<330);
+  const box=(kiosk?host:footer).getBoundingClientRect(),viewport=window.visualViewport,left=viewport?.offsetLeft||0,top=viewport?.offsetTop||0,width=viewport?.width||innerWidth,height=viewport?.height||innerHeight,edge=10,w=Math.min(420,width-edge*2),below=Math.max(top+edge,box.bottom+7),y=top+height-below-edge<260?top+edge:below,available=Math.max(100,Math.min(480,top+height-y-edge));
+  panel.style.width=w+'px';panel.style.left=Math.max(left+edge,Math.min(kiosk?box.left:box.right-w,left+width-w-edge))+'px';panel.style.top=y+'px';panel.style.maxHeight=available+'px';panel.classList.toggle('app-search-short',available<330);
  }
 
  function syncIntelligence(){submitButton.disabled=thinking||input.value.trim().length<2;submitButton.setAttribute('aria-busy',String(thinking));submitButton.setAttribute('aria-label',thinking?'Searching with OpStack intelligence':'Search with OpStack intelligence');submitButton.textContent=thinking?'…':'→';hint.hidden=!input.value.trim();hint.textContent=intelligenceAvailable===false?'Search saved content. Press Enter to open a clear match.':'Search articles, images, videos and pages. Press Enter to open a clear match.';}

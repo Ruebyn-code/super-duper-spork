@@ -7,7 +7,7 @@
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
  let selectedGroup='',isAdmin=false,isUserManager=false,session;
- const mobile=matchMedia('(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
+ const kiosk=root.classList.contains('kiosk-app'),mobile=matchMedia(kiosk?'not all':'(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
  const currentGroup=()=>({'/':'ordering','/order-history':'ordering','/cart':'ordering','/stock-count':'ordering','/stock-transfers':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
  const groupFocus=group=>group==='settings'?document.getElementById('toolbar-toggle'):mobile.matches?more:groupLink(group);
@@ -17,7 +17,7 @@
  const navs=[...scroll.querySelectorAll(':scope > .main-sidebar-nav')];navs[0]?.before(tabs);tabs.append(...navs);
  if(admin)tabs.append(admin);
  const logout=document.getElementById('logout');if(footer)scroll.append(footer);if(secondary)sidebar.append(secondary);
- const controls=window.createAppControls({footer,toggle,wording,beforeOpen:()=>{window.locationPickers?.closeAll();closeMore();if(mobile.matches||selectedGroup==='ordering')closeSubmenu();}});
+ const controls=window.createAppControls({footer,toggle,wording,beforeOpen:()=>{window.locationPickers?.closeAll();closeMore();if(kiosk||mobile.matches||selectedGroup==='ordering')closeSubmenu();}});
 
  // Reuse the same links on phones so cart badges, roles and App edit identities stay intact.
  const mobileBar=document.createElement('nav');mobileBar.id='mobile-tabbar';mobileBar.className='mobile-tabbar';mobileBar.setAttribute('aria-label','Main navigation');
@@ -64,7 +64,7 @@
  function updateSubmenuTitle(){const link=groupLink(selectedGroup),title=document.getElementById('subsidebar-title');if(title&&(link||selectedGroup==='settings')){title.dataset.localWording=link?.dataset.sidebarName||'App settings';const text=selectedGroup==='settings'?wording('App settings'):link.querySelector('.sidebar-label')?.textContent||'';if(title.textContent!==text)title.textContent=text;}const close=document.getElementById('subsidebar-close');if(close){close.title=wording('Close submenu')||'Close submenu';close.setAttribute('aria-label',close.title);}}
  function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary){secondary.hidden=true;delete secondary.dataset.activeGroup;}shell?.classList.remove('subsidebar-open');sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});renderMobileSheets();if(restoreFocus){groupFocus(previous)?.focus();}}
  // Ordering opens on demand so every ordering page has Home's single-row header.
- function restorePageSubmenu(){if(currentGroup()==='ordering')closeSubmenu();else openSubmenu(currentGroup(),false,true);updatePageLinks();}
+ function restorePageSubmenu(){if(kiosk||currentGroup()==='ordering')closeSubmenu();else openSubmenu(currentGroup(),false,true);updatePageLinks();}
  function updatePageLinks(){const defaults={'/stock-count':'#new','/sales':'#entry','/admin':'#stock','/admin/accounts':'#accounts','/admin/settings':'#colours'},hash=location.hash||defaults[location.pathname]||'';for(const link of secondary?.querySelectorAll('a[href]')||[]){const url=new URL(link.href);if(url.pathname===location.pathname&&(url.pathname==='/reporting'||url.hash===hash))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}}
  function openSubmenu(group,focus=false,preserveControls=false){
   if(!secondary||(!isUserManager&&group==='admin')||(!isAdmin&&group==='settings'))return;
@@ -91,7 +91,7 @@
  function updateToggle(){
   if(!toggle)return;const expanded=root.classList.contains('navigation-preview'),mode=expanded?'expanded':'hover',original=expanded?'Collapse navigation':'Expand navigation',text=wording(original);
   toggle.dataset.localWording=original;toggle.setAttribute('aria-expanded',String(expanded));toggle.setAttribute('aria-label',text||original);toggle.title=text||original;toggle.querySelector('.sidebar-toggle-text').textContent=text;
-  if(toggle.dataset.sidebarMode!==mode){toggle.dataset.sidebarMode=mode;toggle.querySelector('svg').innerHTML=expanded?'<path d="m6 14 6-6 6 6"/>':'<path d="m6 10 6 6 6-6"/>';}
+  if(toggle.dataset.sidebarMode!==mode){toggle.dataset.sidebarMode=mode;toggle.querySelector('svg').innerHTML=kiosk?(expanded?'<path d="m14 6-6 6 6 6"/>':'<path d="m10 6 6 6-6 6"/>'):(expanded?'<path d="m6 14 6-6 6 6"/>':'<path d="m6 10 6 6 6-6"/>');}
  }
  function accessibleName(element,original){const name=element.querySelector('.sidebar-label,.submenu-label')?.textContent.trim()||wording(original)||original;return element.classList.contains('roster-navigation-link')?name+' · '+wording('Beta'):name;}
  function updateNavigationLabels(){
@@ -100,15 +100,19 @@
  }
  function renderNavigation(){const preview=!mobile.matches&&(pointerInside||keyboardInside||touchOpen);root.classList.toggle('navigation-compact',!preview);root.classList.toggle('navigation-preview',preview);updateToggle();}
  if(toggle)toggle.onclick=()=>{touchOpen=!root.classList.contains('navigation-preview');pointerInside=false;keyboardInside=false;renderNavigation();};
- sidebar.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&matchMedia('(hover:hover) and (pointer:fine)').matches){pointerInside=true;renderNavigation();}});
- sidebar.addEventListener('pointerleave',()=>{pointerInside=false;touchOpen=false;renderNavigation();});
- sidebar.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible')){keyboardInside=true;renderNavigation();}});
- sidebar.addEventListener('focusout',()=>queueMicrotask(()=>{keyboardInside=Boolean(sidebar.querySelector(':focus-visible'));renderNavigation();}));
+ const previewRoots=kiosk?[tabs,secondary].filter(Boolean):[sidebar];
+ for(const target of previewRoots){
+  target.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&matchMedia('(hover:hover) and (pointer:fine)').matches){pointerInside=true;renderNavigation();}});
+  target.addEventListener('pointerleave',event=>{if(kiosk&&event.relatedTarget?.nodeType&&previewRoots.some(root=>root.contains(event.relatedTarget)))return;pointerInside=false;touchOpen=false;renderNavigation();});
+  target.addEventListener('focusin',event=>{if(event.target.matches(':focus-visible')){keyboardInside=true;renderNavigation();}});
+  target.addEventListener('focusout',()=>queueMicrotask(()=>{keyboardInside=previewRoots.some(root=>root.querySelector(':focus-visible'));renderNavigation();}));
+ }
  document.addEventListener('pointerdown',event=>{if(!sidebar.contains(event.target)){touchOpen=false;renderNavigation();}});
  window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateSubmenuTitle();updateMore();controls.refresh();});
  new MutationObserver(()=>{updateNavigationLabels();updateSubmenuTitle();}).observe(sidebar,{childList:true,characterData:true,subtree:true});
  updateNavigationLabels();syncMobileLayout();
- window.appNavigation={dismissTransient(){window.appSearch?.close();controls.close();closeMore();if(selectedGroup==='ordering')closeSubmenu();window.locationPickers?.closeAll();},refresh(value){
+ if(kiosk){const measure=()=>root.style.setProperty('--kiosk-header-height',sidebar.getBoundingClientRect().height+'px');new ResizeObserver(measure).observe(sidebar);measure();}
+ window.appNavigation={dismissTransient(){window.appSearch?.close();controls.close();closeMore();if(kiosk||selectedGroup==='ordering')closeSubmenu();if(kiosk){pointerInside=keyboardInside=touchOpen=false;renderNavigation();}window.locationPickers?.closeAll();},refresh(value){
   if(value){
    session=value;let changed=false;
    for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',session.locations,session.locationId]]){
