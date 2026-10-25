@@ -1,8 +1,8 @@
 (()=>{
- const $=id=>document.getElementById(id),panel=$('home-daily-sales'),form=$('home-daily-sales-form'),input=$('home-daily-sales-amount'),hourly=$('home-hourly-upload');if(!panel)return;
+ const $=id=>document.getElementById(id),panel=$('home-daily-sales'),form=$('home-daily-sales-form'),input=$('home-daily-sales-amount'),hourly=$('home-hourly-upload'),history=$('home-daily-sales-history');if(!panel)return;
  const number=cents=>new Intl.NumberFormat('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(cents/100),date=value=>new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
  const clock=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:'Australia/Melbourne'}).format(new Date(value));
- let actor,current,latest,dirty=false,busy=false,loading=false,wake,clockOffset=0,expired=false;
+ let actor,current,latest,dirty=false,busy=false,loading=false,wake,clockOffset=0,expired=false,generation=0;
  const active=()=>actor?.csrf&&document.body.dataset.homeDashboard!=='staff'&&appAccess.can('home.view',actor)&&appAccess.can('sales.edit',actor);
  const label=(node,text)=>{node.textContent=typeof interfaceLabel==='function'?interfaceLabel(text):text;window.appWording?.label(node,text);};
  const message=text=>label($('home-daily-sales-message'),text);
@@ -20,16 +20,17 @@
   }
   current=result;expired=false;panel.hidden=!entry?.available;if(panel.hidden)return;
   $('home-daily-sales-date').textContent=result.locationName+' · '+date(entry.tradingDate);window.publicHolidayMarkers?.mark($('home-daily-sales-date'),entry.tradingDate);
+  const day=new Date(entry.tradingDate+'T12:00:00Z');day.setUTCDate(day.getUTCDate()-(day.getUTCDay()+6)%7);history.href='/sales?week='+day.toISOString().slice(0,10)+'#entry';
   $('home-daily-sales-closing').textContent='Closes '+clock(entry.closesAt)+' · Melbourne';
   input.value=entry.amountCents===null?'':number(entry.amountCents);input.setCustomValidity('');$('home-daily-sales-reload').hidden=true;
   message(entry.amountCents===null?'Enter the total for this trading day. Enter 0 for no sales.':'Daily sales saved. You can update this amount.');controls();
  }
- async function refresh(){if(!active()||document.hidden||loading||busy)return;loading=true;try{apply(await api());}catch(error){if(!panel.hidden)message(error.message);}finally{loading=false;}}
+ async function refresh(){if(!active()||document.hidden||loading||busy)return;loading=true;const version=generation;try{const result=await api();if(version===generation)apply(result);}catch(error){if(version===generation&&!panel.hidden)message(error.message);}finally{loading=false;}}
  input.addEventListener('input',()=>{input.setCustomValidity('');dirty=current?.entry?.amountCents===null?input.value.trim()!=='':cents()!==current?.entry?.amountCents;controls();if(!expired)message(dirty?'Unsaved sales.':'Daily sales saved. You can update this amount.');});
  input.addEventListener('blur',()=>{const value=cents();if(value!==null)input.value=number(value);});
  form.addEventListener('submit',async event=>{
   event.preventDefault();if(!active()||busy||expired||!current?.entry?.available)return;const amountCents=cents();input.setCustomValidity(amountCents===null?'Enter an amount from $0 to $10,000,000 with up to two decimal places.':'');if(!form.reportValidity())return;
-  busy=true;controls();message('Saving sales…');
+  generation++;busy=true;controls();message('Saving sales…');
   try{const result=await api('PUT',{date:current.entry.tradingDate,amountCents,revision:current.entry.revision});dirty=false;busy=false;input.blur();apply(result);message('Daily sales saved.');const key='souvlaki-sales-updated-'+(actor.dataScope||actor.id);try{localStorage.setItem(key,String(Date.now()));}catch{}window.dispatchEvent(new StorageEvent('storage',{key}));}
   catch(error){message(error.message);if(error.status===409)$('home-daily-sales-reload').hidden=false;}
   finally{busy=false;controls();}
