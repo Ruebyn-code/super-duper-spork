@@ -148,6 +148,7 @@ module.exports={'/location-setup-step':'location-setup-step.html','/location-set
   '/password.js':'password.js',
   '/admin.js':'admin.js',
   '/stock-item-editor.js':'stock-item-editor.js',
+  '/stock-item-save.js':'stock-item-save.js',
   '/admin-panels.js':'admin-panels.js',
   '/admin-ui.js':'admin-ui.js',
   '/login.js':'login.js',

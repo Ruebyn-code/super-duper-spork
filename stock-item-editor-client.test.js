@@ -1,8 +1,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const countUnits=require('./public/stock-count-units');
-function editor(){
+function editor({popup=false}={}){
  const elements=new Map();let active=null;
- function node(id,dataset={}){const listeners=new Map(),attributes=new Map();const element={id,dataset,value:'',disabled:false,hidden:false,textContent:'',tabIndex:0,open:false,
+ function node(id,dataset={}){const listeners=new Map(),attributes=new Map();const element={id,dataset,value:'',disabled:false,hidden:false,textContent:'',tabIndex:0,open:false,isConnected:true,getClientRects(){return this.panel?.hidden?[]:[{}];},
   addEventListener(type,listener){if(!listeners.has(type))listeners.set(type,[]);listeners.get(type).push(listener);},
   fire(type,event={}){for(const listener of listeners.get(type)||[])listener({target:element,...event});},
   setAttribute(key,value){attributes.set(key,value);},getAttribute(key){return attributes.get(key);},focus(){active=element;},setCustomValidity(value){this.validationMessage=value;},closest(){return this.panel;}
@@ -10,10 +10,11 @@ function editor(){
  const tabs=['details','counting','ordering'].map(key=>node('stock-tab-'+key,{stockTab:key})),panels=['details','counting','ordering'].map(key=>node('stock-panel-'+key,{stockPanel:key}));
  const name=node('name'),ratio=node('ratio'),itemName=node('itemName'),cutoff=node('cutoff');name.panel=ratio.panel=panels[1];itemName.panel=panels[0];cutoff.panel=panels[2];cutoff.disabled=true;
  const preview=node('stock-count-unit-preview'),message=node('stock-editor-message');node('stock-photo-options');node('stock-photo-preview').hidden=true;
- const form=node('stock-form');form.elements=Object.assign([name,ratio,itemName,cutoff,...tabs],{countUnitName:name,countUnitsPerUnit:ratio});form.querySelectorAll=selector=>selector==='[data-stock-tab]'?tabs:selector==='[data-stock-panel]'?panels:[];
- const window=node('window'),document={getElementById:id=>elements.get(id)};
+ const form=node('stock-form');form.elements=Object.assign([name,ratio,itemName,cutoff,...tabs],{countUnitName:name,countUnitsPerUnit:ratio,name:itemName});form.querySelectorAll=selector=>selector==='[data-stock-tab]'?tabs:selector==='[data-stock-panel]'?panels:[];
+ const dialog=popup?node('stock-item-dialog'):null,closeButton=popup?node('stock-dialog-close'):null;if(dialog){dialog.showModal=()=>{dialog.open=true;};dialog.close=()=>{dialog.open=false;dialog.fire('close');};}
+ const window=node('window'),document={getElementById:id=>elements.get(id),documentElement:{classList:{toggle(){}}}};
  vm.runInNewContext(fs.readFileSync(require.resolve('./public/stock-item-editor.js'),'utf8'),{window,document,stockCountUnits:countUnits,Intl,setTimeout});
- const api=window.stockItemEditor;api.reset();return{api,window,form,tabs,panels,name,ratio,itemName,cutoff,preview,message,active:()=>active};
+ const api=window.stockItemEditor;api.reset();return{api,window,form,tabs,panels,name,ratio,itemName,cutoff,preview,message,dialog,closeButton,active:()=>active};
 }
 
 test('stock editor tabs preserve the same inputs and support arrow/Home/End keyboard navigation',()=>{
@@ -40,4 +41,12 @@ test('pending stock saves freeze tabs and context switching, then restore rule-s
  e.api.select('details');assert.equal(e.panels[2].hidden,false);let vetoed=false;e.window.fire('before-location-switch',{preventDefault(){vetoed=true;}});assert.equal(vetoed,true);
  e.api.setBusy(false);assert.equal(e.api.busy,false);assert.equal(e.cutoff.disabled,true);assert.equal(e.name.disabled,false);assert.equal(e.ratio.value,'20');assert.equal(e.name.value,'Sleeves');e.api.select('counting');assert.equal(e.panels[1].hidden,false);
  vetoed=false;e.window.fire('before-location-switch',{preventDefault(){vetoed=true;}});assert.equal(vetoed,false);
+});
+
+
+test('popup close and Escape preserve tab drafts and restore focus; pending saves prevent dismissal',()=>{
+ const e=editor({popup:true}),opener=e.tabs[0];e.name.value='Sleeves';e.ratio.value='20';e.api.open(opener);assert.equal(e.dialog.open,true);
+ e.api.select('counting');let prevented=false;e.dialog.fire('cancel',{preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(e.dialog.open,false);assert.equal(e.active(),opener);assert.equal(e.ratio.value,'20');
+ e.api.open(opener);assert.equal(e.active(),e.tabs[1]);assert.equal(e.panels[1].hidden,false);e.api.setBusy(true);e.closeButton.fire('click');e.dialog.fire('cancel',{preventDefault(){}});assert.equal(e.dialog.open,true);assert.equal(e.closeButton.disabled,true);
+ e.api.setBusy(false);e.closeButton.fire('click');assert.equal(e.dialog.open,false);assert.equal(e.ratio.value,'20');
 });

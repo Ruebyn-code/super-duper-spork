@@ -2,6 +2,7 @@
  const form=document.getElementById('stock-form');if(!form)return;
  const tabs=[...form.querySelectorAll('[data-stock-tab]')],panels=[...form.querySelectorAll('[data-stock-panel]')];
  const name=form.elements.countUnitName,ratio=form.elements.countUnitsPerUnit,preview=document.getElementById('stock-count-unit-preview'),message=document.getElementById('stock-editor-message');
+ const dialog=document.getElementById('stock-item-dialog'),closeButton=document.getElementById('stock-dialog-close');let returnFocus=null;
  let busy=false,invalidField=null;const disabled=new Map();
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??''));
  function select(key,focus=false){
@@ -34,14 +35,32 @@
   setTimeout(()=>{invalidField=null;},0);
  },true);
  function reset(){select('details');document.getElementById('stock-photo-options').open=!document.getElementById('stock-photo-preview').hidden;message.textContent='';refresh();}
+ function presentation(){
+  if(!dialog)return;document.documentElement.classList.toggle('stock-settings-open',dialog.open);
+  if(window.appEmbedded)parent.appShell?.childPresentationChanged(window);
+ }
+ function open(opener){
+  if(busy||!dialog)return;returnFocus=opener||returnFocus;if(!dialog.open)dialog.showModal();
+  returnFocus?.setAttribute('aria-expanded','true');presentation();const field=form.elements.name;const focus=field.getClientRects().length?field:tabs.find(tab=>tab.getAttribute('aria-selected')==='true');focus?.focus({preventScroll:true});
+ }
+ function close(){
+  if(busy||!dialog?.open)return;dialog.close();returnFocus?.setAttribute('aria-expanded','false');presentation();
+  const focus=returnFocus?.isConnected&&returnFocus.getClientRects().length?returnFocus:document.getElementById('add-stock-shortcut');focus?.focus({preventScroll:true});
+ }
+ if(dialog){
+  closeButton.addEventListener('click',close);dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',presentation);
+  let backdrop=false;const outside=event=>{const rect=dialog.getBoundingClientRect();return event.target===dialog&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom);};
+  dialog.addEventListener('pointerdown',event=>{backdrop=outside(event);});dialog.addEventListener('click',event=>{if(backdrop&&outside(event))close();backdrop=false;});
+ }
  function setBusy(value){
   busy=value;form.setAttribute('aria-busy',String(value));
   if(value){for(const control of form.elements){disabled.set(control,control.disabled);control.disabled=true;}}
   else {for(const [control,wasDisabled]of disabled)control.disabled=wasDisabled;disabled.clear();}
   for(const select of form.querySelectorAll('select'))window.locationPickers?.refresh(select);
+  if(closeButton)closeButton.disabled=value;
  }
- window.stockItemEditor={select,refresh,reset,setBusy,get busy(){return busy;}};
- window.addEventListener('before-location-switch',event=>{if(busy)event.preventDefault();});
+ window.stockItemEditor={select,refresh,reset,setBusy,open,close,get busy(){return busy;}};
+ window.addEventListener('before-location-switch',event=>{if(busy||dialog?.open)event.preventDefault();});
  window.addEventListener('interface-text-updated',refresh);
  refresh();
 })();
