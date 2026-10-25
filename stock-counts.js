@@ -1,6 +1,7 @@
 const {belongs}=require('./location-scope');
 const {headOffice}=require('./permissions');
 const stockCountGroups=require('./public/stock-count-groups');
+const countUnits=require('./public/stock-count-units');
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
@@ -11,7 +12,8 @@ function normalize(input){
  if(!Array.isArray(input.items)||!input.items.length||input.items.length>10000)invalid('Enter a quantity for at least one stock item.');
  const seen=new Set();const items=input.items.map(item=>{
   if(!item||typeof item.id!=='string'||!item.id||item.id.length>240||seen.has(item.id)||typeof item.quantity!=='number'||!Number.isFinite(item.quantity)||item.quantity<0||item.quantity>1000000||Math.abs(item.quantity*1000-Math.round(item.quantity*1000))>0.000001)invalid('Use unique stock items and quantities from 0 to 1,000,000, with up to three decimal places.');
-  seen.add(item.id);return {id:item.id,quantity:Math.round(item.quantity*1000)/1000};
+  if(item.countUnit!==undefined&&!countUnits.valid(item.countUnit))invalid('Choose a valid stock counting unit.');
+  seen.add(item.id);return {id:item.id,quantity:Math.round(item.quantity*1000)/1000,...(item.countUnit===undefined?{}:{countUnit:countUnits.normalize(item.countUnit)})};
  }).sort((a,b)=>a.id.localeCompare(b.id));
  return {countDate:input.countDate,location:(input.location||'').trim(),notes:(input.notes||'').trim(),items};
 }
@@ -29,7 +31,11 @@ async function save(dir,input,catalogue,session){
  const fingerprint=crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
  const previous=await read(dir,id);if(previous){if(previous.accountId!==session.id||!belongs(previous,session)||previous.fingerprint!==fingerprint)invalid('This count reference was already used. Start a new count.',409);return {created:false,record:previous};}
  const products=new Map(catalogue.products.map(product=>[product.id,product])),suppliers=new Map(catalogue.suppliers.map(supplier=>[supplier.id,supplier.name]));
- const items=normalized.items.map(item=>{const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');return {...item,name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};});
+ const items=normalized.items.map(item=>{
+  const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');
+  if(item.countUnit&&!countUnits.equal(item.countUnit,product.countUnit))invalid(product.name+': the counting unit changed. Refresh, clear this quantity and enter it again.',409);
+  return {...item,...(item.countUnit?{countedQuantity:item.quantity,quantity:countUnits.quantity(item.quantity,item.countUnit)}:{}),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
+ });
  const record={...normalized,items,id,accountId:session.id,counterName:session.username,...(session.locationId?{companyId:session.companyId,locationId:session.locationId,locationName:session.locationName}:{}),createdAt:new Date().toISOString(),fingerprint};
  await fs.mkdir(folder(dir),{recursive:true});const temp=path.join(folder(dir),id+'.'+crypto.randomUUID()+'.tmp'),target=path.join(folder(dir),id+'.json');
  try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});try{await fs.link(temp,target);}catch(error){if(error.code!=='EEXIST')throw error;const existing=await read(dir,id);if(existing.accountId!==session.id||!belongs(existing,session)||existing.fingerprint!==fingerprint)invalid('This count reference was already used. Start a new count.',409);return {created:false,record:existing};}}finally{await fs.rm(temp,{force:true});}

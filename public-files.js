@@ -111,6 +111,7 @@ module.exports={'/location-setup-step':'location-setup-step.html','/location-set
   '/sales-performance-view.js':'sales-performance-view.js',
   '/sales-budget.js':'sales-budget.js',
   '/stock-count.js':'stock-count.js',
+  '/stock-count-units.js':'stock-count-units.js',
   '/stock-count-groups.js':'stock-count-groups.js','/stock-count.css':'stock-count.css',
   '/stock-usage.js':'stock-usage.js',
   '/order-destinations.js':'order-destinations.js',
