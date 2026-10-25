@@ -60,9 +60,9 @@ window.addEventListener('cart-opening',()=>{if(!busy){refreshStoredCart();render
 function renderProductPar(product){
   const panel=el('div',undefined,'product-par'),label=el('strong',undefined,'par-value'),hint=el('span',undefined,'par-hint');
   const known=product.par&&product.par.level!==null;
-  const template=known?'Par: {level}':'Par: —';label.dataset.appTemplate=template;
+  const template=known?'Target level: {level}':'Target level: —';label.dataset.appTemplate=template;
   const values={level:known?new Intl.NumberFormat('en-AU').format(product.par.level):''};label.dataset.appValues=JSON.stringify(values);label.textContent=wording(template,values);
-  const hintTemplate=product.par?.source==='manual'?'Manual par':known?(product.par.weeksRecorded===1?'Based on 1 completed week':'Average of {weeks} completed weeks'):'Manual par or usage needed';const hintValues={weeks:product.par?.weeksRecorded||0};hint.dataset.appTemplate=hintTemplate;hint.dataset.appValues=JSON.stringify(hintValues);hint.textContent=wording(hintTemplate,hintValues);
+  const hintTemplate=product.par?.source==='manual'?'Manual target level':known?(product.par.weeksRecorded===1?'Based on 1 completed week':'Average of {weeks} completed weeks'):'Manual target level or usage needed';const hintValues={weeks:product.par?.weeksRecorded||0};hint.dataset.appTemplate=hintTemplate;hint.dataset.appValues=JSON.stringify(hintValues);hint.textContent=wording(hintTemplate,hintValues);
   if(known&&product.par.source!=='manual')panel.title=wording('Average used: {average} per week',{average:new Intl.NumberFormat('en-AU',{maximumFractionDigits:5}).format(product.par.average)});
   const countPanel=el('div',undefined,'ordering-stat stock-count-stat'),countLabel=el('span',wording('Stock count'),'ordering-stat-label'),countValue=el('strong',undefined,'stock-count-value'),countHint=el('span',undefined,'ordering-stat-hint');
   const counted=product.ordering?.stockCount,hasCount=typeof counted==='number';countValue.dataset.appTemplate=hasCount?'{quantity}':'—';countValue.dataset.appValues=JSON.stringify({quantity:hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):''});countValue.textContent=hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):'—';
@@ -72,13 +72,13 @@ function renderProductPar(product){
   countPanel.append(countLabel,countValue,countHint);
   const recommendedPanel=el('div',undefined,'ordering-stat recommended-order-stat'),recommendedLabel=el('span',wording('Recommended order'),'ordering-stat-label'),recommendedValue=el('strong',undefined,'recommended-order-value'),recommendedHint=el('span',undefined,'ordering-stat-hint');
   const amount=product.ordering?.recommended,hasRecommendation=typeof amount==='number';recommendedValue.dataset.appTemplate=hasRecommendation?'{quantity}':'—';recommendedValue.dataset.appValues=JSON.stringify({quantity:hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):''});recommendedValue.textContent=hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):'—';
-  const recommendedTemplate=product.ordering?.transferAdjustment?'Par − stock after transfers':hasRecommendation?(amount===0?'No order needed':stockOrderRules.describe(product)?'Par − stock count · rounded to order rule':'Par − stock count'):'Par and count needed';recommendedHint.dataset.appTemplate=recommendedTemplate;recommendedHint.textContent=wording(recommendedTemplate);recommendedPanel.append(recommendedLabel,recommendedValue,recommendedHint);
+  const recommendedTemplate=product.ordering?.transferAdjustment?'Target level − stock after transfers':hasRecommendation?(amount===0?'No order needed':stockOrderRules.describe(product)?'Target level − stock count · rounded to order rule':'Target level − stock count'):'Target level and count needed';recommendedHint.dataset.appTemplate=recommendedTemplate;recommendedHint.textContent=wording(recommendedTemplate);recommendedPanel.append(recommendedLabel,recommendedValue,recommendedHint);
   panel.append(label,hint,countPanel,recommendedPanel);return panel;
 }
 function renderParPeriod(){
   if(!$('par-period')||!parWindow)return;
   const format=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
-  const template='Par levels · {start} – {end} · Location usage';const values={start:format(parWindow.startDate),end:format(parWindow.endDate)};$('par-period').dataset.appTemplate=template;$('par-period').dataset.appValues=JSON.stringify(values);$('par-period').textContent=wording(template,values);
+  const template='Target levels · {start} – {end} · Location usage';const values={start:format(parWindow.startDate),end:format(parWindow.endDate)};$('par-period').dataset.appTemplate=template;$('par-period').dataset.appValues=JSON.stringify(values);$('par-period').textContent=wording(template,values);
   if($('stock-take-status')){const date=latestStockTake?.countDate;const countTemplate=date?'Latest stock take: {date}':'Save a stock take to see counts and recommended orders.';const countValues={date:date?format(date):''};$('stock-take-status').dataset.appTemplate=countTemplate;$('stock-take-status').dataset.appValues=JSON.stringify(countValues);$('stock-take-status').textContent=wording(countTemplate,countValues);}
 }
 function renderMenu(){

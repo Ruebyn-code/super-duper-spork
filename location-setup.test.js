@@ -45,7 +45,7 @@ test('all eight saved setup tasks are required, stale settings are rechecked, an
   const managers=await app.api(app.office,'/api/locations/'+store.id+'/managers');await app.api(app.office,'/api/locations/'+store.id+'/managers','PUT',{revision:managers.revision,userIds:[person.id],roleId:'franchisee'});
   await app.api(app.office,'/api/locations/'+store.id+'/email','PUT',{ORDER_FROM_EMAIL:'setup@example.test',RESEND_API_KEY:'fake-setup-test-provider-key',DELIVERY_EMAIL_ENABLED:true});
   const steps='/api/location-setup/steps/'+store.id;await app.api(app.office,steps+'/team','POST',{mode:'existing',userId:person.id},headers);
-  let state=await app.api(app.office,'/api/location-setup'),item=state.locations[0];assert.deepEqual(item.steps.map(s=>s.title),['Location name','Location state','Trading hours','Location manager','First user','Ordering sending email','Manual par level entry','Kiosk device']);assert.equal(item.steps.filter(s=>s.done).length,6);
+  let state=await app.api(app.office,'/api/location-setup'),item=state.locations[0];assert.deepEqual(item.steps.map(s=>s.title),['Location name','Location state','Trading hours','Location manager','First user','Ordering sending email','Manual target level entry','Kiosk device']);assert.equal(item.steps.filter(s=>s.done).length,6);
   assert.equal((await app.request(app.office,'/api/location-setup/complete','POST',{locationId:store.id,revision:item.revision})).status,409);
   const pars=await app.api(app.office,steps+'/par','GET',undefined,headers);for(const p of pars.products)if(!p.automatic)await app.api(app.office,'/api/products/'+p.id+'/par','PUT',{level:10},headers);
   await app.api(app.office,steps+'/devices','POST',{name:'Ready shop counter',requestId:crypto.randomUUID()},headers);

@@ -610,7 +610,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         return json(200,await manualParStore.save(dataDir,session.locationId||session.id,manualParRoute[1],input,async()=>{
           const catalogue=await readCatalogue();if(!catalogue.products.some(product=>product.id===manualParRoute[1]))fail('Stock not found.',404);
           const automatic=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory});
-          if(automatic.levels[manualParRoute[1]].weeksRecorded>0)fail('This item uses automatic par because completed usage history is available.');
+          if(automatic.levels[manualParRoute[1]].weeksRecorded>0)fail('This item uses automatic target level because completed usage history is available.');
         }));
       }
       if(req.method==='POST' && req.url==='/api/suppliers'){
