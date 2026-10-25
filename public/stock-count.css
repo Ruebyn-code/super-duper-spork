@@ -1,4 +1,11 @@
 /* Stock counts use open storage sections and compact, directly editable rows. */
+.stock-count-page #count-form .stocktake-toolbar{flex-wrap:nowrap}
+.stock-count-page #count-form .stocktake-toolbar .date-edit{flex-shrink:0}
+.stock-count-page #count-form .stocktake-suppliers{flex:1;min-width:0}
+.stock-count-page #count-form .supplier-filters{margin:0;padding:2px 1px}
+.stock-count-page #count-form .stocktake-search-tools{flex:0 1 auto;max-width:50%}
+.stock-count-page #count-form .count-progress{margin:0;font-size:10px;padding:4px 6px;line-height:1.3}
+@media(max-width:720px){.stock-count-page #count-form .stocktake-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto}.stock-count-page #count-form .stocktake-toolbar .date-edit{grid-column:1/-1}.stock-count-page #count-form .count-progress{margin-left:auto}.stock-count-page #count-form .stocktake-search-tools{max-width:140px}.stock-count-page #count-form .stocktake-search-tools .catalogue-search.search-open{width:140px;flex:0 1 auto}}
 .stock-count-page .count-stock-group{margin-top:8px;border:1px solid var(--theme-line,var(--line,#dce5ed));border-radius:8px;overflow:hidden}
 .stock-count-page .count-stock-heading{display:grid;grid-template-columns:minmax(0,1fr) 96px;align-items:center;gap:10px;padding:6px 9px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));border-bottom:1px solid var(--theme-line,var(--line,#dce5ed))}
 .stock-count-page .count-stock-heading h3{margin:0;font-size:13px;line-height:1.4;letter-spacing:0}
