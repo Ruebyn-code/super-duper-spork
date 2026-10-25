@@ -18,7 +18,7 @@
 .stock-count-page .count-stock-content .count-quantity-field input[type=number]:focus{outline:2px solid var(--primary);outline-offset:1px}
 .stock-count-page .count-stock-content .count-quantity-field input[type=number]::placeholder{font-size:10px}
 .stock-count-page .count-order-stats{display:flex;align-items:center;flex-wrap:wrap;gap:2px 7px;margin-top:2px;font-size:10px;line-height:1.4}
-.stock-count-page .count-item-par{padding:0;background:none;border-radius:0;font-size:10px;line-height:1.4}
+.stock-count-page .count-item-par{padding:0;background:none;border-radius:0;font-size:10px;line-height:1.4;white-space:nowrap}
 .stock-count-page .count-item-recommended{font-size:10px;line-height:1.4}
 .stock-count-page .count-order-actions{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
 .stock-count-page .count-order-actions .count-recommend-add{width:auto;min-height:24px;margin:0;padding:3px 7px;font-size:10px;line-height:1.4;border-radius:5px}
@@ -48,3 +48,4 @@
 .stock-count-page #count-items .count-order-actions .count-item-recommended{font-variant-numeric:tabular-nums}
 @media(max-width:900px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,1fr) 82px 180px}.stock-count-page #count-items .count-order-actions{max-width:180px;gap:3px 6px}}
 @media(max-width:600px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,1fr) 72px 82px}.stock-count-page #count-items .count-order-actions{grid-template-columns:minmax(0,1fr);justify-items:end;max-width:82px;gap:3px}.stock-count-page #count-items .count-order-actions .count-item-recommended{font-size:9px;overflow-wrap:anywhere}}
+@media(max-width:360px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(108px,1fr) minmax(60px,72px) minmax(60px,82px)}}
