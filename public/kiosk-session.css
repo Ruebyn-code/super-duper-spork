@@ -3,8 +3,8 @@ html.kiosk-lock-pending body,html.kiosk-lock-pending body *{visibility:hidden!im
 .kiosk-idle-notice[hidden]{display:none}
 
 /* Paired kiosks keep their account/search header above a left navigation rail. */
-html.kiosk-app{--kiosk-rail-width:72px;--kiosk-nav-width:var(--kiosk-rail-width);--kiosk-header-height:62px}
-html.kiosk-app.navigation-preview{--kiosk-nav-width:220px}
+html.kiosk-app{--kiosk-rail-width:56px;--kiosk-nav-width:var(--kiosk-rail-width);--kiosk-header-height:62px}
+html.kiosk-app.navigation-preview{--kiosk-nav-width:200px}
 .kiosk-app.persistent-shell body>.app-shell{padding-bottom:0!important}
 .kiosk-app.persistent-shell .app-shell>.app-page{margin-left:var(--kiosk-rail-width);width:calc(100% - var(--kiosk-rail-width))}
 .kiosk-app .app-shell>#app-sidebar.top-navigation{-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -15,7 +15,7 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:220px}
 .kiosk-app #app-sidebar .app-search-toggle{display:none!important}
 .kiosk-app #app-sidebar .app-search-control #app-search-input{display:block;width:100%;height:44px;min-height:44px;font-size:16px}
 .kiosk-app #app-sidebar.top-navigation .sidebar-footer.app-search-account #toolbar-toggle{height:44px;min-height:44px}
-.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{position:fixed;inset:var(--kiosk-header-height) auto 0 0;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;width:var(--kiosk-nav-width);max-width:100vw;min-width:0;margin:0;padding:8px 8px 68px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;border-right:1px solid var(--theme-line,var(--line));background:var(--theme-surface,#fff);box-shadow:2px 0 14px #182b3a06;transition:width .2s ease}
+.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{position:fixed;inset:var(--kiosk-header-height) auto 0 0;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;width:var(--kiosk-nav-width);max-width:100vw;min-width:0;margin:0;padding:8px 5px 68px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;border-right:1px solid var(--theme-line,var(--line));background:var(--theme-surface,#fff);box-shadow:2px 0 14px #182b3a06;transition:width .2s ease}
 .kiosk-app #app-sidebar.top-navigation #top-navigation-tabs a{flex:0 0 auto;justify-content:flex-start;gap:12px;width:100%;min-height:44px;margin:0;padding:10px 12px;font-size:12px}
 .kiosk-app.navigation-compact #app-sidebar.top-navigation #top-navigation-tabs a{justify-content:center;gap:0}
 .kiosk-app.navigation-compact #top-navigation-tabs :is(.ordering-cart-badge,#cart-badge){position:absolute;top:1px;right:1px;left:auto;min-width:16px;max-width:32px;margin:0;padding:2px 4px;font-size:9px}
@@ -29,5 +29,5 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:220px}
 .kiosk-app #app-sidebar.top-navigation .secondary-sidebar a{width:100%;min-height:44px;white-space:normal}
 .kiosk-app :is(.mobile-brand-header,#mobile-tabbar,.mobile-nav-backdrop){display:none!important}
 .kiosk-app:is(.shell-conversation-fullscreen,.shell-checklist-fullscreen,.shell-course-fullscreen) .app-shell>.app-page{margin-left:0;width:100%}
-@media(max-width:720px){html.kiosk-app{--kiosk-rail-width:48px}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll{flex-wrap:wrap;gap:6px;padding:8px}.kiosk-app #app-sidebar.top-navigation .sidebar-brand-row{flex-basis:100%}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{flex-basis:100%;margin:0}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{padding:6px 2px 68px}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs a{padding:10px 12px}}
+@media(max-width:720px){html.kiosk-app{--kiosk-rail-width:48px}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll{flex-wrap:wrap;gap:6px;padding:8px}.kiosk-app #app-sidebar.top-navigation .sidebar-brand-row{flex-basis:100%}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{flex-basis:100%;margin:0}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{padding:6px 1px 68px}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs a{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{transition:none}}
