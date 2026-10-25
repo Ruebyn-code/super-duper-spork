@@ -52,6 +52,36 @@
 .stock-admin-page :is(#stock-form,.inline-stock-form)>:is(h2,h3){margin:0}
 .stock-admin-page .admin-form-actions{margin-top:2px}
 
+/* Stock items keep one form and Save action while related settings use tabs. */
+.stock-admin-page #stock-form .stock-editor-heading{display:block;padding:0;border:0;background:none;box-shadow:none}
+.stock-admin-page #stock-form .stock-editor-heading h2{margin:0;font-size:18px}
+.stock-admin-page #stock-form .stock-editor-heading p{margin:3px 0 0}
+.stock-admin-page #stock-form .stock-settings-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--theme-line,var(--line,#d3dfea));border-radius:10px;background:var(--theme-surface,#fff)}
+.stock-admin-page #stock-form .stock-settings-tabs button{min-width:0;margin:0;padding:7px 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--theme-muted,var(--muted,#526574));font-size:12px;line-height:1.35}
+.stock-admin-page #stock-form .stock-settings-tabs button[aria-selected=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--primary) 35%,var(--theme-line,#d3dfea));color:var(--theme-primary-text,var(--primary));font-weight:700}
+.stock-admin-page #stock-form .stock-settings-tabs button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.stock-admin-page #stock-form .stock-settings-panel,.stock-admin-page #stock-form .stock-counting-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;align-content:start}
+.stock-admin-page #stock-form .stock-settings-panel[hidden]{display:none}
+.stock-admin-page #stock-form :is(.stock-settings-panel,.stock-counting-fields) label{margin:0;min-width:0;font-size:12px}
+.stock-admin-page #stock-form :is(.stock-settings-panel,.stock-counting-fields) label :is(input,select,.app-select-trigger){margin-top:5px}
+.stock-admin-page #stock-form :is(.stock-settings-wide,.stock-counting-fields,.stock-settings-help,.stock-settings-preview){grid-column:1/-1;min-width:0}
+.stock-admin-page #stock-form .stock-counting-fields{margin:0;padding:12px;border:1px solid var(--theme-line,var(--line,#d3dfea));border-radius:10px}
+.stock-admin-page #stock-form .stock-counting-fields legend{padding:0 5px;font-size:13px;font-weight:700}
+.stock-admin-page #stock-form .stock-settings-preview{margin:0;padding:9px 11px;border-radius:8px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));color:var(--theme-text,#182b3a);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.stock-admin-page #stock-form :is(.stock-settings-photo,.stock-settings-help){border-top:1px solid var(--theme-line,var(--line,#d3dfea));padding-top:9px;font-size:12px}
+.stock-admin-page #stock-form :is(.stock-settings-photo,.stock-settings-help) summary{font:inherit;font-weight:600;color:var(--theme-primary-text,var(--primary))}
+.stock-admin-page #stock-form .stock-settings-photo label{display:block;margin-top:10px}
+.stock-admin-page #stock-form .stock-settings-photo .stock-photo-preview{max-width:120px;max-height:100px;object-fit:contain;margin-top:10px}
+.stock-admin-page #stock-form .stock-editor-footer{position:sticky;bottom:0;z-index:2;margin-top:2px;padding:9px 0 0;border:0;border-top:1px solid var(--theme-line,var(--line,#d3dfea));background:var(--theme-surface,#fff)}
+.stock-admin-page #stock-form .stock-editor-footer .admin-form-actions{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:2px}
+.stock-admin-page #stock-form .stock-editor-footer button{margin-top:0}
+.stock-admin-page #stock-editor-message{margin:0 0 7px;color:var(--theme-text,#182b3a)}
+.stock-admin-page #stock-editor-message:empty{display:none}
+@media(max-width:720px){
+ .stock-admin-page #stock-form .stock-settings-panel,.stock-admin-page #stock-form .stock-counting-fields{grid-template-columns:minmax(0,1fr)}
+ .stock-admin-page #stock-form .stock-settings-tabs button{min-height:36px;padding:7px 4px;font-size:11px}
+}
+
 /* Stock transfer summaries, composer and history retain their existing actions. */
 .transfers-page.compact-page{gap:10px}
 .transfers-page .transfer-metrics{gap:8px}
