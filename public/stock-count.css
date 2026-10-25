@@ -1,0 +1,32 @@
+/* Stock counts use open storage sections and compact, directly editable rows. */
+.stock-count-page .count-stock-group{margin-top:8px;border:1px solid var(--theme-line,var(--line,#dce5ed));border-radius:8px;overflow:hidden}
+.stock-count-page .count-stock-heading{display:grid;grid-template-columns:minmax(0,1fr) 96px;align-items:center;gap:10px;padding:6px 9px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));border-bottom:1px solid var(--theme-line,var(--line,#dce5ed))}
+.stock-count-page .count-stock-heading h3{margin:0;font-size:13px;line-height:1.4;letter-spacing:0}
+.stock-count-page .count-stock-caption{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 10px;min-width:0}
+.stock-count-page .count-stock-heading .stock-items-count{float:none;font-size:10px;color:var(--theme-muted,var(--muted,#64748b))}
+.stock-count-page .count-column-heading{text-align:right;font-size:11px;color:var(--theme-muted,var(--muted,#64748b))}
+.stock-count-page .count-stock-content{padding:0;background:var(--theme-surface,#fff)}
+.stock-count-page .count-stock-content>.small{margin:0;padding:7px 9px;font-size:11px}
+.stock-count-page .count-stock-content>.count-item{grid-template-columns:minmax(0,1fr) 96px;gap:10px;padding:5px 9px;align-items:center;border-bottom:1px solid var(--theme-line,var(--line,#e8eef4))}
+.stock-count-page .count-stock-content>.count-item:last-child{border-bottom:0}
+.stock-count-page .count-stock-content>.count-item:focus-within{background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.stock-count-page .count-stock-content .stock-name{margin:0;font-size:13px;line-height:1.35;letter-spacing:0;overflow-wrap:anywhere}
+.stock-count-page .count-stock-content .count-item p{margin:1px 0 0;font-size:10px;line-height:1.4}
+.stock-count-page .count-stock-content .count-quantity-field{margin:0;min-width:0}
+.stock-count-page .count-stock-content .count-quantity-field input[type=number]{box-sizing:border-box;width:100%;max-width:none;min-height:28px;height:28px;margin:0;padding:4px 6px;border:1px solid var(--theme-line,var(--line,#dce5ed));border-radius:6px;background:var(--theme-surface,#fff);color:var(--theme-text,var(--text,#182b3a));font-size:12px;line-height:1.4;text-align:right;font-variant-numeric:tabular-nums;appearance:textfield}
+.stock-count-page .count-stock-content .count-quantity-field input[type=number]::-webkit-inner-spin-button,.stock-count-page .count-stock-content .count-quantity-field input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.stock-count-page .count-stock-content .count-quantity-field input[type=number]:focus{outline:2px solid var(--primary);outline-offset:1px}
+.stock-count-page .count-stock-content .count-quantity-field input[type=number]::placeholder{font-size:10px}
+.stock-count-page .count-order-stats{display:flex;align-items:center;flex-wrap:wrap;gap:2px 7px;margin-top:2px;font-size:10px;line-height:1.4}
+.stock-count-page .count-item-par{padding:0;background:none;border-radius:0;font-size:10px;line-height:1.4}
+.stock-count-page .count-item-recommended{font-size:10px;line-height:1.4}
+.stock-count-page .count-order-actions{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px 6px}
+.stock-count-page .count-order-actions .count-recommend-add{width:auto;min-height:24px;margin:0;padding:3px 7px;font-size:10px;line-height:1.4;border-radius:5px}
+.stock-count-page .count-order-actions .count-cart-feedback{margin:0;text-align:left;font-size:10px}
+.stock-count-page .count-cart-feedback:empty{display:none}
+.stock-count-page :is(.count-field-label,.count-par-source,.count-order-hint:not(.count-order-warning)){position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.stock-count-page .count-order-warning{flex-basis:100%;font-size:10px;color:var(--theme-danger-text,#a23025)}
+.stock-count-page .count-stock-content>.count-item>strong{text-align:right;font-size:13px}
+@media(max-width:600px){.stock-count-page .count-stock-heading,.stock-count-page .count-stock-content>.count-item{grid-template-columns:minmax(0,1fr) 82px;gap:8px;padding-left:7px;padding-right:7px}.stock-count-page .count-stock-content .count-quantity-field input[type=number]{min-height:36px;height:36px;font-size:16px;padding:5px 6px}.stock-count-page .count-stock-heading h3{font-size:12px}.stock-count-page .count-stock-content .stock-name{font-size:12px}.stock-count-page .count-order-actions .count-recommend-add{min-height:28px;padding:4px 7px}.stock-count-page .count-order-stats{gap:2px 6px}}
+
+@media(min-width:721px){.stock-count-page #count-items .count-item>div:first-child{display:flex;align-items:center;flex-wrap:wrap;gap:2px 12px}.stock-count-page #count-items .count-item>div:first-child>.small,.stock-count-page #count-items .count-order-stats{margin:0}}
