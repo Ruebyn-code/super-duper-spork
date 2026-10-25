@@ -25,7 +25,7 @@ function deliveryConfigurationIssue(order,delivery,env={}){
  }
  return 'Supplier contact or sending service is not configured.';
 }
-function textOrder(order){return `Order ${order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(emailTemplate.itemLine).join('\n')}\n\nNotes: ${order.notes||'None'}`;}
+function textOrder(order){return `Order ${order.orderNumber||order.orderId}\nRequested by: ${order.requester}${order.locationName?'\nLocation: '+order.locationName:''}${order.phone?'\nContact: '+order.phone:''}${order.location?'\nDeliver to: '+order.location:''}\n\n${order.items.map(emailTemplate.itemLine).join('\n')}\n\nNotes: ${order.notes||'None'}`;}
 async function deliverSupplier(order,delivery,{env={},fetchImpl=fetch}={}){
  const issue=deliveryConfigurationIssue(order,delivery,env);if(issue)return {status:'not_configured',message:issue};
  delivery=validateDelivery(delivery);

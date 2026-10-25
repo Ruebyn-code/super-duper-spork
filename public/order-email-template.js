@@ -21,7 +21,7 @@
  }
  function itemLine(item){const unit=typeof item.unitAmount==='string'?item.unitAmount.trim():'',sku=typeof item.sku==='string'?item.sku.trim():'';return `${item.quantity} × ${item.name}${unit?' ('+unit+')':''}${sku?' [SKU: '+sku+']':''}`;}
  function render(input,order){
-  const template=validate(input),values={company:order.companyName||'Your company',location:order.locationName||order.location||'your location',supplier:order.supplier||'Supplier',order_reference:order.orderId||order.id||'',requested_by:order.requester||order.name||'',items:order.items.map(itemLine).join('\n'),notes:order.notes||'None'};
+  const template=validate(input),values={company:order.companyName||'Your company',location:order.locationName||order.location||'your location',supplier:order.supplier||'Supplier',order_reference:order.orderNumber||order.orderId||order.id||'',requested_by:order.requester||order.name||'',items:order.items.map(itemLine).join('\n'),notes:order.notes||'None'};
   // Replace once: tokens inside stock names or notes are ordinary text, never template instructions.
   const fill=text=>text.replace(/{{\s*([a-z_]+)\s*}}/g,(_,key)=>String(values[key]));
   return {subject:fill(template.subject).replace(/[\x00-\x1f\x7f]/g,' ').trim().slice(0,300),text:fill(template.body)};

@@ -3,7 +3,7 @@
  const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
  let session,key='',version=0;
  function show(order){
-  version++;panel.replaceChildren();panel.hidden=false;panel.append(node('h2','Order delivery'),node('p','Order '+order.id,'small'));
+  version++;panel.replaceChildren();panel.hidden=false;panel.append(node('h2','Order delivery'),node('p','Order '+(order.orderNumber||order.id),'small'));
   for(const delivery of order.delivery||[]){
    const card=node('article',undefined,'order-delivery-card'),header=node('div',undefined,'order-delivery-heading'),title=node('h3',delivery.supplier),labels={submitted:'Accepted by sending service',action_required:'Finish in platform',not_configured:'Not sent',failed:'Sending failed',unconfirmed:'Submission unconfirmed',pending:'Processing unconfirmed'},badge=node('span',labels[delivery.status]||'Not confirmed','order-delivery-badge');badge.dataset.state=delivery.status;title.dataset.userText='';header.append(title,badge);card.append(header,node('p',delivery.message,'small'));
    if(delivery.configurationMessage){const setup=node('p',delivery.configurationMessage,'small');setup.dataset.userText='';card.append(setup);}

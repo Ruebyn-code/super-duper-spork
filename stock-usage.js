@@ -1,7 +1,7 @@
 const stockOrderRules=require('./public/stock-order-rules');
 const {belongs}=require('./location-scope');
 const fs=require('node:fs/promises'),path=require('node:path');
-const par=require('./par-levels'),transferEffects=require('./stock-transfer-effects');
+const par=require('./par-levels'),transferEffects=require('./stock-transfer-effects'),orderNumbers=require('./order-numbers');
 const dayMs=86400000,uuidFile=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/i;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
@@ -60,7 +60,7 @@ function createReader(){
   }));result.push(...batch.filter(Boolean));}
   return result;
  }
- return async dir=>{const [counts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);return {counts,orders:orders.filter(order=>order.status!=='deleted'),transfers};};
+ return async dir=>{const [counts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);return {counts,orders:await orderNumbers.decorate(dir,orders.filter(order=>order.status!=='deleted')),transfers};};
 }
 const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){

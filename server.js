@@ -29,6 +29,7 @@ const {validateDelivery,providerStatus,deliveryConfigurationIssue,dispatchOrder}
 const deliverySettings=require('./delivery-settings');
 const orderEmailTemplates=require('./order-email-templates'),orderConfirmation=require('./order-confirmation');
 const {splitBySupplier}=require('./supplier-orders');
+const orderNumbers=require('./order-numbers');
 const orderHistory=require('./order-history');
 const interfaceText=require('./interface-text');
 const elementOverrides=require('./element-overrides');
@@ -89,7 +90,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore,{defaultsRoot:platformDataDir});
   const kioskStore=kioskDevices.createStore(dataDir,{networkId:network.id,now:kioskNow,location:id=>locationStore.get(id),context:(actor,id)=>auth.forCompany(actor,id),openStaff:async(pin,id)=>companyStore.context(await locationStore.sessionContext(await auth.openKiosk(pin,id),id)),staffSession:async(token,id)=>{const raw=await auth.session({headers:{cookie:'admin_session='+token}});return raw?companyStore.context(await locationStore.sessionContext(raw,id)):null;},closeStaff:token=>auth.logout(token)});
-  let defaultsMigration;
+  let defaultsMigration,orderNumbersMigration;
   async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory().then(photoStore.decorate),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];const people=accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,photoUrl:account.photoUrl,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});const operators=platformStore?(await platformStore.summary()).accounts.filter(account=>!account.disabled&&!account.pending):[];return[...people,...operators.map(account=>({id:'opstack-'+account.id,username:account.username+' (Opstack)',companyIds}))];}
   const prepLabelStore=prepLabels.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),allLocations:()=>auth.levels.locations(),now:communicationsNow});
   const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor,{includeTradingHours:true}),people:()=>auth.directory(),roleLevels:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
@@ -151,6 +152,8 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if(req.method==='GET'&&req.url==='/login'&&!await auth.configured()&&!await platformStore?.enabled()){res.writeHead(303,{Location:'/setup'});return res.end();}
       if(req.method==='GET'&&req.url==='/setup'&&await auth.configured()){res.writeHead(303,{Location:'/login'});return res.end();}
       await locationStore.ensure();await companyStore.ensure();
+      if(!orderNumbersMigration)orderNumbersMigration=orderNumbers.migrate(dataDir).catch(error=>{orderNumbersMigration=undefined;throw error;});
+      await orderNumbersMigration;
       const kioskCookie=kioskDevices.cookie(req),kioskDevice=await kioskStore.device(req),kioskStaff=await kioskStore.worker(kioskDevice);
       const kioskCsrf=kioskCookie?crypto.createHash('sha256').update(kioskCookie+':csrf').digest('hex'):'';
       const deviceCookie=value=>`opstack_kiosk=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${value?365*86400:0}${secureCookie(req)?'; Secure':''}`;
@@ -326,7 +329,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(can(session,'users.manage'))providers.Users=async(q,terms)=>{const ids=new Set((await locationStore.list()).filter(s=>s.companyId===session.companyId).map(s=>s.id));return filtered((await auth.list(session)).filter(p=>locationIds(p).some(id=>ids.has(id))).map(p=>({id:'user:'+p.id,type:'Users',title:p.username,text:p.email||'',url:link('/admin/accounts',p.username,'#accounts')})),terms);};
         if(canAny(session,['users.manage','locations.manage','email.manage','companies.manage']))providers.Locations=async(q,terms)=>filtered((await locationStore.accessible(session)).filter(s=>s.companyId===session.companyId).map(s=>({id:'location:'+s.id,type:'Locations',title:s.name,text:'Company location',url:link('/admin/accounts',s.name,'#locations')})),terms);
         if(can(session,'home.view')&&can(session,'invoices.view'))providers.Invoices=(q,terms)=>invoices.search(dataDir,session,terms);
-        if(can(session,'orders.view'))providers.Orders=async(q,terms)=>filtered((await usageHistory(dataDir)).orders.filter(order=>order.requestOwnerId===session.id&&belongs(order,session,'requestOwnerId')).map(o=>({id:'order:'+o.id,type:'Orders',title:'Order '+o.id,text:[o.createdAt?.slice(0,10),o.notes,...o.items.map(p=>p.name+' '+(p.sku||'')+' '+(p.supplier||''))].filter(Boolean).join(' · '),url:'/api/orders/'+o.id,action:'order'})),terms);
+        if(can(session,'orders.view'))providers.Orders=async(q,terms)=>filtered((await usageHistory(dataDir)).orders.filter(order=>order.requestOwnerId===session.id&&belongs(order,session,'requestOwnerId')).map(o=>({id:'order:'+o.id,type:'Orders',title:'Order '+(o.orderNumber||o.id),text:[o.createdAt?.slice(0,10),o.notes,...o.items.map(p=>p.name+' '+(p.sku||'')+' '+(p.supplier||''))].filter(Boolean).join(' · '),url:'/api/orders/'+o.id,action:'order'})),terms);
         if(intelligent)return json(200,await globalSearch.intelligentSearch(session,query,plan,providers));
         const result=await globalSearch.search(session,query,providers);
         let available=false;try{const config=await aiStore.status(session);available=config.enabled&&config.configured;}catch{}
@@ -663,21 +666,22 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
             return {...result,configurationMessage:issue?'Current setup: '+issue:'Current sending settings for '+session.locationName+' are complete. This saved order was not sent and has not been retried.'};
           });
         }
-        return json(200,record);
+        return json(200,await orderNumbers.decorate(dataDir,record));
       }
       if (req.method === 'POST' && req.url === '/api/orders') {
         const input=await body(req);
         const requestId=input?.requestId;
         if(requestId!==undefined&&!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId))fail('Invalid request identifier.');
         const fingerprint=crypto.createHash('sha256').update(JSON.stringify(input)).digest('hex');
-        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,previous);}catch(error){if(error.code!=='ENOENT')throw error;}}
+        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderNumbers.decorate(dataDir,previous));}catch(error){if(error.code!=='ENOENT')throw error;}}
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
         if(requestId)order.id=requestId;order.companyId=session.companyId;order.companyName=session.companyName;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.confirmation={status:'pending',message:'Confirmation email is still processing or unconfirmed. Check the sending service before retrying.'};order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        order.orderNumber=await orderNumbers.assign(dataDir,order);
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
-        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,previous);}}finally{await fs.rm(staged,{force:true});}
+        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderNumbers.decorate(dataDir,previous));}}finally{await fs.rm(staged,{force:true});}
         const templateSettings=await orderEmailTemplates.read(dataDir,session.companyId);
         const env={...await deliverySettings.deliveryEnvironment(dataDir,session.locationId),...(templateSettings.revision?{ORDER_EMAIL_TEMPLATE:templateSettings.template}:{})};
         order.delivery=await dispatchOrder(order,catalogue.suppliers,{env,fetchImpl});

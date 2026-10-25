@@ -4,9 +4,9 @@ const {itemLine}=require('./public/order-email-template');
 const money=value=>new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100);
 const statuses={submitted:'Accepted by the sending service; supplier receipt is not confirmed.',action_required:'Action required: finish this order in the supplier ordering platform. It has not been submitted there.',not_configured:'Not sent: supplier delivery or sending settings are not configured.',failed:'Sending failed. Check the order in OpStack.',unconfirmed:'Submission unconfirmed. Check the sending service before resending.',pending:'Sending is still processing or unconfirmed.'};
 function content(order){
- const subject=('Order confirmation · '+(order.locationName||'Your location')+' · '+order.id).replace(/[\x00-\x1f\x7f]/g,' ').trim().slice(0,200);
+ const subject=('Order confirmation · '+(order.locationName||'Your location')+' · '+(order.orderNumber||order.id)).replace(/[\x00-\x1f\x7f]/g,' ').trim().slice(0,200);
  const instant=new Date(order.createdAt),savedAt=Number.isFinite(instant.valueOf())?new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeStyle:'short',timeZone:'Australia/Melbourne'}).format(instant)+' (Melbourne time)':'Not recorded';
- const lines=['Your order has been saved in OpStack.','This confirms the saved order, not supplier receipt.','', 'Company: '+(order.companyName||'Your company'),'Location: '+(order.locationName||'Your location'),'Order: '+order.id,'Placed by: '+(order.name||'Team member'),'Saved: '+savedAt];
+ const lines=['Your order has been saved in OpStack.','This confirms the saved order, not supplier receipt.','', 'Company: '+(order.companyName||'Your company'),'Location: '+(order.locationName||'Your location'),'Order: '+(order.orderNumber||order.id),'Placed by: '+(order.name||'Team member'),'Saved: '+savedAt];
  for(const supplier of splitBySupplier(order)){
   const delivery=order.delivery?.find(result=>result.supplierId===supplier.supplierId);
   lines.push('',supplier.supplier||'Supplier',statuses[delivery?.status]||statuses.unconfirmed);
