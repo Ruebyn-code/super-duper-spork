@@ -1,5 +1,10 @@
 # Opstack
 
+Open **Help & support** from the blue account dropdown for searchable, step-by-step
+guides across the app. Browse by feature, follow related guides, copy a guide link
+or prepare details for your manager/support contact. Screen links respect current
+permissions. See [Help & support](docs/help-support.md).
+
 A stock ordering application with a searchable catalogue, supplier filters, editable quantities, and saved purchase requests. Prices are in AUD. The app starts with sample stock; submitting a request does not change inventory or place an order with a supplier.
 
 ## Run

@@ -19,7 +19,7 @@ const script=(html,name)=>new RegExp('src="/'+name+'\\.js\\?v=[a-f0-9]{64}"').te
 
 test('navigation shell runs shared controls once while content documents retain their own page scripts',async t=>{
  const app=await fixture(t);
- for(const [route,pageScript] of [['/order-history','order-history'],['/home','home'],['/','app'],['/sales','sales'],['/rostering','rostering'],['/communications','communications']]){
+ for(const [route,pageScript] of [['/help','help'],['/order-history','order-history'],['/home','home'],['/','app'],['/sales','sales'],['/rostering','rostering'],['/communications','communications']]){
   const outer=await fetch(app.base+route,{headers:app.office});assert.equal(outer.status,200);assert.equal(outer.headers.get('cache-control'),'no-store');const shell=await outer.text();
   assert.ok(script(shell,'persistent-navigation'));assert.ok(script(shell,'navigation'));assert.ok(script(shell,'required-reading'));assert.ok(script(shell,'shift-clock'));assert.ok(!script(shell,pageScript));
   const content=await fetch(app.base+route,{headers:{...app.office,'Sec-Fetch-Dest':'iframe'}});assert.equal(content.status,200);assert.equal(content.headers.get('cache-control'),'no-store');const html=await content.text();
