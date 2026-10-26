@@ -5,7 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
 const globalSearch=require('./global-search');
-const publicHolidays=require('./australian-public-holidays');
+const publicHolidays=require('./australian-public-holidays'),supplierDeliveryDays=require('./supplier-delivery-days');
 const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
@@ -100,7 +100,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
   const learningStore=learningCentre.createStore(dataDir,{library:libraryStore,people:async companyId=>{const[accounts,data,stores]=await Promise.all([auth.directory(),auth.levels.read(),auth.levels.locations()]);return accounts.map(account=>auth.levels.decorate(account,companyId,data,stores));},locations:actor=>locationStore.accessible(actor),roles:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   // Rich editors share private media URLs; article and training access follow their current audiences.
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:async(actor,record)=>await libraryStore.canReadMedia(actor,record)||await learningStore.canReadMedia(actor,record)});
-  const catalogueStore=catalogues.createStore(dataDir,menu);
+  const catalogueStore=catalogues.createStore(dataDir,menu),supplierDeliveryDaysStore=supplierDeliveryDays.createStore(dataDir);
   const locationSetupStore=locationSetup.createStore(dataDir,{locations:locationStore,auth,catalogues:catalogueStore,now:locationNow});
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
@@ -414,6 +414,15 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         }else if(entry?.available)record=await sales.read(dataDir,session,sales.currentWeek(new Date(entry.tradingDate+'T12:00:00Z')));
         return json(200,{checkedAt,locationId:location.locationId,locationName:location.name,entry:entry?{...entry,...(record?{amountCents:record.days[(new Date(entry.tradingDate+'T12:00:00Z').getUTCDay()+6)%7],revision:record.revision}:{})}:null});
       }
+      const supplierDaysRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/supplier-delivery-days$/);
+      if(supplierDaysRoute){
+        const target=await locationStore.get(supplierDaysRoute[1]),context=await auth.forCompany(session,target.companyId);
+        if(target.companyId!==session.companyId||!canAccessLocation(context,target))fail('Location not found.',404);
+        if(!can(context,'locations.manage'))fail('Location management permission required.',403);
+        if(req.method==='GET')return json(200,{companyId:target.companyId,locationId:target.id,...await supplierDeliveryDaysStore.read(target.id,target.companyId),suppliers:(await catalogueStore.read(target.companyId)).suppliers.map(({id,name})=>({id,name}))});
+        if(req.method==='PUT')return json(200,await supplierDeliveryDaysStore.save(target.id,target.companyId,await body(req),async()=>(await catalogueStore.read(target.companyId)).suppliers));
+        fail('Unsupported supplier delivery days action.',405);
+      }
       const managerRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/managers$/);
       if(managerRoute){const store=await locationStore.get(managerRoute[1]),context=await auth.forCompany(session,store.companyId);if(!canAccessLocation(context,store))fail('Location not found.',404);if(req.method==='GET')return json(200,await auth.locationManagers(context,store.id));if(req.method==='PUT')return json(200,await auth.assignLocationManagers(context,store.id,await body(req)));}
       if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId},{setupCreatorId:session.id}));}
@@ -606,7 +615,8 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const manualLevels=await manualParStore.read(dataDir,session.locationId||session.id);
         const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels});
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
-        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers:can(session,'suppliers.manage')?catalogue.suppliers:catalogue.suppliers.map(({id,name})=>({id,name})),products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
+        const deliveryDays=await supplierDeliveryDaysStore.read(session.locationId,session.companyId),suppliers=catalogue.suppliers.map(supplier=>({...(can(session,'suppliers.manage')?supplier:{id:supplier.id,name:supplier.name}),deliveryDays:deliveryDays.schedules.find(row=>row.supplierId===supplier.id)?.days||[]}));
+        return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers,products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
       }
       const manualParRoute=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)\/par$/);
       if(manualParRoute&&req.method==='PUT'){

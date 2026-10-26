@@ -14,3 +14,22 @@ Search and location filters apply to the current active/archive menu. Search
 matches location names, state codes and full state names. Switching menus clears
 these filters; counts and state headings describe only the visible menu. Direct
 links to archived locations open their archived entry for authorised managers.
+
+Open **Edit location → Supplier delivery days** to choose each supplier's regular
+Monday–Sunday delivery days for that store. Use **Find supplier** to filter the
+list. Unticked days mean no saved schedule; **Save settings** saves these choices
+with the rest of the location popup. Switching tabs or closing and reopening the
+popup retains unsaved choices. Each location has independent schedules, including
+when it uses the same suppliers as another location.
+
+Location management permission is required to edit delivery days. Staff with
+Ordering access can see configured days beneath the selected supplier in
+Catalogue and in that supplier's cart group. Saved days refresh in open ordering
+pages. A conflicting edit keeps the draft and asks you to reload delivery days;
+reloading a changed draft asks before discarding it. Archived locations retain
+their schedules when restored.
+
+Schedules are stored in **data/location-supplier-delivery-days/[location ID].json**
+with revisions and company/location bindings. They describe regular delivery days;
+they do not reserve a delivery, restrict when staff may order, or alter previously
+placed orders, supplier contacts, stock counts, target levels or prices.
