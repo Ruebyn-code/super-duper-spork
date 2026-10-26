@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Ordering → Stock items, edit the item and choose Pack &amp; counting.
+
+2
+00:00:06.000 --> 00:00:15.000
+Step 2: Keep Unit amount as the ordered pack, such as “Box of 1,000 cups”. Set Count in smaller packs to Sleeves and 20 per ordered unit.
+
+3
+00:00:15.000 --> 00:00:21.000
+Step 3: Save changes, then enter sleeves in Stock count. For example, 10 sleeves is 0.5 of that box.
+
+4
+00:00:21.000 --> 00:00:27.000
+Step 4: Check the conversion shown beside the count before saving.

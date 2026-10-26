@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:07.000
+Step 1: Open Home’s Invoice scanner and choose Take photo or Upload invoice. Supported files include PDF, JPEG, PNG and WebP.
+
+2
+00:00:07.000 --> 00:00:13.000
+Step 2: Review the detected supplier, invoice number, invoice date, subtotal, GST and total against the original.
+
+3
+00:00:13.000 --> 00:00:19.000
+Step 3: Check the bundle week, which can be changed independently of the invoice date.
+
+4
+00:00:19.000 --> 00:00:25.000
+Step 4: Review any proposed stock price changes, then choose Save invoice or Confirm price updates.
+
+5
+00:00:25.000 --> 00:00:31.000
+Step 5: Reopen the saved bundle to correct details, move the invoice, download the original or delete it with confirmation.

@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Keep the scan popup open and check the extracted dates and hourly values.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Resolve warnings and choose Trading day or Calendar day if required.
+
+3
+00:00:12.000 --> 00:00:19.000
+Step 3: Press Submit hourly sales and read the message beside it. A scan preview alone is not a saved import.
+
+4
+00:00:19.000 --> 00:00:26.000
+Step 4: Check the earliest imported date in Hourly sales. Existing differing hours may have been skipped unless replacement was explicitly selected.

@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Admin → Locations → Edit location → Sending for the intended store.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Enter its sender email and Resend API key, and enable automatic supplier emails.
+
+3
+00:00:12.000 --> 00:00:18.000
+Step 3: Press Save settings and check the saved sending status.
+
+4
+00:00:18.000 --> 00:00:24.000
+Step 4: In Suppliers &amp; delivery, separately set each supplier to Email and save the recipient.

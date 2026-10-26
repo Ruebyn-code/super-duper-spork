@@ -1,7 +1,8 @@
 # Opstack
 
 Open **Help & support** from the blue account dropdown for searchable, step-by-step
-guides across the app. Browse by feature, follow related guides, copy a guide link
+guides across the app, with picture steps and captioned video walkthroughs for
+every guide. Browse by feature, follow related guides, copy a guide link
 or prepare details for your manager/support contact. Screen links respect current
 permissions. See [Help & support](docs/help-support.md).
 

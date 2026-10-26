@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: In Planner, choose Hourly recurrence for a separate checklist occurrence each hour within the window.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Choose Location trading hours to base the window on saved opening/closing times, adding offsets when needed.
+
+3
+00:00:12.000 --> 00:00:18.000
+Step 3: Check the assigned locations have valid hours and review the window’s finish.
+
+4
+00:00:18.000 --> 00:00:24.000
+Step 4: Activate the planner. Active work appears only when its planned window is open.

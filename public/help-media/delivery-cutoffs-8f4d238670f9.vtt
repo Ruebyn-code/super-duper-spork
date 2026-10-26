@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Expand a supplier’s Delivery timing &amp; exceptions in location settings.
+
+2
+00:00:06.000 --> 00:00:13.000
+Step 2: Set lead time in calendar days, Order cutoff and expected Delivery time. Same-day cutoffs must be earlier than arrival.
+
+3
+00:00:13.000 --> 00:00:23.000
+Step 3: For Tuesday/Friday delivery with one day’s lead time and a 2 pm cutoff, order before Monday 2 pm for Tuesday. After that, Friday is the next eligible estimate.
+
+4
+00:00:23.000 --> 00:00:29.000
+Step 4: Save settings and check Order by and Estimated delivery in the cart and review.

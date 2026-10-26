@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Read the post shown over the app.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Choose Mark as read &amp; continue to acknowledge that version.
+
+3
+00:00:12.000 --> 00:00:18.000
+Step 3: If you need to finish something first, choose Snooze for 5 minutes.
+
+4
+00:00:18.000 --> 00:00:24.000
+Step 4: Handle each outstanding post separately. The prompt returns when its snooze expires.

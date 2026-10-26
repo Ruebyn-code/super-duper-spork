@@ -4,6 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
+const serveHelpMedia=require('./help-media').createMediaServer(path.join(__dirname,'public/help-media'),require('./public/help-media-manifest'));
 const globalSearch=require('./global-search');
 const publicHolidays=require('./australian-public-holidays'),supplierDeliveryDays=require('./supplier-delivery-days'),deliveryCalendar=require('./delivery-calendar'),deliveryPlanning=require('./delivery-planning'),orderFulfilment=require('./order-fulfilment'),deliveryClock=require('./delivery-time');
 const prepLabels=require('./prep-labels');
@@ -134,7 +135,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       res.setHeader('Cache-Control','no-store');
       if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
       if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
-      if(await publicAssets.serve(req,res,requestUrl))return;
+      if(await serveHelpMedia(req,res,requestUrl)||await publicAssets.serve(req,res,requestUrl))return;
       if(!defaultsMigration)defaultsMigration=newNetworkDefaults.migrate(dataDir,platformDataDir).catch(error=>{defaultsMigration=undefined;throw error;});
       await defaultsMigration;
       if(req.url==='/accept-invite'){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','DENY');}
