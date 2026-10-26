@@ -14,3 +14,5 @@ Saving, correcting, moving or deleting an invoice changes live calculated totals
 Invoice details and **Open invoice** links require `invoices.view`. Financial viewers without that permission receive only the aggregate cost and counts. Existing invoice editing, CSRF, file access, revision conflicts, duplicate-file protection and company/location controls remain in place.
 
 Daily sales, forecast revenue, ordering budgets, legacy Home order metrics, stock counts/usage and placed orders retain their existing sources. Invoice price changes still require the existing explicit price confirmation.
+
+Explicitly confirmed stock price changes also update the effective price in the latest order containing each item at every location in that company. History, budgets and placed-order reference costs use those revised totals, while financial Cost of goods still includes saved invoices only. Original order snapshots and sent messages remain available unchanged; confirmation never resends them. See [Order history](order-history.md).

@@ -61,7 +61,8 @@
  }
  window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)session=event.detail.actor;render();refresh();});
  $('logout').onclick=async()=>{try{const response=await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':session?.csrf||''}});if(!response.ok)throw Error();location.href=companyLoginUrl();}catch{template($('home-status'),'Please sign in again.');}};
- window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)))refresh();});
+ window.addEventListener('storage',event=>{if(event.key===cartKey||event.key===null)renderCart();if(session&&(event.key==='souvlaki-usage-updated-'+(session.dataScope||session.id)||event.key==='souvlaki-sales-updated-'+(session.dataScope||session.id)||event.key==='opstack-stock-prices-updated-'+session.companyId))refresh();});
+ window.addEventListener('stock-prices-updated',event=>{if(event.detail.companyId===session?.companyId)refresh();});
  window.addEventListener('focus',()=>{renderCart();refresh();});window.addEventListener('pageshow',event=>{renderCart();if(event.persisted)refresh();});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderCart();refresh();}});
  document.addEventListener('DOMContentLoaded',render);window.addEventListener('interface-text-updated',render);setInterval(refresh,60000);

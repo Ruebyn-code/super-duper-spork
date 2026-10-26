@@ -1,4 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const orderPrices=require('./order-prices');
 const {mergeSpreadsheet}=require('./catalogue-import'),groups=require('./public/stock-count-groups');
 function createStore(dir,menu){
  const initializations=new Map(),pending=new Map();
@@ -13,9 +14,9 @@ function createStore(dir,menu){
    for(const product of catalogue.products){for(const key of ['roundDownThreshold','roundUpThreshold'])if(product[key]===undefined){product[key]=null;changed=true;}if(product.roundingCutoff===undefined){product.roundingCutoff=1;changed=true;}if(product.minimumOrder===undefined){product.minimumOrder=1;changed=true;}if(product.orderRule===undefined){product.orderRule='minimum';changed=true;}}
    if(changed)await write(target,catalogue);
   })().catch(error=>{initializations.delete(target);throw error;}));
-  await initializations.get(target);const result=JSON.parse(await fs.readFile(target,'utf8'));if(!includePrivate)delete result.invoicePriceUpdates;return result;
+  await initializations.get(target);const result=JSON.parse(await fs.readFile(target,'utf8'));if(!includePrivate){delete result.invoicePriceUpdates;delete result.orderPriceUpdates;}return result;
  }
- function mutate(companyId,change){const target=file(companyId),operation=(pending.get(target)||Promise.resolve()).then(async()=>{const catalogue=await read(companyId,true),result=await change(catalogue);await write(target,catalogue);return result;});const settled=operation.catch(()=>{});pending.set(target,settled);return operation.finally(()=>{if(pending.get(target)===settled)pending.delete(target);});}
+ function mutate(companyId,change,metadata){const target=file(companyId),operation=(pending.get(target)||Promise.resolve()).then(async()=>{const catalogue=await read(companyId,true),before=new Map(catalogue.products.map(p=>[p.id,p.price])),result=await change(catalogue);await orderPrices.capture(dir,companyId,catalogue,before,metadata);await write(target,catalogue);return result;});const settled=operation.catch(()=>{});pending.set(target,settled);return operation.finally(()=>{if(pending.get(target)===settled)pending.delete(target);});}
  return {read,mutate,invoicePriceUpdates:async companyId=>(await read(companyId,true)).invoicePriceUpdates||[]};
 }
 module.exports={createStore};

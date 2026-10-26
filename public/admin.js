@@ -82,7 +82,7 @@ for(const [formId,url] of [['supplier-form','/api/suppliers'],['stock-form','/ap
       if(isStock){
         const body=stockBody(form),target=$('stock-manual-par'),level=target.disabled?undefined:target.value.trim()===''?null:Number(target.value);stockSaveState??=stockItemSave.create();window.stockItemEditor.setBusy(true);
         await stockSaveState.save(body,level,{
-          stock:(id,input)=>api('/api/products'+(id?'/'+id:''),id?'PUT':'POST',input),
+          stock:async(id,input)=>{const saved=await api('/api/products'+(id?'/'+id:''),id?'PUT':'POST',input);if(id&&products.find(p=>p.id===id)?.price!==saved.price)try{localStorage.setItem('opstack-stock-prices-updated-'+currentCompanyId,String(Date.now()));}catch{}return saved;},
           target:async(id,level)=>{await api('/api/products/'+id+'/par','PUT',{level});try{localStorage.setItem('souvlaki-usage-updated-'+currentDataScope,String(Date.now()));}catch{}},
           onStock:product=>{editingId=product.id;$('stock-form-title').textContent='Edit stock';$('stock-save').textContent='Save changes';$('stock-item-actions').hidden=false;}
         });
