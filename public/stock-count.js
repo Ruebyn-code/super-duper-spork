@@ -126,6 +126,8 @@
  $('logout').onclick=async()=>{try{await api('/api/logout','POST');location.href=companyLoginUrl();}catch(error){$('count-message').textContent=error.message;}};
  for(const control of form.elements)control.disabled=true;$('count-history-refresh').disabled=true;
  window.addEventListener('storage',event=>{if(event.key===cartKey)refreshRecommendations();if(event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id)){historyLoaded=false;refreshPar();if(location.hash==='#history')loadHistory();}});window.addEventListener('focus',()=>{refreshRecommendations();refreshPar();if(session&&location.hash==='#history')loadHistory();});document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshRecommendations();refreshPar();}});setInterval(refreshPar,60000);
+ window.addEventListener('ordering-cart-updated',()=>refreshRecommendations());
+ window.addEventListener('order-placed',refreshPar);
  window.addEventListener('hashchange',showView);showView();
  window.addEventListener('interface-text-updated',()=>{if(session){for(const group of groups.values())group.title.textContent=wording(group.name);updateProgress();buildGroupMenu();if(!draftWarning)$('count-draft-status').textContent=wording('Draft saved on this browser.');}});
  (async()=>{

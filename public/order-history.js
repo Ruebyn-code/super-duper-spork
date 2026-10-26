@@ -43,6 +43,6 @@
  }
  $('history-filters').onsubmit=e=>{e.preventDefault();page=1;$('history-message').textContent='';load();};$('history-clear').onclick=()=>{$('history-filters').reset();page=1;load();};$('history-previous').onclick=()=>{page--;load();};$('history-next').onclick=()=>{page++;load();};$('history-record').onclick=record;
  function refreshPrices(){if(!actor||document.hidden)return;if(modal?.open||$('history-filters').contains(document.activeElement)){priceRefreshPending=true;return;}load();}
- window.addEventListener('focus',refreshPrices);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshPrices();});window.addEventListener('storage',event=>{if(event.key==='opstack-stock-prices-updated-'+actor?.companyId)refreshPrices();});setInterval(refreshPrices,30000);
+ window.addEventListener('order-placed',refreshPrices);window.addEventListener('focus',refreshPrices);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshPrices();});window.addEventListener('storage',event=>{if(event.key==='opstack-stock-prices-updated-'+actor?.companyId)refreshPrices();});setInterval(refreshPrices,30000);
  (async()=>{try{actor=await appAccess.initialSession();await load();}catch(error){$('history-message').textContent=error.message;}})();
 })();

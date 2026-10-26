@@ -1,3 +1,7 @@
+(()=>{
+// Ordering screens share this cart controller without sharing their page globals.
+if(!document.getElementById('cart'))return;
+if(!appAccess.can('orders.view')){document.getElementById('cart-pill')?.remove();document.getElementById('cart-popup')?.remove();return;}
 const money = n => n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(n/100);
 let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',scopeKey='',page=1,parWindow=null,latestStockTake=null;
 let cartRuleNotice='',reviewingOrder=false,orderContext={};
@@ -56,6 +60,7 @@ if($('list-view')){
 function refreshStoredCart(){if(!cartKey)return;try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');if(stored&&typeof stored==='object'&&!Array.isArray(stored))cart=Object.fromEntries(Object.entries(stored).filter(([id,quantity])=>(!products.length||products.some(product=>product.id===id))&&Number.isInteger(quantity)&&quantity>0&&quantity<=999));}catch{}}
 function syncStoredCart(){if(busy)return;refreshStoredCart();if(products.length)render();}
 window.addEventListener('storage',event=>{if(event.key===cartKey)syncStoredCart();});window.addEventListener('focus',syncStoredCart);window.addEventListener('pageshow',event=>{if(event.persisted)syncStoredCart();});
+window.addEventListener('cart-updated',event=>{if(event.detail?.key===cartKey)syncStoredCart();});
 window.addEventListener('cart-opening',()=>{if(!busy){refreshStoredCart();render(false);}});
 function renderProductPar(product){
   const panel=el('div',undefined,'product-par'),label=el('strong',undefined,'par-value'),hint=el('span',undefined,'par-hint');
@@ -152,7 +157,7 @@ function orderSnapshot(form){
  const body={...Object.fromEntries(new FormData(form)),items:items.map(({id,quantity})=>({id,quantity}))};
  return {...orderContext,locationId:window.appLocationId||orderContext.locationId,notes:body.notes||'',items,body,signature:JSON.stringify({body,items})};
 }
-async function placeReviewedOrder(form,body){busy=true;render();$('message').textContent='';try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}refreshStoredCart();for(const item of body.items){const remaining=(cart[item.id]||0)-item.quantity;if(remaining>0)cart[item.id]=remaining;else delete cart[item.id];}window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Order '+(order.orderNumber||order.id)+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':d.status==='action_required'?'finish in ordering platform':'submission unconfirmed')).join('; ');window.orderDeliveryResults?.show(order);form.reset();}catch(error){refreshStoredCart();$('message').textContent=error.message||'Could not place the order. Try again.';}finally{busy=false;render();}}
+async function placeReviewedOrder(form,body){busy=true;render();$('message').textContent='';try{const signature=JSON.stringify(body);if(signature!==submissionBody){submissionBody=signature;submissionId=crypto.randomUUID();}body.requestId=submissionId;const response=await fetch('/api/orders',{method:'POST',headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json'},body:JSON.stringify(body)});const order=await response.json();if(!response.ok)throw Error(order.error);try{localStorage.setItem('souvlaki-usage-updated-'+scopeKey,String(Date.now()));}catch{}refreshStoredCart();for(const item of body.items){const remaining=(cart[item.id]||0)-item.quantity;if(remaining>0)cart[item.id]=remaining;else delete cart[item.id];}window.dispatchEvent(new Event('sales-budget-updated'));submissionId='';submissionBody='';$('message').textContent='Order '+(order.orderNumber||order.id)+' saved. Estimated total '+money(order.total)+(order.pricePending?' + prices pending':'')+'. '+(order.delivery||[]).map(d=>d.supplier+': '+(d.status==='submitted'?'submitted to sending service':d.status==='not_configured'?'not sent — delivery not configured':d.status==='failed'?'sending failed':d.status==='action_required'?'finish in ordering platform':'submission unconfirmed')).join('; ');window.orderDeliveryResults?.show(order);form.reset();window.dispatchEvent(new CustomEvent('order-placed',{detail:{companyId:orderContext.companyId,locationId:orderContext.locationId,orderId:order.id}}));}catch(error){refreshStoredCart();$('message').textContent=error.message||'Could not place the order. Try again.';}finally{busy=false;render();}}
 if($('checkout'))$('checkout').onsubmit=async event=>{
  event.preventDefault();if(busy||reviewingOrder||!appAccess.can('orders.place'))return;
  reviewingOrder=true;let notice='';
@@ -177,13 +182,13 @@ async function reload(){
   for(const supplier of [{id:'All',name:wording('All suppliers')},...suppliers]){const button=el('button',supplier.name);button.type='button';button.dataset.supplierId=supplier.id;button.classList.toggle('active',category===supplier.id);button.setAttribute('aria-pressed',String(category===supplier.id));if(supplier.id!=='All')button.dataset.userText='';button.onclick=()=>{category=supplier.id;page=1;for(const child of $('filters').children){const active=child===button;child.classList.toggle('active',active);child.setAttribute('aria-pressed',String(active));}renderMenu();};$('filters').append(button);}}
   refreshStoredCart();render();
 }
-$('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href=companyLoginUrl();}catch(error){$('message').textContent=error.message;}};
-(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href=companyLoginUrl();return;}csrf=session.csrf;orderContext={companyId:session.companyId,locationId:session.locationId,locationName:session.locationName,companyName:session.companyName};window.orderDeliveryResults?.init(session);scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}$('admin-link').hidden=!appAccess.any(appAccess.admin,session);await reload();$('load-status').textContent='';}catch(error){$('load-status').textContent=error.message;}})();
+if($('logout')&&!$('logout').onclick)$('logout').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',headers:{'X-CSRF-Token':csrf}});location.href=companyLoginUrl();}catch(error){$('message').textContent=error.message;}};
+(async()=>{try{const session=await api('/api/session','GET');if(!session.csrf){location.href=companyLoginUrl();return;}csrf=session.csrf;orderContext={companyId:session.companyId,locationId:session.locationId,locationName:session.locationName,companyName:session.companyName};window.orderDeliveryResults?.init(session);scopeKey=session.dataScope||session.id;const legacyCartKey='souvlaki-cart-'+(session.id||session.username);cartKey=legacyCartKey+(session.locationId?'-'+session.locationId:'');try{if(session.canMigrateBrowserData&&localStorage.getItem(cartKey)===null&&localStorage.getItem(legacyCartKey)!==null)localStorage.setItem(cartKey,localStorage.getItem(legacyCartKey));}catch{}try{const stored=JSON.parse(localStorage.getItem(cartKey)||'{}');cart=stored&&typeof stored==='object'&&!Array.isArray(stored)?stored:{};}catch{cart={};}$('admin-link').hidden=!appAccess.any(appAccess.admin,session);await reload();if($('load-status'))$('load-status').textContent='';}catch(error){($('load-status')||$('message')).textContent=error.message;}})();
 
 window.addEventListener('interface-text-updated',()=>{if(products.length){renderParPeriod();renderMenu();if($('cart'))render(false);}});
 
 // Recalculate after a week boundary or after usage is saved in another tab.
-if($('menu')){
+if($('cart')){
  let parRefreshPending=false,parRefreshDeferred=false;
  const editingCartQuantity=()=>{const input=document.activeElement,item=input?.matches('input')?input.closest('#cart [data-product-id]'):null;return item&&input.value!==String(cart[item.dataset.productId]||0);};
  async function refreshParIfNeeded(force=false){
@@ -194,14 +199,15 @@ if($('menu')){
   parRefreshPending=true;try{
    const data=await api('/api/catalogue','GET');if(editingCartQuantity()){parRefreshDeferred=true;return;}parWindow=data.parWindow;latestStockTake=data.stockTake;const refreshed=new Map(data.products.map(product=>[product.id,product]));
    let rulesChanged=false,pricesChanged=false;for(const product of products){const latest=refreshed.get(product.id);product.par=latest?.par;product.ordering=latest?.ordering;if(latest){if(product.price!==latest.price){product.price=latest.price;pricesChanged=true;}for(const key of ['minimumOrder','orderRule','roundingCutoff','roundDownThreshold','roundUpThreshold']){if(product[key]!==latest[key]){product[key]=latest[key];rulesChanged=true;}}}}renderParPeriod();if(rulesChanged){refreshStoredCart();render();}else if(pricesChanged)render(false);
-   for(const card of $('menu').querySelectorAll('[data-product-id]')){const product=products.find(product=>product.id===card.dataset.productId);if(product){card.querySelector('.product-par')?.replaceWith(renderProductPar(product));if(pricesChanged){const price=card.querySelector('.product-bottom>strong');if(price)price.textContent=money(product.price);}}}
-   $('load-status').textContent='';
-  }catch(error){$('load-status').textContent=error.message;}finally{parRefreshPending=false;}
+   for(const card of $('menu')?.querySelectorAll('[data-product-id]')||[]){const product=products.find(product=>product.id===card.dataset.productId);if(product){card.querySelector('.product-par')?.replaceWith(renderProductPar(product));if(pricesChanged){const price=card.querySelector('.product-bottom>strong');if(price)price.textContent=money(product.price);}}}
+   if($('load-status'))$('load-status').textContent='';
+  }catch(error){($('load-status')||$('message')).textContent=error.message;}finally{parRefreshPending=false;}
  }
  for(const event of ['focusout','change'])$('cart')?.addEventListener(event,()=>setTimeout(()=>{if(parRefreshDeferred)refreshParIfNeeded(true);},0));
  setInterval(()=>refreshParIfNeeded(true),60000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshParIfNeeded(true);});
  window.addEventListener('focus',()=>refreshParIfNeeded(true));
+ window.addEventListener('stock-prices-updated',event=>{if(event.detail?.companyId===orderContext.companyId)refreshParIfNeeded(true);});
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-usage-updated-'+scopeKey||event.key==='opstack-stock-prices-updated-'+orderContext.companyId)refreshParIfNeeded(true);});
  window.addEventListener('pageshow',event=>{if(event.persisted)refreshParIfNeeded(true);});
 }
@@ -209,3 +215,5 @@ if($('menu')){
 window.addEventListener('before-location-switch',event=>{if(busy||reviewingOrder)event.preventDefault();});
 
 window.addEventListener('app-layout-changed',()=>renderMenu());
+
+})();
