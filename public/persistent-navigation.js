@@ -70,6 +70,7 @@
   // The phone roster is a page reader. Its sheet covers only the content
   // document, so users must still be able to leave through the shared bar.
   const modal=[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('dialog[open]:not(#phone-roster)'));
+  root.classList.toggle('shell-feature-help-open',[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('.feature-help-dialog[open]')));
   if(modal||root.classList.contains('shell-conversation-fullscreen')||root.classList.contains('shell-checklist-fullscreen')||root.classList.contains('shell-course-fullscreen'))window.appSearch?.close();
   for(const control of document.querySelectorAll('#app-sidebar,#mobile-tabbar,.mobile-brand-header,#app-edit-indicator,#shift-clock-dock'))control.inert=modal;
  }

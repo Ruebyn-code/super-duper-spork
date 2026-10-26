@@ -10,7 +10,7 @@
  async function show(userId,form){
   hide();if(!appAccess.can('awards.manage'))return;
   const token=generation,section=node('fieldset',undefined,'user-employment');section.id='user-employment';section.append(node('legend','Employment & award'));form.append(section);
-  if(!userId){section.append(node('p','Create the user, then edit them to add their company employment details.','small'));return;}
+  if(!userId){section.append(node('p','Create the user, then edit them to add their company employment details.','small feature-instruction'));return;}
   section.disabled=true;section.append(node('p','Loading employment details…','small'));
   try{
    const data=await api('');if(token!==generation)return;
@@ -25,7 +25,7 @@
     const changed=()=>{bandField.hidden=classification.value!=='3';baseField.hidden=basis.value!=='base-plus-penalties';anchorField.hidden=cycle.value==='1';patternPanel.hidden=type.value!=='part-time';};
     for(const control of [type,classification,basis,cycle])control.onchange=changed;
     grid.append(field('Effective from',effective),field('Date of birth',dob),field('Employment start',start),field('Employment type',type),field('Award classification',classification),bandField,field('Pay arrangement',basis),baseField,field('Award arrangement',arrangement),field('Ordinary-hours cycle',cycle),anchorField,field('Super estimate eligibility',superEligible));section.append(grid,field('Employee launders required uniform',laundry));
-    const patternPanel=node('div',undefined,'user-employment-pattern'),agreementReference=input('text',record.agreementReference||''),rows=[];agreementReference.maxLength=500;patternPanel.append(node('h3','Written part-time work pattern'),field('Written pattern agreement reference',agreementReference),node('p','Enter the written agreed hours. A change to a single shift is recorded in that shift’s Pay details. Meal breaks here are unpaid.','small'));
+    const patternPanel=node('div',undefined,'user-employment-pattern'),agreementReference=input('text',record.agreementReference||''),rows=[];agreementReference.maxLength=500;patternPanel.append(node('h3','Written part-time work pattern'),field('Written pattern agreement reference',agreementReference),node('p','Enter the written agreed hours. A change to a single shift is recorded in that shift’s Pay details. Meal breaks here are unpaid.','small feature-instruction'));
     for(const [index,name]of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].entries()){
      const d=record.pattern?.[index],row=node('div',undefined,'employment-pattern-row'),enabled=input('checkbox'),from=input('time',d?.start||'09:00'),to=input('time',d?.end||'17:00'),next=input('checkbox'),meal=input('number',d?.breakMinutes??30),mealStart=input('time',d?.mealBreakStart||'13:00');enabled.checked=Boolean(d);next.checked=d?.overnight===true;meal.min=0;meal.max=180;meal.step=1;
      const toggle=()=>{for(const e of [from,to,next,meal,mealStart])e.disabled=!enabled.checked;};enabled.onchange=toggle;toggle();row.append(field(name,enabled),field('Start',from),field('Finish',to),field('Next day',next),field('Meal (min)',meal),field('Meal starts',mealStart));patternPanel.append(row);rows.push(()=>enabled.checked?{start:from.value,end:to.value,overnight:next.checked,breakMinutes:Number(meal.value),...(Number(meal.value)>0?{mealBreakStart:mealStart.value}:{})}:null);

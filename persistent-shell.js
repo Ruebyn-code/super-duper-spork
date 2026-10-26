@@ -6,7 +6,8 @@ function render(markup,embedded){
   let filtered=markup.replace(/<script\b[^>]*\bsrc="\/([a-z0-9-]+)\.js"[^>]*><\/script>/g,(tag,name)=>embedded?(parentOnly.has(name)?'':tag):(shellScripts.has(name)?tag:''));
   if(!embedded)filtered=filtered.replace('<link rel="stylesheet" href="/ai-brand.css">','').replace('<script src="/app-controls.js"','<script src="/app-search.js" defer></script><script src="/app-controls.js"');
   const boot=embedded?'<script src="/page-bridge.js"></script><script src="/openable.js" defer></script>':'<script src="/persistent-navigation.js" defer></script>';
-  return filtered.replace('<head>','<head><link rel="stylesheet" href="/profile-photos.css"><script src="/profile-photos.js" defer></script>'+ (embedded?boot:''))
+  const featureHelp='<link rel="stylesheet" href="/feature-help.css"><script src="/feature-help-model.js" defer></script><script src="/feature-help.js" defer></script>';
+  return filtered.replace('<head>','<head><link rel="stylesheet" href="/profile-photos.css"><script src="/profile-photos.js" defer></script>'+featureHelp+ (embedded?boot:''))
     .replace('</head>','<link rel="stylesheet" href="/persistent-navigation.css">'+(!embedded?'<link rel="stylesheet" href="/app-search.css"><link rel="stylesheet" href="/ai-brand.css">':'')+(embedded?'':boot)+'</head>');
 }
 module.exports={render};

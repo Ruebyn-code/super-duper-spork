@@ -6,6 +6,29 @@ navigation shell, theme, company appearance and required-reading checks. Every
 signed-in role can read the generic guides, without gaining access to any
 operational feature or records.
 
+Feature pages, section headings, builders and settings also have an **ⓘ** button.
+It opens the relevant guide in a popup over the current work, with a guide picker,
+written steps, pictures and videos. Closing restores focus to the icon and leaves
+the underlying form and any existing popup intact. Guide browsing never saves,
+publishes, sends, starts work or calls intelligence. Media is loaded only after
+selecting its format, and closing the guide stops video playback.
+
+Duplicated how-to paragraphs and old instruction-only expanders are hidden on
+operational pages. Their nodes remain available to existing rendering scripts;
+field labels, actual values, validation, empty states, autosave/sending results,
+destructive-action warnings and provider/billing disclosures stay visible. User
+authored checklist instructions, course lessons, articles and messages are not
+altered. The standalone Help & support page retains the complete guidance.
+
+`public/feature-help-model.js` owns page guide groups and bindings for app-owned
+dynamic headings. Static headings use `data-feature-help` with stable guide IDs;
+owned instructional nodes use `data-feature-instruction` or `feature-instruction`.
+Never hide generic `.small`, `.ai-help` or user-content classes: they also contain
+business values, results and errors. `public/feature-help.js` adds keyboard-accessible
+icons and the read-only popup. Its shared assets join both shell and content
+documents through `persistent-shell.js`; the platform console loads them directly.
+Keep icons outside navigation links/buttons and outside user-authored content.
+
 Browse feature categories, select a popular how-to, or search guide titles,
 summaries, keywords, steps and notes. The feature filter narrows results. Search
 is local and makes no intelligence/provider request. Guides contain numbered
