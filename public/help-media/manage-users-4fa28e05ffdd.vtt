@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Admin → Users and choose Create user or the pencil beside an account.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Set its username, permitted role, accessible locations and default location.
+
+3
+00:00:12.000 --> 00:00:19.125
+Step 3: Enter a phone number for clock/kiosk PIN access. Its last four digits must be unique across the network.
+
+4
+00:00:19.125 --> 00:00:25.333
+Step 4: Set a new password only when needed, or use the available account setup invitation workflow.
+
+5
+00:00:25.333 --> 00:00:31.333
+Step 5: Save and tell affected users to sign in again after access or credential changes.

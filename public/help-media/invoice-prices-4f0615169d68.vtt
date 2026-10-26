@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Scan or upload an invoice and check its invoice date and transcription.
+
+2
+00:00:06.000 --> 00:00:14.083
+Step 2: Review Price updates. Matching uses a unique SKU first, then a unique item name, and shows differing current → new prices.
+
+3
+00:00:14.083 --> 00:00:21.542
+Step 3: Correct invoice details if needed, then press Confirm price updates to save the invoice and apply the reviewed differences.
+
+4
+00:00:21.542 --> 00:00:27.750
+Step 4: If another user changed a price or pack, review the refreshed comparison before confirming again.

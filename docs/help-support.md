@@ -21,6 +21,17 @@ and an optional download. They have no voiceover and never autoplay. Media is
 loaded only after choosing a visual format; changing format or guide stops the
 active video. The ordinary written instructions remain the printable version.
 
+Videos run at 24 fps, with brief crossfades, a smoothly moving illustrative pointer
+on matched controls, and a continuous progress strip. Screens and instructions
+remain still during reading. Each step allows at least six seconds, with longer
+instructions receiving more time. Captions and transcript timestamps share the
+same frame-aligned timeline. Transcript steps can jump to a clear frame after
+the transition and bring the player into view, without starting playback when
+paused. Keyboard focus follows the jump to the player, and scrolling respects
+reduced-motion preferences. The pointer demonstrates
+where to look; it does not perform an action in the signed-in account. Use Picture
+guide or Read steps for a completely static format.
+
 The bundled library includes a separate video and matching picture sequence for
 every guide. Each picture and caption uses the exact written step. If a guide's
 title or steps change, its old media is hidden until regenerated. Snapshots are
@@ -68,6 +79,15 @@ data directory and use fake email responses; intelligence requests are rejected.
    callouts do not highlight buttons hidden behind a dialog.
 4. Run `node tools/build-help-media.cjs` to render pictures, H.264 MP4 clips and
    WebVTT captions. This updates the manifest and removes obsolete generated
-   assets only after the new library is complete.
+   assets only after the new library is complete. For a single-guide preview,
+   use `--guide place-order`; inspect the MP4 in the temporary `rendered` folder,
+   then run the full build to publish its timeline and prune unused assets.
 5. Review representative pictures and videos, validate every asset, and run the
    normal tests, desktop/phone playback checks and production image checks.
+
+Pacing, crossfade length, caption boundaries and chapter positions are shared by
+`tools/help-video-timeline.cjs`. Review representative decoded frames during a
+transition, pointer movement, and the final hold. Check every video's native
+metadata, playback and captions after generation; browser and test servers must
+start after the final manifest/assets are written so they cannot cache obsolete
+asset names during a rebuild.

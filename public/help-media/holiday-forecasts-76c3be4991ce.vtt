@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Choose the location’s state and ensure its historical sales are complete.
+
+2
+00:00:06.000 --> 00:00:14.083
+Step 2: For a holiday, the app looks for the same uniquely named holiday in the previous year, even when its date moves.
+
+3
+00:00:14.083 --> 00:00:20.583
+Step 3: It adjusts that day’s revenue by comparable total sales growth or decline since the previous holiday.
+
+4
+00:00:20.583 --> 00:00:26.583
+Step 4: Review the holiday, previous date, growth percentage or fallback explanation in the projection.

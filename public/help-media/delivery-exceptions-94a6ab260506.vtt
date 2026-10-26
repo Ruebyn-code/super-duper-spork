@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Set the location’s state, then open Supplier delivery days → Delivery timing &amp; exceptions.
+
+2
+00:00:06.000 --> 00:00:12.208
+Step 2: Turn on Skip public holidays when the supplier does not deliver on the location’s holidays.
+
+3
+00:00:12.208 --> 00:00:18.417
+Step 3: Add a dated exception and choose to skip that delivery or allow an extra delivery.
+
+4
+00:00:18.417 --> 00:00:26.500
+Step 4: Save settings and review the next eligible delivery. For an already placed order, correct its expected date separately in Order history.

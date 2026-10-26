@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Edit a stock item and open Ordering rules.
+
+2
+00:00:06.000 --> 00:00:12.833
+Step 2: Set Minimum order quantity, then choose Minimum only, Multiples of minimum, Custom cutoff or Separate up/down cutoffs.
+
+3
+00:00:12.833 --> 00:00:22.458
+Step 3: For multiples of 15, a requirement of 19 rounds to 30. For a custom cutoff of 5, 19 rounds to 15 and 20 rounds to 30.
+
+4
+00:00:22.458 --> 00:00:28.458
+Step 4: Save changes and review any cart notice about updated quantity rules.

@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Ordering → Stock count and select New count. Check the count date.
+
+2
+00:00:06.000 --> 00:00:14.083
+Step 2: Filter by storage group or search. Enter quantities next to each item; leave uncounted items blank and enter 0 for none.
+
+3
+00:00:14.083 --> 00:00:21.542
+Step 3: Use Enter, Down or Right to move to the next visible count field. Up, Left or Shift+Enter moves back.
+
+4
+00:00:21.542 --> 00:00:29.000
+Step 4: Review the recommended order beside Add to cart. Adding a recommendation is a separate action from saving the count.
+
+5
+00:00:29.000 --> 00:00:35.000
+Step 5: Save the count explicitly, then use History to check its saved snapshot.

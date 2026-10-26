@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Settings → Permission levels and create or edit a role within your authority.
+
+2
+00:00:06.000 --> 00:00:12.000
+Step 2: Choose company-only or authorised network scope, its hierarchy and individual view/edit/manage grants.
+
+3
+00:00:12.000 --> 00:00:18.500
+Step 3: Choose Staff or Manager Home. Select sales permissions separately if that account should access Sales elsewhere.
+
+4
+00:00:18.500 --> 00:00:25.000
+Step 4: Save the level, then assign it to users through Admin → Users in the intended scope.

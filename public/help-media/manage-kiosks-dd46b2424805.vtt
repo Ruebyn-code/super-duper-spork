@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open Settings → Kiosk devices or the location’s Devices tab.
+
+2
+00:00:06.000 --> 00:00:12.500
+Step 2: Create a new named kiosk for the intended location and obtain its expiring single-use pairing code.
+
+3
+00:00:12.500 --> 00:00:18.500
+Step 3: Open the kiosk page on that device and enter the pairing details.
+
+4
+00:00:18.500 --> 00:00:25.000
+Step 4: Test staff PIN access. Revoke the device from management when it should no longer be trusted.
