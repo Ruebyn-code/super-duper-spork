@@ -84,6 +84,8 @@ module.exports={'/location-setup-step':'location-setup-step.html','/location-set
   '/':'index.html',
   '/home':'home.html',
   '/home.js':'home.js',
+  '/home-transfer-approvals.js':'home-transfer-approvals.js',
+  '/home-transfer-approvals.css':'home-transfer-approvals.css',
   '/cart':'cart.html',
   '/cart-popup.js':'cart-popup.js',
   '/cart-popup.css':'cart-popup.css',
