@@ -1,0 +1,76 @@
+/* Daily entry density is independent of hourly sales and the weekly report.
+   Saved section dimensions continue to use the shared App edit layout. */
+@media screen {
+ .sales-page.daily-sales-compact{padding-top:12px;padding-bottom:24px;min-width:0}
+ .sales-page.daily-sales-compact:not(.app-section-flow){display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px;align-items:start}
+ .daily-sales-compact:not(.app-section-flow)>:is(h1,[data-sales-view],#sales-message){grid-column:1/-1}
+ .daily-sales-compact>h1{margin:0;font-size:24px;line-height:1.3}
+ .sales-page.daily-sales-compact>.management{min-width:0;margin:0;padding:12px;border-radius:12px}
+ .daily-sales-compact .sales-overview .eyebrow{font-size:10px;line-height:1.4}
+ .daily-sales-compact #sales-current-period{margin:5px 0 0;font-size:11px;line-height:1.4}
+ .daily-sales-compact .sales-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 6px}
+ .daily-sales-compact .sales-metrics span{font-size:11px;line-height:1.4}
+ .daily-sales-compact .sales-metrics h2{font-size:22px;line-height:1.25;margin:4px 0 0}
+ .daily-sales-compact #sales-projection-status{font-size:10px;line-height:1.45;margin:6px 0 0}
+ .daily-sales-compact .sales-performance-heading{gap:6px}
+ .daily-sales-compact .sales-performance-heading h2{font-size:15px;line-height:1.4}
+ .daily-sales-compact .sales-performance-status{padding:3px 7px;font-size:10px;line-height:1.4}
+ .daily-sales-compact .sales-performance-metrics{gap:10px;margin:10px 0 6px}
+ .daily-sales-compact .sales-performance-metrics>div+div{padding-left:10px}
+ .daily-sales-compact .sales-performance-metrics span{font-size:10px;line-height:1.4}
+ .daily-sales-compact .sales-performance-metrics h2{font-size:22px;margin:3px 0;line-height:1.25}
+ .daily-sales-compact .sales-performance :is(#sales-performance-coverage,#sales-performance-note){font-size:10px;margin:5px 0 0;line-height:1.45}
+ .daily-sales-compact :is(#sales-projection-status,#sales-performance-coverage,#sales-performance-note,#sales-progress,#sales-draft-status):empty{display:none}
+ .daily-sales-compact .sales-week-controls>h2{flex:1 0 auto;margin:0;font-size:17px;line-height:1.4}
+ .daily-sales-compact #sales-form{margin:0}
+ .daily-sales-compact .sales-week-controls{gap:8px 12px;align-items:center}
+ .daily-sales-compact .sales-week-controls>.date-edit{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%}
+ .daily-sales-compact .sales-week-controls label{margin:0;font-size:11px;line-height:1.4}
+ .daily-sales-compact .sales-week-controls .stock-actions{gap:6px;margin:0}
+ .daily-sales-compact #sales-entry-period{font-size:11px;line-height:1.4;margin:7px 0}
+ .daily-sales-compact .sales-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:2px 2px 6px;overflow:visible}
+ .daily-sales-compact .sales-day{padding:7px;gap:6px;border-radius:8px}
+ .daily-sales-compact .sales-day label{font-size:11px;line-height:1.4}
+ .daily-sales-compact .sales-day label>.small{margin-top:2px;font-size:10px;line-height:1.4}
+ .daily-sales-compact .sales-day input{box-sizing:border-box;width:100%;min-width:0;min-height:34px;padding:6px 5px 6px 20px;font-size:12px;line-height:1.5}
+ .daily-sales-compact .sales-currency-symbol{left:7px;font-size:12px}
+ .daily-sales-compact .sales-entry-total{padding:8px 0 0;gap:8px}
+ .daily-sales-compact .sales-total-caption{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px;min-width:0}
+ .daily-sales-compact .sales-entry-total span{font-size:12px}
+ .daily-sales-compact .sales-entry-total strong{font-size:19px;line-height:1.3}
+ .daily-sales-compact #sales-progress{margin:0;font-size:11px;line-height:1.4}
+ .daily-sales-compact .count-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px}
+ .daily-sales-compact .count-actions button{margin:0}
+ .daily-sales-compact #sales-draft-status{font-size:11px;line-height:1.4;margin:7px 0 0}
+ .daily-sales-compact #sales-message:not(:empty){margin:0;font-size:12px;line-height:1.5}
+}
+@media screen and (max-width:1000px) {
+ .daily-sales-compact .sales-days{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media screen and (min-width:721px) {
+ /* A deliberately narrowed App edit section retains readable amount fields. */
+ .daily-sales-compact.app-section-flow .sales-days{grid-template-columns:repeat(7,minmax(108px,1fr));overflow-x:auto}
+}
+@media screen and (max-width:720px) {
+ .sales-page.daily-sales-compact:not(.app-section-flow){grid-template-columns:minmax(0,1fr);gap:8px}
+ .sales-page.daily-sales-compact{padding-top:10px}
+ .daily-sales-compact>h1{font-size:22px}
+ .sales-page.daily-sales-compact>.management{padding:10px 12px}
+ .daily-sales-compact .sales-metrics{margin-top:8px;gap:8px}
+ .daily-sales-compact .sales-metrics h2{font-size:21px}
+ .daily-sales-compact .sales-performance-metrics{gap:7px;margin-top:8px}
+ .daily-sales-compact .sales-performance-metrics>div+div{padding-left:7px}
+ .daily-sales-compact .sales-performance-metrics h2{font-size:18px}
+ .daily-sales-compact .sales-week-controls{gap:6px 8px}
+ .daily-sales-compact .sales-week-controls .stock-actions{flex-wrap:wrap;gap:6px}
+ .daily-sales-compact .sales-week-controls .stock-actions button{padding:7px 9px;min-height:40px;font-size:11px;line-height:1.4}
+ .daily-sales-compact .sales-days{display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0}
+ .daily-sales-compact .sales-day{display:grid;grid-template-columns:minmax(0,1fr) minmax(112px,46%);align-items:center;gap:8px;padding:2px 0;border:0;border-bottom:1px solid var(--theme-line,#dce5ed);border-radius:0;background:transparent}
+ .daily-sales-compact .sales-day:last-child{border-bottom:0}
+ .daily-sales-compact .sales-day label{display:flex;align-items:baseline;flex-wrap:wrap;gap:1px 7px;font-size:12px}
+ .daily-sales-compact .sales-day label>.small{margin:0;font-size:10px}
+ .daily-sales-compact .sales-day input{min-height:40px;padding:7px 7px 7px 22px;font-size:16px;line-height:1.4}
+ .daily-sales-compact .sales-currency-symbol{left:8px;font-size:13px}
+ .daily-sales-compact .sales-entry-total{padding-top:7px}
+ .daily-sales-compact .count-actions button{flex:1;min-width:0;width:auto;min-height:40px;padding:8px 10px;font-size:12px}
+}

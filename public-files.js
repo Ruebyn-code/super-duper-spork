@@ -92,6 +92,7 @@ module.exports={'/help-media.js':'help-media.js','/help-media-manifest.js':'help
   '/stock-count':'stock-count.html',
   '/sales':'sales.html',
   '/sales.js':'sales.js',
+  '/daily-sales.css':'daily-sales.css',
   '/weekly-sales-report.js':'weekly-sales-report.js',
   '/sales-report-entry.js':'sales-report-entry.js',
   '/weekly-expenses.js':'weekly-expenses.js',
