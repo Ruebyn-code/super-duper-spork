@@ -18,7 +18,12 @@
  body .formatted-text>:last-child{margin-bottom:0}
  body .formatted-text :is(ul,ol){margin:.7em 0 .9em;padding-inline-start:1.55em}
  body .formatted-text li{padding-inline-start:.15em;margin:.25em 0}
- body .formatted-text li::marker{font-weight:600}
+ body .formatted-text li::marker{color:var(--primary);font-weight:600}
+ /* Keep native list items/counters so editing, accessibility and print stay intact. */
+ body .formatted-text ol{padding-inline-start:0;list-style-type:decimal}
+ body .formatted-text ol>li{position:relative;box-sizing:border-box;min-height:2.4em;padding-block:.35em;padding-inline-start:3.1em;margin:.45em 0}
+ body .formatted-text ol>li::marker{font-size:0}
+ body .formatted-text ol>li::before{content:counter(list-item);content:counter(list-item) / "";position:absolute;inset-block-start:0;inset-inline-start:0;display:grid;place-items:center;box-sizing:border-box;width:2.4em;height:2.4em;border-radius:.8em;background:color-mix(in srgb,var(--primary) 16%,var(--theme-surface,#fff));color:var(--primary);font-family:inherit;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;pointer-events:none;user-select:none}
  body .formatted-text blockquote{margin:.9em 0;padding:10px 14px;border-inline-start:3px solid var(--theme-primary-text,var(--primary));border-radius:0 9px 9px 0;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));color:inherit}
  body .formatted-text a{text-underline-offset:3px;text-decoration-thickness:1px}
  body .formatted-text a:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:2px}

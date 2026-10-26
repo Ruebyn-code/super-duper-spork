@@ -7,6 +7,12 @@ accordions and media captions. Saved company fonts and explicit course section
 fonts, colours and text sizes retain priority. General app typography and printed
 layouts keep their existing owners.
 
+Numbered lists use rounded badges with the company primary colour and a 16%
+primary-colour fill over the current surface (twice the standard 8% tint).
+Other list markers use the same primary colour; list text retains its authored
+colour. Badges use native list counters and CSS decoration, so they do not enter
+saved content or disrupt list editing. Printed lists keep native numbering.
+
 Posts, articles and lessons have a **Text style** button beside **Insert**. Choose
 Normal text or Heading 1, 2 or 3 after placing the caret or selecting text. The
 existing Insert → Heading path remains available, alongside lists, tables, quotes,
