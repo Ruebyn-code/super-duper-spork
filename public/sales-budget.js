@@ -12,6 +12,7 @@
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';
   const upcoming=Boolean(projection.isUpcoming),cartPending=cart.pricePending;
+  template($('ordering-projected-sales').previousElementSibling,upcoming?'Projected sales next week':'Projected sales');
   template($('ordering-budget-spent').previousElementSibling,upcoming?'Order costs next week':'Order costs this week');
   template($('ordering-budget-remaining').previousElementSibling,'Budget after this cart');
   const remaining=projection.remainingCents===null||cartPending?null:projection.remainingCents-cart.total;
