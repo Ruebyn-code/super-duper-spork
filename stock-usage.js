@@ -74,7 +74,7 @@ function orderingSuggestions(counts,products,session,levels,transfers=[]){
  return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
   const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
   const adjustment=Math.round((adjustments.get(product.id)||0)*1000)/1000,available=counted===null?null:Math.max(0,Math.round((counted+adjustment)*1000)/1000);
-  const recommendation=stockOrderRules.recommendation(product,level,available);
+  const recommendation=stockOrderRules.recommendation({...product,par:levels[product.id]},level,available);
   return [product.id,{stockCount:counted,recommended:recommendation,...(adjustment?{transferAdjustment:adjustment,availableStock:available}:{})}];
  }))};
 }

@@ -31,7 +31,9 @@ function calculate(records,products,session,{now=new Date(),timeZone=defaultTime
  return {window:{...window,scope:session.locationId?'location':'account',source:'sunday_counts_and_orders'},levels:Object.fromEntries([...totals].map(([id,total])=>{
   const weeks=total.weeks.size,manualLevel=Number.isInteger(manualLevels[id])&&manualLevels[id]>=0&&manualLevels[id]<=1000000?manualLevels[id]:null;
   const average=weeks?total.thousandths/(weeks*1000):null;
-  return [id,{level:weeks?Math.ceil(total.thousandths/(weeks*1000)):manualLevel,average,usedQuantity:total.thousandths/1000,weeksRecorded:weeks,manualLevel,source:weeks?'usage':manualLevel!==null?'manual':'unavailable'}];
+  // Counts use thousandths: flooring the mean to that precision preserves <= average.
+  const orderWhenLevel=weeks?Math.floor(total.thousandths/weeks)/1000:null;
+  return [id,{level:weeks?Math.ceil(total.thousandths/(weeks*1000)):manualLevel,orderWhenLevel,average,usedQuantity:total.thousandths/1000,weeksRecorded:weeks,manualLevel,source:weeks?'usage':manualLevel!==null?'manual':'unavailable'}];
  }))};
 }
 module.exports={windowFor,calculate,defaultTimeZone,calendar,dayNumber,dateLabel};

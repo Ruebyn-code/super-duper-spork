@@ -29,6 +29,9 @@ function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefine
 async function api(url,method,body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':csrf},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;}
 function prepareTarget(product){
  const input=$('stock-manual-par'),automatic=(product?.par?.weeksRecorded||0)>0;input.value=product?.par?.manualLevel??'';input.disabled=automatic;
+ const orderWhen=stockOrderRules.orderWhen(product),weeks=product?.par?.weeksRecorded||0;
+ $('stock-order-when').textContent=orderWhen===null?'Usage needed':'≤ '+new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(orderWhen)+' ordered units';
+ $('stock-order-when-help').textContent=orderWhen===null?'Calculated automatically from completed weekly usage. Until usage is available, recommendations use the manual target level.':'Average weekly usage from '+weeks+' completed '+(weeks===1?'week':'weeks')+' within the last four weeks. Order is recommended at or below this level, up to the target level, using the saved rounding rules.';
  $('stock-target-location').textContent=currentLocationName;$('stock-target-hint').textContent=automatic?'Automatic target level: '+product.par.level+' · '+product.par.weeksRecorded+' completed week(s). Manual entry is unavailable while usage history supplies the target level.':'Used until completed usage history is available. Leave blank to remove the manual target level.';
  $('stock-item-actions').hidden=!product;
 }
