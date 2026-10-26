@@ -5,7 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
 const globalSearch=require('./global-search');
-const publicHolidays=require('./australian-public-holidays'),supplierDeliveryDays=require('./supplier-delivery-days');
+const publicHolidays=require('./australian-public-holidays'),supplierDeliveryDays=require('./supplier-delivery-days'),deliveryCalendar=require('./delivery-calendar'),deliveryPlanning=require('./delivery-planning'),orderFulfilment=require('./order-fulfilment'),deliveryClock=require('./delivery-time');
 const prepLabels=require('./prep-labels');
 const persistentShell=require('./persistent-shell');
 const accountInvitations=require('./account-invitations');
@@ -82,7 +82,7 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
+function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
@@ -419,7 +419,7 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         const target=await locationStore.get(supplierDaysRoute[1]),context=await auth.forCompany(session,target.companyId);
         if(target.companyId!==session.companyId||!canAccessLocation(context,target))fail('Location not found.',404);
         if(!can(context,'locations.manage'))fail('Location management permission required.',403);
-        if(req.method==='GET')return json(200,{companyId:target.companyId,locationId:target.id,...await supplierDeliveryDaysStore.read(target.id,target.companyId),suppliers:(await catalogueStore.read(target.companyId)).suppliers.map(({id,name})=>({id,name}))});
+        if(req.method==='GET')return json(200,{companyId:target.companyId,locationId:target.id,timeZone:deliveryClock.zoneFor(target),...await supplierDeliveryDaysStore.read(target.id,target.companyId),suppliers:(await catalogueStore.read(target.companyId)).suppliers.map(({id,name})=>({id,name}))});
         if(req.method==='PUT')return json(200,await supplierDeliveryDaysStore.save(target.id,target.companyId,await body(req),async()=>(await catalogueStore.read(target.companyId)).suppliers));
         fail('Unsupported supplier delivery days action.',405);
       }
@@ -613,9 +613,9 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {
         const catalogue=await readCatalogue();
         const manualLevels=await manualParStore.read(dataDir,session.locationId||session.id);
-        const parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels});
-        const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
-        const deliveryDays=await supplierDeliveryDaysStore.read(session.locationId,session.companyId),suppliers=catalogue.suppliers.map(supplier=>({...(can(session,'suppliers.manage')?supplier:{id:supplier.id,name:supplier.name}),deliveryDays:deliveryDays.schedules.find(row=>row.supplierId===supplier.id)?.days||[]}));
+        const history=await usageHistory(dataDir),now=deliveryNow(),parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:async()=>history,manualLevels,now:new Date(now)});
+        let products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
+        const deliveryDays=await supplierDeliveryDaysStore.read(session.locationId,session.companyId),planned=await deliveryPlanning.build(dataDir,session,products,deliveryDays.schedules,await locationStore.get(session.locationId),parLevels.levels,parLevels.stockTake,history,{now});products=planned.products;const suppliers=catalogue.suppliers.map(supplier=>({...(can(session,'suppliers.manage')?supplier:{id:supplier.id,name:supplier.name}),deliveryDays:deliveryDays.schedules.find(row=>row.supplierId===supplier.id)?.days||[],deliveryPlan:planned.plans.get(supplier.id)||null}));
         return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers,products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
       }
       const manualParRoute=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)\/par$/);
@@ -659,6 +659,8 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
         const saved=await orderHistory.save(dataDir,session,await body(req,160000),await readCatalogue());return json(saved.created?201:200,saved.order);
       }
+      const receiptRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})\/delivery$/i);
+      if(receiptRoute){if(req.method!=='PUT')fail('Unsupported order delivery action.',405);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await orderFulfilment.update(dataDir,session,receiptRoute[1],await body(req),{now:deliveryNow()}));}
       const historyOrderRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})$/i);
       if(historyOrderRoute){
         if(req.method==='GET')return json(200,await orderHistory.get(dataDir,session,historyOrderRoute[1]));
@@ -678,30 +680,31 @@ function createNetworkServer(dataDir,{fetchImpl,communicationsNow=Date.now,roste
             return {...result,configurationMessage:issue?'Current setup: '+issue:'Current sending settings for '+session.locationName+' are complete. This saved order was not sent and has not been retried.'};
           });
         }
-        return json(200,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,record)));
+        return json(200,await orderFulfilment.decorate(dataDir,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,record))));
       }
       if (req.method === 'POST' && req.url === '/api/orders') {
         const input=await body(req);
         const requestId=input?.requestId;
         if(requestId!==undefined&&!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId))fail('Invalid request identifier.');
         const fingerprint=crypto.createHash('sha256').update(JSON.stringify(input)).digest('hex');
-        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,previous)));}catch(error){if(error.code!=='ENOENT')throw error;}}
+        if(requestId){try{const previous=JSON.parse(await fs.readFile(path.join(dataDir,requestId+'.json'),'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderFulfilment.decorate(dataDir,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,previous))));}catch(error){if(error.code!=='ENOENT')throw error;}}
         const catalogue=await readCatalogue();
         const products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name}));
         let order;try{order=validateOrder(input,products,session.username);}catch(error){fail(error.message);}
-        if(requestId)order.id=requestId;order.companyId=session.companyId;order.companyName=session.companyName;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.confirmation={status:'pending',message:'Confirmation email is still processing or unconfirmed. Check the sending service before retrying.'};order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        order.createdAt=new Date(deliveryNow()).toISOString();if(requestId)order.id=requestId;order.companyId=session.companyId;order.companyName=session.companyName;order.locationId=session.locationId;order.locationName=session.locationName;order.requestOwnerId=session.id;order.requestFingerprint=fingerprint;order.confirmation={status:'pending',message:'Confirmation email is still processing or unconfirmed. Check the sending service before retrying.'};order.delivery=splitBySupplier(order).map(s=>({supplierId:s.supplierId,supplier:s.supplier,status:'pending',message:'Delivery processing is not yet confirmed.'}));
+        const deliveryConfig=await supplierDeliveryDaysStore.read(session.locationId,session.companyId),deliveryPlans=await deliveryCalendar.plans(dataDir,session,deliveryConfig.schedules,await locationStore.get(session.locationId),{now:deliveryNow()});order.fulfilment=orderFulfilment.initial(order,deliveryPlans);
         order.orderNumber=await orderNumbers.assign(dataDir,order);
         await fs.mkdir(dataDir,{recursive:true});
         const initial=path.join(dataDir,order.id+'.json'),staged=initial+'.'+crypto.randomUUID()+'.tmp';
-        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,previous)));}}finally{await fs.rm(staged,{force:true});}
+        try{await fs.writeFile(staged,JSON.stringify(order,null,2),{mode:0o600});try{await fs.link(staged,initial);}catch(error){if(error.code!=='EEXIST')throw error;const previous=JSON.parse(await fs.readFile(initial,'utf8'));if(previous.requestOwnerId!==session.id||!belongs(previous,session,'requestOwnerId')||previous.requestFingerprint!==fingerprint)fail('This request identifier belongs to another order.',409);if(previous.status==='deleted')fail('This order was deleted. Start a new order to place it again.',409);return json(200,await orderFulfilment.decorate(dataDir,await orderPrices.decorate(dataDir,await orderNumbers.decorate(dataDir,previous))));}}finally{await fs.rm(staged,{force:true});}
         const templateSettings=await orderEmailTemplates.read(dataDir,session.companyId);
         const env={...await deliverySettings.deliveryEnvironment(dataDir,session.locationId),...(templateSettings.revision?{ORDER_EMAIL_TEMPLATE:templateSettings.template}:{})};
-        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env,fetchImpl});
+        order.delivery=await dispatchOrder(order,catalogue.suppliers,{env,fetchImpl});for(const supplier of order.fulfilment.suppliers)supplier.confirmed=order.delivery.some(result=>result.supplierId===supplier.supplierId&&result.status==='submitted');order.fulfilment=orderFulfilment.publicState(order.fulfilment);
         const target=path.join(dataDir,`${order.id}.json`);
         const persist=async()=>{const temp=target+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(order,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}};
         // Persist supplier outcomes and the pending confirmation before any receipt call.
         await persist();order.confirmation=await orderConfirmation.send(order,{env,fetchImpl,networkId:network.id});await persist();
-        return json(201,await orderPrices.decorate(dataDir,order));
+        return json(201,await orderFulfilment.decorate(dataDir,await orderPrices.decorate(dataDir,order)));
       }
 
       if (req.method !== 'GET' || !publicFiles[req.url]) return json(404,{error:'Not found'});

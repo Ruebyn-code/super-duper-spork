@@ -9,7 +9,7 @@ function createStore(dir){
   if(!Number.isSafeInteger(input.revision)||input.revision<0)fail('Reload supplier delivery days before saving.');let schedules;try{schedules=model.normalize(input.schedules);}catch(error){fail(error.message);}
   const target=file(locationId),operation=(pending.get(target)||Promise.resolve()).then(async()=>{
    const suppliers=await check();if(schedules.some(row=>!suppliers.some(s=>s.id===row.supplierId)))fail('A supplier changed. Reload delivery days before saving.');
-   const previous=await read(locationId,companyId);if(JSON.stringify(previous.schedules)===JSON.stringify(schedules))return previous;
+   const previous=await read(locationId,companyId);schedules=model.normalize(schedules.map(row=>({...previous.schedules.find(old=>old.supplierId===row.supplierId),...row})));if(JSON.stringify(previous.schedules)===JSON.stringify(schedules))return previous;
    if(previous.revision!==input.revision)fail('Supplier delivery days changed in another session. Reload delivery days before saving.',409);
    const record={locationId,companyId,revision:previous.revision+1,schedules},temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}
    return{revision:record.revision,schedules};

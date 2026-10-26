@@ -84,3 +84,9 @@
 .supplier-delivery-day-choices>label:has(input:checked){background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));border-color:var(--primary)}
 .admin-page .supplier-delivery-day-choices input[type=checkbox]{width:18px;height:18px;margin:0;min-height:0;accent-color:var(--primary)}
 @media(max-width:540px){.supplier-delivery-day-choices{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.supplier-delivery-options{margin-top:10px}.supplier-delivery-options>summary{cursor:pointer;font:600 12px Arial,sans-serif;padding:8px 0}
+.supplier-delivery-timing{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0}
+.admin-page .supplier-delivery-timing>label{display:block;font-size:11px;margin:0;min-width:0}.admin-page .supplier-delivery-timing input{width:100%;min-width:0;height:36px;margin-top:5px;padding:6px;font-size:13px}
+.admin-page .supplier-delivery-holiday{display:flex;align-items:center;gap:8px;font-size:12px;margin:10px 0}.admin-page .supplier-delivery-holiday input{width:18px;height:18px;margin:0}
+.supplier-delivery-exception{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center;margin:8px 0}.supplier-delivery-exception input,.supplier-delivery-exception select,.supplier-delivery-exception button{min-width:0;margin:0;font-size:12px;padding:7px}
+@media(max-width:540px){.supplier-delivery-timing{grid-template-columns:1fr}.admin-page .supplier-delivery-timing input{font-size:16px}.supplier-delivery-exception{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.supplier-delivery-exception button{grid-column:2}}

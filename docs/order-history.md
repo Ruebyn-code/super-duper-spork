@@ -25,3 +25,16 @@ When an existing stock price changes in stock settings or an explicitly confirme
 History marks affected orders **Stock prices updated**. Details show the update time, original total and each affected item's original unit price. Order totals, ordering budgets, Home order metrics and order reports use the revised totals. Weekly financial Cost of goods continues to use invoices only. Previously sent supplier messages and sender confirmations retain their original contents; a price change sends no email and does not place another order.
 
 Private `orderPriceUpdates` records in the company catalogue save exact target order/item IDs, before/after prices, time, staff identity and source (including invoice ID where applicable), atomically with the changed catalogue price. Original UUID order files remain untouched. Reads apply those durable adjustments without rewriting snapshots or retargeting to newer orders; deletion does not move an earlier adjustment to another order. Request fingerprints, original payloads and idempotency keys remain stable across retries and restarts. Public catalogue responses omit the private audit; history exposes only the relevant original prices and update time.
+
+Order details now include **Delivery tracking** for each supplier. New orders keep
+an estimated delivery date from the location's current schedule. Use **Confirm
+ordered** for orders placed externally or not confirmed by a sending service,
+**Change delivery date** to correct an outstanding estimate, and **Mark received →
+Confirm received** when that supplier's full delivery arrives. Multiple-supplier
+orders can be part received. Order placing permission is required for these actions.
+
+Receipt actions update separate revisioned audit records in **data/order-receipts/**,
+not the original order or count files, and never resend a supplier message or
+change financial totals. Historical orders start untracked; recording an old
+receipt only updates history. Confirming an outstanding order with a future date
+includes it in delivery-based stock planning. See [Delivery planning](supplier-delivery-planning.md).

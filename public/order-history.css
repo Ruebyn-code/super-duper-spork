@@ -104,3 +104,7 @@
 .history-dialog-footer .history-selection-jump{width:auto;padding:7px 10px;margin-top:0;margin-bottom:0;font-size:12px;min-height:36px;text-align:left;white-space:normal}
 
 .history-price-updated{display:block;color:var(--theme-primary-text,var(--primary));font-size:11px;line-height:1.4;margin:3px 0}
+.order-fulfilment{margin-top:16px;padding-top:12px;border-top:1px solid var(--theme-line,#dce5ed)}.order-fulfilment h3{margin:0 0 8px}.order-fulfilment-supplier{padding:12px 0;border-bottom:1px solid var(--theme-line,#dce5ed)}.order-fulfilment-status{display:inline-block;margin-left:8px;padding:4px 7px;border-radius:8px;font-size:11px;background:var(--theme-surface-raised,#eef5fb)}.order-fulfilment-status[data-state=received]{color:var(--theme-success-text,#13724c)}.order-fulfilment-actions,.order-fulfilment-confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.order-fulfilment-confirm[hidden]{display:none}.order-fulfilment-confirm>p{width:100%;margin:4px 0}.order-fulfilment button{font-size:12px;min-height:36px;margin:0;padding:8px 10px}.order-fulfilment-confirm input{width:170px;min-height:36px;margin:0}
+.history-delivery-state{display:block;font-size:11px;color:var(--theme-muted,#526574);margin-top:3px}
+
+.order-fulfilment-status[data-state=received]{background:var(--theme-success-soft,#eefaf3)}.order-fulfilment-status[data-state=overdue],.order-fulfilment-status[data-state=unconfirmed]{background:var(--theme-warning-soft,#fff6e5);color:var(--theme-warning-text,#875c0a)}

@@ -18,7 +18,7 @@
   const groups=new Map();let amount=0,pending=false;
   for(const item of snapshot.items){if(!groups.has(item.supplierId))groups.set(item.supplierId,[]);groups.get(item.supplierId).push(item);}
   for(const items of groups.values()){
-   const section=node('section',undefined,'order-review-supplier');section.append(data('h3',items[0].supplier));let subtotal=0,pricesPending=false;
+   const section=node('section',undefined,'order-review-supplier');section.append(data('h3',items[0].supplier));const delivery=window.supplierDeliveryDays?.planText(items[0].deliveryPlan);if(delivery)section.append(data('p',delivery,'supplier-delivery-hint')); let subtotal=0,pricesPending=false;
    for(const item of items){const row=node('div',undefined,'order-review-item'),details=node('div'),line=item.price===null?null:item.quantity*item.price;row.dataset.productId=item.id;details.append(data('strong',item.name));if(item.unitAmount)details.append(data('small',item.unitAmount,'order-review-unit'));details.append(data('span',item.quantity+' × '+money(item.price),'order-review-quantity'));row.append(details,data('strong',money(line),'order-review-line-total'));section.append(row);subtotal+=line??0;pricesPending||=line===null;}
    const sum=node('div',undefined,'order-review-subtotal');sum.append(label('span','Subtotal'),data('strong',money(subtotal)+(pricesPending?' + prices pending':'')));section.append(sum);body.append(section);amount+=subtotal;pending||=pricesPending;
   }

@@ -17,7 +17,7 @@ links to archived locations open their archived entry for authorised managers.
 
 Open **Edit location → Supplier delivery days** to choose each supplier's regular
 Monday–Sunday delivery days for that store. Use **Find supplier** to filter the
-list. Unticked days mean no saved schedule; **Save settings** saves these choices
+list. Regular days can be supplemented by dated exceptions; **Save settings** saves these choices
 with the rest of the location popup. Switching tabs or closing and reopening the
 popup retains unsaved choices. Each location has independent schedules, including
 when it uses the same suppliers as another location.
@@ -31,5 +31,6 @@ their schedules when restored.
 
 Schedules are stored in **data/location-supplier-delivery-days/[location ID].json**
 with revisions and company/location bindings. They describe regular delivery days;
-they do not reserve a delivery, restrict when staff may order, or alter previously
-placed orders, supplier contacts, stock counts, target levels or prices.
+they do not reserve a delivery or restrict when staff may order. Advanced timing
+can drive estimated stock coverage without changing original orders, counts or
+weekly usage targets. See [Delivery planning](supplier-delivery-planning.md).

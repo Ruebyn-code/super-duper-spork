@@ -4,7 +4,7 @@ if(!document.getElementById('cart'))return;
 if(!appAccess.can('orders.view')){document.getElementById('cart-pill')?.remove();document.getElementById('cart-popup')?.remove();return;}
 const money = n => n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(n/100);
 let products=[], suppliers=[], cart={}, category='All', busy=false, editingId=null,csrf='',cartKey='',scopeKey='',page=1,parWindow=null,latestStockTake=null;
-let cartRuleNotice='',reviewingOrder=false,orderContext={};
+let cartRuleNotice='',reviewingOrder=false,orderContext={},refreshDeliveryPlans=async()=>{};
 const itemQuantities=new Map(),itemMessages=new Map(),itemAddedQuantities=new Map();let submissionId='',submissionBody='';
 const $=id=>document.getElementById(id);
 const wording=(template,values={})=>typeof interfaceLabel==='function'?interfaceLabel(template,values):template.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
@@ -64,11 +64,11 @@ window.addEventListener('cart-updated',event=>{if(event.detail?.key===cartKey)sy
 window.addEventListener('cart-opening',()=>{if(!busy){refreshStoredCart();render(false);}});
 function renderProductPar(product){
   const panel=el('div',undefined,'product-par'),label=el('strong',undefined,'par-value'),hint=el('span',undefined,'par-hint');
-  const known=product.par&&product.par.level!==null;
+  const delivery=product.ordering?.deliveryPlan,level=delivery?.enabled?delivery.targetLevel:product.par?.level,known=typeof level==='number';
   const template=known?'Target level: {level}':'Target level: —';label.dataset.appTemplate=template;
-  const values={level:known?new Intl.NumberFormat('en-AU').format(product.par.level):''};label.dataset.appValues=JSON.stringify(values);label.textContent=wording(template,values);
+  const values={level:known?new Intl.NumberFormat('en-AU').format(level):''};label.dataset.appValues=JSON.stringify(values);label.textContent=wording(template,values);
   const orderWhen=stockOrderRules.orderWhen(product),orderWhenHint=el('small',undefined,'order-when-hint');orderWhenHint.dataset.appTemplate=orderWhen===null?'Order when: usage needed':'Order when: ≤ {level}';orderWhenHint.dataset.appValues=JSON.stringify({level:orderWhen===null?'':new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(orderWhen)});orderWhenHint.textContent=wording(orderWhenHint.dataset.appTemplate,JSON.parse(orderWhenHint.dataset.appValues));
-  const hintTemplate=product.par?.source==='manual'?'Manual target level':known?(product.par.weeksRecorded===1?'Based on 1 completed week':'Average of {weeks} completed weeks'):'Manual target level or usage needed';const hintValues={weeks:product.par?.weeksRecorded||0};hint.dataset.appTemplate=hintTemplate;hint.dataset.appValues=JSON.stringify(hintValues);hint.textContent=wording(hintTemplate,hintValues);
+  const hintTemplate=delivery?.enabled?'Delivery coverage target':product.par?.source==='manual'?'Manual target level':known?(product.par.weeksRecorded===1?'Based on 1 completed week':'Average of {weeks} completed weeks'):'Manual target level or usage needed';const hintValues={weeks:product.par?.weeksRecorded||0};hint.dataset.appTemplate=hintTemplate;hint.dataset.appValues=JSON.stringify(hintValues);hint.textContent=wording(hintTemplate,hintValues);
   if(known&&product.par.source!=='manual')panel.title=wording('Average used: {average} per week',{average:new Intl.NumberFormat('en-AU',{maximumFractionDigits:5}).format(product.par.average)});
   const countPanel=el('div',undefined,'ordering-stat stock-count-stat'),countLabel=el('span',wording('Stock count'),'ordering-stat-label'),countValue=el('strong',undefined,'stock-count-value'),countHint=el('span',undefined,'ordering-stat-hint');
   const counted=product.ordering?.stockCount,hasCount=typeof counted==='number';countValue.dataset.appTemplate=hasCount?'{quantity}':'—';countValue.dataset.appValues=JSON.stringify({quantity:hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):''});countValue.textContent=hasCount?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(counted):'—';
@@ -78,8 +78,8 @@ function renderProductPar(product){
   countPanel.append(countLabel,countValue,countHint);
   const recommendedPanel=el('div',undefined,'ordering-stat recommended-order-stat'),recommendedLabel=el('span',wording('Recommended order'),'ordering-stat-label'),recommendedValue=el('strong',undefined,'recommended-order-value'),recommendedHint=el('span',undefined,'ordering-stat-hint');
   const amount=product.ordering?.recommended,hasRecommendation=typeof amount==='number';recommendedValue.dataset.appTemplate=hasRecommendation?'{quantity}':'—';recommendedValue.dataset.appValues=JSON.stringify({quantity:hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):''});recommendedValue.textContent=hasRecommendation?new Intl.NumberFormat('en-AU').format(amount):'—';
-  const waiting=orderWhen!==null&&hasRecommendation&&amount===0&&(product.ordering?.availableStock??counted)>orderWhen;const recommendedTemplate=waiting?'Above order when level':product.ordering?.transferAdjustment?'Target level − stock after transfers':hasRecommendation?(amount===0?'No order needed':stockOrderRules.describe(product)?'Target level − stock count · rounded to order rule':'Target level − stock count'):'Target level and count needed';recommendedHint.dataset.appTemplate=recommendedTemplate;recommendedHint.textContent=wording(recommendedTemplate);recommendedPanel.append(recommendedLabel,recommendedValue,recommendedHint);
-  const hints=el('div',undefined,'par-detail-hints');hints.append(hint,orderWhenHint);panel.append(label,hints,countPanel,recommendedPanel);return panel;
+  const waiting=orderWhen!==null&&hasRecommendation&&amount===0&&(product.ordering?.availableStock??counted)>orderWhen;const recommendedTemplate=delivery?.enabled?'Delivery target − estimated stock − incoming orders':waiting?'Above order when level':product.ordering?.transferAdjustment?'Target level − stock after transfers':hasRecommendation?(amount===0?'No order needed':stockOrderRules.describe(product)?'Target level − stock count · rounded to order rule':'Target level − stock count'):'Target level and count needed';recommendedHint.dataset.appTemplate=recommendedTemplate;recommendedHint.textContent=wording(recommendedTemplate);recommendedPanel.append(recommendedLabel,recommendedValue,recommendedHint);
+  const hints=el('div',undefined,'par-detail-hints');hints.append(hint,orderWhenHint);if(delivery){const notes=[];if(delivery.enabled){notes.push('Next delivery '+supplierDeliveryDays.dateText(delivery.nextDate));notes.push('Cover through '+supplierDeliveryDays.dateText(delivery.followingDate));notes.push('Incoming: '+delivery.incomingUnits);if(typeof delivery.estimatedAvailable==='number')notes.push('Estimated available: '+delivery.estimatedAvailable);}if(delivery.shortageBeforeNext)notes.push('May run out before delivery on '+supplierDeliveryDays.dateText(delivery.nextDate));if(delivery.overdueUnits)notes.push('Overdue deliveries: '+delivery.overdueUnits+' units — review before reordering');if(delivery.unconfirmedUnits)notes.push('Orders needing confirmation: '+delivery.unconfirmedUnits+' units');if(delivery.reason)notes.push(delivery.reason);const note=el('small',notes.join(' · '),'delivery-stock-note');note.dataset.userText='';note.classList.toggle('delivery-shortage',Boolean(delivery.shortageBeforeNext));hints.append(note);}panel.append(label,hints,countPanel,recommendedPanel);return panel;
 }
 function renderParPeriod(){
   if(!$('par-period')||!parWindow)return;
@@ -90,8 +90,8 @@ function renderParPeriod(){
 function deliveryDaysFor(supplierId){return window.supplierDeliveryDays?.describe(suppliers.find(supplier=>supplier.id===supplierId)?.deliveryDays)||'';}
 function renderSupplierDeliveryDays(){
  const filters=$('filters');if(!filters)return;let note=$('supplier-delivery-summary');if(!note){note=el('p','','supplier-delivery-summary small');note.id='supplier-delivery-summary';filters.after(note);}
- const supplier=suppliers.find(supplier=>supplier.id===category),days=deliveryDaysFor(category);note.dataset.appTemplate='{supplier} delivery days: {days}';note.dataset.appValues=JSON.stringify({supplier:supplier?.name||'',days});note.textContent=days?wording('{supplier} delivery days: {days}',{supplier:supplier.name,days}):'';note.hidden=!days;
- for(const button of filters.querySelectorAll('[data-supplier-id]')){const days=deliveryDaysFor(button.dataset.supplierId);button.title=days?wording('Delivery days: {days}',{days}):'';}
+ const supplier=suppliers.find(supplier=>supplier.id===category),days=deliveryDaysFor(category),plan=window.supplierDeliveryDays?.planText(supplier?.deliveryPlan)||'';note.dataset.appTemplate='{supplier} delivery days: {days}. {plan}';note.dataset.appValues=JSON.stringify({supplier:supplier?.name||'',days:days||'One-off only',plan});note.textContent=days||plan?wording('{supplier} delivery days: {days}. {plan}',{supplier:supplier.name,days:days||'One-off only',plan}):'';note.hidden=!days&&!plan;
+ for(const button of filters.querySelectorAll('[data-supplier-id]')){const supplier=suppliers.find(s=>s.id===button.dataset.supplierId),days=deliveryDaysFor(button.dataset.supplierId),plan=supplier?.deliveryPlan;button.title=[days?wording('Delivery days: {days}',{days}):'',window.supplierDeliveryDays?.planText(plan)||''].filter(Boolean).join(' · ');let next=button.querySelector('.supplier-delivery-next');if(plan?.next){if(!next){next=el('small',undefined,'supplier-delivery-next');next.dataset.userText='';button.append(next);}next.textContent=' · Est '+supplierDeliveryDays.dateText(plan.next.date);}else next?.remove();}
 }
 function renderMenu(){
   if(!$('menu'))return;renderSupplierDeliveryDays();for(const finish of addConfirmations.values())finish();$('menu').replaceChildren();
@@ -131,7 +131,7 @@ function render(refreshMenu=true){
     title.dataset.userText='';
     const countTemplate=items.length===1?'{count} item':'{count} items';
     itemCount.dataset.appTemplate=countTemplate;itemCount.dataset.appValues=JSON.stringify({count:items.length});itemCount.textContent=wording(countTemplate,{count:items.length});
-    summary.append(title,itemCount);group.append(summary);const days=deliveryDaysFor(supplierId);if(days){const hint=el('p',wording('Delivery days: {days}',{days}),'small supplier-delivery-hint');hint.dataset.appTemplate='Delivery days: {days}';hint.dataset.appValues=JSON.stringify({days});group.append(hint);}
+    summary.append(title,itemCount);group.append(summary);const days=deliveryDaysFor(supplierId),plan=window.supplierDeliveryDays?.planText(suppliers.find(s=>s.id===supplierId)?.deliveryPlan)||'';if(days||plan){const hint=el('p',wording('Delivery days: {days}. {plan}',{days:days||'One-off only',plan}),'small supplier-delivery-hint');hint.dataset.appTemplate='Delivery days: {days}. {plan}';hint.dataset.appValues=JSON.stringify({days:days||'One-off only',plan});group.append(hint);}
     const content=el('div',undefined,'supplier-stock-content cart-supplier-items');
     for(const p of items){
       const qty=cart[p.id],row=el('div',undefined,'cart-row');row.dataset.productId=p.id;const title=el('strong',p.name);if(p.unitAmount)title.append(el('span',p.unitAmount,'stock-unit-amount'));if(stockOrderRules.describe(p))title.append(el('span',stockOrderRules.describe(p),'small stock-order-rule'));row.append(title);
@@ -159,7 +159,7 @@ if($('search'))$('search').oninput=()=>{page=1;renderMenu();};
 if($('previous-page'))$('previous-page').onclick=()=>{page--;renderMenu();$('menu').scrollIntoView({block:'start'});};
 if($('next-page'))$('next-page').onclick=()=>{page++;renderMenu();$('menu').scrollIntoView({block:'start'});};
 function orderSnapshot(form){
- const items=products.filter(product=>cart[product.id]>0).map(product=>({id:product.id,name:product.name,supplierId:product.supplierId,supplier:product.supplier,unitAmount:product.unitAmount,price:product.price,quantity:cart[product.id]}));
+ const items=products.filter(product=>cart[product.id]>0).map(product=>({id:product.id,name:product.name,supplierId:product.supplierId,supplier:product.supplier,unitAmount:product.unitAmount,price:product.price,quantity:cart[product.id],deliveryPlan:suppliers.find(s=>s.id===product.supplierId)?.deliveryPlan||null}));
  if(!items.length||products.some(product=>cart[product.id]&&!stockOrderRules.valid(product,cart[product.id])))return null;
  const body={...Object.fromEntries(new FormData(form)),items:items.map(({id,quantity})=>({id,quantity}))};
  return {...orderContext,locationId:window.appLocationId||orderContext.locationId,notes:body.notes||'',items,body,signature:JSON.stringify({body,items})};
@@ -169,12 +169,12 @@ if($('checkout'))$('checkout').onsubmit=async event=>{
  event.preventDefault();if(busy||reviewingOrder||!appAccess.can('orders.place'))return;
  reviewingOrder=true;let notice='';
  try{while(true){
-  refreshStoredCart();render(false);const snapshot=orderSnapshot(event.target);if(!snapshot)return;
+  await refreshDeliveryPlans();refreshStoredCart();render(false);const snapshot=orderSnapshot(event.target);if(!snapshot)return;
   if(!window.orderReview){$('message').textContent='Reload this page to review your order.';return;}
   if(!await orderReview.review({...snapshot,notice}))return;
   if(!appAccess.can('orders.place'))return;
   if(snapshot.locationId!==(window.appLocationId||orderContext.locationId)){$('message').textContent='Your location changed. Open the cart and review the order again.';return;}
-  refreshStoredCart();render(false);const current=orderSnapshot(event.target);
+  await refreshDeliveryPlans();refreshStoredCart();render(false);const current=orderSnapshot(event.target);
   if(!current){$('message').textContent='Your cart changed. Check its quantities before placing an order.';return;}
   if(snapshot.signature!==current.signature){notice='Your cart changed. Check the updated order before placing it.';continue;}
   await placeReviewedOrder(event.target,snapshot.body);return;
@@ -205,19 +205,21 @@ if($('cart')){
   if(!force&&date.toISOString().slice(0,10)===parWindow.currentWeekStart)return;
   parRefreshPending=true;try{
    const data=await api('/api/catalogue','GET');if(editingCartQuantity()){parRefreshDeferred=true;return;}parWindow=data.parWindow;latestStockTake=data.stockTake;const refreshed=new Map(data.products.map(product=>[product.id,product]));
-   let deliveriesChanged=false;for(const supplier of suppliers){const days=data.suppliers.find(row=>row.id===supplier.id)?.deliveryDays||[];if(JSON.stringify(supplier.deliveryDays||[])!==JSON.stringify(days)){supplier.deliveryDays=days;deliveriesChanged=true;}}
+   let deliveriesChanged=false;for(const supplier of suppliers){const latest=data.suppliers.find(row=>row.id===supplier.id),days=latest?.deliveryDays||[],plan=latest?.deliveryPlan||null;if(JSON.stringify([supplier.deliveryDays||[],supplier.deliveryPlan||null])!==JSON.stringify([days,plan])){supplier.deliveryDays=days;supplier.deliveryPlan=plan;deliveriesChanged=true;}}
    let rulesChanged=false,pricesChanged=false;for(const product of products){const latest=refreshed.get(product.id);product.par=latest?.par;product.ordering=latest?.ordering;if(latest){if(product.price!==latest.price){product.price=latest.price;pricesChanged=true;}for(const key of ['minimumOrder','orderRule','roundingCutoff','roundDownThreshold','roundUpThreshold']){if(product[key]!==latest[key]){product[key]=latest[key];rulesChanged=true;}}}}renderParPeriod();if(rulesChanged){refreshStoredCart();render();}else if(pricesChanged||deliveriesChanged)render(false);
    for(const card of $('menu')?.querySelectorAll('[data-product-id]')||[]){const product=products.find(product=>product.id===card.dataset.productId);if(product){card.querySelector('.product-par')?.replaceWith(renderProductPar(product));if(pricesChanged){const price=card.querySelector('.product-bottom>strong');if(price)price.textContent=money(product.price);}}}
    if($('load-status'))$('load-status').textContent='';
   }catch(error){($('load-status')||$('message')).textContent=error.message;}finally{parRefreshPending=false;}
  }
+ refreshDeliveryPlans=()=>refreshParIfNeeded(true);
+ window.addEventListener('order-delivery-updated',()=>refreshParIfNeeded(true));
  for(const event of ['focusout','change'])$('cart')?.addEventListener(event,()=>setTimeout(()=>{if(parRefreshDeferred)refreshParIfNeeded(true);},0));
  setInterval(()=>refreshParIfNeeded(true),60000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshParIfNeeded(true);});
  window.addEventListener('focus',()=>refreshParIfNeeded(true));
  window.addEventListener('supplier-delivery-days-updated',event=>{if(event.detail?.companyId===orderContext.companyId&&event.detail?.locationId===orderContext.locationId)refreshParIfNeeded(true);});
  window.addEventListener('stock-prices-updated',event=>{if(event.detail?.companyId===orderContext.companyId)refreshParIfNeeded(true);});
- window.addEventListener('storage',event=>{if(event.key==='opstack-supplier-deliveries-updated-'+orderContext.companyId+'-'+orderContext.locationId||event.key==='souvlaki-usage-updated-'+scopeKey||event.key==='opstack-stock-prices-updated-'+orderContext.companyId)refreshParIfNeeded(true);});
+ window.addEventListener('storage',event=>{if(event.key==='opstack-order-delivery-updated-'+orderContext.companyId+'-'+orderContext.locationId||event.key==='opstack-supplier-deliveries-updated-'+orderContext.companyId+'-'+orderContext.locationId||event.key==='souvlaki-usage-updated-'+scopeKey||event.key==='opstack-stock-prices-updated-'+orderContext.companyId)refreshParIfNeeded(true);});
  window.addEventListener('pageshow',event=>{if(event.persisted)refreshParIfNeeded(true);});
 }
 

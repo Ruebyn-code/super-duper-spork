@@ -36,3 +36,6 @@
 @media(max-width:600px){.catalogue-layout :is(#menu,.history-stock-menu):not(.menu-list){grid-template-columns:1fr;gap:8px}.catalogue-layout :is(#menu,.history-stock-menu) .product{padding:8px}.catalogue-layout :is(#menu,.history-stock-menu) .add-controls input{font-size:16px}.catalogue-layout :is(#menu,.history-stock-menu) .product-par{gap:4px}}
 
 .supplier-delivery-summary{margin:6px 0 10px;color:var(--theme-muted,#526574);overflow-wrap:anywhere}
+.delivery-stock-note{display:block;font-size:11px;line-height:1.5;overflow-wrap:anywhere}.delivery-shortage{color:var(--theme-warning-text,#985400);font-weight:600}
+
+.supplier-delivery-next{font:10px Arial,sans-serif;white-space:nowrap;opacity:.85}

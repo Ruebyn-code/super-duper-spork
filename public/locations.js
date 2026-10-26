@@ -73,7 +73,7 @@ const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialA
    message.textContent=wording('Location settings saved.');window.appSetupEditor?.saved?.();
    list.querySelector('[data-location-id="'+record.id+'"] .location-edit-toggle')?.focus({preventScroll:true});
   }catch(error){
-   selectTab(panel,current);
+   selectTab(panel,current);if(current==='deliveries'){const invalid=panel.querySelector('.location-supplier-deliveries input:invalid');if(invalid){invalid.scrollIntoView({block:'center'});invalid.focus({preventScroll:true});}}
    message.textContent=wording(saved?'Some settings were saved. {error} Your remaining changes are kept; press Save settings to retry.':'Settings could not be saved. {error}',{error:error.message});
   }finally{saving=false;disable();}
  }
