@@ -41,3 +41,5 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 .comms-conversation-active:not(.comms-conversation-open) .conversation-search.search-open{width:100%;max-width:100%;flex:1}
 .comms-conversation-active:not(.comms-conversation-open) .conversation-directory-heading:has(.search-open)>span{display:none}
 .comms-conversation-active:not(.comms-conversation-open) .conversation-card{box-shadow:none}
+
+@media screen{.communications-page .communication-post>h2{font-size:20px;line-height:1.3;letter-spacing:-.02em;font-weight:600;text-wrap:pretty}.communication-post-top>div>strong{font-weight:600}.conversation-message>strong{font-weight:600;letter-spacing:normal}}

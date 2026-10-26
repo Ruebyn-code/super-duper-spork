@@ -469,7 +469,7 @@
   'Open Insert for headings, lists, tables, accordions, quotes and dividers.',
   'Choose Media for images, galleries, video/audio, documents or supported video embeds, then check captions.',
   'Use callouts for important information and Undo/redo to review changes before saving or sending.'
- ],{notes:['Uploaded video supports up to 25 MB; most other files support up to 10 MB each. Access to attached files follows the saved chat, article, course or post audience.'],related:['team-chat','publish-library','course-builder']});
+ ],{notes:['In post, article and lesson editors, Text style opens Normal text and Heading 1–3 directly. Insert also keeps the full formatting and media options.','Uploaded video supports up to 25 MB; most other files support up to 10 MB each. Access to attached files follows the saved chat, article, course or post audience.'],related:['team-chat','publish-library','course-builder']});
  add(c,'required-reading','Read or snooze required announcements','Handle an important update before continuing work.',[
   'Read the post shown over the app.',
   'Choose Mark as read & continue to acknowledge that version.',
