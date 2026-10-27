@@ -10,7 +10,10 @@ layouts keep their existing owners.
 Numbered lists use rounded badges with the company primary colour and a 16%
 primary-colour fill over the current surface (twice the standard 8% tint).
 Other list markers use the same primary colour; list text retains its authored
-colour. Badges use native list counters and CSS decoration, so they do not enter
+colour. Bullet points are solid rounded squares matching the number badge's
+corner shape, at 0.385em (10% above the 0.35em disc size). They keep the existing
+text indent and align with the first line of wrapped text.
+Badges use native list counters and CSS decoration, so they do not enter
 saved content or disrupt list editing. Printed lists keep native numbering.
 Badges measure 1.44 times the body text size, with their numbers at 60% of that
 text size and a compact gap; the list's written content keeps its authored size.

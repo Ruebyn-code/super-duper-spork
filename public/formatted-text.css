@@ -19,6 +19,11 @@
  body .formatted-text :is(ul,ol){margin:.7em 0 .9em;padding-inline-start:1.55em}
  body .formatted-text li{padding-inline-start:.15em;margin:.25em 0}
  body .formatted-text li::marker{color:var(--primary);font-weight:600}
+ /* A .385em point is 10% larger than the .35em disc, with the badge corner shape. */
+ body .formatted-text ul{padding-inline-start:0}
+ body .formatted-text ul>li{position:relative;padding-inline-start:1.7em}
+ body .formatted-text ul>li::marker{font-size:0}
+ body .formatted-text ul>li::before{content:"";position:absolute;inset-inline-start:.6em;inset-block-start:calc(.5lh - .1925em);width:.385em;height:.385em;border-radius:33.333%;background:var(--primary);pointer-events:none;user-select:none}
  /* Keep native list items/counters so editing, accessibility and print stay intact. */
  body .formatted-text ol{padding-inline-start:0;list-style-type:decimal}
  body .formatted-text ol>li{position:relative;box-sizing:border-box;min-height:1.44em;padding-block:0;padding-inline-start:1.86em;margin:.27em 0}
