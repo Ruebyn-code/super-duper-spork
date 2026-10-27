@@ -12,6 +12,8 @@ primary-colour fill over the current surface (twice the standard 8% tint).
 Other list markers use the same primary colour; list text retains its authored
 colour. Badges use native list counters and CSS decoration, so they do not enter
 saved content or disrupt list editing. Printed lists keep native numbering.
+Badges measure 1.44 times the body text size, with their numbers at 60% of that
+text size and a compact gap; the list's written content keeps its authored size.
 
 Posts, articles and lessons have a **Text style** button beside **Insert**. Choose
 Normal text or Heading 1, 2 or 3 after placing the caret or selecting text. The
