@@ -27,6 +27,11 @@ Opening a menu does not modify or save content. Applying a style uses the native
 editor history, ordinary saves and course draft autosave; publishing remains an
 explicit, separate action.
 
+Post and article editors keep Audience and Title on one row, including phones,
+with more room for the title. Article type and category sit together below it.
+The native labels, audience permissions, category filtering and save actions
+remain attached to the original fields.
+
 `public/editor-menu.js` shares one popover between Insert and Text style, anchored
 to the active button. Disabling the editor or destroying it closes the menu.
 Keep upload guards, undo/redo, draft state and existing audience/permission checks.
