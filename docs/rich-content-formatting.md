@@ -27,6 +27,17 @@ Opening a menu does not modify or save content. Applying a style uses the native
 editor history, ordinary saves and course draft autosave; publishing remains an
 explicit, separate action.
 
+Selecting text inside a writing field opens a small toolbar beside the selection.
+It applies bold, italic, underline, bullet/number lists and links through the
+existing editor commands. Posts, articles and lessons also offer the shared text
+style menu there. The top toolbar remains available for media and other blocks.
+Alt+F10 opens the selection toolbar from the keyboard, including at a caret;
+Escape returns to the field. It follows visible text when scrolling and closes
+when selection leaves the editor, the editor is disabled or the popup closes.
+Keep the selection toolbar read-only until a formatting control is chosen, out
+of saved content, and absent from readers/printed content. Destroy its popover,
+animation frame and document/viewport listeners with the editor.
+
 Post and article editors keep Audience and Title on one row, including phones,
 with more room for the title. Article type and category sit together below it.
 The native labels, audience permissions, category filtering and save actions
