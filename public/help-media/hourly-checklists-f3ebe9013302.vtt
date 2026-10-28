@@ -9,9 +9,9 @@ Step 1: In Planner, choose Hourly recurrence for a separate checklist occurrence
 Step 2: Choose Location trading hours to base the window on saved opening/closing times, adding offsets when needed.
 
 3
-00:00:12.708 --> 00:00:18.708
-Step 3: Check the assigned locations have valid hours and review the window’s finish.
+00:00:12.708 --> 00:00:21.708
+Step 3: Check the assigned locations have valid hours. Expand the Schedule breakdown’s next runs to review each hourly window and its finish, including overnight times.
 
 4
-00:00:18.708 --> 00:00:24.708
+00:00:21.708 --> 00:00:27.708
 Step 4: Activate the planner. Active work appears only when its planned window is open.

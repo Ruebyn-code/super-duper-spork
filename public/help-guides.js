@@ -385,14 +385,14 @@
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Step activity and completion are recorded from saved work. Required uploads and active editing must finish before completion.'],related:['checklist-builder','complete-checklist']});
  add(c,'checklist-planners','Create checklist planners','Give one checklist one or several schedules.',[
   'Open the checklist’s Planner stage and add or select a planner.',
-  'Choose recurrence, dates and a fixed-time or location-trading-hours window.',
+  'Choose recurrence, dates and a fixed-time or location-trading-hours window. The Schedule breakdown shows repeat days, date limits, active hours and deadlines. Expand Current and next runs to see exact windows for each selected location.',
   'Use Locations and Assignees to choose who should receive that planner’s work.',
   'Review the saved planner and activate it when ready. Add another planner for a separate schedule.'
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Each planner keeps its own audience and schedule. Review paused intelligence-generated planners before activation.'],related:['hourly-checklists','checklist-audiences','intelligence-planners']});
  add(c,'hourly-checklists','Repeat checklists hourly or around trading hours','Make planned tasks follow each location’s opening and closing.',[
   'In Planner, choose Hourly recurrence for a separate checklist occurrence each hour within the window.',
   'Choose Location trading hours to base the window on saved opening/closing times, adding offsets when needed.',
-  'Check the assigned locations have valid hours and review the window’s finish.',
+  'Check the assigned locations have valid hours. Expand the Schedule breakdown’s next runs to review each hourly window and its finish, including overnight times.',
   'Activate the planner. Active work appears only when its planned window is open.'
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Closed days are skipped; missing hours require correction. Overnight work follows its opening trading day. Existing runs retain their frozen timing when hours change.'],related:['trading-hours','checklist-planners','intelligence-planners'],keywords:['repeat hourly','opening','closing','planner','scheduled day']});
  add(c,'checklist-audiences','Choose checklist locations and assignees','Target planned work to the right team.',[

@@ -1,5 +1,7 @@
 # Project instructions
 
+- Planner settings show a live Schedule breakdown above recurrence controls: repeat days, date limits, effective active hours and due rules. Its expandable current/next windows use the existing planner model, server-aligned Melbourne time, native DST/trading offsets and all selected accessible locations. Preserve paused/manual/unscheduled meanings, explicit invalid/missing-hours feedback, 12-hour times and overnight dates. Previewing never saves or creates work; keep autosave, focused fields, audiences and run snapshots unchanged. See docs/ops-management.md.
+
 - Wastage is a separate location/company-scoped stock log under Ordering. Snapshot ordered packs, counting-unit conversion and stock prices, preserving unknown versus zero costs. Require native counts permissions plus optional wastage viewing/recording/void/export controls, CSRF, required reading and kiosk scope. Coalesce actor-bound retries and retain immutable original entries and reasoned void audits. Counts remain physical snapshots; wastage never subtracts stock again, changes usage targets, places orders or adds to invoice-only expenses. Preserve drafts, frozen uncertain retries, stale-pack validation, phone dialogs and company styling. See docs/wastage.md.
 
 - Treat user-supplied visual references as styling guidance while retaining existing OpStack feature names, data and permissions unless new behaviour is explicitly requested. Multi-person Comms conversations are Groups, not Channels.
