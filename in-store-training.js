@@ -1,0 +1,64 @@
+const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const {can,canAccessLocation}=require('./permissions'),clock=require('./public/ops-planner-model');
+const queues=new Map(),uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
+const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+function text(value,max,label,optional=false){if(typeof value!=='string'||value.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)||!optional&&!value.trim())fail('Enter '+label+'.');return value.trim();}
+function shape(input,keys){if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!keys.includes(key)))fail('Choose valid in-store training details.');}
+function references(value,max,label){if(!Array.isArray(value)||!value.length||value.length>max||new Set(value).size!==value.length||value.some(id=>typeof id!=='string'||!id||id.length>100))fail('Choose valid '+label+'.');return [...value];}
+function normalize(input){
+ shape(input,['requestId','title','description','locationId','trainerId','userIds','date','time','minutes','skills']);
+ if(!uuid(input.requestId))fail('Choose a valid session request reference.');
+ const title=text(input.title,160,'a training title'),description=text(input.description??'',1500,'training notes',true),locationId=text(input.locationId,100,'a location'),trainerId=text(input.trainerId,100,'a trainer'),userIds=references(input.userIds,100,'staff');
+ if(typeof input.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.date)||!Number.isFinite(Date.parse(input.date+'T00:00:00Z'))||new Date(input.date+'T00:00:00Z').toISOString().slice(0,10)!==input.date||typeof input.time!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(input.time))fail('Choose a valid session date and time.');
+ if(!Number.isInteger(input.minutes)||input.minutes<5||input.minutes>480)fail('Choose a session length from 5–480 minutes.');
+ const startsAt=clock.deadline(input.date,input.time);if(!startsAt||clock.local(Date.parse(startsAt)).slice(0,16)!==input.date+'T'+input.time)fail('This session time does not exist because the clocks change. Choose another time.');
+ if(!Array.isArray(input.skills)||!input.skills.length||input.skills.length>30)fail('Add 1–30 practical skills.');
+ const skills=input.skills.map(value=>text(value,300,'each practical skill'));if(new Set(skills.map(s=>s.toLowerCase())).size!==skills.length)fail('Give each practical skill a different name.');
+ if(userIds.includes(trainerId))fail('Choose a trainer who is not being assessed in this session.');
+ return{title,description,locationId,trainerId,userIds,date:input.date,time:input.time,minutes:input.minutes,startsAt,endsAt:new Date(Date.parse(startsAt)+input.minutes*60000).toISOString(),skills};
+}
+function createStore(dir,{people,locations,now=Date.now}){
+ const file=path.join(dir,'in-store-training.json'),stamp=()=>new Date(now()).toISOString();
+ async function read(){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;return{sessions:[]};}}
+ function mutate(work){const task=(queues.get(file)||Promise.resolve()).then(async()=>{const state=await read(),result=await work(state);await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(state),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return result;});const done=task.catch(()=>{});queues.set(file,done);return task.finally(()=>{if(queues.get(file)===done)queues.delete(file);});}
+ async function context(actor){
+  if(!can(actor,'learning.view'))fail('Training viewing permission required.',403);
+  const staff=(await people(actor.companyId)).filter(p=>!p.invitation&&((p.companyIds||[]).includes(actor.companyId)||can(p,'network.access')&&can(p,'locations.all'))&&can(p,'learning.view')),person=staff.find(p=>p.id===actor.id);
+  if(!person)fail('An active employee profile in this company is required.',403);
+  const stores=(await locations(actor)).filter(s=>!s.archived&&s.companyId===actor.companyId&&canAccessLocation(person,s)&&(!actor.kiosk||s.id===actor.locationId));
+  return{staff,stores,person,allowed:new Set(stores.map(s=>s.id)),manage:can(actor,'learning.assign')&&can(person,'learning.assign'),report:can(actor,'learning.report')&&can(person,'learning.report'),signoff:can(actor,'learning.signoff')&&can(person,'learning.signoff')};
+ }
+ const member=(p,id,ctx)=>Boolean(p&&ctx.stores.some(s=>s.id===id&&canAccessLocation(p,s)));
+ function access(value,actor,ctx){return value.companyId===actor.companyId&&ctx.allowed.has(value.locationId)&&(ctx.manage||ctx.report||value.trainerId===actor.id||value.userIds.includes(actor.id));}
+ function assessing(value,actor,ctx){return ctx.signoff&&(ctx.manage||value.trainerId===actor.id)&&member(ctx.person,value.locationId,ctx);}
+ function progress(value,userId){const record=value.assessments[userId],completed=Boolean(record?.completedAt);return{revision:record?.revision||0,skillIds:[...(record?.skillIds||[])],notes:record?.notes||'',startedAt:record?.startedAt||null,completedAt:record?.completedAt||null,updatedAt:record?.updatedAt||null,assessorName:record?.assessorName||null,status:completed?'completed':value.status==='cancelled'?'cancelled':record?'in-progress':Date.parse(value.endsAt)<now()?'awaiting-signoff':'scheduled',percent:Math.round((record?.skillIds.length||0)/value.skills.length*100)};}
+ function view(value,actor,ctx,detail=false){
+  const privileged=ctx.manage||ctx.report||value.trainerId===actor.id,participants=value.participants.filter(p=>privileged||p.userId===actor.id).map(p=>({...p,progress:progress(value,p.userId),canAssess:detail&&value.status==='active'&&p.userId!==actor.id&&assessing(value,actor,ctx)&&member(ctx.staff.find(person=>person.id===p.userId),value.locationId,ctx)&&can(ctx.staff.find(person=>person.id===p.userId),'learning.complete')}));
+  const completed=participants.filter(p=>p.progress.completedAt).length;
+  return{id:value.id,title:value.title,locationId:value.locationId,locationName:ctx.stores.find(s=>s.id===value.locationId)?.name||value.locationName,trainerId:value.trainerId,trainerName:ctx.staff.find(p=>p.id===value.trainerId)?.username||value.trainerName,date:value.date,time:value.time,startsAt:value.startsAt,endsAt:value.endsAt,minutes:value.minutes,status:value.status,revision:value.revision,createdAt:value.createdAt,canManage:ctx.manage,completed,total:participants.length,participants:detail?participants:participants.map(p=>({userId:p.userId,username:p.username,status:p.progress.status,percent:p.progress.percent})),...(detail?{description:value.description,skills:structuredClone(value.skills),serverNow:stamp()}:{} )};
+ }
+ function find(state,id,actor,ctx){const value=state.sessions.find(s=>s.id===id&&access(s,actor,ctx));if(!value)fail('In-store training not found.',404);return value;}
+ async function dashboard(actor){const ctx=await context(actor),state=await read(),sessions=state.sessions.filter(s=>access(s,actor,ctx)).map(s=>view(s,actor,ctx)).sort((a,b)=>(a.status==='cancelled')-(b.status==='cancelled')||b.date.localeCompare(a.date)||b.time.localeCompare(a.time)||a.title.localeCompare(b.title));return{sessions,canManage:ctx.manage,timeZone:clock.zone,locations:ctx.stores.map(({id,name})=>({id,name})),people:ctx.manage?ctx.staff.filter(p=>ctx.stores.some(s=>canAccessLocation(p,s))).map(p=>({id:p.id,username:p.username,locationIds:ctx.stores.filter(s=>canAccessLocation(p,s)).map(s=>s.id),canTrain:can(p,'learning.signoff'),canLearn:can(p,'learning.complete')})):[],summary:{sessions:sessions.filter(s=>s.status==='active').length,learners:sessions.filter(s=>s.status==='active').reduce((n,s)=>n+s.total,0),completed:sessions.filter(s=>s.status==='active').reduce((n,s)=>n+s.completed,0)}};}
+ async function get(actor,id){const ctx=await context(actor),state=await read();return view(find(state,id,actor,ctx),actor,ctx,true);}
+ async function create(actor,input){const prepared=normalize(input);return mutate(async state=>{
+  const ctx=await context(actor);if(!ctx.manage)fail('Training assignment permission required.',403);if(!ctx.allowed.has(prepared.locationId))fail('Location access required.',403);
+  const trainer=ctx.staff.find(p=>p.id===prepared.trainerId);if(!member(trainer,prepared.locationId,ctx)||!can(trainer,'learning.signoff'))fail('Choose an eligible trainer at this location.');
+  const participants=prepared.userIds.map(id=>ctx.staff.find(p=>p.id===id));if(participants.some(p=>!member(p,prepared.locationId,ctx)||!can(p,'learning.complete')))fail('Choose eligible staff from this location.');
+  const fingerprint=JSON.stringify(prepared),prior=state.sessions.find(s=>s.requestId===input.requestId);if(prior){if(prior.companyId!==actor.companyId||prior.createdBy!==actor.id||prior.fingerprint!==fingerprint)fail('This session reference was already used.',409);return view(prior,actor,ctx,true);}
+  const value={...prepared,id:crypto.randomUUID(),companyId:actor.companyId,locationName:ctx.stores.find(s=>s.id===prepared.locationId).name,trainerName:trainer.username,participants:participants.map(p=>({userId:p.id,username:p.username})),skills:prepared.skills.map(title=>({id:crypto.randomUUID(),title})),requestId:input.requestId,fingerprint,createdAt:stamp(),createdBy:actor.id,status:'active',revision:1,assessments:{},requests:[]};state.sessions.push(value);return view(value,actor,ctx,true);
+ });}
+ async function assess(actor,id,userId,input){
+  shape(input,['revision','requestId','skillIds','notes']);if(!uuid(input.requestId)||!Number.isInteger(input.revision)||input.revision<0||!Array.isArray(input.skillIds)||input.skillIds.length>30||new Set(input.skillIds).size!==input.skillIds.length||input.skillIds.some(id=>!uuid(id)))fail('Choose valid assessment details.');
+  const notes=text(input.notes??'',2000,'assessment notes',true);
+  return mutate(async state=>{const ctx=await context(actor),value=find(state,id,actor,ctx);if(userId===actor.id||!assessing(value,actor,ctx))fail('Only the appointed trainer or an authorised training manager can sign off another staff member.',403);
+   const person=ctx.staff.find(p=>p.id===userId);if(!value.userIds.includes(userId)||!member(person,value.locationId,ctx)||!can(person,'learning.complete'))fail('This staff member is no longer eligible for this training.',403);
+   if(input.skillIds.some(id=>!value.skills.some(s=>s.id===id)))fail('Choose skills from this training session.');
+   const skillIds=value.skills.filter(s=>input.skillIds.includes(s.id)).map(s=>s.id),fingerprint=JSON.stringify({userId,skillIds,notes}),prior=value.requests.find(r=>r.id===input.requestId);if(prior){if(prior.actorId!==actor.id||prior.fingerprint!==fingerprint)fail('This assessment reference was already used.',409);return view(value,actor,ctx,true);}
+   const old=value.assessments[userId];if(value.status!=='active')fail('This training session has been cancelled.',409);if(old?.completedAt)fail('This completed sign-off is kept as a permanent record.',409);if(input.revision!==(old?.revision||0))fail('This assessment changed. Reload it before saving.',409);if(now()<Date.parse(value.startsAt))fail('Wait until the session starts before recording an assessment.');
+   const record={revision:(old?.revision||0)+1,skillIds,notes,startedAt:old?.startedAt||stamp(),updatedAt:stamp(),completedAt:skillIds.length===value.skills.length?stamp():null,assessorId:actor.id,assessorName:ctx.person.username};value.assessments[userId]=record;value.requests.push({id:input.requestId,actorId:actor.id,fingerprint,at:stamp(),assessment:structuredClone(record)});return view(value,actor,ctx,true);
+  });
+ }
+ async function cancel(actor,id,input){shape(input,['revision','requestId']);if(!uuid(input.requestId)||!Number.isInteger(input.revision))fail('Choose valid cancellation details.');return mutate(async state=>{const ctx=await context(actor),value=find(state,id,actor,ctx);if(!ctx.manage)fail('Training assignment permission required.',403);const fingerprint=JSON.stringify({cancel:true}),prior=value.requests.find(r=>r.id===input.requestId);if(prior){if(prior.actorId!==actor.id||prior.fingerprint!==fingerprint)fail('This cancellation reference was already used.',409);return view(value,actor,ctx,true);}if(input.revision!==value.revision)fail('This session changed. Reload it before cancelling.',409);if(value.status==='cancelled')return view(value,actor,ctx,true);value.status='cancelled';value.revision++;value.cancelledAt=stamp();value.cancelledBy=actor.id;value.requests.push({id:input.requestId,actorId:actor.id,fingerprint,at:stamp()});return view(value,actor,ctx,true);});}
+ return{dashboard,get,create,assess,cancel};
+}
+module.exports={createStore,normalize};

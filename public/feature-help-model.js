@@ -10,7 +10,7 @@
   '/sales':ids('daily-sales weekly-report weekly-import sales-projections public-holidays holiday-forecasts hourly-import hourly-projections ordering-budget platform-fees invoice-expenses weekly-costs operating-expenses sales-missing hourly-not-imported'),
   '/rostering':ids('view-roster make-roster publish-roster roster-forecasts timesheets leave-availability labour-settings shift-clock early-start clock-breaks clock-problem award-settings'),
   '/ops-management':ids('complete-checklist checklist-builder checklist-responses checklist-planners hourly-checklists checklist-audiences checklist-history intelligence-checklists intelligence-planners'),
-  '/learning-centre':ids('take-course course-builder course-questions assign-training training-reports intelligence-questions'),
+  '/learning-centre':ids('take-course in-store-training course-builder course-questions assign-training training-reports intelligence-questions'),
   '/communications':ids('team-chat publish-post rich-content required-reading intelligence-writing'),
   '/knowledge-library':ids('read-library publish-library library-categories rich-content intelligence-writing'),
   '/reporting':ids('business-reports location-rankings operational-reports report-details report-exports scheduled-reports reports-not-arriving'),
@@ -89,7 +89,7 @@
   if(value==='@page')return pages[path]||common;
   if(value==='@intelligence')return ids(/planner/i.test(title)?'intelligence-planners checklist-planners':/course/i.test(title)?'course-builder intelligence-questions':'intelligence-checklists checklist-builder');
   if(value==='@checklists')return ids(hash.includes('history')?'checklist-history':hash.includes('templates')?'checklist-builder checklist-planners':'complete-checklist checklist-history');
-  if(value==='@training')return ids(hash.includes('progress')?'training-reports':hash.includes('builder')?'course-builder course-questions intelligence-questions':hash.includes('courses')?'assign-training course-builder':'take-course');
+  if(value==='@training')return ids(hash.includes('in-store')?'in-store-training':hash.includes('progress')?'training-reports':hash.includes('builder')?'course-builder course-questions intelligence-questions':hash.includes('courses')?'assign-training course-builder':'take-course');
   return ids(value);
  }
  return{pages,common,bindings,dynamicTitles,instructionText,resolve};

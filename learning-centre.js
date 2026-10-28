@@ -18,6 +18,7 @@ function normalize(input,strict=false){
  return{title,description,category,minutes:input.minutes,passPercent:input.passPercent,shuffleAnswers:input.shuffleAnswers===true,lessons:sections?ordered('content'):lessons,quiz:sections?ordered('question'):quiz,...(sections?{sections}:{})};
 }
 function createStore(dir,{people,locations,roles,library,now=Date.now}){
+ const inStore=require('./in-store-training').createStore(dir,{people,locations,now});
  const file=path.join(dir,'learning-centre.json'),media=mediaFiles.createStore(dir),stamp=()=>new Date(now()).toISOString(),today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()));
  async function read(){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;return{courses:[],assignments:[],progress:[]};}}
  function mutate(change){const task=(queues.get(file)||Promise.resolve()).then(async()=>{const state=await read(),result=await change(state);await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(state),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return result;});const settled=task.catch(()=>{});queues.set(file,settled);return task.finally(()=>{if(queues.get(file)===settled)queues.delete(file);});}
@@ -78,12 +79,15 @@ function createStore(dir,{people,locations,roles,library,now=Date.now}){
  async function libraryList(actor,query){need(actor,'learning.manage');if(!library)fail('Knowledge Library is unavailable.',503);return library.list(actor,query);}
  async function libraryArticle(actor,id){need(actor,'learning.manage');if(!library)fail('Knowledge Library is unavailable.',503);return library.get(actor,id);}
  function token(assignment,q,index,userId){return crypto.createHmac('sha256',assignment.quizSeed||assignment.id).update(q.id+':'+index+(userId?':'+userId:'')).digest('hex').slice(0,32);}
- return{sectionAction,libraryList,libraryArticle,dashboard,getCourse,saveCourse,publish,archive,assign,enroll,getAssignment,assignments,cancel,act,report,upload,canReadMedia};
+ return{inStore,sectionAction,libraryList,libraryArticle,dashboard,getCourse,saveCourse,publish,archive,assign,enroll,getAssignment,assignments,cancel,act,report,upload,canReadMedia};
 }
 function csv(report){const cell=value=>'"'+String(value??'').replace(/^[=+@\-\t\r]/,"'$&").replaceAll('"','""')+'"';return[['Employee','Permission level','Locations','Course','Version','Assignment','Required','Due date','Status','Progress %','Quiz score %','Attempts','Started','Completed'],...report.rows.map(r=>[r.username,r.roleName,r.locationNames.join('; '),r.courseTitle,r.courseVersion,r.assignmentTitle,r.required?'Yes':'No',r.dueDate,r.status,r.percent,r.score,r.attemptCount,r.startedAt,r.completedAt])].map(row=>row.map(cell).join(',')).join('\r\n');}
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/learning-centre'&&!url.startsWith('/api/learning-centre/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  const send=(code,value)=>{json(code,value);return true;},input=()=>body(req,1500000);
+ if(url==='/api/learning-centre/in-store'){if(req.method==='GET')return send(200,await store.inStore.dashboard(session));if(req.method==='POST')return send(201,await store.inStore.create(session,await body(req,100000)));}
+ const practical=url.match(/^\/api\/learning-centre\/in-store\/([a-f0-9-]{36})(?:\/(cancel)|\/assess\/([a-zA-Z0-9-]{1,100}))?$/i);
+ if(practical){if(!practical[2]&&!practical[3]&&req.method==='GET')return send(200,await store.inStore.get(session,practical[1]));if(practical[2]==='cancel'&&!practical[3]&&req.method==='POST')return send(200,await store.inStore.cancel(session,practical[1],await body(req,10000)));if(!practical[2]&&practical[3]&&req.method==='POST')return send(200,await store.inStore.assess(session,practical[1],practical[3],await body(req,10000)));}
  if(url==='/api/learning-centre'&&req.method==='GET')return send(200,await store.dashboard(session));
  if(url==='/api/learning-centre/library'&&req.method==='GET')return send(200,await store.libraryList(session,Object.fromEntries(params)));
  const article=url.match(/^\/api\/learning-centre\/library\/([a-f0-9-]{36})$/i);if(article&&req.method==='GET')return send(200,await store.libraryArticle(session,article[1]));

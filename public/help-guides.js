@@ -400,6 +400,12 @@
  ],{route:'/ops-management#history',permissions:['ops.view'],notes:['Reports can show today’s eligible unstarted tasks. Earlier unstarted schedules cannot be reconstructed from the current planner settings.'],related:['operational-reports','complete-checklist']});
 
  c='training';
+ add(c,'in-store-training','Schedule and sign off in-store training','Plan practical training and record each staff member’s demonstrated skills.',[
+  'Open Learning centre → In-store training. Use the location, search and status filters to find your sessions.',
+  'With training assignment access, choose New session. Set the location, trainer, date, Melbourne start time, duration, staff and practical skills, then press Create session.',
+  'Open View session and choose a staff member. The appointed trainer or an authorised manager ticks only the skills demonstrated competently, adds any notes and presses Save assessment.',
+  'Save partial progress until every skill is signed off. The final save records completion, the assessor and the time. Find these read-only records using the Completed filter.'
+ ],{route:'/learning-centre#in-store',permissions:['learning.view'],notes:['Self sign-off is excluded. Sign off in-store training is a separate detailed permission; managers also need training assignment access to assess sessions where they are not the appointed trainer. Assessments cannot be saved before the session starts. Cancelling a session retains saved completion records. Course progress reports continue to report online courses; practical progress is shown in In-store training.'],related:['take-course','assign-training','permissions']});
  add(c,'take-course','Start and complete a training course','Work through lessons and submit your knowledge check.',[
   'Open Learning centre → My learning for assigned work, or Course library to start an available published course.',
   'Open the course and complete its sections in order. Start timed reading where required.',

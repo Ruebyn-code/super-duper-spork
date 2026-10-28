@@ -43,6 +43,7 @@
   ['learning.publish','Publish training courses','Publish a reviewed course version for learners','learning.manage'],
   ['learning.archive','Archive training courses','Remove courses from the published library','learning.manage'],
   ['learning.export','Export training progress','Download training progress as CSV','learning.report'],
+  ['learning.signoff','Sign off in-store training','Assess practical skills as the appointed trainer or an authorised training manager; self sign-off is excluded','learning.view'],
   ['ops.planners','Manage checklist planners','Create and change planners, locations and assignees','ops.manage'],
   ['rostering.publish','Publish rosters','Make a draft roster visible to the team','rostering.manage'],
   ['rostering.delete-shift','Delete roster shifts','Remove shifts from a draft roster','rostering.manage'],
