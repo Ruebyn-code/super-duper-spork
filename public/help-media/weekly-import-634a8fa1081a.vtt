@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.833
+Step 1: Open Sales → Weekly report and choose Upload sales report. Select the location the report belongs to.
+
+2
+00:00:06.833 --> 00:00:19.583
+Step 2: Choose an Excel (.xlsx), PDF, JPEG/JPG, PNG or WebP report up to 5 MB. Excel opens its preview directly. For a scan, select up to three PDF pages and check the text and images to send.
+
+3
+00:00:19.583 --> 00:00:30.792
+Step 3: For a PDF or photo, choose Read report · OpStack intelligence. Check and edit the extracted Monday–Sunday dates, sales channels, printed totals and weekly platform fees. Reading does not save sales.
+
+4
+00:00:30.792 --> 00:00:40.750
+Step 4: For a scan, check the report location, tick the location confirmation and choose Review import. Review the dated weeks and totals, then choose Import weeks to save.
+
+5
+00:00:40.750 --> 00:00:48.833
+Step 5: Check the imported week. Matching values are retained, missing values filled, and a whole week with conflicting saved figures is skipped.

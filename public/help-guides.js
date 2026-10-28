@@ -209,12 +209,13 @@
   'Review the expense views and platform fee tables, then press Save weekly report.',
   'Use Overview to compare saved weekly sales, cost percentages and profit.'
  ],{route:'/sales#report',permissions:['finances.view'],notes:['Report sales = Till + Uber Eats + DoorDash. Cash variance = Cash + Eftpos + Petty cash − Till. Platform fees are shown separately from profit. Invoice totals supply Cost of goods.'],related:['weekly-import','invoice-expenses','weekly-costs','platform-fees']});
- add(c,'weekly-import','Import a weekly sales spreadsheet','Review an Excel report before importing its sales and platform fees.',[
-  'Open Sales → Weekly report and choose Import spreadsheet.',
-  'Choose the store’s .xlsx weekly report and review its dated weeks, sales and platform fees.',
-  'Check the selected location matches the workbook, then choose Import weeks.',
-  'Review any skipped weeks: matching values are retained, missing values filled, and a conflicting week is skipped.'
- ],{route:'/sales#report',permissions:['finances.view'],notes:['This imports sales and platform fees. Daily sales, labour, operating expenses, R&O and invoices remain separate. Recalculate and save Excel formulas before uploading if their saved values are missing.'],related:['weekly-report','sales-projections'],keywords:['Excel','XLSX','upload workbook']});
+ add(c,'weekly-import','Upload a weekly sales report','Review an Excel, PDF or photo report before importing its sales and platform fees.',[
+  'Open Sales → Weekly report and choose Upload sales report. Select the location the report belongs to.',
+  'Choose an Excel (.xlsx), PDF, JPEG/JPG, PNG or WebP report up to 5 MB. Excel opens its preview directly. For a scan, select up to three PDF pages and check the text and images to send.',
+  'For a PDF or photo, choose Read report · OpStack intelligence. Check and edit the extracted Monday–Sunday dates, sales channels, printed totals and weekly platform fees. Reading does not save sales.',
+  'For a scan, check the report location, tick the location confirmation and choose Review import. Review the dated weeks and totals, then choose Import weeks to save.',
+  'Check the imported week. Matching values are retained, missing values filled, and a whole week with conflicting saved figures is skipped.'
+ ],{route:'/sales#report',permissions:['finances.view'],notes:['PDFs and photos require enabled company OpStack intelligence and use its request limit and budget. Excel does not use intelligence. Only reviewed sales and platform fees are imported; Daily sales, labour, operating expenses, R&O and invoices remain separate. Blank fields stay unrecorded; enter zero only when known. Recalculate and save Excel formulas before uploading if their saved values are missing.'],related:['weekly-report','sales-projections','intelligence-setup'],keywords:['Excel','XLSX','PDF','JPEG','JPG','PNG','WebP','image','photo','scan','upload workbook']});
  add(c,'sales-projections','Understand daily and weekly projected sales','See which saved sales determine the forecast.',[
   'Open Sales → Projection & budget to view the source weeks and any missing-history explanation.',
   'Normal forecasts use four completed Monday–Sunday weeks, averaging corresponding weekdays.',

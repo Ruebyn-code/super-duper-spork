@@ -547,10 +547,25 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const history=await usageHistory(dataDir);
         return json(200,await weeklySalesOverview.build(dataDir,session,params,{orders:history.orders,transfers:history.transfers,store:weeklySalesReportStore}));
       }
+      if(req.url==='/api/weekly-sales-import/intelligence'){
+        if(req.method!=='POST')fail('Use POST to read a weekly sales report.',405);
+        if(!can(session,'finances.edit'))fail('Financial editing permission required.',403);
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
+        const input=await body(req,7000000);
+        if(input?.companyId!==session.companyId||input?.locationId!==session.locationId)fail('The selected company or location changed. Reopen the import.',409);
+        const result=await aiStore.generateWeeklySales(session,input);
+        const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
+        if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reviewing this report.',401);
+        if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
+        if(!can(current,'finances.edit'))fail('Financial editing permission required.',403);
+        if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
+        const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
+        return json(200,{...result,locationId:current.locationId});
+      }
       if(['/api/weekly-sales-import/preview','/api/weekly-sales-import/confirm'].includes(req.url)){
         if(req.method!=='POST')fail('Use POST to import a weekly sales workbook.',405);
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
-        const input=await body(req,7000000),workbook=weeklySalesImport.upload(input,session);
+        const input=await body(req,7000000),workbook=input?.format==='scan'?require('./weekly-sales-scan').upload(input,session):weeklySalesImport.upload(input,session);
         return json(200,await weeklySalesReportStore.importReports(dataDir,session,workbook,req.url.endsWith('/confirm')?{expectedRevisions:input.expectedRevisions??null,sha256:input.sha256}:{}));
       }
       if(req.url==='/api/weekly-sales-reports'&&req.method==='GET'){

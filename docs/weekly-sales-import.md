@@ -1,0 +1,15 @@
+# Weekly sales report uploads
+
+Sales → Weekly report → Upload sales report accepts Excel (`.xlsx`), PDF, JPEG/JPG, PNG and WebP files up to 5 MB. Editing requires `finances.edit`, a selected accessible location and CSRF protection. Opening, preparing, reading or reviewing an upload never saves sales.
+
+Excel retains its native cached-cell parser and free preview. It never evaluates formulas, opens external links or calls a provider. Recalculate formulas in Excel and save before uploading when cached values are missing.
+
+PDF and photo preparation runs locally through the existing report-source helper. Select up to three PDF pages (1–20); the company provider receives only reviewed text and selected bounded page images after the explicit **Read report · OpStack intelligence** action. Company intelligence must be enabled and configured. The existing company model, monthly budget, request cap and UUID retry ledger apply; unchanged retries do not make another paid call. No platform records or credentials become report context.
+
+The response is an editable draft with Monday-starting weeks, seven daily amounts per sales channel, weekly Uber Eats/DoorDash fees, printed reconciliation totals and warnings. Unknown values remain blank, explicit zero stays zero, Cash supports signed adjustments and refunds support signed credits. Never distribute a weekly total across days. Review uncertain channel mappings against the original document. No document is retained by this import flow.
+
+Confirm the report belongs to the selected location, then choose **Review import** and **Import weeks**. Printed totals must reconcile where the channel totals are complete. Scope, permissions and required reading are checked before requests and again after provider completion. Dates, currency, amounts and location are checked again on review and confirmation. Editing the draft invalidates the preview; confirmation binds to the reviewed content hash and every report revision.
+
+Both formats share the native weekly writer queue. Imports fill missing sales and platform fees, retain matching saved values and skip a whole conflicting week. Any stale revision rejects confirmation before writing. Retries preserve matching data, including a lost confirmation response; reviewed scan imports retain `salesImport.format: 'scan'` provenance. Existing cost entries, invoices, Daily sales, schedules, orders and other company/location records remain intact. Forecasts continue using completed weekly daily channel totals through the existing weekly-first rule.
+
+Validation: `node --test weekly-sales-scan.test.js weekly-sales-import.test.js hourly-sales-intelligence.test.js invoice-intelligence.test.js ai-assistance.test.js`, then `npm test`. Use isolated data and fake provider responses for PDF/photo/browser tests; never submit a customer report or make paid provider requests in tests. Check desktop and phone, finance editors/viewers, explicit read/review/import, signed amounts, missing/zero, edited/stale previews, conflicts, retry recovery and the native Excel path.
