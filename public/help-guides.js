@@ -249,9 +249,9 @@
  add(c,'ordering-budget','Understand the weekly ordering budget','Compare forecast-based spending allowance with orders and cart.',[
   'View Projection & budget, Ordering or the cart.',
   'The ordering budget is projected weekly sales × 28%.',
-  'Review allocated saved orders and net stock-cost transfers for the displayed week; Ordering and cart also account for the current cart.',
+  'In Ordering, review Available after cart and the budget-used bar, including saved order costs, net stock-cost transfers and this cart. Review cart opens the existing cart.',
   'Check warnings before placing an order. On Sunday, the displayed forecast and budget move to the upcoming week.'
- ],{route:'/sales#projection',permissions:['sales.view'],notes:['Projected COGS % = (allocated saved-order costs, including net cost transfers, plus the current cart where available) ÷ projected sales × 100. Missing or zero projected sales and pending prices show a dash. Weekly financial COGS uses saved invoices.','Saved orders count even if supplier sending failed. Pending prices keep the remaining budget unknown. Budget warnings are guidance and do not block an explicit order.'],related:['sales-projections','place-order','stock-transfers']});
+ ],{route:'/sales#projection',permissions:['sales.view'],notes:['Projected COGS % = (allocated saved-order costs, including net cost transfers, plus the current cart where available) ÷ projected sales × 100. Missing or zero projected sales and pending prices show a dash. Weekly financial COGS uses saved invoices.','Ordering shows Near budget at 90% used and Over budget when the cart exceeds the remaining amount. The exact percentage can exceed 100%, while the bar stops at full. Retry budget reloads figures after a connection problem.','Saved orders count even if supplier sending failed. Pending prices keep the remaining budget unknown. Budget warnings are guidance and do not block an explicit order.'],related:['sales-projections','place-order','stock-transfers']});
  add(c,'platform-fees','Record Uber Eats and DoorDash fees','Check platform deductions and expected payouts separately.',[
   'Open the selected week in Weekly report.',
   'Choose the Uber Eats or DoorDash overview card.',

@@ -6,6 +6,16 @@ week's allocated saved-order costs, including net confirmed cost transfers, plus
 the current cart where available, divided by projected sales for that same week.
 It refreshes with the existing cart, sales, price and budget events.
 
+Ordering puts **Available after cart** first, beside the forecast, 28% budget,
+allocated order costs and projected COGS. The budget-used bar includes the current
+cart and shows the exact percentage even above 100%; only its visual fill is
+bounded. At 90% it shows **Near budget**, and any negative remainder shows
+**Over budget**. Net transfer credits remain part of the calculation. Pending
+prices or missing sales keep the remainder and usage unknown; a known $0 budget
+is shown separately. **Review cart** opens the existing cart without placing an
+order. Failed refreshes clear old figures and offer **Retry budget**. The compact
+page heading keeps the original appearance identities without a resizable hero.
+
 Use the final `orderingProjection` after holiday adjustments, retaining the
 existing fallback to `projection`. At Melbourne Sunday midnight the ordering
 week moves to next Monday–Sunday, together with its allocated costs. Keep the

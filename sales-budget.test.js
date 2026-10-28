@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {projectedCogsPercent}=require('./public/sales-budget'),sales=require('./sales'),{shift}=require('./stock-usage');
+const {projectedCogsPercent,budgetPosition}=require('./public/sales-budget'),sales=require('./sales'),{shift}=require('./stock-usage');
 
 test('projected ordering COGS follows the Sunday cost week, scoped commitments, transfers and cart without changing records',()=>{
  const actor={id:'manager',locationId:'shop'},now=new Date('2026-10-17T13:00:00Z'),records=[1,2,3,4].map(index=>({locationId:'shop',weekStart:shift('2026-10-12',-7*index),days:Array(7).fill(100000)}));
@@ -18,4 +18,25 @@ test('projected COGS distinguishes zero costs, missing sales and pending prices,
  assert.equal(projectedCogsPercent({...p,pricePending:true}),null);assert.equal(projectedCogsPercent(p,{total:0,pricePending:true}),null);assert.equal(projectedCogsPercent({...p,spentCents:null}),null);
  for(const total of [null,NaN,Infinity,-1])assert.equal(projectedCogsPercent(p,{total}),null);
  assert.equal(projectedCogsPercent(null),null);assert.equal(projectedCogsPercent(p,null),null);
+});
+
+test('ordering budget position includes the cart, exact overspend, transfers and the near-budget boundary',()=>{
+ const p={budgetCents:100000,remainingCents:20000,pricePending:false},original=JSON.stringify(p);
+ assert.deepEqual(budgetPosition(p),{remainingCents:20000,usedPercent:80,state:'within'});
+ assert.deepEqual(budgetPosition(p,{total:10000,pricePending:false}),{remainingCents:10000,usedPercent:90,state:'near'});
+ assert.equal(budgetPosition(p,{total:9999,pricePending:false}).state,'within');
+ assert.deepEqual(budgetPosition(p,{total:20000.25,pricePending:false}),{remainingCents:-.25,usedPercent:100.00025,state:'over'});
+ assert.deepEqual(budgetPosition({...p,remainingCents:105000}),{remainingCents:105000,usedPercent:-5,state:'within'});
+ assert.equal(JSON.stringify(p),original);
+});
+
+test('ordering budget availability keeps pending costs and missing sales distinct from a known zero budget',()=>{
+ const p={budgetCents:100000,remainingCents:50000,pricePending:false};
+ assert.deepEqual(budgetPosition({...p,pricePending:true}),{remainingCents:null,usedPercent:null,state:'pending'});
+ assert.deepEqual(budgetPosition(p,{total:0,pricePending:true}),{remainingCents:null,usedPercent:null,state:'pending'});
+ assert.deepEqual(budgetPosition({...p,budgetCents:null,remainingCents:null}),{remainingCents:null,usedPercent:null,state:'unavailable'});
+ assert.deepEqual(budgetPosition({...p,budgetCents:0,remainingCents:0}),{remainingCents:0,usedPercent:null,state:'zero'});
+ assert.deepEqual(budgetPosition({...p,budgetCents:0,remainingCents:0},{total:100,pricePending:false}),{remainingCents:-100,usedPercent:null,state:'over'});
+ for(const total of [null,NaN,Infinity,-1])assert.equal(budgetPosition(p,{total}).remainingCents,null);
+ assert.equal(budgetPosition(null).state,'unavailable');
 });

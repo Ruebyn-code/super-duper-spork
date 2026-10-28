@@ -3,7 +3,14 @@
   if(!projection||!cart||projection.pricePending||cart.pricePending||!Number.isFinite(projection.projectedSalesCents)||projection.projectedSalesCents<=0||!Number.isFinite(projection.spentCents)||!Number.isFinite(cart.total)||cart.total<0)return null;
   return (projection.spentCents+cart.total)/projection.projectedSalesCents*100;
  }
- if(typeof module==='object'&&module.exports){module.exports={projectedCogsPercent};return;}
+ function budgetPosition(projection,cart={total:0,pricePending:false}){
+  const pending=Boolean(projection?.pricePending||cart?.pricePending),known=Number.isFinite(projection?.remainingCents)&&Number.isFinite(cart?.total)&&cart.total>=0;
+  const remainingCents=pending||!known?null:projection.remainingCents-cart.total;
+  const usedPercent=remainingCents!==null&&Number.isFinite(projection?.budgetCents)&&projection.budgetCents>0?(projection.budgetCents-remainingCents)/projection.budgetCents*100:null;
+  const state=pending?'pending':remainingCents===null?'unavailable':remainingCents<0?'over':projection.budgetCents===0?'zero':usedPercent>=90?'near':'within';
+  return{remainingCents,usedPercent,state};
+ }
+ if(typeof module==='object'&&module.exports){module.exports={projectedCogsPercent,budgetPosition};return;}
  if(!appAccess.can('sales.view')){document.getElementById('ordering-budget')?.classList.add('access-denied');document.querySelector('.ordering-sales-budget')?.classList.add('access-denied');return;}
  const active=()=>document.body?.dataset?.homeDashboard!=='staff';
  const panel=document.getElementById('ordering-budget');if(!panel)return;
@@ -11,8 +18,21 @@
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]));
  let session,projection,currentProjection,loading=false,refreshAgain=false,cart={total:0,pricePending:false};
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
+ const overview=panel.classList.contains('ordering-budget-overview'),reviewCart=$('ordering-budget-review-cart'),retry=$('ordering-budget-retry');
+ if(reviewCart)reviewCart.onclick=()=>{const popup=$('cart-popup');$('cart-pill')?.click();if(popup?.open)popup.addEventListener('close',()=>{if(reviewCart.isConnected&&!reviewCart.disabled)reviewCart.focus({preventScroll:true});},{once:true});};
+ if(retry)retry.onclick=refresh;
+ function renderCart(){if(!overview)return;template($('ordering-budget-cart-total'),'{amount}{pending}',{amount:money(cart.total),pending:cart.pricePending?' + '+wording('prices pending'):''});reviewCart.disabled=!$('cart-pill')||$('cart-pill').disabled||Boolean(cart.busy);}
+ function renderOverview(){
+  if(!overview)return;const{remainingCents,usedPercent,state}=budgetPosition(projection,cart),badge=$('ordering-budget-state'),meter=$('ordering-budget-meter'),usage=$('ordering-budget-usage');
+  panel.dataset.budgetState=state;template(badge,({pending:'Prices pending',unavailable:'Sales needed',over:'Over budget',zero:'No budget',near:'Near budget',within:'Within budget'})[state]);
+  retry.hidden=true;
+  meter.hidden=usedPercent===null;meter.value=Math.max(0,Math.min(100,usedPercent||0));
+  if(usedPercent!==null){const percent=new Intl.NumberFormat('en-AU',{maximumFractionDigits:1}).format(usedPercent);template(usage,'{percent}% of budget used, including this cart',{percent});meter.setAttribute('aria-valuetext',usage.textContent);}
+  else template(usage,state==='pending'?'Budget usage unavailable until all prices are known.':projection.budgetCents===0?'Projected sales give a $0 ordering budget.':'Enter four complete sales weeks to calculate the budget.');
+  template($('ordering-budget-remaining').previousElementSibling,remainingCents!==null&&remainingCents<0?'Over budget after cart':'Available after cart');
+ }
  function render(){
-  if(!active()){projection=null;currentProjection=null;return;}if(!projection)return;window.salesPerformanceView?.render(currentProjection);
+  if(!active()){projection=null;currentProjection=null;return;}renderCart();if(!projection)return;window.salesPerformanceView?.render(currentProjection);
   $('ordering-projected-sales').textContent=money(projection.projectedSalesCents);$('ordering-week-budget').textContent=money(projection.budgetCents);
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';
@@ -22,7 +42,7 @@
   template($('ordering-projected-sales').previousElementSibling,upcoming?'Projected sales next week':'Projected sales');
   template($('ordering-budget-spent').previousElementSibling,upcoming?'Order costs next week':'Order costs this week');
   template($('ordering-budget-remaining').previousElementSibling,'Budget after this cart');
-  const remaining=projection.remainingCents===null||cartPending?null:projection.remainingCents-cart.total;
+  const{remainingCents:remaining}=budgetPosition(projection,cart);
   if(remaining!==null&&remaining<0||projection.pricePending||cartPending)$('ordering-budget-status').dataset.homeError='';else delete $('ordering-budget-status').dataset.homeError;
   $('ordering-budget-remaining').textContent=money(remaining);$('ordering-budget-remaining').classList.toggle('budget-over',remaining!==null&&remaining<0);
   const dateLabel=date=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z'));
@@ -31,12 +51,13 @@
   const label=projection.projectedSalesCents===null?'{weeks} of 4 complete sales weeks. Enter sales to calculate your budget.':projection.pricePending||cartPending?'Some items have prices pending. The remaining budget cannot be calculated yet.':remaining<0?(upcoming?'This cart would take you over the upcoming week’s budget.':'This cart would take you over this week’s budget.'):'Budget after this cart = weekly budget − allocated order costs − this cart.';
   const holidayNote=(projection.dailyProjections||[]).some(day=>day.holiday?.status==='adjusted')?' Includes public-holiday forecasts based on last year’s matching holiday, adjusted for sales growth since the previous holiday.':'';
   template($('ordering-budget-status'),(upcoming?'Upcoming week’s budget, including Sunday orders and cost transfers. Forecast uses the last four completed sales weeks. '+label:label)+holidayNote,{weeks:projection.weeksRecorded});
+  renderOverview();
  }
  async function refresh(){
-  if(document.hidden||!active())return;if(loading){refreshAgain=true;return;}loading=true;
+  if(document.hidden||!active())return;if(loading){refreshAgain=true;return;}loading=true;if(retry)retry.disabled=true;
   try{const response=await fetch('/api/sales',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(!response.ok)throw Error('Unable to load sales budget.');const report=await response.json();currentProjection=report.projection;projection=report.orderingProjection||report.projection;render();}
-  catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');}
-  finally{loading=false;if(refreshAgain){refreshAgain=false;refresh();}}
+  catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');if(overview){projection=null;panel.dataset.budgetState='error';template($('ordering-budget-state'),'Unavailable');for(const id of ['ordering-projected-sales','ordering-week-budget','ordering-budget-spent','ordering-budget-remaining','ordering-projected-cogs'])$(id).textContent='—';$('ordering-budget-meter').hidden=true;template($('ordering-budget-usage'),'Budget figures could not be refreshed.');retry.hidden=false;}}
+  finally{loading=false;if(retry)retry.disabled=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
  window.addEventListener('home-dashboard-access',()=>{if(!active()){projection=null;currentProjection=null;}else refresh();});
  window.addEventListener('ordering-cart-updated',event=>{cart=event.detail;render();});

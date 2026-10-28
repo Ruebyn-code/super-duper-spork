@@ -39,3 +39,64 @@
 .delivery-stock-note{display:block;font-size:11px;line-height:1.5;overflow-wrap:anywhere}.delivery-shortage{color:var(--theme-warning-text,#985400);font-weight:600}
 
 .supplier-delivery-next{font:10px Arial,sans-serif;white-space:nowrap;opacity:.85}
+
+/* Ordering overview keeps the week, spending and the current cart together. */
+.ordering-page>.ordering-page-header{display:block;width:100%;max-width:none;margin:0 0 12px;padding:0;border:0}
+.ordering-page-header>.stock-workspace-heading{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0;width:100%}
+.ordering-page-header h1{flex:1;min-width:0;margin:0;font-size:24px;line-height:1.25}
+.ordering-page .ordering-budget-overview{padding:14px 16px;margin-bottom:14px;border:1px solid var(--theme-line,#dce5ed);border-radius:16px;background:var(--theme-surface,#fff);box-shadow:var(--ui-card-shadow,0 2px 8px #14243b05)}
+.ordering-budget-overview .ordering-budget-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.ordering-page .ordering-budget-overview .ordering-budget-heading{gap:8px 16px}
+.ordering-page .ordering-budget-overview h2{font-family:inherit;font-size:14px;letter-spacing:0;font-weight:700;line-height:1.4}
+.ordering-page .ordering-budget-overview #ordering-budget-period{margin:0;font-size:11px;color:var(--theme-muted,#637287);line-height:1.5}
+.ordering-budget-overview .ordering-budget-heading>a{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;flex:none;font-size:12px;white-space:nowrap}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics{display:grid;grid-template-columns:minmax(180px,1.25fr) repeat(4,minmax(0,1fr));align-items:center;gap:12px;margin-top:12px}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics>div{grid-column:auto;display:block;padding:0 0 0 16px;border:0;border-left:1px solid var(--theme-line,#dce5ed)}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics span{font-size:11px;line-height:1.5;color:var(--theme-muted,#637287)}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics strong{margin-top:4px;font-size:20px;line-height:1.3;font-weight:700;letter-spacing:-.4px;color:var(--theme-text,#1d2b3f)}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-available{padding:12px 14px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));border-radius:11px;background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
+.ordering-page .ordering-budget-overview .ordering-budget-available strong{font-size:27px;color:var(--theme-primary-text,var(--primary));margin-top:2px}
+.ordering-page .ordering-budget-overview .ordering-budget-available .ordering-budget-state{margin-top:5px;font-size:10px;font-weight:600;color:var(--theme-primary-text,var(--primary))}
+.ordering-budget-overview[data-budget-state=over] .ordering-budget-available{background:color-mix(in srgb,var(--theme-danger-text,#b13c2e) 6%,var(--theme-surface,#fff))!important;border-color:color-mix(in srgb,var(--theme-danger-text,#b13c2e) 30%,var(--theme-line,#dce5ed))!important}
+.ordering-budget-overview[data-budget-state=over] .ordering-budget-available :is(strong,.ordering-budget-state){color:var(--theme-danger-text,#b13c2e)!important}
+.ordering-budget-overview[data-budget-state=near] .ordering-budget-state{color:var(--theme-warning-text,#985400)!important}
+.ordering-budget-overview .ordering-budget-footer{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;margin-top:12px;padding-top:12px;border-top:1px solid var(--theme-line,#dce5ed);font-size:11px;color:var(--theme-muted,#637287)}
+.ordering-budget-overview .ordering-budget-progress{display:grid;gap:6px;min-width:0;width:min(100%,420px)}
+.ordering-budget-overview progress{display:block;width:100%;height:5px;border:0;border-radius:99px;overflow:hidden;appearance:none;background:var(--theme-line,#e4ecf4);accent-color:var(--primary)}
+.ordering-budget-overview progress::-webkit-progress-bar{background:var(--theme-line,#e4ecf4);border-radius:99px}
+.ordering-budget-overview progress::-webkit-progress-value{background:var(--primary);border-radius:99px}
+.ordering-budget-overview progress::-moz-progress-bar{background:var(--primary);border-radius:99px}
+.ordering-budget-overview[data-budget-state=over] progress{accent-color:var(--theme-danger-text,#b13c2e)}
+.ordering-budget-overview[data-budget-state=over] progress::-webkit-progress-value{background:var(--theme-danger-text,#b13c2e)}
+.ordering-budget-overview[data-budget-state=over] progress::-moz-progress-bar{background:var(--theme-danger-text,#b13c2e)}
+.ordering-budget-overview .ordering-budget-cart{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;min-width:0}
+.ordering-budget-overview .ordering-budget-cart strong{font-size:13px;color:var(--theme-text,#1d2b3f);font-variant-numeric:tabular-nums}
+.ordering-budget-overview .ordering-budget-cart button,.ordering-budget-overview #ordering-budget-retry{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 10px;font-family:inherit;font-size:11px;letter-spacing:0;border-radius:8px;color:var(--theme-primary-text,var(--primary))}
+.ordering-page .ordering-budget-overview #ordering-budget-status[data-home-error]{margin-top:10px;color:var(--theme-danger-text,#b13c2e);font-size:11px;line-height:1.5}
+.ordering-budget-overview #ordering-budget-retry{margin-top:8px}
+.ordering-budget-overview [hidden]{display:none!important}
+@media(max-width:1000px){
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-available{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}
+ .ordering-page .ordering-budget-overview .ordering-budget-available strong{grid-column:2;grid-row:1/3;margin:0}
+ .ordering-page .ordering-budget-overview .ordering-budget-available .ordering-budget-state{margin-top:1px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>div:nth-child(2){border-left:0;padding-left:0}
+ .ordering-budget-overview .ordering-budget-title{gap:4px 12px}
+}
+@media(max-width:600px){
+ .ordering-page-header h1{font-size:22px}
+ .ordering-page .ordering-budget-overview{padding:12px;border-radius:13px;margin-bottom:12px}
+ .ordering-budget-overview .ordering-budget-title{display:block;flex:1}
+ .ordering-page .ordering-budget-overview #ordering-budget-period{font-size:10px;margin-top:4px}
+ .ordering-page .ordering-budget-overview .ordering-budget-heading{align-items:flex-start;gap:6px}
+ .ordering-budget-overview .ordering-budget-heading>a{font-size:11px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 8px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>div{padding-left:12px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>div:nth-child(even){border-left:0;padding-left:0}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics strong{font-size:18px}
+ .ordering-page .ordering-budget-overview .ordering-budget-available strong{font-size:25px}
+ .ordering-budget-overview .ordering-budget-footer{flex-direction:column;align-items:stretch;gap:12px}
+ .ordering-budget-overview .ordering-budget-progress{width:100%}
+ .ordering-budget-overview .ordering-budget-cart{justify-content:flex-start}
+ .ordering-budget-overview .ordering-budget-cart button{margin-left:auto;min-height:40px}
+}
