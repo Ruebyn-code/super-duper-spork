@@ -14,7 +14,7 @@ async function page(fetchImpl,actorOverrides={}){
  return{requests,input,node:id=>document.getElementById(id),message:()=>document.getElementById('home-daily-sales-message').textContent,profile(value){window.homeProfile={actor,profile:value};document.body.dataset.homeDashboard=value;window.dispatchEvent({type:'home-dashboard-access',detail:{actor,profile:value}});},enter(value){input.value=value;document.activeElement=input;input.listeners.get('input')();},submit:()=>form.listeners.get('submit')({preventDefault(){}}),refresh:()=>events.get('focus')[0]()};
 }
 test('Head Office never fetches or displays daily sales entry, even before the dashboard controller publishes its mode',async()=>{
- const ui=await page(()=>{throw Error('Head Office must not request daily sales entry.');},{homeDashboard:'manager',permissions:['home.view','reporting.view','locations.all','sales.view','sales.edit']});
+ const ui=await page(()=>{throw Error('Head Office must not request daily sales entry.');},{homeDashboard:'manager',locationName:'Head Office',permissions:['home.view','reporting.view','locations.all','sales.view','sales.edit']});
  assert.equal(ui.node('home-daily-sales').hidden,true);assert.equal(ui.node('home-hourly-upload').hidden,true);await ui.refresh();await ui.submit();assert.equal(ui.requests.length,0);
 });
 test('switching from Store to Head Office hides entry and ignores an in-flight refresh while keeping a Store draft',async()=>{

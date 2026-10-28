@@ -2,12 +2,12 @@
 const {can}=require('./permissions'),time=require('./public/rostering-model'),sales=require('./sales'),{belongs}=require('./location-scope'),orderDates=require('./order-cost-period'),par=require('./par-levels'),budgetModel=require('./public/sales-budget');
 const topics=['kpis','sales','stores','budget','stock','checklists','activity'];
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
-const eligible=actor=>Boolean(actor&&actor.homeDashboard!=='staff'&&!actor.kiosk&&['home.view','reporting.view','locations.all'].every(key=>can(actor,key)));
+const eligible=require('./public/home-board-model').headOffice;
 const total=values=>values.length&&values.every(Number.isFinite)?values.reduce((n,v)=>n+v,0):null;
 const ratio=(cost,revenue)=>Number.isFinite(cost)&&revenue>0?cost/revenue*100:null;
 function createReader({dir,locations,context,history,salesStore,weekly,ops,now=Date.now}){
  async function read(actor,input={}){
-  if(!eligible(actor))fail('The business dashboard requires Manager Home, Home, Reporting and all-location access.',403);
+  if(!eligible(actor))fail('Select the Head Office location with Manager Home, Home, Reporting and all-location access.',403);
   if(Object.keys(input).some(key=>!['week','location','topics'].includes(key)))fail('Choose valid business dashboard filters.');
   const instant=now(),today=time.today(instant),current=time.monday(today),week=input.week||current;time.date(week);if(time.monday(week)!==week||week>current)fail('Choose this week or an earlier Monday.');
   const wanted=input.topics?input.topics.split(','):topics.filter(topic=>topic!=='checklists'||can(actor,'ops.view'));if(!wanted.length||wanted.length>topics.length||new Set(wanted).size!==wanted.length||wanted.some(t=>!topics.includes(t)))fail('Choose supported dashboard sections.');

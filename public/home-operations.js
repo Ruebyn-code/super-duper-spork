@@ -20,7 +20,7 @@
   if(document.hidden)return;if(loading){queued=true;return;}loading=true;const token=version;
   try{
    const headers=window.appLocationId?{'X-Location-Id':window.appLocationId}:{},response=await fetch('/api/session',{cache:'no-store',headers});if(!response.ok){if([401,403,428].includes(response.status)){clear();if(response.status===428)window.appRequiredReading?.check();return;}throw Error('Unable to check dashboard access.');}const next=await response.json();if(!next.csrf){clear();return;}
-   const nextIdentity=JSON.stringify([next.id,next.companyId,next.locationId,next.homeDashboard,next.permissions]);actor=next;if(actor.homeDashboard==='staff'||preview==='head-office'&&!homeBoardModel.headOffice(actor))preview=null;if(nextIdentity!==identity){identity=nextIdentity;appAccess.apply(actor);publish();}
+   const nextIdentity=JSON.stringify([next.id,next.companyId,next.locationId,next.locationName,next.homeDashboard,next.permissions]);actor=next;if(actor.homeDashboard==='staff'||preview==='head-office'&&!homeBoardModel.headOffice(actor))preview=null;if(nextIdentity!==identity){identity=nextIdentity;appAccess.apply(actor);publish();}
    if(['staff','head-office'].includes(profile())||!appAccess.can('home.view',actor)||!appAccess.can('sales.view',actor)){clear();return;}
    const result=await fetch('/api/home-operations',{cache:'no-store',headers});if(!result.ok){clear();return;}const value=await result.json();if(token!==version||profile()==='staff'||value.locationId!==actor.locationId||value.companyId!==actor.companyId)return;paint(value);
   }catch{if(profile()==='staff')clear();else if(last)note.textContent='Unable to refresh today’s projections. Refresh Home to try again.';}

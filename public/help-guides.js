@@ -32,7 +32,7 @@
   'Save or discard open drafts when prompted before switching.'
  ],{notes:['A paired kiosk is fixed to its assigned location. If a company or location is missing, ask a user manager to review your access.'],related:['companies','manage-users','kiosk-use']});
  add(c,'home-dashboards','Understand your Home dashboards','Use a company-styled business overview or a store’s daily dashboard.',[
-  'Open Home. Manager profiles with Home, Reporting and all-location access automatically see Head Office. Other Manager profiles see the selected store; Staff profiles keep an operational dashboard without sales.',
+  'Select the Head Office location and open Home. Manager profiles with Home, Reporting and all-location access see the Head Office dashboard there. Selecting a store shows its Store dashboard; Staff profiles keep an operational dashboard without sales.',
   'On Head Office, choose accessible locations in this company and a week. Compare recorded sales, saved cost percentages, orders and location performance. Open Reporting for the same selection.',
   'On a store dashboard, use Today and This hour for projected sales and labour budget, compare saved hourly sales, and review ordering, checklists, published staff shifts and quick links.',
   'Use Edit Home on a computer to customise the company layout. Head Office, Store and Staff layouts are independent; existing custom sections and the company’s colours, fonts and logos are retained.'

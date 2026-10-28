@@ -44,7 +44,7 @@
   'heading':{title:'Section heading',group:'Essentials',icon:'text',description:'Add a heading and a short note to organise Home.'}
  };
  const salesTypes=new Set(['quarter-totals','sales-progress','finance','ordering-budget','sales-today']),salesLinks=new Set(['sales','projections','weekly-report','overview','cogs','labour','opex','ro','reporting']);
- const headOffice=actor=>Boolean(actor&&actor.homeDashboard!=='staff'&&!actor.kiosk&&['home.view','reporting.view','locations.all'].every(key=>can(actor,[key])));
+ const headOffice=actor=>Boolean(actor&&actor.locationId&&typeof actor.locationName==='string'&&actor.locationName.trim().replace(/\s+/g,' ').toLowerCase()==='head office'&&actor.homeDashboard!=='staff'&&!actor.kiosk&&['home.view','reporting.view','locations.all'].every(key=>can(actor,[key])));
  const assignedProfile=actor=>actor?.homeDashboard==='staff'?'staff':headOffice(actor)?'head-office':'manager';
  const profile=actor=>actor?.homeDashboard==='staff'?'staff':actor?.homeDashboard==='head-office'?'head-office':'manager';
  const allowedType=(dashboard,type)=>type.startsWith('business-')?dashboard==='head-office':dashboard!=='staff'||!salesTypes.has(type);
