@@ -1,0 +1,23 @@
+/* Personal work is permanent; shared Home section arrangements remain independent. */
+@media screen{
+.home-dashboard-layout{display:grid;grid-template-columns:240px minmax(0,1fr);align-items:start;gap:var(--home-gap,14px);min-width:0}
+.home-dashboard-content{display:grid;gap:var(--home-gap,14px);min-width:0}
+.home-personal{position:sticky;top:12px;max-height:calc(100dvh - 24px);overflow:auto;scrollbar-width:thin;min-width:0;padding:14px;border:1px solid var(--theme-line,#dce5ed);border-radius:var(--home-radius,14px);background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);box-shadow:0 2px 10px color-mix(in srgb,var(--primary) 3%,transparent)}
+.home-personal-heading,.home-personal-group-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.home-personal-heading{margin:0 0 8px;padding:0;border:0;background:transparent;box-shadow:none}.home-personal-heading h2{display:flex;min-width:0;white-space:nowrap;align-items:center;gap:5px;margin:0;font-size:15px;line-height:1.4}
+.home-personal-heading>button{flex:0 0 30px;width:30px;height:30px;padding:6px;margin:0;border:1px solid var(--theme-line,#dce5ed);border-radius:8px;color:var(--theme-primary-text,var(--primary));background:var(--theme-surface,#fff)}
+.home-personal-heading>button svg{display:block;width:16px;height:16px}.home-personal-heading>button:disabled{opacity:.5}
+.home-personal-group+.home-personal-group{margin-top:14px;padding-top:14px;border-top:1px solid var(--theme-line,#dce5ed)}
+.home-personal-group-heading h3{font-size:12px;margin:0;line-height:1.4}.home-personal-count{display:grid;place-items:center;min-width:24px;min-height:22px;padding:1px 5px;border-radius:7px;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.home-personal-list{list-style:none;margin:8px 0 0;padding:0}.home-personal-list>li{padding:0;margin:0}
+.home-personal-item{display:flex;align-items:flex-start;gap:8px;padding:9px 5px;border-radius:8px;text-decoration:none;color:var(--theme-text,#182b3a)}
+.home-personal-item:hover{background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff))}.home-personal-item:focus-visible,.home-personal button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.home-personal-marker{display:grid;place-items:center;flex:0 0 26px;width:26px;height:28px;border-radius:7px;color:var(--theme-primary-text,var(--primary));background:color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff))}.home-personal-marker svg{width:16px;height:16px}
+.home-personal-copy{min-width:0}.home-personal-copy strong{display:block;font-size:12px;line-height:1.45;overflow-wrap:anywhere}.home-personal-copy small{display:block;margin-top:3px;font-size:10px;line-height:1.5;color:var(--theme-muted,#63778c);overflow-wrap:anywhere}
+.home-personal-item[data-state=overdue] .home-personal-marker{color:var(--theme-danger-text,#b42318);background:color-mix(in srgb,var(--theme-danger-text,#b42318) 10%,var(--theme-surface,#fff))}
+.home-personal-status,.home-personal-empty,.home-personal-error{font-size:11px;line-height:1.6;color:var(--theme-muted,#63778c);margin:8px 0}.home-personal-error{color:var(--theme-danger-text,#b42318)}
+.home-personal-more{display:block;padding:6px 3px;margin:5px 0 0;font-size:11px;border:0;background:transparent;color:var(--theme-primary-text,var(--primary));text-align:left}
+@media(max-width:1100px){.home-dashboard-layout{grid-template-columns:minmax(0,1fr)}.home-personal{position:static;max-height:none;overflow:visible}#home-personal-content{display:grid;grid-template-columns:1fr 1fr;gap:16px}.home-personal-group+.home-personal-group{margin:0;padding:0 0 0 16px;border-top:0;border-left:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:220px;overflow:auto;scrollbar-width:thin}}
+@media(max-width:540px){.home-personal{padding:12px}#home-personal-content{grid-template-columns:minmax(0,1fr);gap:12px}.home-personal-group+.home-personal-group{padding:12px 0 0;border-left:0;border-top:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:180px}.home-personal-heading h2{font-size:14px}}
+}
+@media print{.home-personal{display:none}.home-dashboard-layout,.home-dashboard-content{display:block}}

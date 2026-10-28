@@ -249,6 +249,7 @@
  window.addEventListener('online',()=>{const auto=activeSave();if(auto.dirty)auto.flush().catch(()=>{});});
  function moveDay(offset){if(!result)return;const day=new Date(result.date+'T12:00:00Z');day.setUTCDate(day.getUTCDate()+offset);const next=day.toISOString().slice(0,10);if(next>result.today)return;$('ops-date').value=next;page=1;load();}
  $('ops-day-previous').onclick=()=>moveDay(-1);$('ops-day-next').onclick=()=>moveDay(1);$('ops-go-today').onclick=()=>{$('ops-date').value=result.today;page=1;load();};
+const initialLocation=new URLSearchParams(location.search).get('location');if(initialLocation&&/^[a-zA-Z0-9-]{1,100}$/.test(initialLocation))$('ops-location').append(new Option(initialLocation,initialLocation,true,true));
 const initialAppSearch=new URLSearchParams(location.search).get('q');if(initialAppSearch&&document.getElementById('ops-search'))document.getElementById('ops-search').value=initialAppSearch.slice(0,120);
  $('ops-active-search').oninput=()=>{$('ops-search').value=$('ops-active-search').value;$('ops-search').dispatchEvent(new Event('input'));};
  for(const id of ['ops-sort','ops-status-filter','ops-priority-filter'])$(id).onchange=()=>{if(view==='checklists'&&!busy)render();};

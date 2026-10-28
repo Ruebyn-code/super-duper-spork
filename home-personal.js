@@ -1,0 +1,18 @@
+// Personal Home work is a read-only projection of the native assignment and inbox readers.
+const {can}=require('./permissions'),clock=require('./public/ops-planner-model');
+const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+function createReader({ops,learning,comms,now=Date.now}){
+ return{async read(actor,input={}){
+  if(!can(actor,'home.view'))fail('Home viewing permission required.',403);
+  if(Object.keys(input).length)fail('Personal work uses your signed-in account and current company.');
+  const instant=now(),today=clock.local(instant).slice(0,10),sources=[],tasks=[],errors=[];let inbox={items:[],unreadMessages:0,unreadPosts:0},nextChangeAt=null;
+  if(can(actor,'ops.view')&&can(actor,'ops.complete'))sources.push(['Checklists',async()=>{const data=await ops.list(actor,{location:actor.kiosk?actor.locationId:'all'});nextChangeAt=data.nextChangeAt||null;return data.tasks.filter(t=>t.run?.status!=='completed').map(t=>({id:'checklist:'+t.plannerId+':'+t.locationId+':'+t.periodKey,kind:'checklist',title:t.title,detail:t.locationName+(t.plannerName&&t.plannerName!==t.title?' · '+t.plannerName:''),dueAt:t.dueAt,dueDate:t.dueDate,status:t.timing==='overdue'?'overdue':t.run?'in-progress':'not-started',href:'/ops-management?'+new URLSearchParams({q:t.title,location:t.locationId})+'#checklists'}));}]);
+  if(can(actor,'learning.view')&&can(actor,'learning.complete'))sources.push(['Courses',async()=>{const data=await learning.dashboard(actor);return data.myLearning.filter(a=>a.status==='active'&&a.progress.status!=='completed').map(a=>({id:'course:'+a.id,kind:'course',title:a.title,detail:a.required?'Required training':'Training',dueDate:a.dueDate,status:a.progress.status,href:'/learning-centre#learn-'+a.id}));}]);
+  if(can(actor,'learning.view')&&(can(actor,'learning.complete')||can(actor,'learning.signoff')))sources.push(['In-store training',async()=>{const data=await learning.inStore.dashboard(actor),items=[];for(const session of data.sessions.filter(s=>s.status==='active')){const own=session.participants.find(p=>p.userId===actor.id);if(can(actor,'learning.complete')&&own&&own.status!=='completed')items.push({id:'practical:'+session.id,kind:'practical',title:session.title,detail:session.locationName+' · Practical training',dueAt:session.startsAt,status:own.status,href:'/learning-centre#in-store'});if(can(actor,'learning.signoff')&&session.trainerId===actor.id&&Date.parse(session.startsAt)<=instant&&session.participants.some(p=>p.userId!==actor.id&&p.status!=='completed'))items.push({id:'signoff:'+session.id,kind:'signoff',title:session.title,detail:session.locationName+' · Trainer sign-off',dueAt:session.endsAt,status:'awaiting-signoff',href:'/learning-centre#in-store'});}return items;}]);
+  if(can(actor,'comms.view'))sources.push(['Comms',async()=>{inbox=await comms.homeInbox(actor);return [];}]);
+  const settled=await Promise.allSettled(sources.map(([,read])=>read()));settled.forEach((result,index)=>{if(result.status==='fulfilled')tasks.push(...result.value);else errors.push(sources[index][0]);});
+  tasks.sort((a,b)=>Number(b.status==='overdue')-Number(a.status==='overdue')||(a.dueAt||a.dueDate||'9999').localeCompare(b.dueAt||b.dueDate||'9999')||a.title.localeCompare(b.title)||a.id.localeCompare(b.id));
+  return{userId:actor.id,companyId:actor.companyId,locationId:actor.locationId,checkedAt:new Date(instant).toISOString(),today,nextChangeAt,tasks:{total:tasks.length,items:tasks.slice(0,100),enabled:sources.some(([name])=>name!=='Comms'),errors:errors.filter(name=>name!=='Comms')},comms:{...inbox,total:inbox.items.length,items:inbox.items.slice(0,100),enabled:can(actor,'comms.view'),errors:errors.filter(name=>name==='Comms')}};
+ }};
+}
+module.exports={createReader};

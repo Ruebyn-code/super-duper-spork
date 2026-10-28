@@ -113,6 +113,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   },now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
+  const homePersonal=require('./home-personal').createReader({ops:opsStore,learning:learningStore,comms:communicationStore,now:communicationsNow});
   const homeInsights=require('./home-insights').createReader({dir:dataDir,locations:actor=>locationStore.accessible(actor),context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),history:()=>usageHistory(dataDir),salesStore,weekly:weeklySalesReportStore,ops:opsStore,now:communicationsNow});
   const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
   const manualParStore=manualPar.createStore();
@@ -501,6 +502,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const history=await usageHistory(dataDir),seen=new Set();
         return json(200,history.orders.filter(order=>order.requestOwnerId===session.id&&sales.allTimeTotals([],[order],session).orderCount&&!seen.has(order.id)&&seen.add(order.id)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).slice(0,8).map(order=>({id:order.id,createdAt:order.createdAt,totalCents:order.total,pricePending:Boolean(order.pricePending||order.items.some(item=>item?.price===null)),units:order.items.reduce((sum,item)=>sum+(Number(item?.quantity)||0),0)})));
       }
+      if(req.url==='/api/home-personal'&&req.method==='GET')return json(200,await homePersonal.read(session,Object.fromEntries(requestUrl.searchParams)));
       if(req.url==='/api/home-insights'&&req.method==='GET')return json(200,await homeInsights.read(session,Object.fromEntries(requestUrl.searchParams)));
       if(req.url==='/api/home-operations'&&req.method==='GET'){
         if(!homeOperations.canView(session))fail('Manager Home and daily sales viewing permission are required.',403);
