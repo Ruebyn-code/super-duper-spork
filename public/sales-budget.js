@@ -46,11 +46,11 @@
   if(cogs){
    const outlook=projection.salesOutlook,revenue=outlook?outlook.expectedSalesCents:projection.projectedSalesCents,state=projectedCogsState(projection,cart),basis=$('ordering-cogs-outlook');
    cogs.textContent=cogsPercent===null?'—':new Intl.NumberFormat('en-AU',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}).format(cogsPercent/100);cogs.dataset.cogsState=state;
-   cogs.title=wording(projection.pricePending||cartPending?'Some item prices are pending.':revenue===null?'More sales history is needed to estimate full-week sales.':revenue===0?'Projected COGS cannot be calculated when expected sales are $0.':'Projected COGS = (allocated order costs + this cart) ÷ expected full-week sales × 100. Green is within the {budget}% budget; red is over it.',{budget:projection.budgetPercent});
+   cogs.title=wording(projection.pricePending||cartPending?'Some item prices are pending.':revenue===null?'More sales history is needed to estimate full-week sales.':revenue===0?'Projected COGS cannot be calculated when expected sales are $0.':'COGS = (allocated order costs + this cart) ÷ updated full-week sales × 100. Green is within the {budget}% budget; red is over it.',{budget:projection.budgetPercent});
    if(basis){
-    const pace=outlook?.trendPercent,percent=Number.isFinite(pace)?new Intl.NumberFormat('en-AU',{signDisplay:'always',maximumFractionDigits:1}).format(pace):null;
-    template(basis,revenue===null?'Sales outlook unavailable':outlook?.method==='actuals'?'Recorded weekly sales {amount}':percent!==null?'Expected sales {amount} · Sales pace {percent}%':'Expected sales {amount} · Baseline forecast',{amount:money(revenue),percent});
-    basis.title=outlook?wording('Recorded sales: {actual}. Estimated unrecorded days: {forecast}. Pace compares saved sales with the forecast for the same recorded days. Unrecorded days include any missing past sales.',{actual:money(outlook.actualSalesCents),forecast:money(outlook.forecastSalesCents)}):'';
+    const difference=outlook?.varianceCents;
+    template(basis,revenue===null?'Sales outlook unavailable':outlook?.method==='actuals'?'Recorded weekly sales {amount}':outlook?.actualDays?Number.isFinite(difference)?difference>0?'Updated sales {amount} · {difference} above projection':difference<0?'Updated sales {amount} · {difference} below projection':'Updated sales {amount} · On projection':'Updated sales {amount} · Comparison unavailable':'Updated sales {amount} · Awaiting recorded sales',{amount:money(revenue),difference:money(Math.abs(difference||0))});
+    basis.title=outlook?wording('Recorded sales: {actual}. Original forecast for those recorded days: {projected}. Unrecorded days keep their original forecast: {forecast}. Missing past days remain estimated.',{actual:money(outlook.actualSalesCents),projected:money(outlook.recordedProjectedSalesCents),forecast:money(outlook.forecastSalesCents)}):'';
    }
   }
   template($('ordering-projected-sales').previousElementSibling,upcoming?'Projected sales next week':'Projected sales');

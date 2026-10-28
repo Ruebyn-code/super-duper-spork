@@ -4,36 +4,37 @@ Home's ordering widget, Ordering and Cart share the read-only forecast and cost
 summary in `public/sales-budget.js`. Projected COGS shows two estimates together:
 **Original projection** divides the displayed ordering week's allocated saved-order
 costs, including net confirmed cost transfers and the available current cart, by
-the original holiday-adjusted projected sales. **Current sales trend** divides
+the original holiday-adjusted projected sales. **Updated projection** divides
 the same costs by the expected full-week sales outlook for that same week.
 It refreshes with the existing cart, sales, price and budget events.
 
-The COGS sales outlook combines recorded sales through today with forecasts for
-all unrecorded days. It resolves one revenue source per day: complete Weekly
-report Till + Uber Eats + DoorDash, otherwise Daily sales. It never adds both.
-Compare those actuals with the holiday-adjusted forecast for the same recorded
-weekdays, then multiply unrecorded-day forecasts by that sales pace. For example,
-20% ahead means a 20% increase for the unrecorded days. Missing past days remain
-estimates, future-entered amounts are ignored and explicit zero sales count.
-Partial hourly reports do not represent completed daily totals.
+The updated sales outlook is the original weekly forecast plus the current dollar
+variance: saved actual sales minus the forecast for those same recorded days.
+For a $7,000 forecast, $2,400 actual against $2,000 expected so far gives a $400
+positive variance and a $7,400 updated projection. $1,600 actual gives $6,600.
+Unrecorded days keep their original forecasts, including missing past days. The
+remaining days are never multiplied by a sales-growth percentage.
+
+Resolve one revenue source per recorded day through today: complete Weekly
+report Till + Uber Eats + DoorDash, otherwise Daily sales. Never add both.
+Future-entered amounts and partial hourly reports are excluded; explicit zero
+sales are valid. Zero forecast sales on a recorded day still permit a dollar
+comparison. Whole-week cent rounding is retained in the remaining forecast.
 
 Both estimates appear side by side on Home, Ordering and Cart, with their sales
-denominators below. Current sales trend also shows the sales pace. Each COGS
-number is independently green at or below the displayed budget percentage and
-red above it, using unrounded amounts; an unavailable estimate stays neutral. The
-original forecast, 28% ordering allowance and its budget-used bar retain their
-existing planning basis. This is an updated sales outlook for COGS only.
+denominators below. Updated projection also shows the dollar amount above or
+below projection, or On projection. Each COGS number is independently green at
+or below the budget percentage and red above it, using unrounded amounts.
+Unavailable estimates stay neutral. The original forecast, 28% allowance and
+budget-used bar retain their existing planning basis.
 
-Without comparable positive forecast sales, retain the normal remaining-day
-forecast and explain the baseline. Missing forecast days leave the outlook
-unknown; a fully recorded week uses its actual total without needing history.
-The server rounds the remaining forecast once to cents using the unrounded
-sales ratio and refuses unsupported totals. On Sunday, the ordering week moves
-forward: apply the current week’s recorded sales pace to the upcoming week’s
-forecast, with no current-week actual revenue added to that future week. Monday
-starts a new current-week comparison. Source records and Daily sales performance
-remain unchanged. Only revenue aggregates enter the API; finance details stay
-under their existing permissions.
+Without recorded sales for the displayed week, keep its original forecast.
+Missing forecasts leave the updated outlook unknown; a fully recorded week can
+use its actual total without history. Refuse unsupported totals. On Sunday the
+ordering week moves forward: the upcoming week starts from its own original
+forecast, without applying the previous week’s dollar variance. Source sales,
+Daily sales performance and financial reports remain unchanged. Only revenue
+aggregates enter the API under the existing sales permissions.
 
 Ordering puts **Available after cart** first, beside the forecast, 28% budget,
 allocated order costs and projected COGS. The budget-used bar includes the current

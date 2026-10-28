@@ -41,7 +41,7 @@ test('ordering budget availability keeps pending costs and missing sales distinc
  assert.equal(budgetPosition(null).state,'unavailable');
 });
 
-test('original projection and current sales trend COGS use the same costs with independent denominators and budget colours',()=>{
+test('original and updated projection COGS use the same costs with independent denominators and budget colours',()=>{
  const p={projectedSalesCents:700000,budgetPercent:28,spentCents:210000,salesOutlook:{expectedSalesCents:840000}},cart={total:0,pricePending:false},before=JSON.stringify(p);
  assert.equal(projectedCogsPercent(p,cart,'baseline'),30);assert.equal(projectedCogsState(p,cart,'baseline'),'over');assert.equal(projectedCogsPercent(p,cart),25);assert.equal(projectedCogsState(p,cart),'within');
  assert.equal(projectedCogsPercent(p,{total:14000,pricePending:false},'baseline'),32);assert.ok(Math.abs(projectedCogsPercent(p,{total:14000,pricePending:false})-26.666666666666668)<1e-10);
