@@ -18,7 +18,9 @@ Store Manager Home has a compact two-column dashboard with **Today at a glance**
 
 The summary reuses the roster’s daily forecast (four completed weeks, weekly-report-first revenue and matching public holidays with yearly growth), plus the same saved hourly patterns as Hourly sales and Rostering. It does not use Sunday’s upcoming ordering week. Labour budgets inherit Location → Company → Network. A percentage applies to the day’s forecast, rounded once; a fixed weekly amount is divided among all seven daily forecasts by sales weight. The daily budget is then divided among forecast hours by sales weight, allocating remainder cents consistently so totals reconcile. No budget, incomplete history or missing hourly pattern remains unavailable; real zeroes stay zero. No staff pay, rates, raw hourly reports or private budget settings are returned.
 
-The Daily sales reminder includes **Scan hourly sales report**, using the shared OpStack intelligence upload/review/submit popup on Home. It supports CSV/Excel, PDF and photos, saves only hourly records on explicit Submit, and preserves unsaved daily totals. See `docs/hourly-sales.md`.
+Daily sales entry and its hourly-scan action appear only on the Store dashboard, with the existing permissions and trading window. Head Office does not display or fetch the entry panel; authorised Head Office users can still enter sales through Sales → Daily sales.
+
+The Store Daily sales reminder includes **Scan hourly sales report**, using the shared OpStack intelligence upload/review/submit popup on Home. It supports CSV/Excel, PDF and photos, saves only hourly records on explicit Submit, and preserves unsaved daily totals. See `docs/hourly-sales.md`.
 
 Trading dates follow the location’s saved hours and Melbourne clock, including after-midnight closing. At closing the current-hour figures become unavailable and the panel uses the calendar date, so yesterday’s trading day does not stay on Home. The panel refreshes on focus and every 30 seconds while visible. Missing hours prompt setup. Forecast reads never create records or call external providers.
 

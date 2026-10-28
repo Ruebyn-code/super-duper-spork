@@ -3,7 +3,8 @@
  const number=cents=>new Intl.NumberFormat('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(cents/100),date=value=>new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
  const clock=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:'Australia/Melbourne'}).format(new Date(value));
  let actor,current,latest,dirty=false,busy=false,loading=false,wake,clockOffset=0,expired=false,generation=0;
- const active=()=>actor?.csrf&&document.body.dataset.homeDashboard!=='staff'&&appAccess.can('home.view',actor)&&appAccess.can('sales.edit',actor);
+ const dashboard=()=>window.homeProfile?.actor?window.homeProfile.profile:homeBoardModel.assignedProfile(actor);
+ const active=()=>actor?.csrf&&dashboard()==='manager'&&appAccess.can('home.view',actor)&&appAccess.can('sales.edit',actor);
  const label=(node,text)=>{node.textContent=typeof interfaceLabel==='function'?interfaceLabel(text):text;window.appWording?.label(node,text);};
  const message=text=>label($('home-daily-sales-message'),text);
  function cents(){const value=input.value.replace(/[$,\s]/g,'');if(!/^\d+(?:\.\d{1,2})?$/.test(value))return null;const parts=value.split('.'),amount=Number(parts[0])*100+Number((parts[1]||'').padEnd(2,'0'));return Number.isSafeInteger(amount)&&amount<=1000000000?amount:null;}
@@ -13,6 +14,7 @@
   if(!active()){panel.hidden=true;return;}latest=result;clockOffset=Date.parse(result.checkedAt)-Date.now();clearTimeout(wake);
   const entry=result.entry;if(entry){const delay=Date.parse(entry.available?entry.expiresAt:entry.availableAt)-(Date.now()+clockOffset);if(delay>0)wake=setTimeout(refresh,Math.min(delay+50,2147483647));}
   if(dirty||busy||document.activeElement===input&&entry?.available&&entry.tradingDate===current?.entry?.tradingDate){
+   panel.hidden=false;
    expired=!entry?.available||entry.tradingDate!==current?.entry?.tradingDate;
    if(expired){message('This entry period has ended. Use Daily sales history to enter this date.');$('home-daily-sales-reload').hidden=true;}
    else if(entry.revision!==current?.entry?.revision){message('Sales have changed in another tab. Your entry is kept here; reload saved sales before making a correction.');$('home-daily-sales-reload').hidden=false;}
@@ -43,5 +45,5 @@
  window.addEventListener('beforeunload',guard);window.addEventListener('before-location-switch',guard);
  window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(actor?.dataScope||actor?.id))refresh();});setInterval(refresh,30000);
- (async()=>{try{actor=await appAccess.initialSession();if(actor.csrf&&appAccess.can('home.view',actor)&&appAccess.can('sales.edit',actor))await refresh();else actor=null;}catch{actor=null;}})();
+ (async()=>{try{actor=await appAccess.initialSession();if(active())await refresh();else{panel.hidden=true;controls();}}catch{actor=null;}})();
 })();
