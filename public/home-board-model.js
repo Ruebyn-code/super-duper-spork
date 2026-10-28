@@ -44,7 +44,8 @@
   'heading':{title:'Section heading',group:'Essentials',icon:'text',description:'Add a heading and a short note to organise Home.'}
  };
  const salesTypes=new Set(['quarter-totals','sales-progress','finance','ordering-budget','sales-today']),salesLinks=new Set(['sales','projections','weekly-report','overview','cogs','labour','opex','ro','reporting']);
- const headOffice=actor=>Boolean(actor&&actor.locationId&&typeof actor.locationName==='string'&&actor.locationName.trim().replace(/\s+/g,' ').toLowerCase()==='head office'&&actor.homeDashboard!=='staff'&&!actor.kiosk&&['home.view','reporting.view','locations.all'].every(key=>can(actor,[key])));
+ const isHeadOfficeName=name=>typeof name==='string'&&name.trim().replace(/\s+/g,' ').toLowerCase()==='head office';
+ const headOffice=actor=>Boolean(actor&&actor.locationId&&isHeadOfficeName(actor.locationName)&&actor.homeDashboard!=='staff'&&!actor.kiosk&&['home.view','reporting.view','locations.all'].every(key=>can(actor,[key])));
  const assignedProfile=actor=>actor?.homeDashboard==='staff'?'staff':headOffice(actor)?'head-office':'manager';
  const profile=actor=>actor?.homeDashboard==='staff'?'staff':actor?.homeDashboard==='head-office'?'head-office':'manager';
  const allowedType=(dashboard,type)=>type.startsWith('business-')?dashboard==='head-office':dashboard!=='staff'||!salesTypes.has(type);
@@ -66,5 +67,5 @@
  const can=(actor,keys)=>!keys?.length||keys.some(key=>permissions?.can?permissions.can(actor,key):(actor.permissions||[]).includes(key));
  function allowedLink(actor,id,{phone=false}={}){const item=links[id];return Boolean(item&&!(profile(actor)==='staff'&&salesLinks.has(id))&&can(actor,item.permissions)&&(id!=='console'||actor.opstackSupport)&&(!phone||!['roster-maker','roster-settings','appearance'].includes(id)));}
  function visible(actor,section,options={}){if(section.type.startsWith('business-')&&!headOffice(actor))return false;if(!allowedType(profile(actor),section.type))return false;if(section.type==='module')return allowedLink(actor,section.target,options);if(section.type==='quick-links')return section.links.some(id=>allowedLink(actor,id,options));return can(actor,types[section.type]?.permissions);}
- return{links,types,defaults,legacyManagerDefaults,assignedProfile,headOffice,validate,visible,allowedLink,profile,allowedType};
+ return{links,types,defaults,legacyManagerDefaults,assignedProfile,headOffice,isHeadOfficeName,validate,visible,allowedLink,profile,allowedType};
 });

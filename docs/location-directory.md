@@ -1,3 +1,5 @@
+Administrative Head Office locations show Ready and Company overview, with only General/archive controls in their location popup. They require no state, trading hours, manager, sender, target levels or kiosk setup. Head Office is offered in the location selector for authorised company managers and is created only when explicitly selected; retries reuse the same location. Archived offices remain archived until restored.
+
 # Location directory
 
 Locations opens on **Active locations**. It is one continuous list with a section

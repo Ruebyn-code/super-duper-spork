@@ -7,6 +7,7 @@
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
  let isUserManager=false,session;
+ const newHeadOffice='__head-office__',locationEntries=()=>{const entries=session.locations||[{id:session.locationId,name:session.locationName}];return session.canCreateHeadOffice?[...entries,{id:newHeadOffice,name:'Head Office'}]:entries;};
  const kiosk=root.classList.contains('kiosk-app'),mobile=matchMedia(kiosk?'not all':'(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
  const currentGroup=()=>({'/':'ordering','/order-history':'ordering','/cart':'ordering','/stock-count':'ordering','/stock-transfers':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
  // Retain the legacy destinations for permissions and edit identities, without a second bar.
@@ -99,7 +100,7 @@
  window.appNavigation={dismissTransient(){window.appSearch?.close();controls.close();closeMore();if(kiosk){pointerInside=keyboardInside=touchOpen=false;renderNavigation();}window.locationPickers?.closeAll();},refresh(value){
   if(value){
    session=value;let changed=false;
-   for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',session.locations,session.locationId]]){
+   for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',locationEntries(),session.locationId]]){
     const select=document.getElementById(id);if(!select||!entries)continue;
     if(JSON.stringify([...select.options].map(option=>[option.value,option.textContent,option.dataset.setupPending==='true']))!==JSON.stringify(entries.map(entry=>[entry.id,entry.name,Boolean(entry.setupPending)]))){
      select.replaceChildren(...entries.map(entry=>{const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;option.dataset.setupPending=String(Boolean(entry.setupPending));return option;}));select.value=selected;select.disabled=entries.length<2;window.locationPickers?.refresh(select);changed=true;
@@ -141,12 +142,12 @@
     control.innerHTML='<svg class="location-pin" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
     const label=document.createElement('span');label.id='sidebar-location-name';label.className='location-name';label.dataset.userText='';label.dataset.editId='sidebar-location-'+location.pathname.replace(/[^a-z0-9]/gi,'_');label.textContent=session.locationName;
     const arrow=document.createElement('span');arrow.className='location-chevron';arrow.setAttribute('aria-hidden','true');arrow.textContent='⌄';
-    const select=document.createElement('select');select.id='sidebar-location-select';select.setAttribute('aria-label',wording('Switch location'));for(const entry of session.locations||[{id:session.locationId,name:session.locationName}]){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;option.dataset.setupPending=String(Boolean(entry.setupPending));select.append(option);}select.value=session.locationId;select.disabled=select.options.length<2;arrow.hidden=select.disabled;
+    const select=document.createElement('select');select.id='sidebar-location-select';select.setAttribute('aria-label',wording('Switch location'));for(const entry of locationEntries()){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;option.dataset.setupPending=String(Boolean(entry.setupPending));select.append(option);}select.value=session.locationId;select.disabled=select.options.length<2;arrow.hidden=select.disabled;
     const status=document.createElement('p');status.className='location-switch-status';status.setAttribute('role','status');status.hidden=true;
     select.onchange=async()=>{const next=select.value;if(next===session.locationId)return;
      const before=new Event('before-location-switch',{cancelable:true});if(!window.dispatchEvent(before)){select.value=session.locationId;status.hidden=false;status.textContent=wording('Wait for saving to finish before switching locations.');return;}
      select.disabled=true;status.hidden=false;status.textContent=wording('Switching location…');
-     try{const response=await fetch('/api/session/location',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},body:JSON.stringify({locationId:next})});const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to switch location.');location.reload();}
+     try{let target=next;if(next===newHeadOffice){const created=await fetch('/api/locations/head-office',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},body:JSON.stringify({companyId:session.companyId})});const office=await created.json();if(!created.ok)throw Error(office.error||'Unable to create Head Office.');target=office.id;}const response=await fetch('/api/session/location',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf},body:JSON.stringify({locationId:target})});const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to switch location.');location.reload();}
      catch(error){select.value=session.locationId;select.disabled=false;status.textContent=error.message;}
     };
     control.append(label,arrow,select);row.append(control,status);window.locationPickers.enhance(select,{host:control,displayLabel:label,contents:[control.querySelector('.location-pin'),label,arrow],label:'Switch location',holdWhileBusy:true});syncMobileLayout();

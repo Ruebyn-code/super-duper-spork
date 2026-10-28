@@ -1,3 +1,5 @@
+Head Office is an administrative company location and is exempt from the store setup checklist, pending tint and reminders. Select Head Office from the location selector to create/open it without a form, using native creation/all-location permissions. Ordinary stores still require all eight tasks. Existing Head Office setup/review records are preserved without requiring completion.
+
 # Location setup
 
 New locations retain their authenticated creator and saved setup checklist.
