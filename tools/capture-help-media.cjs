@@ -14,6 +14,7 @@ async function capture(){
  for(const [name,scene]of Object.entries(scenes).sort((a,b)=>Boolean(a[1].platform)-Boolean(b[1].platform))){
   const target=path.join(buildDir,'scenes',name);if(!process.argv.includes('--refresh')){try{await fs.access(target+'.json');await fs.access(target+'.jpg');continue;}catch{}}
   if(process.argv.includes('--scene')&&process.argv[process.argv.indexOf('--scene')+1]!==name)continue;
+  if(process.argv.includes('--scenes')&&!process.argv[process.argv.indexOf('--scenes')+1].split(',').includes(name))continue;
   const activeContext=scene.platform?await platformContext():scene.kiosk?await kioskContext():scene.staff?await staffContext():context,page=await activeContext.newPage();try{
    if(scene.before)await scene.before(demo);await page.goto(demo.base+scene.route);const frame=scene.standalone?page:await frameFor(page);await page.waitForLoadState('domcontentloaded');await page.waitForTimeout(650);if(scene.act)await scene.act({page,frame,demo});await page.waitForTimeout(350);
    const frameBox=frame===page?{x:0,y:0}:await page.locator('iframe.shell-page-frame:not([data-pending])').boundingBox();

@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const model=require('./public/home-board-model'),store=require('./home-board'),permissions=require('./permissions'),{createServer}=require('./server'),{saveAdmin}=require('./auth');
 
 test('Home catalogue supplies a fresh default dashboard and covers every Opstack area without arbitrary destinations',()=>{
- const first=model.defaults(),next=model.defaults();first[1].links.pop();assert.equal(next[1].links.length,6);assert.equal(next.length,6);assert.deepEqual(model.validate(next),next);
+ const first=model.defaults(),next=model.defaults();first[1].links.pop();assert.equal(next[1].links.length,8);assert.equal(next.length,7);assert.deepEqual(model.validate(next),next);
  assert.ok(Object.keys(model.types).length>=20);for(const id of ['ordering','cart','counts','transfers','sales','weekly-report','cogs','labour','opex','ro','reporting','messages','chats','posts','checklists','checklist-builder','labels','library','roster','timesheets','availability','leave','invoices','users','locations','companies','settings','appearance','permissions','awards','console'])assert.ok(model.links[id],id);
  for(const item of Object.values(model.links)){assert.ok(item.href.startsWith('/')&&!item.href.startsWith('//'));for(const key of item.permissions)assert.ok(permissions.keys.includes(key),key);}
  assert.equal(model.links.posts.href,'/communications#posts');

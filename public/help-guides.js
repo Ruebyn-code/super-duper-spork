@@ -31,12 +31,13 @@
   'Check the selected company and location before entering sales, counts, orders or settings.',
   'Save or discard open drafts when prompted before switching.'
  ],{notes:['A paired kiosk is fixed to its assigned location. If a company or location is missing, ask a user manager to review your access.'],related:['companies','manage-users','kiosk-use']});
- add(c,'home-dashboards','Understand Staff and Manager Home','See the dashboard chosen for your permission level.',[
-  'Open Home to see your current location’s dashboard and available shortcuts.',
-  'Staff Home focuses on operational work and excludes sales and finance sections.',
-  'Manager Home can show today’s projected sales and labour budget together, with current-hour and cumulative figures and a roster shortcut.',
-  'Use the Daily sales reminder to save a daily total or open the hourly-report scanner when those actions are available.'
- ],{route:'/home',permissions:['home.view'],notes:['Dashboard choice is configured on the permission level. Access to Sales elsewhere is still controlled separately. Assigned location managers can also see eligible incoming stock-transfer approvals.'],related:['permissions','daily-sales','hourly-import','transfer-approvals','home-layout']});
+ add(c,'home-dashboards','Understand your Home dashboards','Use a company-styled business overview or a store’s daily dashboard.',[
+  'Open Home. Manager profiles with Home, Reporting and all-location access automatically see Head Office. Other Manager profiles see the selected store; Staff profiles keep an operational dashboard without sales.',
+  'On Head Office, choose accessible locations in this company and a week. Compare recorded sales, saved cost percentages, orders and location performance. Open Reporting for the same selection.',
+  'On a store dashboard, use Today and This hour for projected sales and labour budget, compare saved hourly sales, and review ordering, checklists, published staff shifts and quick links.',
+  'Use Edit Home on a computer to customise the company layout. Head Office, Store and Staff layouts are independent; existing custom sections and the company’s colours, fonts and logos are retained.'
+ ],{route:'/home',permissions:['home.view'],notes:['Staff Home does not change permission to open Sales elsewhere. Head Office filters are read-only and never switch the operational location. Sales use complete saved weekly revenue channels where available, otherwise Daily sales; future days are excluded. Financial percentages use saved weekly costs divided by recorded sales, so a partial week may show a high percentage. Food cost uses saved invoices plus confirmed cost transfers, never order totals. Ordering projections keep their normal Sunday rollover and original/updated COGS rules; the Head Office budget excludes carts. Staff on now means published shifts scheduled at this time. Checklist summaries retain the existing audience and date rules. Assigned location managers still see eligible transfer approvals, and the daily-sales reminder retains its selected trading location.'],related:['permissions','daily-sales','hourly-import','transfer-approvals','home-layout']});
+
  add(c,'profile-photo','Add or change your profile photo','Give your account a recognisable photo.',[
   'Open the blue account dropdown and choose User profile.',
   'Choose a photo and check its square preview.',

@@ -36,6 +36,7 @@
  }
  function render(){
   if(!active()){projection=null;currentProjection=null;return;}renderCart();if(!projection)return;window.salesPerformanceView?.render(currentProjection);
+  const homeTrack=$('home-budget-track'),homeFill=$('home-budget-progress');if(homeTrack&&homeFill){const position=budgetPosition(projection,cart);homeTrack.dataset.state=position.state;homeTrack.setAttribute('role','meter');homeTrack.setAttribute('aria-valuemin','0');homeTrack.setAttribute('aria-valuemax','100');if(position.usedPercent!==null)homeTrack.setAttribute('aria-valuenow',String(Math.min(100,Math.max(0,position.usedPercent))));else homeTrack.removeAttribute('aria-valuenow');homeTrack.setAttribute('aria-label',position.usedPercent===null?'Ordering budget unavailable':Math.round(position.usedPercent)+'% of the ordering budget used');homeFill.style.width=(position.usedPercent===null?0:Math.min(100,Math.max(0,position.usedPercent)))+'%';}
   $('ordering-projected-sales').textContent=money(projection.projectedSalesCents);$('ordering-week-budget').textContent=money(projection.budgetCents);
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';

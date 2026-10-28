@@ -30,6 +30,7 @@ function validate(input){
  if(Object.hasOwn(input,'operatingAdditionalCents')){const value=input.operatingAdditionalCents;if(value!==null&&(!Number.isSafeInteger(value)||value<0||value>maximumDailyCents*7))invalid('Enter a valid additional operating cost.');costs.operatingAdditionalCents=value;}
  return {weekStart:input.weekStart,breakdown,...costs,revision:input.revision};
 }
+function invoiceCostSummary(bundle,transferCosts,supplierCosts={orderCount:0,placedOrdersCents:0},invoiceDetailsAvailable=false){const invoiceCents=bundle?.totalCents??0,missingTotals=bundle?.missingTotals??0;return{source:'invoices',invoiceCents,invoiceCount:bundle?.count??0,missingTotals,totalCents:invoiceCents+transferCosts.totalCents,pricePending:missingTotals>0,orderCount:supplierCosts.orderCount,supplierOrdersCents:supplierCosts.placedOrdersCents,transferCents:transferCosts.totalCents,transferCount:transferCosts.transferCount,invoiceDetailsAvailable};}
 function createStore(){
  const pending=new Map();
  async function read(dir,session,start){try{const record=JSON.parse(await fs.readFile(file(dir,session,start),'utf8'));return {...record,roCents:record.roCents===undefined?0:record.roCents,platformFees:record.platformFees??weeklyReport.blankPlatformFees(),expenseEntries:record.expenseEntries??weeklyReport.blankExpenses()};}catch(error){if(error.code!=='ENOENT')throw error;return {weekStart:start,breakdown:weeklyReport.blank(),labourCents:null,operatingExpensesCents:null,roCents:0,platformFees:weeklyReport.blankPlatformFees(),expenseEntries:weeklyReport.blankExpenses(),revision:0,updatedAt:null};}}
@@ -77,11 +78,12 @@ function createStore(){
   const supplierCosts=allTimeTotals([],weeklyOrders,session),transferCosts=transferEffects.costs(transfers,session,{weeks:new Set([start])});
   // Invoice totals are a live read of the saved bundle, never a copied expense entry.
   const bundle=(invoiceBundlesSnapshot||await invoices.list(dir,session,start)).bundles.find(bundle=>bundle.weekStart===start),invoiceCents=bundle?.totalCents??0,missingTotals=bundle?.missingTotals??0,invoiceDetailsAvailable=can(session,'invoices.view');
-  const stockCosts={source:'invoices',invoiceCents,invoiceCount:bundle?.count??0,missingTotals,totalCents:invoiceCents+transferCosts.totalCents,pricePending:missingTotals>0,orderCount:supplierCosts.orderCount,supplierOrdersCents:supplierCosts.placedOrdersCents,transferCents:transferCosts.totalCents,transferCount:transferCosts.transferCount,invoiceDetailsAvailable};
+  const stockCosts=invoiceCostSummary(bundle,transferCosts,supplierCosts,invoiceDetailsAvailable);
   const stockInvoices=invoiceDetailsAvailable?(bundle?.invoices||[]).map(({id,supplier,invoiceNumber,invoiceDate,totalCents})=>({id,supplier,invoiceNumber,invoiceDate,totalCents})):[];
   const summary=weeklyReport.calculate(record.breakdown),profit=weeklyReport.profit(summary.totals.sales,{stockOrdersCents:invoiceCents,stockTransferCents:transferCosts.totalCents,pricePending:stockCosts.pricePending,labourCents:record.labourCents,operatingExpensesCents:record.operatingExpensesCents,roCents:record.roCents}),platformSettlements=Object.fromEntries(weeklyReport.platforms.map(platform=>[platform,weeklyReport.settlement(summary.totals[platform],record.platformFees[platform])]));
   return {record,summary,profit,platformSettlements,stockOrders,stockTransfers:transferCosts.lines,stockCosts,stockInvoices,operatingExpenseTypes,weeklyOrders:{totalCents:supplierCosts.placedOrdersCents,pricePending:supplierCosts.pricePending,orderCount:supplierCosts.orderCount},currentWeek:currentWeek(now),timeZone:defaultTimeZone};
  }
- return {save,report,importReports};
+ async function homeCosts(dir,session,start,{transfers=[]}={}){const[record,bundles]=await Promise.all([read(dir,session,start),invoices.list(dir,session,start)]),costs=invoiceCostSummary(bundles.bundles.find(b=>b.weekStart===start),transferEffects.costs(transfers,session,{weeks:new Set([start])}));return{labourCents:record.labourCents??null,goodsCents:costs.pricePending?null:costs.totalCents};}
+ return {save,report,importReports,homeCosts};
 }
 module.exports={createStore,validate};

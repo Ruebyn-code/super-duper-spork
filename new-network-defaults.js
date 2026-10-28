@@ -35,7 +35,7 @@ async function migrateNetwork(dir,root){
   if(saved){const normalise=value=>({...appearance.defaults,...value,primary:(value.primary||appearance.defaults.primary).toLowerCase(),secondary:(value.secondary||appearance.defaults.secondary).toLowerCase(),fonts:{...appearance.defaults.fonts,...value.fonts},backgrounds:value.backgrounds||{},backgroundImages:value.backgroundImages||{},fontColours:value.fontColours||{}});if(![appearance.defaults,standard].some(base=>isDeepStrictEqual(normalise(saved),normalise(base))))customised=true;}
   const text=await jsonFile(path.join(scope,'interface-text.json'))||{};
   if(Object.entries(text).some(([key,value])=>value!==key&&!(['Yassou,','Hello'].includes(key)&&value==='Hello')&&!(key==='Yassou!'&&value==='Welcome!')))customised=true;
-  for(const name of ['element-overrides.json','fonts.json','home-dashboard.json','home-greeting.json'])if(Object.keys(await jsonFile(path.join(scope,name))||{}).length)customised=true;
+  for(const name of ['element-overrides.json','fonts.json','home-dashboard.json','home-dashboard-staff.json','home-dashboard-head-office.json','home-greeting.json'])if(Object.keys(await jsonFile(path.join(scope,name))||{}).length)customised=true;
   if(Object.values(await jsonFile(path.join(scope,'layouts.json'))||{}).some(page=>Object.keys(page.groups||{}).length||Object.keys(page.sizes||{}).length))customised=true;
   for(const name of ['logo.json','sidebar-logo.json'])if(await jsonFile(path.join(scope,name)))customised=true;
  }
