@@ -1,4 +1,9 @@
 (()=>{
+ function projectedCogsPercent(projection,cart={total:0,pricePending:false}){
+  if(!projection||!cart||projection.pricePending||cart.pricePending||!Number.isFinite(projection.projectedSalesCents)||projection.projectedSalesCents<=0||!Number.isFinite(projection.spentCents)||!Number.isFinite(cart.total)||cart.total<0)return null;
+  return (projection.spentCents+cart.total)/projection.projectedSalesCents*100;
+ }
+ if(typeof module==='object'&&module.exports){module.exports={projectedCogsPercent};return;}
  if(!appAccess.can('sales.view')){document.getElementById('ordering-budget')?.classList.add('access-denied');document.querySelector('.ordering-sales-budget')?.classList.add('access-denied');return;}
  const active=()=>document.body?.dataset?.homeDashboard!=='staff';
  const panel=document.getElementById('ordering-budget');if(!panel)return;
@@ -12,6 +17,8 @@
   $('ordering-budget-spent').textContent=money(projection.spentCents)+(projection.pricePending?' + '+wording('prices pending'):'');
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';
   const upcoming=Boolean(projection.isUpcoming),cartPending=cart.pricePending;
+  const cogs=$('ordering-projected-cogs'),cogsPercent=projectedCogsPercent(projection,cart);
+  if(cogs){cogs.textContent=cogsPercent===null?'—':new Intl.NumberFormat('en-AU',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}).format(cogsPercent/100);cogs.title=wording(projection.pricePending||cartPending?'Some item prices are pending.':projection.projectedSalesCents===null?'Complete four weeks of sales to calculate projected COGS.':projection.projectedSalesCents===0?'Projected COGS cannot be calculated when projected sales are $0.':'Projected COGS = (allocated order costs + this cart) ÷ projected sales × 100.');}
   template($('ordering-projected-sales').previousElementSibling,upcoming?'Projected sales next week':'Projected sales');
   template($('ordering-budget-spent').previousElementSibling,upcoming?'Order costs next week':'Order costs this week');
   template($('ordering-budget-remaining').previousElementSibling,'Budget after this cart');
