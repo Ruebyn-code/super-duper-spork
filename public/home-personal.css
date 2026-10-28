@@ -44,4 +44,14 @@ body[data-home-dashboard=head-office] .dashboard-store-info{display:none}
 @media(max-width:1100px){.home-dashboard-layout{grid-template-columns:minmax(0,1fr)}.home-personal{position:static;max-height:none;overflow:visible}#home-personal-content{display:grid;grid-template-columns:1fr 1fr;gap:16px}.home-personal-group+.home-personal-group{margin:0;padding:0 0 0 16px;border-top:0;border-left:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:220px;overflow:auto;scrollbar-width:thin}}
 @media(max-width:540px){.home-personal{padding:12px}#home-personal-content{grid-template-columns:minmax(0,1fr);gap:12px}.home-personal-group+.home-personal-group{padding:12px 0 0;border-left:0;border-top:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:180px}.home-personal-heading h2{font-size:14px}}
 }
+/* On wide screens each column owns its viewport; phones keep normal page scrolling. */
+@media screen and (min-width:1101px){
+html.embedded-page:has(main.home-page),html.embedded-page:has(main.home-page) body{height:100%;overflow:hidden}
+html.embedded-page:has(main.home-page) .app-shell{height:100dvh;min-height:0;overflow:hidden}
+html.embedded-page:has(main.home-page) .app-shell>.app-page{height:100%;min-height:0;padding:0;overflow:hidden}
+html.embedded-page main.home-page{display:flex;flex-direction:column;height:100%;min-height:0}
+html.embedded-page .home-dashboard-layout{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);overflow:hidden}
+html.embedded-page #home-personal{position:static;height:100%;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable}
+html.embedded-page .home-dashboard-content{height:100%;min-height:0;align-content:start;grid-auto-rows:max-content;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-gutter:stable;padding:0 4px 14px 0}
+}
 @media print{.home-personal{display:none}.home-dashboard-layout,.home-dashboard-content{display:block}}
