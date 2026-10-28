@@ -50,8 +50,9 @@
 .ordering-page .ordering-budget-overview h2{font-family:inherit;font-size:14px;letter-spacing:0;font-weight:700;line-height:1.4}
 .ordering-page .ordering-budget-overview #ordering-budget-period{margin:0;font-size:11px;color:var(--theme-muted,#637287);line-height:1.5}
 .ordering-budget-overview .ordering-budget-heading>a{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;flex:none;font-size:12px;white-space:nowrap}
-.ordering-page .ordering-budget-overview .ordering-budget-metrics{display:grid;grid-template-columns:minmax(180px,1.25fr) repeat(4,minmax(0,1fr));align-items:center;gap:12px;margin-top:12px}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics{display:grid;grid-template-columns:minmax(180px,1.25fr) repeat(5,minmax(0,1fr));align-items:center;gap:12px;margin-top:12px}
 .ordering-page .ordering-budget-overview .ordering-budget-metrics>div{grid-column:auto;display:block;padding:0 0 0 16px;border:0;border-left:1px solid var(--theme-line,#dce5ed)}
+.ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-cogs{grid-column:span 2}
 .ordering-page .ordering-budget-overview .ordering-budget-metrics span{font-size:11px;line-height:1.5;color:var(--theme-muted,#637287)}
 .ordering-page .ordering-budget-overview .ordering-budget-metrics strong{margin-top:4px;font-size:20px;line-height:1.3;font-weight:700;letter-spacing:-.4px;color:var(--theme-text,#1d2b3f)}
 .ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-available{padding:12px 14px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));border-radius:11px;background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
@@ -76,7 +77,8 @@
 .ordering-budget-overview #ordering-budget-retry{margin-top:8px}
 .ordering-budget-overview [hidden]{display:none!important}
 @media(max-width:1000px){
- .ordering-page .ordering-budget-overview .ordering-budget-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-cogs{grid-column:1/-1;border-left:0;padding:10px 0 0;border-top:1px solid var(--theme-line,#dce5ed)}
  .ordering-page .ordering-budget-overview .ordering-budget-metrics>.ordering-budget-available{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}
  .ordering-page .ordering-budget-overview .ordering-budget-available strong{grid-column:2;grid-row:1/3;margin:0}
  .ordering-page .ordering-budget-overview .ordering-budget-available .ordering-budget-state{margin-top:1px}
@@ -93,6 +95,7 @@
  .ordering-page .ordering-budget-overview .ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 8px}
  .ordering-page .ordering-budget-overview .ordering-budget-metrics>div{padding-left:12px}
  .ordering-page .ordering-budget-overview .ordering-budget-metrics>div:nth-child(even){border-left:0;padding-left:0}
+ .ordering-page .ordering-budget-overview .ordering-budget-metrics>[data-edit-id=index-budget-spent]{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}
  .ordering-page .ordering-budget-overview .ordering-budget-metrics strong{font-size:18px}
  .ordering-page .ordering-budget-overview .ordering-budget-available strong{font-size:25px}
  .ordering-budget-overview .ordering-budget-footer{flex-direction:column;align-items:stretch;gap:12px}

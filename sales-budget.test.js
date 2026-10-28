@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {projectedCogsPercent,budgetPosition}=require('./public/sales-budget'),sales=require('./sales'),{shift}=require('./stock-usage');
+const {projectedCogsPercent,projectedCogsState,budgetPosition}=require('./public/sales-budget'),sales=require('./sales'),{shift}=require('./stock-usage');
 
 test('projected ordering COGS follows the Sunday cost week, scoped commitments, transfers and cart without changing records',()=>{
  const actor={id:'manager',locationId:'shop'},now=new Date('2026-10-17T13:00:00Z'),records=[1,2,3,4].map(index=>({locationId:'shop',weekStart:shift('2026-10-12',-7*index),days:Array(7).fill(100000)}));
@@ -39,4 +39,18 @@ test('ordering budget availability keeps pending costs and missing sales distinc
  assert.deepEqual(budgetPosition({...p,budgetCents:0,remainingCents:0},{total:100,pricePending:false}),{remainingCents:-100,usedPercent:null,state:'over'});
  for(const total of [null,NaN,Infinity,-1])assert.equal(budgetPosition(p,{total}).remainingCents,null);
  assert.equal(budgetPosition(null).state,'unavailable');
+});
+
+test('original projection and current sales trend COGS use the same costs with independent denominators and budget colours',()=>{
+ const p={projectedSalesCents:700000,budgetPercent:28,spentCents:210000,salesOutlook:{expectedSalesCents:840000}},cart={total:0,pricePending:false},before=JSON.stringify(p);
+ assert.equal(projectedCogsPercent(p,cart,'baseline'),30);assert.equal(projectedCogsState(p,cart,'baseline'),'over');assert.equal(projectedCogsPercent(p,cart),25);assert.equal(projectedCogsState(p,cart),'within');
+ assert.equal(projectedCogsPercent(p,{total:14000,pricePending:false},'baseline'),32);assert.ok(Math.abs(projectedCogsPercent(p,{total:14000,pricePending:false})-26.666666666666668)<1e-10);
+ assert.equal(projectedCogsState({...p,spentCents:196000},cart,'baseline'),'within');assert.equal(JSON.stringify(p),before);
+});
+
+test('missing sales, pending prices, zeroes and credits are handled separately for both COGS bases',()=>{
+ const p={projectedSalesCents:100000,budgetPercent:28,spentCents:20000,salesOutlook:{expectedSalesCents:null}},cart={total:0,pricePending:false};
+ assert.equal(projectedCogsPercent(p,cart,'baseline'),20);assert.equal(projectedCogsState(p,cart,'baseline'),'within');assert.equal(projectedCogsPercent(p,cart),null);assert.equal(projectedCogsState(p,cart),'unknown');
+ const actualOnly={...p,projectedSalesCents:null,salesOutlook:{expectedSalesCents:100000}};assert.equal(projectedCogsPercent(actualOnly,cart,'baseline'),null);assert.equal(projectedCogsPercent(actualOnly,cart),20);
+ for(const basis of ['baseline','trend']){assert.equal(projectedCogsPercent({...p,pricePending:true},cart,basis),null);assert.equal(projectedCogsState(p,{total:1,pricePending:true},basis),'unknown');assert.equal(projectedCogsPercent({...p,projectedSalesCents:0,salesOutlook:{expectedSalesCents:0}},cart,basis),null);assert.equal(projectedCogsState({...p,spentCents:-100,salesOutlook:{expectedSalesCents:100000}},cart,basis),'within');}
 });

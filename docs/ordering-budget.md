@@ -1,9 +1,11 @@
 # Ordering data
 
 Home's ordering widget, Ordering and Cart share the read-only forecast and cost
-summary in `public/sales-budget.js`. Projected COGS % is the displayed ordering
-week's allocated saved-order costs, including net confirmed cost transfers, plus
-the current cart where available, divided by expected full-week sales for that same week.
+summary in `public/sales-budget.js`. Projected COGS shows two estimates together:
+**Original projection** divides the displayed ordering week's allocated saved-order
+costs, including net confirmed cost transfers and the available current cart, by
+the original holiday-adjusted projected sales. **Current sales trend** divides
+the same costs by the expected full-week sales outlook for that same week.
 It refreshes with the existing cart, sales, price and budget events.
 
 The COGS sales outlook combines recorded sales through today with forecasts for
@@ -15,9 +17,10 @@ weekdays, then multiply unrecorded-day forecasts by that sales pace. For example
 estimates, future-entered amounts are ignored and explicit zero sales count.
 Partial hourly reports do not represent completed daily totals.
 
-Expected sales and sales pace appear under Projected COGS on Home, Ordering and
-Cart. The COGS number is green at or below the displayed budget percentage and
-red above it, using unrounded amounts; unavailable COGS stays neutral. The
+Both estimates appear side by side on Home, Ordering and Cart, with their sales
+denominators below. Current sales trend also shows the sales pace. Each COGS
+number is independently green at or below the displayed budget percentage and
+red above it, using unrounded amounts; an unavailable estimate stays neutral. The
 original forecast, 28% ordering allowance and its budget-used bar retain their
 existing planning basis. This is an updated sales outlook for COGS only.
 
