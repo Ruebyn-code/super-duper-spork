@@ -14,5 +14,67 @@
 body[data-home-dashboard=head-office] .home-operations{display:none!important}
 @media(max-width:1100px){.dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-filters{gap:6px}.dashboard-budget-values{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-reference #ordering-budget .ordering-budget-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-reference .home-operations-metric strong{font-size:22px}}
 @media(max-width:720px){.home-page.dashboard-reference{padding:12px 10px 25px;gap:12px}.dashboard-reference .dashboard-page-title{font-size:22px}.dashboard-filters{width:100%;display:grid;grid-template-columns:1fr 1fr}.dashboard-filters label{display:block;min-width:0}.dashboard-filters input,.dashboard-filters select{width:100%;max-width:none;margin-top:4px;min-height:38px}.dashboard-filters .location-picker{min-width:0;max-width:100%;width:100%;margin-top:4px}.dashboard-filters .location-select-trigger{min-height:38px}.dashboard-reference .home-section{padding:12px}.dashboard-kpis{gap:8px}.dashboard-kpi{padding:12px;gap:7px}.dashboard-kpi strong{font-size:21px}.dashboard-kpi .dashboard-kpi-icon{width:30px;height:30px;flex-basis:30px}.dashboard-kpi small{font-size:9px}.dashboard-reference .home-operations-cards{grid-template-columns:1fr 1fr;gap:8px}.dashboard-reference .home-operations-group{padding:10px}.dashboard-reference .home-operations-values{grid-template-columns:1fr;gap:10px}.dashboard-reference .home-operations-metric strong{font-size:21px}.dashboard-reference .home-operations-metric>span{font-size:10px}.dashboard-reference .home-operations-metric small{font-size:9px}.dashboard-reference .home-operations-heading{gap:8px}.dashboard-reference .home-operations-heading p{font-size:10px}.dashboard-reference .home-operations-roster{font-size:10px;padding:8px}.dashboard-checklists{gap:10px}.dashboard-ring{flex-basis:90px;width:90px;height:90px}.dashboard-ring>strong{font-size:20px}.dashboard-ring>small{font-size:9px}.dashboard-checklist-row strong{font-size:10px}.dashboard-checklist-row small{font-size:9px;flex-basis:75px}.dashboard-table{font-size:10px}.dashboard-table th,.dashboard-table td{padding:8px 6px}.dashboard-chart>svg{min-height:160px}.dashboard-reference .home-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dashboard-reference .home-section .home-action{padding:9px;min-height:60px}.dashboard-reference .home-section .home-action .home-card-content h2{font-size:11px}.dashboard-cogs strong{font-size:22px}.dashboard-budget-values strong,.dashboard-reference #ordering-budget .ordering-budget-metrics strong{font-size:18px}.dashboard-reference .home-section-business-kpis{padding:0}.dashboard-completion{gap:14px}.dashboard-chart-data .dashboard-table{min-width:270px}}
+/* Keep the standard dashboards on clean rows; saved arrangements retain their geometry. */
+.dashboard-reference .home-board[data-default-dashboard]{align-items:stretch}
+.dashboard-reference .home-board[data-default-dashboard]>.home-section{align-self:stretch}
+.dashboard-reference .home-board[data-default-dashboard="manager"]>.home-section{grid-column:span 5}
+.dashboard-reference .home-board[data-default-dashboard="manager"]>:is(.home-section-sales-today,.home-section-ordering-budget,.home-section-checklists){grid-column:span 7}
+.dashboard-reference .home-board[data-default-dashboard="manager"]>.home-section-recent-activity{grid-column:span 12}
+.dashboard-reference .home-board[data-default-dashboard="staff"]>.home-section{grid-column:span 6}
+.dashboard-reference #home-topline{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:start;gap:8px 14px;padding:0 2px 4px}
+.dashboard-reference #home-topline .home-hero{grid-column:1;min-width:0}
+.dashboard-reference #home-topline .home-hero>div:first-child{gap:5px 10px}
+.dashboard-reference .dashboard-page-title{margin-bottom:2px;font-size:25px}
+.dashboard-reference .dashboard-filters{grid-column:2;grid-row:1;justify-content:flex-end;align-self:center}
+.dashboard-reference .dashboard-filters label{flex-direction:column;align-items:flex-start;gap:5px;font-size:11px}
+.dashboard-reference .dashboard-filters select,.dashboard-reference .dashboard-filters input{min-height:36px;font-size:12px}
+.dashboard-reference .dashboard-filters .location-select-trigger{min-height:36px;font-size:12px}
+.dashboard-reference .home-board-toolbar{grid-column:3;grid-row:1;justify-self:end;max-width:none;margin:0!important;align-self:center}
+.dashboard-reference:not(.home-building) .home-board-save-status:not([data-error]){display:none}
+.dashboard-reference.home-building .home-board-toolbar{grid-column:1/-1;grid-row:2;justify-self:stretch;padding-top:8px;border-top:1px solid var(--dash-line)}
+.dashboard-reference .home-section-heading{min-height:28px;margin-bottom:12px;align-items:center}
+.dashboard-reference .home-section-heading h2{font-size:14px;line-height:1.35}
+.dashboard-reference .home-section-icon{width:20px;height:22px}
+.dashboard-reference .home-section{box-shadow:0 1px 4px color-mix(in srgb,var(--primary) 3%,transparent)}
+.dashboard-reference .dashboard-view-all{font-size:11px}
+.dashboard-reference .home-section-body>.dashboard-view-all{margin-top:12px;padding-top:10px;border-top:1px solid var(--dash-line)}
+.dashboard-reference .dashboard-table{font-size:12px}
+.dashboard-reference .dashboard-table th{font-size:11px}
+.dashboard-reference .dashboard-kpis{grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr))}
+.dashboard-reference .dashboard-kpi{align-items:flex-start;min-height:98px;padding:16px}
+.dashboard-reference .dashboard-kpi strong{line-height:1.35;margin-top:3px}
+.dashboard-reference .dashboard-kpi small{line-height:1.5;margin-top:4px}
+.dashboard-reference .dashboard-kpi-icon{align-self:center}
+.dashboard-reference .dashboard-caption{line-height:1.6}
+.dashboard-reference .dashboard-budget-values>div,.dashboard-reference .ordering-budget-metrics>div{min-width:0}
+.dashboard-reference .dashboard-checklist-row,.dashboard-reference .dashboard-library-row,.dashboard-reference .dashboard-staff-row{min-height:42px}
+.dashboard-reference .dashboard-checklist-row strong,.dashboard-reference .dashboard-library-row strong,.dashboard-reference .dashboard-staff-row strong{font-size:12px}
+.dashboard-reference .home-transfer-approvals{margin:0;padding:12px var(--home-pad,14px);border-color:var(--dash-line);border-radius:var(--home-radius,14px)}
+.dashboard-reference .home-transfers-heading{margin-bottom:6px}
+.dashboard-reference .home-transfers-heading h2{font-size:14px;letter-spacing:normal}
+.dashboard-reference .home-transfers-heading p{font-size:11px}
+.dashboard-reference .home-transfers-heading a{font-size:11px}
+.dashboard-reference .home-transfer-row{padding:9px 0 0}
+@media(max-width:1100px){
+ .dashboard-reference .home-board[data-default-dashboard]>.home-section:not([data-size="full"]){grid-column:span 6}
+ .dashboard-reference .home-board[data-default-dashboard="manager"]>.home-section-recent-activity{grid-column:span 12}
+ .dashboard-reference .dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:720px){
+ .dashboard-reference #home-topline{grid-template-columns:minmax(0,1fr);gap:10px;padding:0 2px 2px}
+ .dashboard-reference .dashboard-filters{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}
+ .dashboard-reference .dashboard-filters label{display:flex;min-width:0}
+ .dashboard-reference .dashboard-filters input,.dashboard-reference .dashboard-filters .location-picker{margin:0}
+ .dashboard-reference .dashboard-filters .location-select-trigger{min-height:38px}
+ .dashboard-reference .home-board-toolbar{grid-column:1;grid-row:auto}
+ .dashboard-reference .dashboard-page-title{font-size:22px}
+ .dashboard-reference .home-board[data-default-dashboard]>.home-section{grid-column:1!important}
+ .dashboard-reference .home-section-heading h2{font-size:13px}
+ .dashboard-reference .dashboard-kpi{min-height:98px;padding:12px}
+ .dashboard-reference .dashboard-table{font-size:11px}
+ .dashboard-reference .dashboard-checklists{align-items:flex-start;padding-top:8px}
+ .dashboard-reference .dashboard-checklist-row strong{font-size:11px}
+ .dashboard-reference .home-section-body>.dashboard-view-all{padding-top:9px;margin-top:10px}
+}
 @media(prefers-reduced-motion:reduce){.dashboard-chart-bar{transition:none}}
 }
