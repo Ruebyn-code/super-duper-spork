@@ -1,7 +1,7 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.opstackFeatureHelp=factory();})(globalThis,()=>{
  const ids=text=>text.split(/\s+/).filter(Boolean);
  const pages={
-  '/home':ids('home-dashboards daily-sales overnight-sales hourly-import hourly-projections ordering-budget transfer-approvals scan-invoice intelligence-invoices invoice-prices invoice-expenses home-layout navigation switch-location profile-photo dark-mode platform-search kiosk-use sales-missing'),
+  '/home':ids('home-dashboards location-rankings daily-sales overnight-sales hourly-import hourly-projections ordering-budget transfer-approvals scan-invoice intelligence-invoices invoice-prices invoice-expenses home-layout navigation switch-location profile-photo dark-mode platform-search kiosk-use sales-missing'),
   '/':ids('place-order shared-cart target-levels order-when order-rounding delivery-dates delivery-cutoffs delivery-quantities delivery-shortages receiving-orders delivery-exceptions order-confirmation order-not-sent'),
   '/cart':ids('shared-cart place-order ordering-budget order-confirmation order-not-sent'),
   '/order-history':ids('order-history receiving-orders stock-price-changes order-confirmation order-not-sent'),
@@ -72,6 +72,7 @@
   'Location settings':'locations location-setup trading-hours location-managers location-email delivery-dates',
   'Managers':'location-managers', 'Devices':'manage-kiosks',
   'Stock transfers to approve':'transfer-approvals', 'Approve stock receipt':'transfer-approvals stock-transfers',
+  'Sales leaderboard':'home-dashboards location-rankings',
   'Today at a glance':'home-dashboards hourly-projections roster-forecasts',
   'Delivery tracking':'receiving-orders', 'Import weekly sales':'weekly-import',
   'Double check your order':'place-order shared-cart order-confirmation',
