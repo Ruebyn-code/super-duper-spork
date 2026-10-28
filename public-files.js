@@ -10,6 +10,7 @@ module.exports={'/home-personal.js':'home-personal.js','/home-personal.css':'hom
   '/favicon.png':'assets/branding/opstack-icon.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',
   '/checklist-phone-frame.png':'assets/branding/checklist-phone-frame.png',
+  '/wastage':'wastage.html','/wastage.js':'wastage.js','/wastage.css':'wastage.css','/wastage-model.js':'wastage-model.js',
   '/stock-transfers':'stock-transfers.html',
   '/stock-transfers.js':'stock-transfers.js',
   '/stock-transfers.css':'stock-transfers.css',

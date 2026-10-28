@@ -10,6 +10,7 @@ function apiPermission(url,method){
  if(url==='/api/home-operations')return['home.view'];
  if(url==='/api/home-totals')return['home.view'];
  if(url==='/api/home-daily-sales')return['sales.edit'];
+ if(url.startsWith('/api/wastage'))return ['wastage.view'];
  if(url.startsWith('/api/stock-transfers'))return ['transfers.view'];
  if(url.startsWith('/api/reporting'))return['reporting.view'];
  if(url.startsWith('/api/invoices'))return[read?'invoices.view':'invoices.edit'];
@@ -33,7 +34,7 @@ function apiPermission(url,method){
  return null;
 }
 function pagePermission(url){
- return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
+ return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/wastage':['wastage.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
 }
 module.exports={apiPermission,pagePermission};
 

@@ -40,6 +40,7 @@ const layouts=require('./layouts'),layoutModel=require('./public/layout-model');
 const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');const editParts=require('./public/edit-parts');
 const stockCounts=require('./stock-counts');
+const wastage=require('./wastage');
 const stockCountGroups=require('./public/stock-count-groups');
 const stockCountUnits=require('./public/stock-count-units');
 const manualPar=require('./manual-par');
@@ -105,6 +106,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const locationSetupStore=locationSetup.createStore(dataDir,{locations:locationStore,auth,catalogues:catalogueStore,now:locationNow});
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
+  const wastageStore=wastage.createStore(dataDir,{catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:salesNow});
   const salesStore=sales.createStore(),hourlySalesStore=hourlySales.createStore(dataDir,{now:salesNow});
   const awardStore=awardCompliance.createStore(dataDir,{people:()=>auth.directory(),locations:()=>auth.levels.locations(),now:rosteringNow,fetchImpl});
   const rosteringStore=rostering.createStore(dataDir,{unlockClockPin:(actor,input)=>auth.unlockClock(actor,input),authorizeClock:(actor,input)=>auth.authorizeClock(actor,input),clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:async actor=>(await locationStore.accessible(actor)).filter(shop=>!actor.kiosk||shop.id===actor.locationId),awards:awardStore,people:()=>auth.directory(),forecast:async(actor,weekStart)=>{
@@ -222,7 +224,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
       const setupStepRoute=req.url.match(/^\/api\/location-setup\/steps\/([a-zA-Z0-9-]+)\/(team|par|devices)$/);
       if(setupStepRoute){
@@ -299,6 +301,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(kioskStaff&&['/api/rostering/clock','/api/rostering/clock-unlock','/api/rostering/clock-status'].includes(req.url)){const value=await rosteringStore.clockStatus(session);if(value.entry&&value.entry.locationId!==kioskDevice.locationId)fail('You are clocked in at another location. Use that location’s time clock.',409);}
       if(await rosteringRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:rosteringStore,body,json,fail}))return;
       if(await stockTransfers.route({req,url:req.url,params:requestUrl.searchParams,session,store:transferStore,body,json}))return;
+      if(await wastage.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:wastageStore,body,json}))return;
       const required=apiPermission(req.url,req.method);
       if(required){if(!session)fail('Sign-in required.',401);if(!canAny(session,required))fail('Your permission level does not allow this action.',403);}
       const management=required&&!['/api/menu','/api/catalogue'].includes(req.url)&&(required.some(key=>key.endsWith('.manage'))||req.url.startsWith('/api/permission-levels')||req.url.startsWith('/api/companies'));
@@ -634,7 +637,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE'){const removed=await auth.remove(session,accountRoute[1]);await photoStore.purge(accountRoute[1]);return json(200,removed);}
 
-      if(req.method==='GET'&&['/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&!(req.url==='/communications'&&requiredReading?.due.length)&&pagePermission(req.url)&&!canAny(session,pagePermission(req.url))){res.writeHead(303,{Location:['/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup','/email-settings'].includes(req.url)?'/':'/home'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {

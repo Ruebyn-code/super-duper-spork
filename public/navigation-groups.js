@@ -28,6 +28,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  if(cartCount){cartCount.hidden=true;cartCount.style.display='none';cartCount.setAttribute('aria-hidden','true');cartCount.dataset.layoutUi='';sidebar.append(cartCount);}cart?.remove();
  moveMenu(segment(ordersMenu,'Stock','count-pages'),menus.get('count'));
  const transfers=fresh(count,'/stock-transfers','Stock transfers','stock-transfers');transfers.dataset.permission='transfers.view';transfers.querySelector('svg')?.replaceChildren();transfers.querySelector('svg').innerHTML='<path d="M3 7h16l-4-4M21 17H5l4 4"/><g class="icon-detail"><path d="M19 7l-4 4M5 17l4-4"/></g>';ordersMenu.append(transfers);
+ const wastage=fresh(count,'/wastage','Wastage','wastage');wastage.dataset.permission='wastage.view';wastage.querySelector('svg').innerHTML='<path d="M4 7h16M9 3h6l1 4M6 7l1 14h10l1-14"/><g class="icon-detail"><path d="M10 11v6M14 11v6"/></g>';ordersMenu.append(wastage);
  const management=segment(ordersMenu,'Manage stock','stock-management');management.setAttribute('data-head-office-only','');moveMenu(management,menus.get('stock'));
  const salesMenu=menuFor('sales','Sales');moveMenu(salesMenu,menus.get('sales'));if(!salesMenu.querySelector('a[href="/sales#hourly"]')){const hourly=fresh(sales,'/sales#hourly','Hourly sales','hourly-sales');hourly.dataset.permission='sales.view';salesMenu.append(hourly);}
  if(reporting)reporting.setAttribute('data-user-manager-only','');

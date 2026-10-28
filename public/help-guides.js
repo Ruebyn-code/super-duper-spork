@@ -140,6 +140,13 @@
   'Open Order history to see Stock prices updated, the original prices and the revised total.',
   'Review ordering budgets and order reports using the revised values.'
  ],{notes:['Previously sent emails retain their original estimates. Weekly financial Cost of goods uses saved invoices rather than these order totals.'],related:['invoice-prices','order-history','invoice-expenses']});
+ add(c,'wastage','Record and review stock wastage','Track wasted stock items and their estimated cost at the selected location.',[
+  'Open Ordering → Wastage and check the selected location. Choose Record wastage to open the entry popup.',
+  'Choose the wastage date, stock items and a reason for each item. Enter quantities in ordered packs, or select the item’s saved counting unit such as sleeves. Review the pack conversion and estimated cost.',
+  'Add any notes and press Save wastage. Only saving records the entry. A closed draft can be reopened; an uncertain save must be retried to check the same entry safely.',
+  'Use Today, This week, Last week, This month or custom dates, then search or filter by reason. Review waste by reason, the highest item costs and the log; Export CSV downloads all matching entries.',
+  'Open View entry to see its original units, price and staff attribution. If it was a mistake, use Void entry, enter a reason and confirm. Voided entries remain in the log but are excluded from totals.'
+ ],{route:'/wastage',permissions:['wastage.view'],notes:['Wastage uses saved stock cost prices, not selling prices. Missing prices stay pending; known subtotals are labelled. Later stock-price or pack changes do not rewrite saved entries.','Stock counts remain physical snapshots. Wastage is logged separately, so it does not subtract stock a second time, change target calculations or add another expense to invoice-based Cost of goods.','Viewing, recording, voiding and CSV exports have separate permission controls under stock counts. Choose the appropriate location to review its records. Finished meals are not included in this version.'],related:['stock-count','count-sleeves','count-history','invoice-expenses','permissions'],keywords:['waste','wastage','spoilage','expiry','damaged','loss']});
  add(c,'stock-transfers','Transfer stock between locations','Record a transfer and confirm its arrival.',[
   'Open Ordering → Stock transfers and create a transfer for an accessible destination.',
   'Choose items, check the receiving units and quantities, and review any cost movement before submitting.',

@@ -6,6 +6,7 @@
   '/cart':ids('shared-cart place-order ordering-budget order-confirmation order-not-sent'),
   '/order-history':ids('order-history receiving-orders stock-price-changes order-confirmation order-not-sent'),
   '/stock-count':ids('stock-count count-sleeves count-history target-levels order-when delivery-quantities delivery-shortages'),
+  '/wastage':ids('wastage stock-count count-sleeves'),
   '/stock-transfers':ids('stock-transfers transfer-approvals'),
   '/sales':ids('daily-sales weekly-report weekly-import sales-projections public-holidays holiday-forecasts hourly-import hourly-projections ordering-budget platform-fees invoice-expenses weekly-costs operating-expenses sales-missing hourly-not-imported'),
   '/rostering':ids('view-roster make-roster publish-roster roster-forecasts timesheets leave-availability labour-settings shift-clock early-start clock-breaks clock-problem award-settings'),

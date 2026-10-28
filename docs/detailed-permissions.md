@@ -1,11 +1,12 @@
 # Detailed permission levels
 
-Settings → Permission levels has 63 feature grants and 37 additional action controls. Search the levels by name/description, edit a manageable level or duplicate one as an unsaved draft. The editor groups permissions by feature, searches names/descriptions/IDs, filters enabled or detailed actions, and shows enabled counts. Groups can enable or clear the shown, grantable controls. View prerequisites are selected recursively, including multi-level leave-review dependencies. Save stays visible while the form scrolls. Cancel does not save.
+Settings → Permission levels has 63 feature grants and 41 additional action controls. Search the levels by name/description, edit a manageable level or duplicate one as an unsaved draft. The editor groups permissions by feature, searches names/descriptions/IDs, filters enabled or detailed actions, and shows enabled counts. Groups can enable or clear the shown, grantable controls. View prerequisites are selected recursively, including multi-level leave-review dependencies. Save stays visible while the form scrolls. Cancel does not save.
 
 Set a description, hierarchy, company/network scope and Staff/Manager Home independently. Company customisations remain local; publishing a network definition replaces its company overrides as before. Assignment still happens in Users. Current role limits apply to the next request, including unlocked kiosks; an old browser cannot bypass server checks.
 
 Detailed controls include:
 
+- Wastage viewing, recording, voiding and CSV exports, inheriting stock-count access.
 - Recording, editing, deleting and receiving saved orders, separately from placing supplier orders.
 - Hourly/weekly report uploads and imports; invoice creation and removal.
 - Creating/removing stock and suppliers, manual targets, user invitations/removal, location creation/archive/restore and company creation.

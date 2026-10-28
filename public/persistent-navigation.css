@@ -8,6 +8,7 @@ html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
 .shell-page-frame[data-pending]{visibility:hidden;pointer-events:none}
 .shell-roster-popup{z-index:2;background:transparent}
 .phone-roster-popup-open #shift-clock-dock{visibility:hidden}
+.shell-wastage-open #shift-clock-dock{visibility:hidden}
 .phone-roster-popup,.phone-roster-popup body{background:transparent!important}
 .phone-roster-popup .rostering-page{padding:0!important}
 .phone-roster-popup .rostering-page>:not(#phone-roster){display:none!important}

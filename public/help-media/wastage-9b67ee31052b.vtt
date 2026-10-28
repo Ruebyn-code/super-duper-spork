@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.833
+Step 1: Open Ordering → Wastage and check the selected location. Choose Record wastage to open the entry popup.
+
+2
+00:00:06.833 --> 00:00:18.958
+Step 2: Choose the wastage date, stock items and a reason for each item. Enter quantities in ordered packs, or select the item’s saved counting unit such as sleeves. Review the pack conversion and estimated cost.
+
+3
+00:00:18.958 --> 00:00:29.833
+Step 3: Add any notes and press Save wastage. Only saving records the entry. A closed draft can be reopened; an uncertain save must be retried to check the same entry safely.
+
+4
+00:00:29.833 --> 00:00:41.958
+Step 4: Use Today, This week, Last week, This month or custom dates, then search or filter by reason. Review waste by reason, the highest item costs and the log; Export CSV downloads all matching entries.
+
+5
+00:00:41.958 --> 00:00:54.708
+Step 5: Open View entry to see its original units, price and staff attribution. If it was a mistake, use Void entry, enter a reason and confirm. Voided entries remain in the log but are excluded from totals.

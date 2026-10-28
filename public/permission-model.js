@@ -20,6 +20,10 @@
  definitions.push({id:'account-email.manage',name:'Account invitation email',description:'Configure the one shared sender for account setup emails across Opstack; network role only',group:'Network'});
  // Optional action limits refine existing grants. Omitted limits preserve legacy access.
  const actionDefinitions=[
+  ['wastage.view','View wastage','Read location wastage logs and estimated stock costs','counts.view'],
+  ['wastage.record','Record wastage','Record wasted stock items at the selected location','counts.edit'],
+  ['wastage.void','Void wastage entries','Void mistakes with a reason while keeping an audit trail','counts.edit'],
+  ['wastage.export','Export wastage','Download filtered wastage records as CSV','wastage.view'],
   ['orders.record','Record past orders','Add a missed order to order history','orders.place'],
   ['orders.edit','Edit placed orders','Correct items, quantities and prices in saved orders','orders.place'],
   ['orders.delete','Delete orders','Remove saved orders and their reporting/usage effects','orders.place'],
@@ -57,7 +61,7 @@
   ['ai.invoices','Intelligence invoice scanning','Send reviewed invoice pages for extraction','invoices.edit'],
   ['ai.sales','Intelligence sales scanning','Read hourly and weekly sales reports',['sales.edit','finances.edit']],
   ['ai.reports','Intelligence scheduled reports','Generate previews and scheduled report summaries','reports.manage']
- ].map(([id,name,description,parent])=>({id,name,description,parent,group:id.startsWith('ai.')?'OpStack intelligence':definitions.find(d=>d.id===(Array.isArray(parent)?parent[0]:parent))?.group||'Settings',sensitive:/delete|archive|revoke|publish/.test(id)}));
+ ].map(([id,name,description,parent])=>({id,name,description,parent,group:id.startsWith('wastage.')?'Wastage':id.startsWith('ai.')?'OpStack intelligence':definitions.find(d=>d.id===(Array.isArray(parent)?parent[0]:parent))?.group||'Settings',sensitive:/delete|archive|revoke|publish|void/.test(id)}));
  const actionKeys=actionDefinitions.map(d=>d.id),actionById=new Map(actionDefinitions.map(d=>[d.id,d]));
  const keys=definitions.map(item=>item.id),networkKeys=['network.access','roles.network','comms.post.network','knowledge.manage.network','rostering.budget.network','account-email.manage'];
  const work=['learning.view','learning.complete','prep.view','prep.print','ops.view','ops.complete','rostering.view','rostering.clock','rostering.availability','rostering.leave','knowledge.view','comms.view','comms.chat','home.view','orders.view','orders.place','counts.view','counts.edit','sales.view','sales.edit','finances.view','finances.edit','invoices.view','invoices.edit'];
