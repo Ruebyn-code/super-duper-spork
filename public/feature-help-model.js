@@ -54,7 +54,7 @@
   ['#labels-view-title','print-labels label-templates'],
   ['#shift-clock-location','shift-clock early-start clock-breaks clock-problem'],
   ['#user-profile-title','profile-photo dark-mode switch-location'],
-  ['#user-greeting','home-dashboards home-layout'],
+  ['#dashboard-page-title','home-dashboards home-layout'],
   ['#users-company-name','manage-users permissions account-invitations'],
   ['.app-search-heading>span:first-child','platform-search'],
   ['#location-setup-title','location-setup'],

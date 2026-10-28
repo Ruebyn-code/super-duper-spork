@@ -25,7 +25,15 @@
 #home-personal #user-greeting :is(.greeting-intro,#home-user-name){font-size:inherit;line-height:inherit;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 #home-personal :is(#home-location,#home-location-managers,#home-today){margin:0;font-size:11px;line-height:1.5;max-width:100%;overflow-wrap:anywhere}
 #home-personal #home-today{color:var(--theme-muted,#63778c)}#home-personal #home-today::before{content:none}
-.home-dashboard-heading{min-width:0;display:grid;gap:4px}.dashboard-reference #home-topline{min-height:40px;align-items:start}.dashboard-reference #home-topline .dashboard-page-title{margin:0}
+.home-dashboard-heading{min-width:0;display:grid;gap:4px}
+.dashboard-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;min-width:0}
+.dashboard-title-row .dashboard-page-title{flex:0 1 auto;display:flex;align-items:center;gap:7px;min-width:0;max-width:100%}
+.dashboard-store-info{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0;max-width:100%}
+.dashboard-store-info :is(#home-location,#home-location-managers){margin:0;max-width:100%;font-size:11px;line-height:1.5;color:var(--theme-muted,#63778c);overflow-wrap:anywhere}
+.dashboard-store-info #home-trading-status{margin:0}
+body[data-home-dashboard=head-office] .dashboard-store-info{display:none}
+@media(max-width:720px){.dashboard-store-info{flex-basis:100%}.dashboard-title-row{gap:8px}}
+.dashboard-reference #home-topline{min-height:40px;align-items:start}.dashboard-reference #home-topline .dashboard-page-title{margin:0}
 .home-personal-comms-group{margin-top:10px}.home-personal-comms-group h4{font-size:11px;line-height:1.4;font-weight:500;color:var(--theme-muted,#63778c);margin:0 0 4px}
 .home-personal-conversations{margin:0}.home-personal-conversation{align-items:center;gap:8px;min-height:36px;padding:5px 4px}
 .home-personal-comms-icon{flex:0 0 24px;display:grid;place-items:center;width:24px;height:24px;color:var(--theme-primary-text,var(--primary))}.home-personal-comms-icon svg{width:19px;height:19px}
