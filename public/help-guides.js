@@ -19,9 +19,9 @@
  const articles=[];
  const add=(category,id,title,description,steps,options={})=>articles.push({category,id,title,description,steps,notes:[],related:[],keywords:[],...options});
  let c='getting-started';
- add(c,'navigation','Find your way around OpStack','Use the main navigation, related menus and blue account dropdown.',[
-  'On a computer, use the main navigation at the top. Select a feature to open it; Ordering’s related pages open from its menu.',
-  'On a phone, use Home, Rostering, Comms and Checklists in the bottom bar. Open More for the other features.',
+ add(c,'navigation','Find your way around OpStack','Use the main navigation, permanent left subpage bar and blue account dropdown.',[
+  'Use the main navigation at the top to open a feature. On phones, Home, Rostering, Comms, Checklists and More remain in the bottom bar.',
+  'Use the permanent bar on the left to switch between that feature’s subpages. Larger screens show labels; phones keep a compact icon bar. The selected subpage stays highlighted.',
   'Open the blue account dropdown for User profile, Dark mode, Help & support and your available Settings.',
   'Use browser Back and Forward to return to earlier screens. Save or resolve outstanding changes before leaving an editor.'
  ],{popular:true,related:['switch-location','platform-search','permissions'],keywords:['menu','blue dropdown','phone','navigation','help support']});

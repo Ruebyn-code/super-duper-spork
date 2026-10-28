@@ -6,7 +6,7 @@
   if(typeof interfaceLabel==='function')return interfaceLabel(text,values);
   const overrides=window.appBootstrap?.interfaceText||{};return String(Object.hasOwn(overrides,text)?overrides[text]??'':text).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??'{'+key+'}'));
  };
- let selectedGroup='',isAdmin=false,isUserManager=false,session;
+ let permanentSubpages=false,selectedGroup='',isAdmin=false,isUserManager=false,session;
  const kiosk=root.classList.contains('kiosk-app'),mobile=matchMedia(kiosk?'not all':'(max-width:720px), (max-width:1100px) and (max-height:500px) and (pointer:coarse)'),page=shell.querySelector('.app-page');
  const currentGroup=()=>({'/':'ordering','/order-history':'ordering','/cart':'ordering','/stock-count':'ordering','/stock-transfers':'ordering','/sales':'sales','/admin':'ordering','/admin/accounts':'admin','/admin/settings':'settings'}[location.pathname]||'');
  const groupLink=group=>sidebar.querySelector('[data-sidebar-group="'+group+'"]');
@@ -64,7 +64,7 @@
  function updateSubmenuTitle(){const link=groupLink(selectedGroup),title=document.getElementById('subsidebar-title');if(title&&(link||selectedGroup==='settings')){title.dataset.localWording=link?.dataset.sidebarName||'App settings';const text=selectedGroup==='settings'?wording('App settings'):link.querySelector('.sidebar-label')?.textContent||'';if(title.textContent!==text)title.textContent=text;}const close=document.getElementById('subsidebar-close');if(close){close.title=wording('Close submenu')||'Close submenu';close.setAttribute('aria-label',close.title);}}
  function closeSubmenu(restoreFocus=false){const previous=selectedGroup;selectedGroup='';if(secondary){secondary.hidden=true;delete secondary.dataset.activeGroup;}shell?.classList.remove('subsidebar-open');sidebar.querySelectorAll('[data-sidebar-group]').forEach(link=>{link.setAttribute('aria-expanded','false');delete link.dataset.submenuOpen;});renderMobileSheets();if(restoreFocus){groupFocus(previous)?.focus();}}
  // Ordering opens on demand so every ordering page has Home's single-row header.
- function restorePageSubmenu(){if(kiosk||currentGroup()==='ordering')closeSubmenu();else openSubmenu(currentGroup(),false,true);updatePageLinks();}
+ function restorePageSubmenu(){if(permanentSubpages||kiosk||currentGroup()==='ordering')closeSubmenu();else openSubmenu(currentGroup(),false,true);updatePageLinks();}
  function updatePageLinks(){const defaults={'/stock-count':'#new','/sales':'#entry','/admin':'#stock','/admin/accounts':'#accounts','/admin/settings':'#colours'},hash=location.hash||defaults[location.pathname]||'';for(const link of secondary?.querySelectorAll('a[href]')||[]){const url=new URL(link.href);if(url.pathname===location.pathname&&(url.pathname==='/reporting'||url.hash===hash))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}}
  function openSubmenu(group,focus=false,preserveControls=false){
   if(!secondary||(!isUserManager&&group==='admin')||(!isAdmin&&group==='settings'))return;
@@ -112,7 +112,7 @@
  new MutationObserver(()=>{updateNavigationLabels();updateSubmenuTitle();}).observe(sidebar,{childList:true,characterData:true,subtree:true});
  updateNavigationLabels();syncMobileLayout();
  if(kiosk){const measure=()=>root.style.setProperty('--kiosk-header-height',sidebar.getBoundingClientRect().height+'px');new ResizeObserver(measure).observe(sidebar);measure();}
- window.appNavigation={dismissTransient(){window.appSearch?.close();controls.close();closeMore();if(kiosk||selectedGroup==='ordering')closeSubmenu();if(kiosk){pointerInside=keyboardInside=touchOpen=false;renderNavigation();}window.locationPickers?.closeAll();},refresh(value){
+ window.appNavigation={setSubpageNavigation(visible){if(permanentSubpages===visible)return;permanentSubpages=visible;if(visible)closeSubmenu();else if(!mobile.matches)restorePageSubmenu();},dismissTransient(){window.appSearch?.close();controls.close();closeMore();if(kiosk||selectedGroup==='ordering')closeSubmenu();if(kiosk){pointerInside=keyboardInside=touchOpen=false;renderNavigation();}window.locationPickers?.closeAll();},refresh(value){
   if(value){
    session=value;let changed=false;
    for(const [id,entries,selected] of [['sidebar-company-select',session.companies,session.companyId],['sidebar-location-select',session.locations,session.locationId]]){
