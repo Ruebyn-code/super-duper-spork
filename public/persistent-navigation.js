@@ -64,7 +64,6 @@
  function presentation(child){
   if(child!==current?.contentWindow&&child!==rosterPopup?.contentWindow)return;
   positionClockDock();
-  const subpages=current?.contentDocument?.querySelector('.subpages-sidebar');window.appNavigation?.setSubpageNavigation(Boolean(subpages?.getClientRects().length));
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
   root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
   root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')));

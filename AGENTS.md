@@ -81,7 +81,7 @@
 
 - Ordering and stock take headers are compact through `public/page-density.css`. Keep their full guidance in keyboard-accessible disclosures, all four budget figures and warnings visible, search/date toggles usable, phone controls usable and stock count drafts intact.
 
-- Ordering uses the same single-row desktop header as Home. Related Ordering destinations stay in the permanent left subpage bar, with Stock count first. Keep the shared top header, phone More, all destination permissions, keyboard access, persistent navigation and draft guards intact.
+- Ordering uses the same single-row desktop header as Home. Related Ordering destinations stay in the permanent left subpage bar, with Stock count first. The old secondary sub bar stays hidden and inert; main navigation links open allowed feature destinations directly rather than opening another row. Keep the shared top header, phone More, all destination permissions, keyboard access, persistent navigation and draft guards intact.
 
 - Ordering uses the floating Cart button, without a Cart link in the second navigation bar. Keep hidden cart-count sources and the Ordering badge working. Place order opens a read-only “Double check your order” popup with location, supplier/item quantities, prices, subtotals and notes. Only its final Place order action may submit. Cancel/Escape must preserve the cart and notes without saving or sending; changed cart contents require a fresh review. Preserve request IDs on retries, block duplicate submissions and remove only submitted quantities after success, retaining additions from other tabs. Keep pending prices, platform handoffs, delivery status and existing location/order permissions accurate.
 
