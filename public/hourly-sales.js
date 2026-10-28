@@ -16,5 +16,5 @@
  function show(){if(location.hash==='#hourly'&&actor&&!loading)load();}window.addEventListener('hashchange',show);window.addEventListener('focus',()=>{if(!window.hourlySalesUpload?.isOpen)show();});window.addEventListener('storage',event=>{if(event.key==='opstack-hourly-sales-'+actor?.dataScope&&!window.hourlySalesUpload?.isOpen)show();});
  $('hourly-upload').onclick=()=>window.hourlySalesUpload.open({actor,report,trigger:$('hourly-upload'),onSaved:async({importedDate,text})=>{await load(importedDate||report?.date||'');$('hourly-message').textContent=text;}});
 
- (async()=>{try{actor=await appAccess.initialSession();if(!appAccess.can('sales.view',actor))return;$('hourly-upload').hidden=!appAccess.can('sales.edit',actor);show();}catch(error){$('hourly-message').textContent=error.message;}})();
+ (async()=>{try{actor=await appAccess.initialSession();if(!appAccess.can('sales.view',actor))return;$('hourly-upload').hidden=!appAccess.can('hourly.import',actor);show();}catch(error){$('hourly-message').textContent=error.message;}})();
 })();

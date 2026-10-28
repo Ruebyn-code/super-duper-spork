@@ -4,7 +4,8 @@ const brandModel=require('./public/ai-brand-model'),writing=require('./public/ai
 const MODEL='gpt-4.1-mini-2025-04-14',OUTPUT_LIMIT=10000,queues=new Map(),flights=new Map();
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
-const canDraft=(actor,kind,scope)=>kind==='weekly-sales'?can(actor,'finances.edit'):kind==='hourly-sales'?can(actor,'sales.view')&&can(actor,'sales.edit'):kind==='invoice'?can(actor,'invoices.view')&&can(actor,'invoices.edit'):kind==='message'?can(actor,'comms.view')&&can(actor,'comms.chat'):kind==='post'?can(actor,'comms.view')&&(scope?can(actor,'comms.post.'+scope):can(actor,'comms.post.company')||can(actor,'comms.post.network')):kind==='article'?can(actor,'knowledge.view')&&(scope?can(actor,'knowledge.manage.'+scope):can(actor,'knowledge.manage.company')||can(actor,'knowledge.manage.network')):kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
+const baseCanDraft=(actor,kind,scope)=>kind==='weekly-sales'?can(actor,'finances.edit'):kind==='hourly-sales'?can(actor,'sales.view')&&can(actor,'sales.edit'):kind==='invoice'?can(actor,'invoices.view')&&can(actor,'invoices.edit'):kind==='message'?can(actor,'comms.view')&&can(actor,'comms.chat'):kind==='post'?can(actor,'comms.view')&&(scope?can(actor,'comms.post.'+scope):can(actor,'comms.post.company')||can(actor,'comms.post.network')):kind==='article'?can(actor,'knowledge.view')&&(scope?can(actor,'knowledge.manage.'+scope):can(actor,'knowledge.manage.company')||can(actor,'knowledge.manage.network')):kind==='search'?Boolean(actor?.id):kind==='report'?can(actor,'reporting.view')&&can(actor,'reports.manage'):can(actor,['checklist','planners'].includes(kind)?'ops.view':'learning.view')&&can(actor,['checklist','planners'].includes(kind)?'ops.manage':'learning.manage');
+const canDraft=(actor,kind,scope)=>baseCanDraft(actor,kind,scope)&&can(actor,require('./permissions').intelligencePermission(kind))&&(kind!=='planners'||can(actor,'ops.planners'))&&(kind!=='weekly-sales'||can(actor,'weekly.import'))&&(kind!=='hourly-sales'||can(actor,'hourly.import'));
 const month=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit'}).format(new Date(now));
 const defaults=()=>({...brandModel.defaults,revision:0,enabled:false,apiKey:'',budgetCents:1000,draftLimit:100,inputUsdPerMillion:.4,outputUsdPerMillion:1.6,requests:[]});
 const cost=(input,output,settings)=>Math.ceil(input*settings.inputUsdPerMillion+output*settings.outputUsdPerMillion);
@@ -79,7 +80,7 @@ function createStore(dir,{fetchImpl=globalThis.fetch,now=Date.now,library}={}){
  }
  return{status,brand,save,generate,generateWeeklySales:(actor,input)=>generate(actor,{kind:'weekly-sales',requestId:input.requestId,prompt:'Extract weekly sales and platform fees for review.'},{weeklySales:require('./weekly-sales-scan').source(input),locationId:actor.locationId}),generateHourlySales:(actor,input)=>generate(actor,{kind:'hourly-sales',requestId:input.requestId,prompt:'Extract hourly sales for review.'},{hourlySales:require('./hourly-sales-model').source(input),locationId:actor.locationId}),generateInvoice:(actor,input)=>generate(actor,{kind:'invoice',requestId:input.requestId,prompt:'Transcribe this invoice for review.'},{invoice:invoiceIntelligence.source(input),locationId:actor.locationId,invoiceId:input.invoiceId||null,revision:input.revision||null}),generateReport:(actor,input,data)=>generate(actor,{...input,kind:'report'},data),generateSearch:(actor,input,pages)=>generate(actor,{kind:'search',requestId:input.requestId,prompt:input.query},{pages,locationId:actor.locationId})};
 }
-async function route({req,url,session,store,body,json}){
+async function route({req,url,session,store,body,json,refreshSession}){
  if(!['/api/ai/status','/api/ai/settings','/api/ai/drafts'].includes(url))return false;
  if(!session)fail('Sign in to use OpStack intelligence.',401);
  if(url==='/api/ai/settings'){
@@ -92,6 +93,6 @@ async function route({req,url,session,store,body,json}){
   if(req.method!=='POST')fail('Use POST to generate an OpStack intelligence draft.',405);
  }
  if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
- const input=await body(req,400000);json(200,url==='/api/ai/settings'?await store.save(session,input):await store.generate(session,input));return true;
+ const input=await body(req,400000);if(url==='/api/ai/settings'){json(200,await store.save(session,input));return true;}const result=await store.generate(session,input);if(refreshSession){const current=await refreshSession();if(!canDraft(current,input.kind,input.scope))fail('Your permission level no longer allows this intelligence action.',403);}json(200,result);return true;
 }
 module.exports={createStore,route,MODEL,month};

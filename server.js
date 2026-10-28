@@ -20,7 +20,7 @@ const {createAuth}=require('./auth');
 const {isSupport,parsedBody,supportIdentity}=require('./platform-identity');
 const {createPlatformServer}=require('./opstack-router');
 const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation}=require('./permissions');
-const {apiPermission,pagePermission}=require('./access-routes');
+const {apiPermission,pagePermission,actionPermission}=require('./access-routes');
 const profilePhotos=require('./profile-photos');
 const locationHoursModel=require('./public/location-hours-model');
 const kioskDevices=require('./kiosk-devices'),kioskPolicy=require('./kiosk-policy');
@@ -213,7 +213,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         if(req.headers['if-none-match']===etag){res.writeHead(304);return res.end();}res.writeHead(200,{'Content-Type':font.mime});return res.end(font.data);
       }
       const readCatalogue=()=>catalogueStore.read(session?.companyId||companies.defaultCompanyId),mutate=change=>catalogueStore.mutate(session.companyId,change,{actor:session});
-      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await homeGreeting.read(customisations.folder(dataDir,session.companyId),(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}')).text,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,photoUrl:(await photoStore.describe(session.id)).photoUrl,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:kioskCookie?[{id:session.companyId,name:session.companyName}]:await companyStore.accessible(session),locations:kioskCookie?[{id:session.locationId,name:session.locationName}]:(await locationSetupStore.decorate(await locationStore.accessible(session))).map(({id,name,setupPending})=>({id,name,...(setupPending?{setupPending:true}:{})})),dataScope:session.dataScope,canMigrateBrowserData:kioskCookie?false:session.canMigrateBrowserData,...(kioskStaff?{kiosk:{deviceId:kioskDevice.id,deviceName:kioskDevice.name,sessionId:kioskStaff.sessionId,expiresAt:kioskStaff.expiresAt}}:{})}:{role:'user'});
+      if(req.method==='GET'&&req.url==='/api/session')return json(200,session?{networkId:network.id,networkName:req.opstackNetwork?.name||network.name,homeGreeting:(await homeGreeting.read(customisations.folder(dataDir,session.companyId),(await newNetworkDefaults.companySnapshot(dataDir,session.companyId))?.greeting||'Hello {user}')).text,opstackManaged:Boolean(await platformStore?.enabled()),opstackSupport:isSupport(session),role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,actionPermissions:session.actionPermissions||{},networkPermissions:session.networkPermissions,permissionRevision:session.permissionRevision,username:session.username,id:session.id,photoUrl:(await photoStore.describe(session.id)).photoUrl,csrf:session.csrf,locationId:session.locationId,locationName:session.locationName,companyId:session.companyId,companyName:session.companyName,companies:kioskCookie?[{id:session.companyId,name:session.companyName}]:await companyStore.accessible(session),locations:kioskCookie?[{id:session.locationId,name:session.locationName}]:(await locationSetupStore.decorate(await locationStore.accessible(session))).map(({id,name,setupPending})=>({id,name,...(setupPending?{setupPending:true}:{})})),dataScope:session.dataScope,canMigrateBrowserData:kioskCookie?false:session.canMigrateBrowserData,...(kioskStaff?{kiosk:{deviceId:kioskDevice.id,deviceName:kioskDevice.name,sessionId:kioskStaff.sessionId,expiresAt:kioskStaff.expiresAt}}:{})}:{role:'user'});
       if(req.method==='POST'&&req.url==='/api/login'){
         if(req.headers.origin&&req.headers.origin!==requestOrigin(req))fail('Invalid request origin.',403);
         const input=await body(req),loggedIn=await auth.login(req,input);
@@ -268,6 +268,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
         await auth.photoAccess(session,id,true);const input=await body(req,360000);return json(200,await photoStore.change(id,input,req.method==='DELETE',()=>auth.photoAccess(session,id,true)));
       }
+      const detailedAction=actionPermission(req.url,req.method);if(detailedAction){if(!session)fail('Sign-in required.',401);if(!can(session,detailedAction))fail('Your permission level does not allow this action.',403);}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
@@ -282,12 +283,12 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
         if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reading this invoice.',401);
         if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
-        if(!can(current,'invoices.view')||!can(current,'invoices.edit'))fail('Invoice editing permission required.',403);
+        if(!can(current,'ai.invoices')||!can(current,'invoices.view')||!can(current,'invoices.edit'))fail('Invoice editing permission required.',403);
         if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
         const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
         await checkInvoice(current);return json(200,result);
       }
-      if(await aiAssistance.route({req,url:req.url,session,store:aiStore,body,json}))return;
+      if(await aiAssistance.route({req,url:req.url,session,store:aiStore,body,json,refreshSession:async()=>{const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reviewing this draft.',401);if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);if(!isSupport(current)&&(await communicationStore.required(current)).due.length)fail('Read or snooze the required posts before continuing.',428);return current;}}))return;
       if(await opsManagement.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:opsStore,body,json,fail}))return;
       if(await learningCentre.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:learningStore,body,json,fail}))return;
       if(await knowledgeLibraryRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:libraryStore,body,json,fail}))return;
@@ -317,7 +318,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
           const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
           if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before searching.',401);
           if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed. Search again.',409);
-          session=current;
+          session=current;if(!can(session,'ai.search'))fail('Intelligence search is not allowed by your permission level.',403);
           if(!isSupport(session)){const required=await communicationStore.required(session);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
           const config=await aiStore.status(session);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
         }
@@ -426,9 +427,9 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       }
       const managerRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/managers$/);
       if(managerRoute){const store=await locationStore.get(managerRoute[1]),context=await auth.forCompany(session,store.companyId);if(!canAccessLocation(context,store))fail('Location not found.',404);if(req.method==='GET')return json(200,await auth.locationManagers(context,store.id));if(req.method==='PUT')return json(200,await auth.assignLocationManagers(context,store.id,await body(req)));}
-      if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.manage')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId},{setupCreatorId:session.id}));}
+      if(req.url==='/api/locations'&&req.method==='POST'){const input=await body(req),companyId=input?.companyId||session.companyId;await companyStore.get(companyId);if(!can(await auth.forCompany(session,companyId),'locations.create')||!(await companyStore.accessible(session)).some(company=>company.id===companyId))fail('You do not have access to this company.',403);return json(201,await locationStore.create({...input,companyId},{setupCreatorId:session.id}));}
       const locationRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)$/);
-      if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);const input=await body(req),task=req.headers['x-location-setup-task'];
+      if(locationRoute&&req.method==='PUT'){const target=await locationStore.get(locationRoute[1]);if(!can(await auth.forCompany(session,target.companyId),'locations.manage')||!canAccessLocation(await auth.forCompany(session,target.companyId),target))fail('You do not have access to this location.',403);const input=await body(req),task=req.headers['x-location-setup-task'];if(input?.archived!==undefined&&input.archived!==Boolean(target.archived)&&!can(await auth.forCompany(session,target.companyId),'locations.archive'))fail('Archiving and restoring locations is not allowed by your permission level.',403);
         if(task){const field={details:'name',state:'publicHolidayState',hours:'tradingHours'}[task];if(!field)fail('Choose a valid location setup field.');if(session.locationId!==target.id)fail('The setup location changed.',409);await locationSetupStore.editor(session,target.id,task,'/admin/accounts');if(!input||!Object.hasOwn(input,field))fail('Enter this setup field.');return json(200,await locationStore.update(target.id,{[field]:input[field]},{partial:true}));}
         return json(200,await locationStore.update(locationRoute[1],input));}
       const locationEmailRoute=req.url.match(/^\/api\/locations\/([a-zA-Z0-9-]+)\/email$/);
@@ -520,7 +521,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
           const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
           if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reviewing this report.',401);
           if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
-          if(!can(current,'sales.view')||!can(current,'sales.edit'))fail('Sales editing permission required.',403);
+          if(!can(current,'ai.sales')||!can(current,'hourly.import')||!can(current,'sales.view')||!can(current,'sales.edit'))fail('Sales editing permission required.',403);
           if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
           const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
           const freshLocation=await locationStore.status(current.locationId,salesNow()),state=await hourlySalesStore.read(current);
@@ -557,7 +558,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await companyStore.context(await locationStore.sessionContext(await auth.session(req),session.locationId));
         if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before reviewing this report.',401);
         if(current.companyId!==session.companyId||current.locationId!==session.locationId)fail('The selected company or location changed.',409);
-        if(!can(current,'finances.edit'))fail('Financial editing permission required.',403);
+        if(!can(current,'ai.sales')||!can(current,'weekly.import')||!can(current,'finances.edit'))fail('Financial editing permission required.',403);
         if(!isSupport(current)){const required=await communicationStore.required(current);if(required.due.length)return json(428,{error:'Read or snooze the required posts before continuing.',code:'REQUIRED_POSTS',required});}
         const config=await aiStore.status(current);if(!config.enabled||!config.configured)fail('OpStack intelligence is no longer enabled for this company.',503);
         return json(200,{...result,locationId:current.locationId});
@@ -742,7 +743,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const arrangedScripts=branded.replace('<script src="/appearance-style.js" defer></script>','<script src="/wording-model.js" defer></script><script src="/appearance-style.js" defer></script><script src="/permission-model.js" defer></script><script src="/access.js" defer></script><script src="/formatted-text.js" defer></script><link rel="stylesheet" href="/formatted-text.css"><script src="/required-reading.js" defer></script><script src="/location-setup.js" defer></script><link rel="stylesheet" href="/location-setup.css"><script src="/message-badge.js" defer></script><link rel="stylesheet" href="/required-reading.css">'+clockScripts+'<script src="/layout-model.js" defer></script><script src="/app-layout.js" defer></script><script src="/section-resize.js" defer></script>');
         const copyMarkup=wordingModel.annotate(arrangedScripts,interfaceText.labels);
         const markup=layoutModel.renderMarkup(editParts.renderImages(editParts.renderIcons(editParts.annotate(copyMarkup,file),overrides),overrides),layout.groups);
-        const bootstrap=JSON.stringify({aiBrand,locationSetup:session&&!isSupport(session)?await locationSetupStore.status(session):null,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
+        const bootstrap=JSON.stringify({aiBrand,locationSetup:session&&!isSupport(session)?await locationSetupStore.status(session):null,requiredReading:requiredReading||null,access:session?{role:session.role,roleName:session.roleName,homeDashboard:session.homeDashboard||'manager',roleLevel:session.roleLevel,permissions:session.permissions,actionPermissions:session.actionPermissions||{},networkPermissions:session.networkPermissions}:null,interfaceText:text,elementOverrides:overrides,hasLogo,hasSidebarLogo,fontLibrary,layout,layoutPage}).replace(/</g,'\\u003c');
         const fontUrl='/fonts/Opsilon-xRj8m.ttf?v='+font.etag.slice(1,-1);
         const dynamicPrefix='dynamic-'+req.url.replace(/[^a-z0-9]/gi,'_')+'-';
         const usedFonts=new Set([...Object.values(appearance.fonts||{}),...Object.entries(overrides).filter(([id,entry])=>entry.font&&(markup.includes('data-edit-id="'+id+'"')||id.startsWith(dynamicPrefix)||id.startsWith('type:'))).map(([,entry])=>entry.font)]);

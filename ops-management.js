@@ -192,12 +192,12 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const saved={...previous,...value,contentOnly,id:previous?.id||crypto.randomUUID(),companyId:actor.companyId,requestId:previous?.requestId||input.requestId,revision:(previous?.revision||0)+1,createdAt:previous?.createdAt||stamp(),createdById:previous?.createdById||actor.id,createdBy:previous?.createdBy||actor.username,updatedAt:stamp(),updatedBy:actor.username};
    if(previous)state.templates.splice(state.templates.indexOf(previous),1,saved);else state.templates.push(saved);
    // Compatibility for older clients. The builder itself never edits location or scheduling data.
-   if(!contentOnly){const old=state.planners.find(plan=>plan.id===saved.id&&plan.legacy);const plan={...old,id:saved.id,legacy:true,templateId:saved.id,companyId:saved.companyId,title:old?.title||saved.title,locationIds:value.locationIds,active:value.active,schedule:value.schedule,dueTime:old?.dueTime||null,reminderMinutes:old?.reminderMinutes||0,priority:old?.priority||'normal',instructions:old?.instructions||'',revision:(old?.revision||0)+1,requestId:old?.requestId||'migrated:'+saved.id,createdAt:old?.createdAt||saved.createdAt,createdById:old?.createdById||saved.createdById,createdBy:old?.createdBy||saved.createdBy,updatedAt:stamp(),updatedBy:actor.username};if(old)state.planners.splice(state.planners.indexOf(old),1,plan);else state.planners.push(plan);}
+   if(!contentOnly){if(!can(actor,'ops.planners'))fail('Checklist planner permission required.',403);const old=state.planners.find(plan=>plan.id===saved.id&&plan.legacy);const plan={...old,id:saved.id,legacy:true,templateId:saved.id,companyId:saved.companyId,title:old?.title||saved.title,locationIds:value.locationIds,active:value.active,schedule:value.schedule,dueTime:old?.dueTime||null,reminderMinutes:old?.reminderMinutes||0,priority:old?.priority||'normal',instructions:old?.instructions||'',revision:(old?.revision||0)+1,requestId:old?.requestId||'migrated:'+saved.id,createdAt:old?.createdAt||saved.createdAt,createdById:old?.createdById||saved.createdById,createdBy:old?.createdBy||saved.createdBy,updatedAt:stamp(),updatedBy:actor.username};if(old)state.planners.splice(state.planners.indexOf(old),1,plan);else state.planners.push(plan);}
    return templateResult(state,saved,actor,stores);
   });
  }
  async function savePlanner(actor,input,id){
-  need(actor,'ops.manage');const stores=await access(actor);return mutate(async state=>{
+  need(actor,'ops.planners');const stores=await access(actor);return mutate(async state=>{
    const previous=id?state.planners.find(plan=>plan.id===id&&company(plan,actor)):null;if(id&&!previous)fail('Planner not found.',404);
    if(previous&&!editablePlan(previous,actor,stores))fail('You need access to every assigned location to edit this planner.',403);
    if(previous&&input?.revision!==previous.revision)fail('This planner changed. Reload before saving.',409);

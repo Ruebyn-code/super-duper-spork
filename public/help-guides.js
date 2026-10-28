@@ -614,12 +614,13 @@
   'Use the available invitation action and review its sending status.',
   'The recipient opens the setup link and chooses credentials. Reissue an invitation if it expires or details need changing.'
  ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['Hosted network account-email settings may be managed by the Opstack owner. Ask the appropriate administrator if this control is unavailable.'],related:['manage-users','location-email','support-request']});
- add(c,'permissions','Choose permission levels and Home dashboard type','Control features separately from the Staff/Manager dashboard.',[
-  'Open Settings → Permission levels and create or edit a role within your authority.',
-  'Choose company-only or authorised network scope, its hierarchy and individual view/edit/manage grants.',
-  'Choose Staff or Manager Home. Select sales permissions separately if that account should access Sales elsewhere.',
-  'Save the level, then assign it to users through Admin → Users in the intended scope.'
- ],{route:'/settings#permissions',permissions:['roles.manage'],notes:['You cannot grant permissions above your own authority. In-use levels cannot be deleted, and network-wide publication can replace company overrides.'],related:['home-dashboards','manage-users','access-problem'],keywords:['roles','supervisor','staff','manager','access']});
+ add(c,'permissions','Choose detailed permission levels','Control feature access and individual actions separately from the Staff/Manager Home dashboard.',[
+  'Open Settings → Permission levels. Search existing levels, edit one within your authority, or choose Duplicate to start from its current settings.',
+  'Set the name, optional description and hierarchy. Choose Staff or Manager / Supervisor Home; sales access elsewhere remains a separate permission.',
+  'Use Find a permission and Show to review grouped feature grants and detailed actions. For example, allow Place orders and Edit placed orders while leaving Delete orders off. Required view permissions are selected automatically.',
+  'Choose This company only or, when authorised, Entire network. Press Save permission level to apply the reviewed settings. Network publishing replaces company customisations of that level.',
+  'Assign the saved level through Admin → Users. Check its feature access and detailed actions; changes apply to assigned users immediately.'
+ ],{route:'/settings#permissions',permissions:['roles.manage'],notes:['The 36 detailed actions cover saved orders, report imports, invoice uploads/removal, stock/supplier/user/location/company actions, kiosks, course publishing/archiving, planners, rosters, report exports, company article removal, email templates and individual intelligence tools. Existing levels retain their access until changed. Detailed actions require their underlying feature grants; they do not grant access to other companies or locations. You cannot grant more authority than you hold. In-use levels cannot be deleted and the final full network owner is protected. Cancel and Duplicate do not save anything.'],related:['home-dashboards','manage-users','access-problem','intelligence-setup'],keywords:['roles','supervisor','staff','manager','access','view','edit','delete','publish','import','duplicate','permissions']});
  add(c,'manage-kiosks','Add, pair or revoke a kiosk device','Connect a shared device to one location.',[
   'Open Settings → Kiosk devices or the location’s Devices tab.',
   'Create a new named kiosk for the intended location and obtain its expiring single-use pairing code.',

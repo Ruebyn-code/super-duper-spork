@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.375
+Step 1: Open Settings → Permission levels. Search existing levels, edit one within your authority, or choose Duplicate to start from its current settings.
+
+2
+00:00:08.375 --> 00:00:16.458
+Step 2: Set the name, optional description and hierarchy. Choose Staff or Manager / Supervisor Home; sales access elsewhere remains a separate permission.
+
+3
+00:00:16.458 --> 00:00:28.583
+Step 3: Use Find a permission and Show to review grouped feature grants and detailed actions. For example, allow Place orders and Edit placed orders while leaving Delete orders off. Required view permissions are selected automatically.
+
+4
+00:00:28.583 --> 00:00:38.208
+Step 4: Choose This company only or, when authorised, Entire network. Press Save permission level to apply the reviewed settings. Network publishing replaces company customisations of that level.
+
+5
+00:00:38.208 --> 00:00:46.292
+Step 5: Assign the saved level through Admin → Users. Check its feature access and detailed actions; changes apply to assigned users immediately.

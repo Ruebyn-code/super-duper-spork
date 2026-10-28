@@ -21,11 +21,11 @@ async function list(dir,actor,params,{reader,now=Date.now()}={}){
  const suppliers=[...new Map(records.flatMap(r=>r.items.map(i=>[i.supplierId,{id:i.supplierId,name:i.supplier||'Supplier removed'}]))).values()].sort((a,b)=>a.name.localeCompare(b.name));
  const filtered=records.filter(r=>{const day=placedDate(r);return(!from||day>=from)&&(!to||day<=to)&&(!supplier||r.items.some(i=>i.supplierId===supplier))&&(!query||[r.id,r.orderNumber,r.reference,r.name,r.notes,...r.items.flatMap(i=>[i.name,i.sku,i.supplier])].filter(Boolean).join(' ').toLowerCase().includes(query));}).sort((a,b)=>placedDate(b).localeCompare(placedDate(a))||String(b.recordedAt||b.createdAt).localeCompare(String(a.recordedAt||a.createdAt))||b.id.localeCompare(a.id));
  const pageSize=25,pages=Math.max(1,Math.ceil(filtered.length/pageSize)),current=Math.min(page,pages);
- return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.place'),canEdit:can(actor,'orders.place'),canDelete:can(actor,'orders.place'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
+ return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.record'),canEdit:can(actor,'orders.edit'),canDelete:can(actor,'orders.delete'),canReceive:can(actor,'orders.receive'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
 }
 const removals=new Map();
 async function remove(dir,actor,id,input,{now=Date.now()}={}){
- if(!can(actor,'orders.view')||!can(actor,'orders.place'))fail('Order placing permission required to delete a past order.',403);
+ if(!can(actor,'orders.view')||!can(actor,'orders.delete'))fail('Order deletion permission required to delete a past order.',403);
  if(input?.companyId!==actor.companyId||input?.locationId!==actor.locationId)fail('The selected location changed. Reopen the order before deleting it.',409);
  if(!uuidFile.test(id+'.json'))fail('Order not found.',404);
  const target=path.join(dir,id+'.json'),operation=(removals.get(target)||Promise.resolve()).then(async()=>{
@@ -50,7 +50,7 @@ function normalize(input,actor,now){
  return{orderDate,reference,notes,items};
 }
 async function save(dir,actor,input,catalogue,{now=Date.now()}={}){
- if(!can(actor,'orders.view')||!can(actor,'orders.place'))fail('Order placing permission required to record a past order.',403);
+ if(!can(actor,'orders.view')||!can(actor,'orders.record'))fail('Past-order permission required to record a past order.',403);
  const normalized=normalize(input,actor,now),id=input.requestId;if(typeof id!=='string'||!uuid.test(id))fail('Choose a valid order reference.');
  const fingerprint=crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
  const replay=async record=>{if(!scope(record,actor)||record.source!=='manual_history'||record.requestOwnerId!==actor.id||record.requestFingerprint!==fingerprint)fail('This order reference is already used. Reopen the form for a new order.',409);return{created:false,order:detail(await fulfilment.decorate(dir,await orderPrices.decorate(dir,record)))};};
@@ -65,7 +65,7 @@ async function save(dir,actor,input,catalogue,{now=Date.now()}={}){
  return{created:true,order:detail(record)};
 }
 async function update(dir,actor,id,input,catalogue,{now=Date.now()}={}){
- if(!can(actor,'orders.view')||!can(actor,'orders.place'))fail('Order placing permission required to edit an order.',403);
+ if(!can(actor,'orders.view')||!can(actor,'orders.edit'))fail('Order editing permission required to edit an order.',403);
  if(!input||input.companyId!==actor.companyId||input.locationId!==actor.locationId)fail('The selected location changed. Reopen the order before editing it.',409);
  if(!uuid.test(input.requestId)||!Number.isSafeInteger(input.editRevision)||input.editRevision<0||typeof input.editToken!=='string'||!/^[a-f0-9]{64}$/.test(input.editToken))fail('Reopen the order before editing it.');
  const original=await read(dir,id);if(!scope(original,actor))fail('Order not found.',404);

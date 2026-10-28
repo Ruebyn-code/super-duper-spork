@@ -58,7 +58,7 @@ window.createAppSearch=({footer,trigger,beforeOpen})=>{
   finally{if(current===version){request=null;thinking=false;syncIntelligence();position();}}
  }
  function followMatch(data){const link=data.destinationId&&links.find(link=>link.dataset.resultId===data.destinationId);if(!link||thinking&&input.value.trim()!==data.query)return false;link.click();return true;}
- function submit(){if(thinking)return;open();if(input.value.trim().length<2){status.textContent='Type at least two characters to search.';return;}if(intelligenceAvailable===false)load(true);else intelligent();}
+ function submit(){if(thinking)return;open();if(input.value.trim().length<2){status.textContent='Type at least two characters to search.';return;}if(!appAccess.can('ai.search')||intelligenceAvailable===false)load(true);else intelligent();}
  submitButton.onclick=submit;
  function focus(){if(input.disabled)return;if(mobile.matches){open();load();return;}if(document.activeElement===input){open();load();}else input.focus({preventScroll:true});}
  input.addEventListener('focus',()=>{if(restoring||thinking)return;const focusedVersion=version;queueMicrotask(()=>{if(focusedVersion===version&&document.activeElement===input&&!restoring){open();load();}});});input.addEventListener('click',()=>{if(!opened()){open();load();}});

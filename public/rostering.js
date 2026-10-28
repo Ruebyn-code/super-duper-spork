@@ -267,7 +267,7 @@
   feedback.hidden=!deletedRosterShifts.length;feedback.querySelector('button').disabled=rosterDeleting;
  }
  async function removeBoardShift(editor){
-  if(rosterDeleting||!can('rostering.manage')||rosterEditing())return;
+  if(rosterDeleting||!can('rostering.delete-shift')||rosterEditing())return;
   rosterDeleting=true;editor.deleting=true;editor.pending=false;editor.card.inert=true;cancelRosterDrag();
   try{
    if(rosterSaveTask)await rosterSaveTask;
@@ -472,7 +472,7 @@
   else if(!event.target.closest('.location-picker-menu,.roster-deletion-feedback'))selectRosterShift(null);
  });
  document.addEventListener('keydown',event=>{
-  if(!['Backspace','Delete'].includes(event.key)||event.repeat||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||section!=='roster'||appRequiredReading.blocked||!selectedRosterShift||!can('rostering.manage')||rosterEditing()||rosterDrag||rosterPress)return;
+  if(!['Backspace','Delete'].includes(event.key)||event.repeat||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||section!=='roster'||appRequiredReading.blocked||!selectedRosterShift||!can('rostering.delete-shift')||rosterEditing()||rosterDrag||rosterPress)return;
   if(event.target.closest('input,textarea,select,[contenteditable],[role="textbox"],[role="combobox"],dialog,[role="dialog"],.location-picker-menu,button:not(.roster-shift-grip):not(.roster-day-shift)'))return;
   const card=event.target.closest('[data-shift-id],[data-timeline-shift]');if(!card&&event.target!==document.body)return;
   const shift=data.roster.shifts.find(shift=>shift.id===selectedRosterShift),element=$('roster-days').querySelector('[data-timeline-shift="'+selectedRosterShift+'"]');

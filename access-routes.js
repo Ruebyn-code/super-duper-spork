@@ -36,3 +36,33 @@ function pagePermission(url){
  return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
 }
 module.exports={apiPermission,pagePermission};
+
+// Additional action limits never replace the original view, edit, hierarchy or scope checks.
+function actionPermission(url,method){
+ const write=method!=='GET'&&method!=='HEAD';
+ if(!write){if(url==='/api/learning-centre/report.csv')return 'learning.export';return null;}
+ if((url==='/api/accounts'||url==='/api/account-invitations'||/^\/api\/accounts\/[^/]+\/invitation$/.test(url))&&method==='POST')return 'users.create';
+ if(/^\/api\/accounts\/[^/]+$/.test(url)&&method==='DELETE')return 'users.delete';
+ if(url==='/api/search/intelligence')return 'ai.search';
+ if(url.startsWith('/api/hourly-sales/'))return 'hourly.import';
+ if(url.startsWith('/api/weekly-sales-import/'))return 'weekly.import';
+ if(url==='/api/invoices'&&method==='POST')return 'invoices.upload';
+ if(/^\/api\/invoices\/[a-f0-9-]{36}$/i.test(url)&&method==='DELETE')return 'invoices.delete';
+ if(url==='/api/products'&&method==='POST')return 'stock.create';
+ if(/^\/api\/products\/[^/]+$/.test(url)&&method==='DELETE')return 'stock.delete';
+ if(/^\/api\/products\/[^/]+\/par$/.test(url))return 'stock.targets';
+ if(url==='/api/suppliers'&&method==='POST')return 'suppliers.create';
+ if(/^\/api\/suppliers\/[^/]+$/.test(url)&&method==='DELETE')return 'suppliers.delete';
+ if(url==='/api/companies'&&method==='POST')return 'companies.create';
+ if(url==='/api/order-email-template')return 'email.template';
+ if(url==='/api/order-history'&&method==='POST')return 'orders.record';
+ if(/^\/api\/order-history\/[^/]+\/delivery$/.test(url))return 'orders.receive';
+ if(/^\/api\/order-history\/[^/]+$/.test(url))return method==='DELETE'?'orders.delete':method==='PUT'?'orders.edit':null;
+ if(/^\/api\/learning-centre\/courses\/[^/]+\/publish$/.test(url))return 'learning.publish';
+ if(/^\/api\/learning-centre\/courses\/[^/]+\/archive$/.test(url))return 'learning.archive';
+ if(url==='/api/rostering/publish')return 'rostering.publish';
+ if(/^\/api\/rostering\/shifts\/[^/]+$/.test(url)&&method==='DELETE')return 'rostering.delete-shift';
+ if(/^\/api\/ops-management\/planners(?:\/[^/]+)?$/.test(url))return 'ops.planners';
+ return null;
+}
+module.exports.actionPermission=actionPermission;
