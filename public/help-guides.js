@@ -75,12 +75,13 @@
   'Check the weekly budget and supplier delivery guidance before ordering.',
   'Cancel the final review if you need to change anything; your cart and notes remain available.'
  ],{route:'/#cart',permissions:['orders.view'],notes:['Carts are separate for each user and location in this browser. Placing or editing quantities requires order-placing permission. Opening the cart does not place an order.'],related:['place-order','ordering-budget']});
- add(c,'order-history','Find, add or delete past orders','Keep order history complete for the selected location.',[
+ add(c,'order-history','Find, edit, add or delete past orders','Keep order history complete for the selected location.',[
   'Open Ordering → Order history. Filter by dates, supplier or order reference and choose View order.',
+  'To correct a placed order, select Edit order. Change items, quantities, unit prices, reference or notes, then select Save changes.',
   'To add a missed order, choose Record past order, enter its original date and use the supplier/category cards to add items.',
   'Review quantities and historical prices, then choose Save to history. This records the order without emailing the supplier.',
   'To remove an incorrect order, open its details, select Delete order and confirm.'
- ],{route:'/order-history',permissions:['orders.view'],notes:['Adding and deleting require order-placing permission. Deleting excludes the order from order-based budgets, usage and reports; it does not cancel an order with a supplier. Orders still being sent cannot be deleted.'],related:['receiving-orders','stock-price-changes'],keywords:['missed order','manual order','past','remove','SGR-MER-0001','order number']});
+ ],{route:'/order-history',permissions:['orders.view'],notes:['Editing, adding and deleting require order-placing permission. Edits retain the original order date and a private audit, update order-based costs and usage, and send no supplier email or confirmation. Invoice-based weekly expenses keep their saved values. Pending prices may remain blank; zero is a known zero price.','If an order, its prices or delivery tracking changes while editing, your draft is kept. Reload latest explicitly discards that draft and opens the current order. An uncertain save freezes its details for the same-request retry.','Deleting excludes the order from order-based budgets, usage and reports; it does not cancel an order with a supplier. Orders still being sent cannot be edited or deleted. A received supplier must retain at least one item.'],related:['receiving-orders','stock-price-changes'],keywords:['edit order','amend','change quantity','pending price','missed order','manual order','past','remove','SGR-MER-0001','order number']});
  add(c,'stock-count','Enter and save a stock count','Use compact rows to record the stock physically present.',[
   'Open Ordering → Stock count and select New count. Check the count date.',
   'Filter by storage group or search. Enter quantities next to each item; leave uncounted items blank and enter 0 for none.',

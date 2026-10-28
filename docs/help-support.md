@@ -106,7 +106,9 @@ data directory and use fake email responses; intelligence requests are rejected.
    WebVTT captions. This updates the manifest and removes obsolete generated
    assets only after the new library is complete. For a single-guide preview,
    use `--guide place-order`; inspect the MP4 in the temporary `rendered` folder,
-   then run the full build to publish its timeline and prune unused assets.
+   then use `--guide place-order --publish` to update only that guide and prune
+   its replaced assets. A single-guide build requires only its storyboard scenes;
+   the other guides and their existing assets are preserved.
 5. Review representative pictures and videos, validate every asset, and run the
    normal tests, desktop/phone playback checks and production image checks.
 

@@ -661,13 +661,15 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const saved=await orderHistory.save(dataDir,session,await body(req,160000),await readCatalogue());return json(saved.created?201:200,saved.order);
       }
       const receiptRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})\/delivery$/i);
-      if(receiptRoute){if(req.method!=='PUT')fail('Unsupported order delivery action.',405);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await orderFulfilment.update(dataDir,session,receiptRoute[1],await body(req),{now:deliveryNow()}));}
+      if(receiptRoute){if(!can(session,'orders.view')||!can(session,'orders.place'))fail('Order placing permission required to update deliveries.',403);if(req.method!=='PUT')fail('Unsupported order delivery action.',405);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);const input=await body(req);return json(200,await mutate(()=>orderFulfilment.update(dataDir,session,receiptRoute[1],input,{now:deliveryNow()})));}
       const historyOrderRoute=req.url.match(/^\/api\/order-history\/([a-f0-9-]{36})$/i);
       if(historyOrderRoute){
         if(req.method==='GET')return json(200,await orderHistory.get(dataDir,session,historyOrderRoute[1]));
-        if(req.method!=='DELETE')fail('Saved history entries cannot be edited.',405);
+        if(!['PUT','DELETE'].includes(req.method))fail('Unsupported order history action.',405);
+        if(!can(session,'orders.view')||!can(session,'orders.place'))fail('Order placing permission required to change a saved order.',403);
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);
-        return json(200,await orderHistory.remove(dataDir,session,historyOrderRoute[1],await body(req)));
+        const input=await body(req,160000);
+        return json(200,await mutate(catalogue=>req.method==='PUT'?orderHistory.update(dataDir,session,historyOrderRoute[1],input,catalogue):orderHistory.remove(dataDir,session,historyOrderRoute[1],input)));
       }
       const savedOrderRoute=req.url.match(/^\/api\/orders\/([a-f0-9-]{36})$/i);
       if(req.method==='GET'&&savedOrderRoute){

@@ -8,8 +8,9 @@ function scope(record,actor,status='requested'){return record?.status===status&&
 function date(value){if(typeof value!=='string'||!/^20\d\d-\d\d-\d\d$/.test(value))fail('Choose a valid order date from 2000 onwards.');calendar.date(value);return value;}
 function text(value,max,label){if(value===undefined)return '';if(typeof value!=='string'||value.length>max||/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value))fail('Enter a valid '+label+'.');return value.trim();}
 function placedDate(record){return record.source==='manual_history'?record.orderDate:calendar.today(Date.parse(record.createdAt));}
-function summary(record){return{id:record.id,orderNumber:record.orderNumber||record.id,orderDate:placedDate(record),createdAt:record.createdAt,locationId:record.locationId,locationName:record.locationName||record.location||'',source:record.source==='manual_history'?'manual_history':'platform',reference:record.reference||'',name:record.name||'',itemCount:record.items.length,suppliers:[...new Map(record.items.map(i=>[i.supplierId,{id:i.supplierId,name:i.supplier||'Supplier removed'}])).values()],total:record.total,...(record.fulfilment?{fulfilment:record.fulfilment}:{}),...(record.priceAdjustment?{priceAdjustment:record.priceAdjustment}:{}),pricePending:Boolean(record.pricePending),recordedAt:record.recordedAt||null,recordedBy:record.recordedBy||null,delivery:(record.delivery||[]).map(d=>({supplierId:d.supplierId,supplier:d.supplier,status:d.status}))};}
-function detail(record){return{...summary(record),notes:record.notes||'',items:record.items.map(i=>({id:i.id,name:i.name,sku:i.sku||'',unitAmount:i.unitAmount||'',supplierId:i.supplierId,supplier:i.supplier,quantity:i.quantity,price:i.price,...(i.priceUpdatedAt?{originalPrice:i.originalPrice,priceUpdatedAt:i.priceUpdatedAt}:{})}))};}
+function editToken(record){return crypto.createHash('sha256').update(JSON.stringify({id:record.id,revision:record.orderEdit?.revision||0,reference:record.reference||'',notes:record.notes||'',items:record.items.map(({id,quantity,price,unitAmount,supplierId})=>({id,quantity,price,unitAmount:unitAmount||'',supplierId})).sort((a,b)=>a.id.localeCompare(b.id)),fulfilment:record.fulfilment||null})).digest('hex');}
+function summary(record){return{id:record.id,orderNumber:record.orderNumber||record.id,orderDate:placedDate(record),createdAt:record.createdAt,locationId:record.locationId,locationName:record.locationName||record.location||'',source:record.source==='manual_history'?'manual_history':'platform',reference:record.reference||'',name:record.name||'',itemCount:record.items.length,suppliers:[...new Map(record.items.map(i=>[i.supplierId,{id:i.supplierId,name:i.supplier||'Supplier removed'}])).values()],total:record.total,...(record.fulfilment?{fulfilment:record.fulfilment}:{}),...(record.priceAdjustment?{priceAdjustment:record.priceAdjustment}:{}),...(record.orderEdit?{orderEdit:record.orderEdit}:{}),pricePending:Boolean(record.pricePending),recordedAt:record.recordedAt||null,recordedBy:record.recordedBy||null,delivery:(record.delivery||[]).map(d=>({supplierId:d.supplierId,supplier:d.supplier,status:d.status}))};}
+function detail(record){return{...summary(record),editRevision:record.orderEdit?.revision||0,editToken:editToken(record),notes:record.notes||'',items:record.items.map(i=>({id:i.id,name:i.name,sku:i.sku||'',unitAmount:i.unitAmount||'',supplierId:i.supplierId,supplier:i.supplier,quantity:i.quantity,price:i.price,...(i.priceUpdatedAt?{originalPrice:i.originalPrice,priceUpdatedAt:i.priceUpdatedAt}:{})}))};}
 async function read(dir,id){if(!uuidFile.test(id+'.json'))return null;try{const record=JSON.parse(await fs.readFile(path.join(dir,id+'.json'),'utf8'));return record.id===id?await orderNumbers.decorate(dir,record):null;}catch(error){if(error.code==='ENOENT')return null;throw error;}}
 async function get(dir,actor,id){if(!can(actor,'orders.view'))fail('Ordering access required.',403);const record=await read(dir,id);if(!scope(record,actor))fail('Order not found.',404);return detail(await fulfilment.decorate(dir,await orderPrices.decorate(dir,record)));}
 async function list(dir,actor,params,{reader,now=Date.now()}={}){
@@ -20,7 +21,7 @@ async function list(dir,actor,params,{reader,now=Date.now()}={}){
  const suppliers=[...new Map(records.flatMap(r=>r.items.map(i=>[i.supplierId,{id:i.supplierId,name:i.supplier||'Supplier removed'}]))).values()].sort((a,b)=>a.name.localeCompare(b.name));
  const filtered=records.filter(r=>{const day=placedDate(r);return(!from||day>=from)&&(!to||day<=to)&&(!supplier||r.items.some(i=>i.supplierId===supplier))&&(!query||[r.id,r.orderNumber,r.reference,r.name,r.notes,...r.items.flatMap(i=>[i.name,i.sku,i.supplier])].filter(Boolean).join(' ').toLowerCase().includes(query));}).sort((a,b)=>placedDate(b).localeCompare(placedDate(a))||String(b.recordedAt||b.createdAt).localeCompare(String(a.recordedAt||a.createdAt))||b.id.localeCompare(a.id));
  const pageSize=25,pages=Math.max(1,Math.ceil(filtered.length/pageSize)),current=Math.min(page,pages);
- return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.place'),canDelete:can(actor,'orders.place'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
+ return{today:calendar.today(now),locationId:actor.locationId,locationName:actor.locationName,companyId:actor.companyId,canRecord:can(actor,'orders.place'),canEdit:can(actor,'orders.place'),canDelete:can(actor,'orders.place'),suppliers,page:current,pages,total:filtered.length,orders:filtered.slice((current-1)*pageSize,current*pageSize).map(summary)};
 }
 const removals=new Map();
 async function remove(dir,actor,id,input,{now=Date.now()}={}){
@@ -63,4 +64,30 @@ async function save(dir,actor,input,catalogue,{now=Date.now()}={}){
  try{await fs.writeFile(temp,JSON.stringify(record,null,2),{mode:0o600});try{await fs.link(temp,target);}catch(error){if(error.code!=='EEXIST')throw error;return replay(await read(dir,id));}}finally{await fs.rm(temp,{force:true});}
  return{created:true,order:detail(record)};
 }
-module.exports={get,list,save,remove};
+async function update(dir,actor,id,input,catalogue,{now=Date.now()}={}){
+ if(!can(actor,'orders.view')||!can(actor,'orders.place'))fail('Order placing permission required to edit an order.',403);
+ if(!input||input.companyId!==actor.companyId||input.locationId!==actor.locationId)fail('The selected location changed. Reopen the order before editing it.',409);
+ if(!uuid.test(input.requestId)||!Number.isSafeInteger(input.editRevision)||input.editRevision<0||typeof input.editToken!=='string'||!/^[a-f0-9]{64}$/.test(input.editToken))fail('Reopen the order before editing it.');
+ const original=await read(dir,id);if(!scope(original,actor))fail('Order not found.',404);
+ if(original.delivery?.some(row=>row.status==='pending')||original.confirmation?.status==='pending')fail('This order is still being sent. Wait for sending to finish before editing it.',409);
+ if(input.orderDate!==undefined&&input.orderDate!==placedDate(original))fail('Keep the original order date when editing a placed order.');
+ const normalized=normalize({...input,orderDate:placedDate(original)},actor,now),units=input.items.map(({id,unitAmount,supplierId})=>({id,unitAmount,supplierId})).sort((a,b)=>a.id.localeCompare(b.id)),fingerprint=crypto.createHash('sha256').update(JSON.stringify({normalized,units,editRevision:input.editRevision,editToken:input.editToken})).digest('hex');
+ const previous=(catalogue.orderEdits||[]).find(entry=>entry.id===input.requestId);
+ const current=await fulfilment.decorate(dir,orderPrices.effectiveOrder(original,catalogue));
+ if(previous){if(previous.orderId!==id||previous.actorId!==actor.id||previous.fingerprint!==fingerprint)fail('This edit request is already used. Reopen the order for a new edit.',409);return detail(current);}
+ if(input.editRevision!==(current.orderEdit?.revision||0)||input.editToken!==editToken(current))fail('This order, its prices or delivery tracking changed. Reopen the order to review the latest details before saving.',409);
+ const existing=new Map(current.items.map(item=>[item.id,item])),products=new Map(catalogue.products.map(product=>[product.id,product])),suppliers=new Map(catalogue.suppliers.map(supplier=>[supplier.id,supplier]));
+ const items=normalized.items.map(item=>{
+  const saved=existing.get(item.id);if(saved)return{id:saved.id,name:saved.name,sku:saved.sku||'',unitAmount:saved.unitAmount||'',supplierId:saved.supplierId,supplier:saved.supplier,quantity:item.quantity,price:item.price};
+  const product=products.get(item.id),supplier=product&&suppliers.get(product.supplierId),expected=units.find(unit=>unit.id===item.id);
+  if(!product||!supplier)fail('An item or supplier was removed. Reload the catalogue before adding it.');
+  if(expected.unitAmount!==(product.unitAmount||'')||expected.supplierId!==product.supplierId)fail('An added item’s pack or supplier changed. Reopen the order and check the item before adding it.',409);
+  return{...item,name:product.name,sku:product.sku||'',unitAmount:product.unitAmount||'',supplierId:supplier.id,supplier:supplier.name};
+ });
+ const wanted=new Set(items.map(item=>item.supplierId));if(current.fulfilment?.suppliers.some(supplier=>supplier.receivedAt&&!wanted.has(supplier.supplierId)))fail('Keep at least one item for a supplier whose delivery is already received. Quantities and prices can still be corrected.');
+ const snapshot=record=>({reference:record.reference||'',notes:record.notes||'',items:record.items.map(({id,name,sku,unitAmount,supplierId,supplier,quantity,price})=>({id,name,sku:sku||'',unitAmount:unitAmount||'',supplierId,supplier,quantity,price})),total:record.total,pricePending:record.pricePending});
+ const after={items,reference:normalized.reference,notes:normalized.notes},event={id:input.requestId,orderId:id,companyId:actor.companyId,locationId:actor.locationId,orderOwnerId:original.requestOwnerId,revision:input.editRevision+1,at:new Date(now).toISOString(),actorId:actor.id,actorName:actor.username,source:'order-edit',fingerprint,before:snapshot(current),after,priceVersions:orderPrices.priceVersions(catalogue,id)};
+ (catalogue.orderEdits||=[]).push(event);
+ return detail(await fulfilment.decorate(dir,orderPrices.effectiveOrder(original,catalogue)));
+}
+module.exports={get,list,save,remove,update};
