@@ -5,6 +5,7 @@ const {shift}=require('./stock-usage');
 const {compare}=require('./public/sales-performance');
 const orderCosts=require('./order-cost-period'),transferEffects=require('./stock-transfer-effects');
 const holidayProjections=require('./holiday-projections');
+const {outlook}=require('./sales-outlook');
 const maximumDailyCents=1000000000;
 function invalid(message,status=400){const error=Error(message);error.status=status;throw error;}
 function week(value){
@@ -161,7 +162,8 @@ function createStore(){
   const previousStarts=[1,2,3,4].map(index=>shift(current,-7*index)),forecast=await projectionRecords(dir,session,previousStarts,records),projection=calculate([...forecast,...records.filter(record=>!previousStarts.includes(record.weekStart))],orders,session,{now,transfers});
   const ordering=orderingProjection(projection,orders,session,{transfers}),changes=await holidayProjections.adjustments(dir,session,{weekStarts:[...new Set([current,ordering.weekStart])],anchor:current,asOf:projection.today,readRevenue:starts=>projectionRecords(dir,session,starts)}),adjusted=holidayProjections.apply(projection,changes);
   if(adjusted!==projection)adjusted.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:adjusted.dailyProjections,today:adjusted.today});
-  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:adjusted,orderingProjection:holidayProjections.apply(ordering,changes)};
+  const [revenue]=await projectionRecords(dir,session,[current],records),orderingAdjusted=holidayProjections.apply(ordering,changes);
+  return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:{...adjusted,salesOutlook:outlook(adjusted,adjusted,revenue)},orderingProjection:{...orderingAdjusted,salesOutlook:outlook(orderingAdjusted,adjusted,revenue)}};
  }
  async function history(dir,session){
   const folders=[accountFolder(dir,session),...(session.locationId?session.legacyAccountIds||[]:[]).filter(id=>/^[a-zA-Z0-9-]{1,100}$/.test(id)).map(id=>path.join(dir,'sales',id))];

@@ -1,8 +1,10 @@
 (()=>{
  function projectedCogsPercent(projection,cart={total:0,pricePending:false}){
-  if(!projection||!cart||projection.pricePending||cart.pricePending||!Number.isFinite(projection.projectedSalesCents)||projection.projectedSalesCents<=0||!Number.isFinite(projection.spentCents)||!Number.isFinite(cart.total)||cart.total<0)return null;
-  return (projection.spentCents+cart.total)/projection.projectedSalesCents*100;
+  const revenue=projection?.salesOutlook?projection.salesOutlook.expectedSalesCents:projection?.projectedSalesCents;
+  if(!projection||!cart||projection.pricePending||cart.pricePending||!Number.isFinite(revenue)||revenue<=0||!Number.isFinite(projection.spentCents)||!Number.isFinite(cart.total)||cart.total<0)return null;
+  return (projection.spentCents+cart.total)/revenue*100;
  }
+ function projectedCogsState(projection,cart={total:0,pricePending:false}){const percent=projectedCogsPercent(projection,cart),revenue=projection?.salesOutlook?projection.salesOutlook.expectedSalesCents:projection?.projectedSalesCents;return percent===null||!Number.isFinite(projection?.budgetPercent)?'unknown':(projection.spentCents+cart.total)*100>revenue*projection.budgetPercent?'over':'within';}
  function budgetPosition(projection,cart={total:0,pricePending:false}){
   const pending=Boolean(projection?.pricePending||cart?.pricePending),known=Number.isFinite(projection?.remainingCents)&&Number.isFinite(cart?.total)&&cart.total>=0;
   const remainingCents=pending||!known?null:projection.remainingCents-cart.total;
@@ -10,7 +12,7 @@
   const state=pending?'pending':remainingCents===null?'unavailable':remainingCents<0?'over':projection.budgetCents===0?'zero':usedPercent>=90?'near':'within';
   return{remainingCents,usedPercent,state};
  }
- if(typeof module==='object'&&module.exports){module.exports={projectedCogsPercent,budgetPosition};return;}
+ if(typeof module==='object'&&module.exports){module.exports={projectedCogsPercent,projectedCogsState,budgetPosition};return;}
  if(!appAccess.can('sales.view')){document.getElementById('ordering-budget')?.classList.add('access-denied');document.querySelector('.ordering-sales-budget')?.classList.add('access-denied');return;}
  const active=()=>document.body?.dataset?.homeDashboard!=='staff';
  const panel=document.getElementById('ordering-budget');if(!panel)return;
@@ -38,7 +40,16 @@
   $('ordering-budget-spent').title=projection.transferCostCents?wording('Includes net stock cost transfers: {cost}',{cost:money(projection.transferCostCents)}):'';
   const upcoming=Boolean(projection.isUpcoming),cartPending=cart.pricePending;
   const cogs=$('ordering-projected-cogs'),cogsPercent=projectedCogsPercent(projection,cart);
-  if(cogs){cogs.textContent=cogsPercent===null?'—':new Intl.NumberFormat('en-AU',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}).format(cogsPercent/100);cogs.title=wording(projection.pricePending||cartPending?'Some item prices are pending.':projection.projectedSalesCents===null?'Complete four weeks of sales to calculate projected COGS.':projection.projectedSalesCents===0?'Projected COGS cannot be calculated when projected sales are $0.':'Projected COGS = (allocated order costs + this cart) ÷ projected sales × 100.');}
+  if(cogs){
+   const outlook=projection.salesOutlook,revenue=outlook?outlook.expectedSalesCents:projection.projectedSalesCents,state=projectedCogsState(projection,cart),basis=$('ordering-cogs-outlook');
+   cogs.textContent=cogsPercent===null?'—':new Intl.NumberFormat('en-AU',{style:'percent',minimumFractionDigits:1,maximumFractionDigits:1}).format(cogsPercent/100);cogs.dataset.cogsState=state;
+   cogs.title=wording(projection.pricePending||cartPending?'Some item prices are pending.':revenue===null?'More sales history is needed to estimate full-week sales.':revenue===0?'Projected COGS cannot be calculated when expected sales are $0.':'Projected COGS = (allocated order costs + this cart) ÷ expected full-week sales × 100. Green is within the {budget}% budget; red is over it.',{budget:projection.budgetPercent});
+   if(basis){
+    const pace=outlook?.trendPercent,percent=Number.isFinite(pace)?new Intl.NumberFormat('en-AU',{signDisplay:'always',maximumFractionDigits:1}).format(pace):null;
+    template(basis,revenue===null?'Sales outlook unavailable':outlook?.method==='actuals'?'Recorded weekly sales {amount}':percent!==null?'Expected sales {amount} · Sales pace {percent}%':'Expected sales {amount} · Baseline forecast',{amount:money(revenue),percent});
+    basis.title=outlook?wording('Recorded sales: {actual}. Estimated unrecorded days: {forecast}. Pace compares saved sales with the forecast for the same recorded days. Unrecorded days include any missing past sales.',{actual:money(outlook.actualSalesCents),forecast:money(outlook.forecastSalesCents)}):'';
+   }
+  }
   template($('ordering-projected-sales').previousElementSibling,upcoming?'Projected sales next week':'Projected sales');
   template($('ordering-budget-spent').previousElementSibling,upcoming?'Order costs next week':'Order costs this week');
   template($('ordering-budget-remaining').previousElementSibling,'Budget after this cart');
@@ -56,7 +67,7 @@
  async function refresh(){
   if(document.hidden||!active())return;if(loading){refreshAgain=true;return;}loading=true;if(retry)retry.disabled=true;
   try{const response=await fetch('/api/sales',{headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})}});if(!response.ok)throw Error('Unable to load sales budget.');const report=await response.json();currentProjection=report.projection;projection=report.orderingProjection||report.projection;render();}
-  catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');if(overview){projection=null;panel.dataset.budgetState='error';template($('ordering-budget-state'),'Unavailable');for(const id of ['ordering-projected-sales','ordering-week-budget','ordering-budget-spent','ordering-budget-remaining','ordering-projected-cogs'])$(id).textContent='—';$('ordering-budget-meter').hidden=true;template($('ordering-budget-usage'),'Budget figures could not be refreshed.');retry.hidden=false;}}
+  catch{$('ordering-budget-status').dataset.homeError='';template($('ordering-budget-status'),'Unable to load sales budget. Open Sales to try again.');if(overview){projection=null;panel.dataset.budgetState='error';template($('ordering-budget-state'),'Unavailable');for(const id of ['ordering-projected-sales','ordering-week-budget','ordering-budget-spent','ordering-budget-remaining','ordering-projected-cogs'])$(id).textContent='—';$('ordering-projected-cogs').dataset.cogsState='unknown';if($('ordering-cogs-outlook'))template($('ordering-cogs-outlook'),'Sales outlook unavailable');$('ordering-budget-meter').hidden=true;template($('ordering-budget-usage'),'Budget figures could not be refreshed.');retry.hidden=false;}}
   finally{loading=false;if(retry)retry.disabled=false;if(refreshAgain){refreshAgain=false;refresh();}}
  }
  window.addEventListener('home-dashboard-access',()=>{if(!active()){projection=null;currentProjection=null;}else refresh();});
