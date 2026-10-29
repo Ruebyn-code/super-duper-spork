@@ -7,7 +7,7 @@
  const validTime=value=>!value||typeof value==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
  function validate(plan){
   if(!plan?.schedule)return 'Choose a checklist type and schedule.';if(model.type(plan)==='unscheduled')return null;
-  const s=plan.schedule;if(!validDate(s.startDate)||s.endDate&&!validDate(s.endDate)||s.endDate&&s.endDate<s.startDate)return 'Choose valid start and end dates to see the breakdown.';
+  const s=plan.schedule;if(!validDate(s.startDate))return 'Choose a valid start date to see the breakdown.';if(s.endDate&&(!validDate(s.endDate)||s.endDate<s.startDate))return 'This saved schedule has invalid dates. Update its settings to remove the saved limit.';
   if(!['hourly','daily','weekly','fortnightly','monthly','yearly','once','manual'].includes(s.kind))return 'Choose a repeat frequency.';
   if(['hourly','daily'].includes(s.kind)&&s.days&&(!s.days.length||s.days.some(day=>!Number.isInteger(day)||day<1||day>7)))return 'Choose at least one repeat day.';
   if([plan.startTime,plan.activeFrom,plan.activeUntil,plan.dueTime].some(value=>!validTime(value)))return 'Choose valid active hours and deadline times.';
@@ -34,7 +34,7 @@
   const offset=plan.dueAfterDays,day=offset===undefined?'Due date follows its repeat period':offset===0?'Same day':offset===1?'Next day':offset+' days after the period starts';
   const dueDay=day+(['weekly','fortnightly','monthly','yearly'].includes(s.kind)&&offset>0?' (capped to the repeat period)':'');
   const due=s.kind==='hourly'?'At the end of each hour, or the active finish if earlier':type==='on-demand'&&!plan.dueTime&&!plan.tradingHours?.due?'No deadline':dueDay+' · '+(plan.tradingHours?.due?point(plan.tradingHours.due):plan.dueTime?time(plan.dueTime):'end of day');
-  return{valid:true,state,headline:!plan.active?'Paused · these settings will apply when activated.':type==='on-demand'?'Team members can start this checklist manually during its available windows.':'A checklist becomes available in each planned window and leaves Active when that window finishes.',rows:[['Repeats',repeat(plan)],['Date range',date(s.startDate)+(s.endDate?' → '+date(s.endDate)+' (inclusive)':type==='once'?' · once only':' onwards · no end date')],['Active hours',hours],['Deadline',due]],hasWindows:true,windowTitle:!plan.active?'Preview if activated':type==='on-demand'?'Available start windows':'Current and next runs'};
+  return{valid:true,state,headline:!plan.active?'Paused · these settings will apply when activated.':type==='on-demand'?'Team members can start this checklist manually during its available windows.':'A checklist becomes available in each planned window and leaves Active when that window finishes.',rows:[['Repeats',repeat(plan)],[s.endDate?'Saved date range':'Start date',date(s.startDate)+(s.endDate?' → '+date(s.endDate)+' (saved limit; removed on edit)':type==='once'?' · once only':' onwards')],['Active hours',hours],['Deadline',due]],hasWindows:true,windowTitle:!plan.active?'Preview if activated':type==='on-demand'?'Available start windows':'Current and next runs'};
  }
  function upcoming(plan,now,hours,limit=3){
   const description=describe(plan);if(!description.valid||!description.hasWindows)return{windows:[],message:description.message||'No scheduled runs.'};

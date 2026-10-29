@@ -383,16 +383,16 @@
   'Use instructions or section headings to explain the task; these are not responses.',
   'Configure timed sections when a minimum elapsed process is needed, then review the complete checklist before planning it.'
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Step activity and completion are recorded from saved work. Required uploads and active editing must finish before completion.'],related:['checklist-builder','complete-checklist']});
- add(c,'checklist-planners','Create checklist planners','Give one checklist one or several schedules.',[
-  'Open the checklist’s Planner stage and add or select a planner.',
-  'Choose recurrence, dates and a fixed-time or location-trading-hours window. The Schedule breakdown shows repeat days, date limits, active hours and deadlines. Expand Current and next runs to see exact windows for each selected location.',
+ add(c,'checklist-planners','Configure checklist Plans','Use one planner for each checklist.',[
+  'Open the checklist’s Plans stage. Choose Set up planner if none exists, or Edit planner to change its single planner.',
+  'Choose recurrence, a start date and fixed times or location trading hours. Plan breakdown shows repeats, active hours and deadlines. Expand Current and next runs for exact windows. Planners continue until paused; once off still runs once.',
   'Use Locations and Assignees to choose who should receive that planner’s work.',
-  'Review the saved planner and activate it when ready. Add another planner for a separate schedule.'
- ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Each planner keeps its own audience and schedule. Review paused intelligence-generated planners before activation.'],related:['hourly-checklists','checklist-audiences','intelligence-planners']});
+  'Review the saved planner and activate it when ready. Older checklists with several planners must use Keep this planner to choose one; the others stop creating work while saved records remain in History.'
+ ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['One planner holds the checklist’s recurrence, locations and audience. End-date fields are removed. Existing saved limits clear only on an explicit settings edit. Review paused intelligence-generated plans before activation.'],related:['hourly-checklists','checklist-audiences','intelligence-planners']});
  add(c,'hourly-checklists','Repeat checklists hourly or around trading hours','Make planned tasks follow each location’s opening and closing.',[
-  'In Planner, choose Hourly recurrence for a separate checklist occurrence each hour within the window.',
+  'In Plans, choose Hourly recurrence for a separate checklist occurrence each hour within the window.',
   'Choose Location trading hours to base the window on saved opening/closing times, adding offsets when needed.',
-  'Check the assigned locations have valid hours. Expand the Schedule breakdown’s next runs to review each hourly window and its finish, including overnight times.',
+  'Check the assigned locations have valid hours. Expand the Plan breakdown’s next runs to review each hourly window and its finish, including overnight times.',
   'Activate the planner. Active work appears only when its planned window is open.'
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Closed days are skipped; missing hours require correction. Overnight work follows its opening trading day. Existing runs retain their frozen timing when hours change.'],related:['trading-hours','checklist-planners','intelligence-planners'],keywords:['repeat hourly','opening','closing','planner','scheduled day']});
  add(c,'checklist-audiences','Choose checklist locations and assignees','Target planned work to the right team.',[
@@ -552,12 +552,12 @@
   'Generate and inspect the proposed instructions and response steps.',
   'Choose Open draft in builder to create an ordinary editable draft, then review its planners and audience before activation.'
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Generation is a preview. It does not start work or activate schedules.'],related:['checklist-builder','intelligence-planners','intelligence-setup']});
- add(c,'intelligence-planners','Generate one or several checklist planners','Ask for repeated work or schedules around trading hours.',[
-  'Open a checklist’s Planner stage and choose OpStack intelligence planners.',
-  'Describe the schedules, such as “repeat hourly from opening until closing”.',
-  'Review the suggested recurrence, timing and dates. Add paused planners explicitly.',
-  'Check Locations, Assignees and saved trading hours, then activate the planners you want.'
- ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Hourly recurrence creates its own hourly occurrences; a separate planner per clock hour is unnecessary. Suggestions can include up to twelve paused planners.'],related:['hourly-checklists','checklist-audiences','trading-hours']});
+ add(c,'intelligence-planners','Generate a checklist plan','Ask for one repeating plan or a plan around trading hours.',[
+  'Open a checklist’s Plans stage and choose OpStack intelligence plan.',
+  'Describe the plan, such as “repeat hourly from opening until closing”. Each checklist has one planner.',
+  'Review the start date, recurrence and timing, then choose Apply paused plan. This creates the first planner or updates the existing one in place, paused for review.',
+  'Check Locations, Assignees and saved trading hours, then activate the planner when ready. Existing locations and assignees are retained when intelligence updates its settings.'
+ ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Hourly recurrence creates its own hourly occurrences; a separate planner per clock hour is unnecessary. Suggestions contain one paused planner and never add an end date.'],related:['hourly-checklists','checklist-audiences','trading-hours']});
  add(c,'intelligence-questions','Generate training questions from content','Create any of the nine question types from approved written sources.',[
   'Open OpStack intelligence questions in Course builder or Add a block → Knowledge checks.',
   'Choose written course content, accessible Knowledge Library articles or pasted text, then inspect the selected source.',

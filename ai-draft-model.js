@@ -10,8 +10,8 @@ const reportModel=require('./ai-report-model');
 const searchModel=require('./ai-search-model'),plannerDrafts=require('./ai-planner-draft-model');
 const writing=require('./public/ai-writing-model'),invoiceIntelligence=require('./invoice-intelligence-model');
 const hourlySales=require('./hourly-sales-model'),weeklySales=require('./weekly-sales-scan');
-const schemas={'weekly-sales':weeklySales.schema,'hourly-sales':hourlySales.schema,invoice:invoiceIntelligence.schema,...Object.fromEntries(writing.kinds.map(kind=>[kind,writing.schema])),planners:object({planners:array(plannerDrafts.schema)}),search:searchModel.schema,report:reportModel.schema,
- checklist:object({title:string,description:string,planners:array(plannerDrafts.schema),steps:array(object({type:{type:'string',enum:['check','text','yesno','photo','instruction','section']},title:string,help:string,required:{type:'boolean'}}))}),
+const schemas={'weekly-sales':weeklySales.schema,'hourly-sales':hourlySales.schema,invoice:invoiceIntelligence.schema,...Object.fromEntries(writing.kinds.map(kind=>[kind,writing.schema])),planners:object({planners:{...array(plannerDrafts.schema),minItems:1,maxItems:1}}),search:searchModel.schema,report:reportModel.schema,
+ checklist:object({title:string,description:string,planners:{...array(plannerDrafts.schema),maxItems:1},steps:array(object({type:{type:'string',enum:['check','text','yesno','photo','instruction','section']},title:string,help:string,required:{type:'boolean'}}))}),
  course:object({title:string,description:string,category:string,minutes:{type:'integer'},sections:array(object({title:string,lessons:array(object({title:string,body:string})),questions:array(questionSchema)}))}),
  questions:object({title:string,questions:array(questionSchema)})
 };
@@ -29,10 +29,10 @@ function normalize(kind,value,parameters){
  if(kind==='report')return reportModel.normalize(value,parameters);
  if(kind==='search')return searchModel.normalize(value,parameters);
  try{
-  if(kind==='planners')return{title:'Planner drafts',planners:list(value.planners,1,12).map(plan=>plannerDrafts.normalize(plan,parameters?.today))};
+  if(kind==='planners')return{title:'Planner drafts',planners:list(value.planners,1,1).map(plan=>plannerDrafts.normalize(plan,parameters?.today))};
   if(kind==='checklist'){
    const steps=list(value.steps,1,40).map(step=>{if(!step||!schemas.checklist.properties.steps.items.properties.type.enum.includes(step.type)||typeof step.required!=='boolean')fail();return{id:crypto.randomUUID(),type:step.type,title:text(step.title,200),help:text(step.help,2000,false),required:step.required};});
-   return{...require('./ops-management').normalizeContent({title:text(value.title,160),description:text(value.description,2000,false),steps}),planners:list(value.planners??[],0,12).map(plan=>plannerDrafts.normalize(plan,parameters?.today))};
+   return{...require('./ops-management').normalizeContent({title:text(value.title,160),description:text(value.description,2000,false),steps}),planners:list(value.planners??[],0,1).map(plan=>plannerDrafts.normalize(plan,parameters?.today))};
   }
   if(kind==='questions'){
    const quiz=list(value.questions,1,20).map(normalizeQuestion);
