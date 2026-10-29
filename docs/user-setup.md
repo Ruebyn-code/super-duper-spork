@@ -26,18 +26,36 @@ Once the account is created, the fifth step opens inside the popup. Managers
 with awards.manage use the existing Employment & award editor, including dated
 employment, DOB, employer-selected classification, pay arrangement and written
 part-time pattern. Nothing changes the employer’s award configuration.
-Managers with rostering.view and rostering.costs can save the new user’s dated
-flat hourly rate separately at each assigned location in the current company.
-Each save sends only that user and location through the existing revision-checked
-rates API, preserving every other employee’s rate. Native award costing hides
-the flat-rate inputs. Missing rates remain unknown; zero is explicit.
+Hourly rates are calculated automatically from the saved date of birth, employment
+type, award classification and pay arrangement. The read-only panel shares the
+native calculator’s junior bases, casual loading, ordinary weekday/weekend,
+public-holiday and night percentages, and cent rounding. Dates can be inspected
+without changing account or employment data. A birthday or later effective
+profile selects the correct rate for that date. Shift overtime, allowances and
+other recorded conditions remain with the existing full shift calculator.
 
-Roster edits require their native explicit saves before Continue. A conflicted
-or unconfirmed rate save keeps the draft and offers Check latest rate before
-retrying. Skipping unchanged roster fields is allowed; editing the existing user
-or Labour settings can complete them later. The popup never schedules shifts,
-changes staff availability, clocks time, or sends a second invitation. Roster
-permissions do not follow automatically from user-management permission.
+The company must enable native award calculations through the existing Employer
+setup, including confirmed coverage and a weekly/fortnightly pay-period anchor.
+Setup and previewing never enable this automatically. Missing profiles, older or
+expired editions, special arrangements and below-minimum agreed bases show
+required setup instead of a guessed rate. Above-award agreed bases retain their
+saved terms and native calculation rules. No automatic rate is copied into the
+legacy flat-rate table; existing company configuration and historical approved
+calculations remain unchanged.
+
+Managers with awards.manage can edit employment and view the calculated panel.
+Those with rostering.view and rostering.costs can read only the rate summary for
+users at their accessible selected location. The server response contains rates,
+source metadata and setup issues, never DOB, employment patterns, profile lists,
+other employees or audit data. The endpoint is a read: it never starts a feed,
+saves settings, creates a shift or changes another employee’s rates.
+
+Unsaved employment changes hide the calculated values until saved, then refresh
+the summary. Rate-date selection and Refresh do not dirty the employment draft
+or submit the account form. Missing access remains a manager-help message.
+Skipping unchanged employment fields is allowed; the ordinary user editor can
+complete them later. Roster setup never changes staff availability, clocks time,
+or sends a second invitation.
 
 Finish user setup closes the checklist. Closing after creation and with no
 unsaved roster draft also releases the popup; existing saved records remain.

@@ -29,6 +29,10 @@ JSON check imports remain available, but do not alter this engine's pay tables.
    Part-time users require a seven-day written work pattern, meal timing and an agreement reference; keep the original
    agreement in the employer's records. Classification decisions are made by the
    employer using clause 12, not inferred from a user's app role.
+   User setup and the employment editor display read-only automatic hourly rates
+   from these saved terms. The preview shares native junior/loading/penalty
+   helpers, uses the selected date, and preserves missing setup/source guards.
+   It never stores a flat-rate copy or enables employer coverage.
 5. Roster → Award checks → Pay details: review estimates and enter break timing,
    eligible allowances, reimbursements and any written part-time variation.
    Published rosters supply the ordinary window for full-time actual work.

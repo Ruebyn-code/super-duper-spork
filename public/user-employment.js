@@ -1,25 +1,26 @@
 (()=>{
- let generation=0;
+ let generation=0,ratePreview=null;
  const node=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
  const field=(title,control)=>{const l=node('label',title);l.append(control);return l;};
  const input=(type,value='')=>{const e=node('input');e.type=type;e.value=value;return e;};
  const select=(options,value)=>{const e=node('select');for(const [id,title]of options){const o=node('option',title);o.value=id;e.append(o);}e.value=value;return e;};
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),p=k=>parts.find(v=>v.type===k).value;return p('year')+'-'+p('month')+'-'+p('day');};
  async function api(path,method='GET',body){const session=await(await fetch('/api/session',{cache:'no-store'})).json(),r=await fetch('/api/awards'+path,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf,...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)}),result=await r.json();if(!r.ok)throw Error(result.error);return result;}
- function hide(){generation++;document.getElementById('user-employment')?.remove();}
+ function hide(){generation++;ratePreview?.destroy();ratePreview=null;document.getElementById('user-employment')?.remove();}
  async function show(userId,form,options={}){
   hide();if(!appAccess.can('awards.manage'))return;
   const token=generation,section=node('fieldset',undefined,'user-employment');section.id='user-employment';section.append(node('legend','Employment & award'));form.append(section);
-  for(const name of ['input','change'])section.addEventListener(name,()=>options.onDirty?.());
+  for(const name of ['input','change'])section.addEventListener(name,event=>{if(event.target.closest('[data-award-rate-preview]')||event.target.dataset.employmentHistory)return;ratePreview?.setDraft(true);options.onDirty?.();});
   if(!userId){section.append(node('p','Create the user, then edit them to add their company employment details.','small feature-instruction'));return;}
   section.disabled=true;section.append(node('p','Loading employment details…','small'));
   try{
    const data=await api('');if(token!==generation)return;
    const history=data.profiles.filter(p=>p.userId===userId).sort((a,b)=>b.effectiveFrom.localeCompare(a.effectiveFrom)),current=history.find(p=>p.effectiveFrom<=today())||{};
    function render(record=current,effectiveDate=today()){
+    ratePreview?.destroy();ratePreview=null;
     section.replaceChildren(node('legend','Employment & award'));section.disabled=false;
     const help=node('p','Applies to '+(window.appBootstrap?.companyName||'the selected company')+'. Award classification describes duties and is separate from app permissions. Save a new effective date to keep earlier employment terms.','small');help.dataset.userText='';section.append(help);
-    if(history.length){const choices=select([['new','New dated record'],...history.map(p=>[p.effectiveFrom,'Edit record · '+p.effectiveFrom])],effectiveDate===record.effectiveFrom?record.effectiveFrom:'new');choices.onchange=()=>{const saved=history.find(p=>p.effectiveFrom===choices.value);render(saved||current,saved?.effectiveFrom||today());};section.append(field('Employment history',choices));}
+    if(history.length){const choices=select([['new','New dated record'],...history.map(p=>[p.effectiveFrom,'Edit record · '+p.effectiveFrom])],effectiveDate===record.effectiveFrom?record.effectiveFrom:'new');choices.dataset.employmentHistory='true';choices.onchange=()=>{const saved=history.find(p=>p.effectiveFrom===choices.value);render(saved||current,saved?.effectiveFrom||today());};section.append(field('Employment history',choices));}
     const grid=node('div',undefined,'user-employment-grid'),effective=input('date',effectiveDate),dob=input('date',record.dateOfBirth||''),start=input('date',record.employmentStart||''),type=select([['casual','Casual'],['part-time','Part-time'],['full-time','Full-time']],record.employmentType||'casual'),classification=select([['1','Level 1 — food preparation, service and delivery'],['2','Level 2 — supervision, training or trade skills'],['3','Level 3 — in charge of an outlet']],record.classification||'1'),band=select([['','Choose supervisory band'],['one-or-none','In charge of one or no person'],['two-or-more','In charge of two or more people']],record.level3Band||''),basis=select([['award','Award minimum (automatic)'],['base-plus-penalties','Agreed base rate + award percentages']],record.payBasis||'award'),base=input('number',record.baseRateCents?(record.baseRateCents/100).toFixed(2):''),cycle=select([[1,'One week · 38 hours'],[2,'Two weeks · 76 hours'],[3,'Three weeks · 114 hours'],[4,'Four weeks · 152 hours']],record.cycleWeeks||1),anchor=input('date',record.cycleAnchor||''),laundry=input('checkbox'),arrangement=select([['standard','Standard award conditions'],['needs-review','Special agreement / traineeship / supported wage / TOIL — review']],record.arrangement||'standard'),superEligible=select([['','Review eligibility'],['yes','Eligible'],['no','Not eligible']],record.superEligible===true?'yes':record.superEligible===false?'no':'');
     laundry.checked=record.laundersUniform===true;base.min='.01';base.step='.01';dob.max=today();for(const control of [effective,dob,start])control.dataset.employmentRequired='true';
     const bandField=field('Level 3 supervisory band',band),baseField=field('Agreed hourly base ($, before casual loading)',base),anchorField=field('First Monday of averaging cycle',anchor);
@@ -40,6 +41,7 @@
      const minutes=pattern.reduce((sum,d)=>sum+(d?Number(d.end.slice(0,2))*60+Number(d.end.slice(3))+(d.overnight?1440:0)-Number(d.start.slice(0,2))*60-Number(d.start.slice(3))-d.breakMinutes:0),0);
      save.disabled=true;options.onBusy?.(true);try{await api('/profiles','PUT',{revision:data.config.revision,userId,effectiveFrom:effective.value,dateOfBirth:dob.value,employmentStart:start.value,employmentType:type.value,classification:classification.value,level3Band:band.value||null,arrangement:arrangement.value,payBasis:basis.value,baseRateCents:basis.value==='base-plus-penalties'?Math.round(Number(base.value)*100):null,agreementReference:type.value==='part-time'?agreementReference.value:'',cycleWeeks:Number(cycle.value),cycleAnchor:anchor.value||null,laundersUniform:laundry.checked,superEligible:superEligible.value===''?null:superEligible.value==='yes',...(type.value==='part-time'?{pattern,agreedWeeklyMinutes:minutes}:{agreedWeeklyMinutes:null})});await show(userId,form,options);document.querySelector('#user-employment [role=status]').textContent='Employment details saved.';options.onSaved?.();}catch(error){status.textContent=error.message;save.disabled=false;}finally{options.onBusy?.(false);}
     };section.append(save,status);
+    ratePreview=window.awardHourlyRates?.mount(section,{userId,date:effectiveDate});
    }
    render();
   }catch(error){if(token===generation){section.disabled=false;section.replaceChildren(node('legend','Employment & award'),node('p',error.message,'small'));}}

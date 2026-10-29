@@ -2,7 +2,7 @@
 // MA000003, consolidated 1 July 2026. Money is cents; percentages are integers.
 // Source and supported scope are deliberately versioned with the calculator.
 const M = require('./public/rostering-model');
-const {age} = require('./award-rules');
+const {age, profile: validateProfile} = require('./award-rules');
 const crypto = require('node:crypto');
 const source = Object.freeze({
   id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
@@ -38,6 +38,32 @@ function ordinaryPercent(type, classification, day, minute, holiday) {
 }
 function overtimePercent(type, day, holiday, seconds) {
   return (holiday ? 250 : day === 0 || seconds >= 7200 ? 200 : 150) + (type === 'casual' ? 25 : 0);
+}
+// Read-only ordinary hourly estimates use the same bases, percentages and cent
+// rounding as shift costing. They do not create work or replace shift facts.
+function hourlyRates({config, profile, date}) {
+  M.date(date);
+  const issues=[],add=(code,message)=>issues.push({code,message});
+  const enabled=config.enabled===true&&config.localPayEnabled===true;
+  if(!enabled||config.coverageConfirmed!==true)add('employer-setup','Complete Employer setup in Award compliance and enable automatic award calculations.');
+  if(config.sourceId&&config.sourceId!==source.id)add('award-source','Review and activate the included award edition.');
+  try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
+  catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in Award compliance.');}
+  if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
+  if(!profile)add('employment','Save employment details covering this date.');
+  else{
+    try{validateProfile(profile,date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
+    catch{add('employment','Complete the employee’s birth date, employment type, classification and pay arrangement.');}
+    if(profile.effectiveFrom>date||profile.employmentStart>date||profile.dateOfBirth>date)add('employment-date','Choose a date covered by the employee’s saved employment details.');
+    if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
+    if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
+  }
+  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null};
+  if(issues.length)return result;
+  const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
+  if(!Number.isSafeInteger(minimumBaseCents)||!Number.isSafeInteger(baseCents)||baseCents<minimumBaseCents){add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');return result;}
+  const ordinary=(day,minute=720,holiday=false)=>roundRate(baseCents,ordinaryPercent(profile.employmentType,profile.classification,day,minute,holiday));
+  return{...result,ready:true,rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
 }
 function calculate({config, profiles, items, mode = 'roster'}) {
   if (!config.localPayEnabled || !config.enabled) return {enabled: false, results: [], coverage: [], exclusions};
@@ -290,4 +316,4 @@ function facts(input = {}) {
   }
   return result;
 }
-module.exports = {source, coverage, exclusions, calculate, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};
+module.exports = {source, coverage, exclusions, calculate, hourlyRates, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};

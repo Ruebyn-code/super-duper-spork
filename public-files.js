@@ -21,6 +21,8 @@ module.exports={'/home-personal.js':'home-personal.js','/home-personal.css':'hom
   '/shift-clock.js':'shift-clock.js',
   '/shift-clock.css':'shift-clock.css',
   '/clock-model.js':'clock-model.js',
+  '/award-hourly-rates.js':'award-hourly-rates.js',
+  '/award-hourly-rates.css':'award-hourly-rates.css',
   '/user-employment.js':'user-employment.js',
   '/user-employment.css':'user-employment.css',
   '/user-setup.js':'user-setup.js',

@@ -2,6 +2,21 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const A=require('./fast-food-award'),M=require('./public/rostering-model');
 const config={enabled:true,localPayEnabled:true,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1,holidayCalendars:[{locationId:'one',year:2026,confirmed:true,dates:[]}]};
 const profile={id:'p1',userId:'u1',effectiveFrom:'2026-01-01',dateOfBirth:'1990-01-01',employmentStart:'2020-01-01',employmentType:'casual',classification:'1',payBasis:'award',cycleWeeks:1};
+test('automatic hourly rates match actual award shift lines, including casual loading and penalty rounding',()=>{
+ const settings={...config,coverageConfirmed:true,sourceId:A.source.id};
+ for(const employmentType of ['casual','full-time'])for(const [day,key]of [['2026-10-19','weekdayCents'],['2026-10-24','saturdayCents'],['2026-10-25','sundayCents']]){
+  const employee={...profile,employmentType},hourly=A.hourlyRates({config:settings,profile:employee,date:day}),priced=A.calculate({config:settings,profiles:[employee],items:[{id:'ordinary',userId:'u1',locationId:'one',startAt:M.instant(day,'09:00'),endAt:M.instant(day,'12:00'),breakMinutes:0}]}).results[0];
+  assert.equal(hourly.ready,true);assert.equal(hourly.rates[key],priced.lines.find(line=>line.kind==='ordinary').rateCents);
+ }
+ const p={...profile,dateOfBirth:'2008-10-20'},before=A.hourlyRates({config:settings,profile:p,date:'2026-10-19'}),birthday=A.hourlyRates({config:settings,profile:p,date:'2026-10-20'});assert.equal(before.rates.minimumBaseCents,1669);assert.equal(before.rates.weekdayCents,2086);assert.equal(birthday.rates.minimumBaseCents,1947);assert.equal(birthday.rates.weekdayCents,2434);
+ assert.equal(A.hourlyRates({config:settings,profile,date:'2026-10-19'}).rates.publicHolidayCents,6953);
+});
+test('hourly award estimates retain agreed-above-award bases and withhold missing, disabled or uncovered calculations',()=>{
+ const settings={...config,coverageConfirmed:true,sourceId:A.source.id},date='2026-10-19',read=(p=profile,c=settings,d=date)=>A.hourlyRates({config:c,profile:p,date:d});
+ assert.equal(read({...profile,payBasis:'base-plus-penalties',baseRateCents:3000}).rates.weekdayCents,3750);
+ for(const [p,c,d]of [[undefined,settings,date],[{...profile,payBasis:undefined},settings,date],[{...profile,classification:'3'},settings,date],[{...profile,arrangement:'needs-review'},settings,date],[{...profile,payBasis:'base-plus-penalties',baseRateCents:100},settings,date],[profile,{...settings,localPayEnabled:false},date],[profile,{...settings,sourceId:'old-edition'},date],[profile,{...settings,payPeriodAnchor:null},date],[profile,settings,'2026-07-01'],[profile,settings,'2027-07-01']]){const result=A.hourlyRates({config:c,profile:p,date:d});assert.equal(result.ready,false);assert.equal(result.rates,null);assert(result.issues.length);}
+ assert.throws(()=>read(profile,settings,'2026-02-30'),{status:400});
+});
 const shift=(date,start,end,extra={})=>({id:date+start,locationId:'one',userId:'u1',startAt:M.instant(date,start),endAt:M.instant(end<=start?M.shiftDate(date,1):date,end),breakMinutes:0,...extra});
 function price(items,profiles=[profile],settings=config,mode='roster'){return A.calculate({config:settings,profiles,items,mode}).results;}
 test('uploaded Schedule A adult and junior rates use rounded junior bases before loading',()=>{

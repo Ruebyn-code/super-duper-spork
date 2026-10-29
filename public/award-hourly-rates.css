@@ -1,0 +1,11 @@
+.award-hourly-rates{min-width:0;margin:12px 0;padding:12px;border:1px solid color-mix(in srgb,var(--primary,#008cff) 22%,var(--theme-line,#d7e3ee));border-radius:10px;background:color-mix(in srgb,var(--primary,#008cff) 4%,var(--theme-surface,#fff))}
+.award-hourly-rates h4{margin:0 0 10px;font-size:.9rem;line-height:1.4}
+.award-hourly-rate-tools{display:flex;align-items:end;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.award-hourly-rate-tools>label{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:190px;margin:0;font-size:.75rem}
+.award-hourly-rate-tools input{width:100%;min-width:0;margin:0}
+.award-hourly-rate-tools button{margin:0!important;min-height:36px;font-size:.75rem}
+.award-hourly-rates dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px;margin:8px 0;font-size:.8rem;line-height:1.5}
+.award-hourly-rates :is(dt,dd){padding:7px 0;border-bottom:1px solid var(--theme-line,#d7e3ee)}
+.award-hourly-rates dt{font-weight:400;overflow-wrap:anywhere}.award-hourly-rates dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.award-hourly-rates .small{margin:8px 0 0;font-size:.75rem;line-height:1.5;color:var(--theme-muted,#52687b)}
+.award-hourly-rates [hidden]{display:none!important}

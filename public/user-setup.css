@@ -34,14 +34,6 @@ html.user-setup-open,html.user-setup-open body{overflow:hidden}
 .user-setup-review dl{display:grid;grid-template-columns:145px minmax(0,1fr);gap:12px;margin:0;padding:14px;border:1px solid var(--theme-line,#d7e3ee);border-radius:10px;background:color-mix(in srgb,var(--primary,#008cff) 4%,var(--theme-surface,#fff));font-size:.82rem;line-height:1.5}
 .user-setup-review dt{font-weight:700}.user-setup-review dd{margin:0;overflow-wrap:anywhere}
 .user-setup-review>.small{font-size:.78rem;line-height:1.5;color:var(--theme-muted,#52687b)}
-.user-setup-rates{min-width:0;margin:0;padding:14px;border:1px solid color-mix(in srgb,var(--primary,#008cff) 22%,var(--theme-line,#d7e3ee));border-radius:10px;background:color-mix(in srgb,var(--primary,#008cff) 3%,var(--theme-surface,#fff))}
-.user-setup-rates legend{padding:0 6px;font-size:15px;color:var(--theme-primary-text,var(--primary,#008cff))}
-.user-setup-roster>.small,.user-setup-rates .small{font-size:.76rem;line-height:1.5;color:var(--theme-muted,#52687b)}
-.user-setup-rate+.user-setup-rate{margin-top:14px;padding-top:14px;border-top:1px solid var(--theme-line,#d7e3ee)}
-.user-setup-rate h4{margin:12px 0 10px;font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
-.user-setup-rate-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
-.user-setup-rate-fields>label{display:flex;flex-direction:column;gap:4px;min-width:0;margin:0;font-size:.76rem;line-height:1.4}
-.user-setup-rate-fields input{margin:0}
 .user-setup-roster .user-employment{margin-top:14px}
 .user-setup-status{margin:12px 0 0;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}.user-setup-status:empty{display:none}
 .user-setup-dialog .admin-form-actions{flex:none;gap:8px;margin:0;padding:12px 22px;border-top:1px solid var(--theme-line,#d7e3ee);background:var(--theme-surface,#fff)}
@@ -49,4 +41,3 @@ html.user-setup-open,html.user-setup-open body{overflow:hidden}
 .user-setup-dialog #account-cancel{margin-left:auto}
 #user-setup-discard{order:1;border:0;background:transparent;color:var(--theme-muted,#52687b);padding-left:0;padding-right:0}
 @media(max-width:600px){.user-setup-dialog{width:calc(100vw - 12px);max-height:calc(100dvh - 12px);border-radius:14px}.user-setup-dialog>header{padding:14px 16px 10px}.user-setup-dialog>header h2{font-size:1.3rem}.user-setup-body{padding:14px 16px}.user-setup-task{gap:8px;grid-template-columns:26px minmax(0,1fr) auto}.user-setup-dialog .admin-form-actions{padding:10px 16px}.user-setup-dialog button{min-height:40px}.user-setup-review dl{grid-template-columns:minmax(0,1fr);gap:3px}.user-setup-review dd{margin-bottom:9px}.user-setup-review dd:last-child{margin-bottom:0}.user-setup-dialog .admin-form-actions button{min-height:40px}#user-setup-discard{flex:1 0 100%;text-align:left}}
-@media(max-width:450px){.user-setup-rates{padding:10px}.user-setup-rate-fields{grid-template-columns:minmax(0,1fr)}}
