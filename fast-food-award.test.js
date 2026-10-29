@@ -140,3 +140,24 @@ test('saved ordinary hourly rates remain available without regular working hours
  const agreed={...employee,agreedWeeklyMinutes:180,agreementReference:'Written regular hours agreement',pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};
  assert.equal(price([work],[agreed])[0].costCents,8343);assert.equal(A.hourlyRates({config:settings,profile:agreed,date:'2026-10-05'}).setupIssues.length,0);
 });
+
+const workingHoursIFA={locationId:'one',employerName:'IFA test employer',reference:'Retained signed IFA 001',signedOn:'2026-10-01',startsOn:'2026-10-05',endsOn:null,terms:['work-times'],rosteredHours:true,variationSummary:'Hours follow the published agreed roster',betterOffOverall:'Signed better-off-overall assessment retained',confirmed:true};
+const ifaEmployee={...profile,employmentType:'part-time',agreedWeeklyMinutes:null,flexibilityAgreements:[workingHoursIFA]},ifaConfig={...config,employerName:'IFA test employer'};
+test('a current roster-hours IFA replaces fixed part-time hours while preserving exact award rates, overtime and minimum payments',()=>{
+ const work=shift('2026-10-05','09:00','12:00'),read=employee=>price([work],[employee],ifaConfig)[0],rostered=read(ifaEmployee);assert.equal(rostered.complete,true);assert.equal(rostered.costCents,8343);assert.equal(rostered.ordinarySeconds,10800);assert(rostered.issues.some(i=>i.code==='pay-ifa-hours'&&!i.blocking));assert(!rostered.issues.some(i=>i.code==='pay-pattern'));
+ const hourly=A.hourlyRates({config:{...ifaConfig,coverageConfirmed:true},profile:ifaEmployee,date:'2026-10-05',locationId:'one'});assert.equal(hourly.rates.weekdayCents,2781);assert.equal(hourly.setupIssues.length,0);
+ const long=price([shift('2026-10-05','00:00','15:00')],[ifaEmployee],ifaConfig)[0];assert.equal(long.ordinarySeconds,39600);assert.equal(long.overtimeSeconds,14400);assert.deepEqual(long.lines.filter(l=>l.kind==='overtime').map(l=>[l.seconds,l.rateCents]),[[7200,4172],[7200,5562]]);
+ const week=price(Array.from({length:6},(_,i)=>shift(M.shiftDate('2026-10-05',i),'09:00','17:00')),[ifaEmployee],ifaConfig);assert.equal(week.reduce((n,v)=>n+v.ordinarySeconds,0),38*3600);assert.equal(week[5].overtimeSeconds,8*3600);
+ assert.equal(price([shift('2026-10-05','09:00','10:00')],[ifaEmployee],ifaConfig)[0].costCents,8343);
+ const priorHours={...ifaEmployee,pattern:[{start:'09:00',end:'12:00',mealBreakStart:'10:00',breakMinutes:30},...Array(6).fill(null)]},later=price([shift('2026-10-05','14:00','20:00',{breakMinutes:30})],[priorHours],ifaConfig)[0];assert.equal(later.complete,true);assert(later.issues.some(i=>i.code==='pay-break-position'));assert(!later.issues.some(i=>i.code==='pay-break-invalid'));
+ const actual={...shift('2026-10-05','08:00','13:00'),ordinaryWindows:[{locationId:'one',startAt:work.startAt,endAt:work.endAt}]},entry=price([actual],[ifaEmployee],ifaConfig,'timesheets')[0];assert.equal(entry.complete,true);assert.equal(entry.ordinarySeconds,10800);assert.equal(entry.overtimeSeconds,7200);assert.equal(entry.costCents,16687);
+ for(const ordinaryWindows of [[],[{locationId:'two',startAt:work.startAt,endAt:work.endAt}]]){const p=price([{...actual,ordinaryWindows}],[ifaEmployee],ifaConfig,'timesheets')[0];assert.equal(p.costCents,null);assert(p.issues.some(i=>i.code==='pay-ifa-roster'&&i.blocking));}
+});
+test('IFA permission to use rostered hours is confined to its employer and dates, and never applies unsupported pay variations',()=>{
+ const work=shift('2026-10-05','09:00','12:00'),read=(agreements,extra={})=>price([work],[{...ifaEmployee,flexibilityAgreements:agreements}],{...ifaConfig,...extra})[0];
+ for(const change of [{startsOn:'2026-10-06'},{endsOn:'2026-10-04'},{locationId:'two'},{rosteredHours:false},{terms:['work-times','penalties']},{confirmed:false}])assert.equal(read([{...workingHoursIFA,...change}]).costCents,null);
+ assert.equal(read([workingHoursIFA],{employerName:'Another employer'}).costCents,null);
+ const ending={...workingHoursIFA,endsOn:'2026-10-05'},overnight=price([shift('2026-10-05','22:00','02:00')],[{...ifaEmployee,flexibilityAgreements:[ending]}],ifaConfig)[0];assert.equal(overnight.costCents,null);assert(overnight.issues.some(i=>i.code==='pay-pattern'&&i.blocking));
+ const futureSigned={...workingHoursIFA,signedOn:'2026-10-06',startsOn:'2026-10-06'},regular={...ifaEmployee,flexibilityAgreements:[futureSigned],agreedWeeklyMinutes:180,agreementReference:'Retained regular written hours',pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};assert.equal(A.hourlyRates({config:{...ifaConfig,coverageConfirmed:true},profile:regular,date:'2026-10-05',locationId:'one'}).ready,true);
+ const pt={...regular,flexibilityAgreements:[]},noVariation=price([shift('2026-10-05','09:00','14:00')],[pt],ifaConfig)[0];assert.equal(noVariation.complete,true);assert.equal(noVariation.overtimeSeconds,7200);assert.equal(noVariation.costCents,16687);
+});

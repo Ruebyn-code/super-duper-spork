@@ -29,8 +29,9 @@ JSON check imports remain available, but do not alter this engine's pay tables.
    classification, DOB, pay arrangement and applicable conditions. These are
    private employer records, independent of application permission levels.
    Regular working hours are optional in staff setup: choose Add regular working
-   hours when ready. Complete part-time shift costs still require seven-day
-   written hours, meal timing and an agreement reference; keep the original
+   hours when ready. Complete part-time shift costs require seven-day
+   written hours, meal timing and an agreement reference, or a current signed
+   working-hours-only IFA permitting roster-based hours at this employer; keep the original
    agreement in the employer's records. Classification decisions are made by the
    employer using clause 12, not inferred from a user's app role.
    User setup and the employment editor display read-only automatic hourly rates
@@ -207,3 +208,33 @@ validation. Saved hourly-rate summaries may show the ordinary rate without hours
 with the missing agreement in `setupIssues`, just as draft previews do. This does
 not make the employee ready for complete native shift costing or change approved
 snapshots. Existing pattern fields and dated records remain compatible.
+
+## Recorded Individual Flexibility Agreements
+
+`flexibilityAgreements` belongs to the native dated employee profile, with one
+record per employer location. The shared employment editor adds/removes the
+selected location’s record and preserves other locations. Writes require current
+awards.manage, native CSRF, company/user membership, location access, assignment
+and a matching saved legal employer; the native revision queue saves the record
+and private before/after audit atomically. Older writers omitting the field retain
+existing agreements, including when creating a later dated profile. Explicit
+removal is required. Reads and previews never save, sign or certify an agreement.
+
+The retained award’s clause 5 permits specific individual flexibility arrangements.
+The app records the signed original’s reference, dates, terms, changes and
+better-off-overall assessment, with employer confirmation of signatures (including
+parent/guardian when required), retention and employee copy. These records do not
+replace the original or prove legal validity.
+
+Only a current, confirmed work-times-only record explicitly permitting rostered
+hours replaces fixed part-time hours in native calculation. It must match the
+shift’s location, legal employer and each worked date. Rosters use their saved
+shift windows; actuals use only published windows at that same employer location.
+No published roster remains unknown. Outside-window work, daily/weekly limits,
+five-day default, minimum engagements, penalties, breaks and allowances retain
+standard award treatment. A visible, non-blocking IFA review notice remains.
+Other varied pay terms withhold costs pending a separately reviewed calculation;
+there are no custom percentages or blanket overtime waivers. Expiry, changed
+employers and dated terms are rechecked across midnight. Approved snapshots remain
+frozen, with normal changed-context warnings. The one-off shift variation remains
+optional; its disabled hidden fields do not participate in form validation.

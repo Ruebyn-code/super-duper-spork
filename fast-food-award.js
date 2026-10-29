@@ -2,7 +2,7 @@
 // MA000003, consolidated 1 July 2026. Money is cents; percentages are integers.
 // Source and supported scope are deliberately versioned with the calculator.
 const M = require('./public/rostering-model');
-const {age, profile: validateProfile, calendarDate} = require('./award-rules');
+const {age, profile: validateProfile, calendarDate, activeFlexibilityAgreement, rosteredHoursAgreement} = require('./award-rules');
 const crypto = require('node:crypto');
 const source = Object.freeze({
   id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
@@ -14,8 +14,8 @@ const source = Object.freeze({
   adultRates: {'1': 2781, '2': 2945, '3-one': 2991, '3-many': 3027},
   allowances: {brokenHill: 4790, cold: 38, freezer: 97, meal: 1733, furtherMeal: 1566, laundryFullTime: 642, laundryShift: 128, deliveryKm: 53, otherKm: 100}
 });
-const coverage = ['Adult and junior minimum rates', 'Casual loading', 'Evening, weekend and configured public holiday penalties', 'Daily and weekly/cycle overtime', 'Part-time agreed pattern and recorded variations', 'Full-time work outside the published roster', 'Minimum engagements and isolated Sunday overtime', 'Recorded break entitlements and timing', 'Configured clothing, cold work, vehicle, meal and travel allowances', 'Itemised wage estimates and approval snapshots'];
-const exclusions = ['Award coverage and classification decisions', 'Six-day/four-day arrangements (five ordinary days used)', 'Individual flexibility, TOIL, supported wages and traineeships', 'Leave, accident pay, termination, redundancy and deductions', 'NES, state child-employment laws, tax, payslips and payroll lodgement', 'Super eligibility, OTE adjustments and employer on-cost obligations (estimates only)', 'Future award changes after this uploaded edition'];
+const coverage = ['Adult and junior minimum rates', 'Casual loading', 'Evening, weekend and configured public holiday penalties', 'Daily and weekly/cycle overtime', 'Part-time agreed pattern, optional variations and recorded roster-hours IFAs', 'Full-time work outside the published roster', 'Minimum engagements and isolated Sunday overtime', 'Recorded break entitlements and timing', 'Configured clothing, cold work, vehicle, meal and travel allowances', 'Itemised wage estimates and approval snapshots'];
+const exclusions = ['Award coverage and classification decisions', 'Six-day/four-day arrangements (five ordinary days used)', 'IFA pay variations, TOIL, supported wages and traineeships', 'Leave, accident pay, termination, redundancy and deductions', 'NES, state child-employment laws, tax, payslips and payroll lodgement', 'Super eligibility, OTE adjustments and employer on-cost obligations (estimates only)', 'Future award changes after this uploaded edition'];
 const invalid=message=>Object.assign(Error(message),{status:400});
 const roundRate = (cents, percent) => Math.floor((cents * percent + 50) / 100);
 function baseRate(profile, date) {
@@ -44,34 +44,37 @@ function overtimePercent(type, day, holiday, seconds) {
 }
 // Read-only ordinary hourly estimates use the same bases, percentages and cent
 // rounding as shift costing. They do not create work or replace shift facts.
-function employmentIssues(profile,date){
+function employmentIssues(profile,date,locationId,employerName){
  const issues=[],add=(code,message)=>issues.push({code,message});
   if(!profile)add('employment','Add employment details covering this date.');
   else{
-    try{validateProfile(profile,date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
+    try{validateProfile({...profile,flexibilityAgreements:profile.flexibilityAgreements?.filter(v=>v.signedOn<=date)},date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
     catch{add('employment','Complete the required employment details for this date.');}
     if(profile.effectiveFrom>date||profile.employmentStart>date||profile.dateOfBirth>date)add('employment-date','Choose a date covered by the employee’s saved employment details.');
     if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
     if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
   }
-  if(profile?.employmentType==='part-time'&&(!Array.isArray(profile.pattern)||!profile.pattern.some(Boolean)||!profile.agreementReference||!Number.isSafeInteger(profile.agreedWeeklyMinutes)||profile.agreedWeeklyMinutes<=0))add('employment-pattern','Add the written regular working hours and agreement reference to calculate complete part-time shift costs.');
+  const ifa=activeFlexibilityAgreement(profile,date,locationId),rosteredIFA=rosteredHoursAgreement(profile,date,locationId,employerName);
+  if(ifa&&!rosteredIFA)add('ifa','This IFA requires a separately reviewed calculation. The standard calculator supports only a confirmed roster-based working-hours IFA for this employer, with unchanged award pay conditions.');
+  if(profile?.employmentType==='part-time'&&!rosteredIFA&&(!Array.isArray(profile.pattern)||!profile.pattern.some(Boolean)||!profile.agreementReference||!Number.isSafeInteger(profile.agreedWeeklyMinutes)||profile.agreedWeeklyMinutes<=0))add('employment-pattern','Add written regular working hours or record a signed IFA permitting roster-based hours for this employer to calculate complete part-time shift costs.');
  if(profile){let minimum=null;try{minimum=baseRate(profile,date);}catch{}const base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(minimum)||!Number.isSafeInteger(base)||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
  return issues;
 }
 // Ordinary hourly rates do not depend on regular working hours. Complete shift
 // calculations still require the written part-time agreement and hours.
-function hourlyInputIssues(profile,date){
+function hourlyInputIssues(profile,date,locationId,employerName){
  const issues=[],add=(code,message)=>issues.push({code,message});if(!profile)return[{code:'employment',message:'Choose the employee’s pay conditions.'}];
  try{calendarDate(profile.dateOfBirth);if(profile.dateOfBirth>date||age(profile.dateOfBirth,date)>120)throw Error();}catch{add('birth-date','Enter a valid date of birth for the rate date.');}
  if(!['full-time','part-time','casual'].includes(profile.employmentType))add('employment-type','Choose an employment type.');
  if(!['1','2','3'].includes(profile.classification)||profile.classification==='3'&&!['one-or-none','two-or-more'].includes(profile.level3Band))add('classification','Choose the classification and any Level 3 supervisory band.');
  if(!['award','base-plus-penalties'].includes(profile.payBasis))add('pay-basis','Choose a pay arrangement.');
  if(profile.arrangement&&profile.arrangement!=='standard')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
+ if(activeFlexibilityAgreement(profile,date,locationId)&&!rosteredHoursAgreement(profile,date,locationId,employerName))add('ifa','The recorded IFA needs a separately reviewed calculation; its pay terms are not applied by the standard calculator.');
  for(const key of ['effectiveFrom','employmentStart'])if(profile[key]){try{calendarDate(profile[key]);if(profile[key]>date)add('employment-date','Choose a rate date covered by the employment details.');}catch{add('employment-date','Check the employment dates.');}}
  if(!issues.length){const minimum=baseRate(profile,date),base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(base)||base>10000000||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
  return issues;
 }
-function hourlyRates({config, profile, date, preview=false}) {
+function hourlyRates({config, profile, date, preview=false, locationId=config.locationId}) {
   M.date(date);
   const issues=[],add=(code,message)=>issues.push({code,message});
   const enabled=config.enabled===true&&config.localPayEnabled===true;
@@ -80,8 +83,8 @@ function hourlyRates({config, profile, date, preview=false}) {
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
   catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
   if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
-  const setupIssues=employmentIssues(profile,date);
-  issues.push(...(preview?hourlyInputIssues(profile,date):setupIssues.filter(i=>i.code!=='employment-pattern')));
+  const setupIssues=employmentIssues(profile,date,locationId,config.employerName);
+  issues.push(...(preview?hourlyInputIssues(profile,date,locationId,config.employerName):setupIssues.filter(i=>i.code!=='employment-pattern')));
   const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,setupIssues:preview?setupIssues:setupIssues.filter(i=>i.code==='employment-pattern'),...(preview?{preview:true}:{})};
   if(issues.length)return result;
   const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
@@ -126,6 +129,8 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       else result.lines.push({label, seconds, rateCents, clause, kind, date});
     };
     const p = selectedProfile(item.userId, firstDate);
+    const firstIFA=activeFlexibilityAgreement(p,firstDate,item.locationId);
+    if(firstIFA){if(rosteredHoursAgreement(p,firstDate,item.locationId,config.employerName))issue('pay-ifa-hours','The recorded signed IFA permits roster-based hours. Standard award rates, daily/weekly limits, penalties and overtime still apply.','5; 13; 20');else issue('pay-ifa-terms','Review this IFA separately. Its employer, working-hours confirmation or varied pay terms are not supported by the standard calculator.','5',true);}
     if(config.sourceId&&config.sourceId!==source.id)issue('pay-source-activation','Review and activate the included award edition before calculating new costs.','15; Schedule A',true);
     if (!p || !item.userId) issue('pay-profile', 'Complete employment details in Users for this shift date.', '12, 15', true);
     if(p?.arrangement==='needs-review')issue('pay-special-arrangement','This employee has a special arrangement. Obtain a separately reviewed calculation; the standard calculator does not interpret it.','7, 15.3–15.4, 20.7',true);
@@ -141,7 +146,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     const unpaidMinutes = item.breakMinutes || 0;
     if (!breaks.length && unpaidMinutes) {
       let breakStart;
-      const plannedMeal=mode==='roster'?p?.pattern?.[(new Date(firstDate+'T12:00:00Z').getUTCDay()+6)%7]?.mealBreakStart:null;
+      const plannedMeal=mode==='roster'&&!rosteredHoursAgreement(p,firstDate,item.locationId,config.employerName)?p?.pattern?.[(new Date(firstDate+'T12:00:00Z').getUTCDay()+6)%7]?.mealBreakStart:null;
       const mealBreakStart=facts.mealBreakStart||plannedMeal;
       if (mealBreakStart) {
         let date = firstDate;
@@ -162,18 +167,25 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     if ((facts.coldMinutes||0)+(facts.freezerMinutes||0) > paidTotal/60) issue('pay-cold-duration','Cold work minutes cannot exceed paid time or overlap each other.','17.3',true);
     if (p && p.cycleWeeks > 1) issue('pay-averaging', 'Hours are averaged over the configured cycle. Review the completed cycle before payroll.', '9, 11.1, 13.2, 20');
     const afterFinishByDate={};
-    let previousDate, windows = [], patternLimit = Infinity;
+    let previousDate, windows = [], patternLimit = Infinity, rosteredIFA=false;
     for (let cursor = start; cursor < end && p && Number.isFinite(cursor);) {
       const part = getParts(cursor), date = part.date, minute = M.minutes(part.time), day = new Date(date+'T12:00:00Z').getUTCDay();
       const current = selectedProfile(item.userId, date), effectiveProfile = current || p;
       if (date !== previousDate) {
         previousDate = date;
-        if(date!==firstDate)for(const problem of employmentIssues(effectiveProfile,date))issue(({'employment':'pay-profile','employment-date':'pay-profile-date','arrangement':'pay-special-arrangement','averaging':'pay-part-time-cycle','employment-pattern':'pay-pattern','agreed-base':'pay-contract-rate'})[problem.code]||'pay-'+problem.code,'Employment terms for '+date+': '+problem.message,'10–15; 20',true);
+        if(date!==firstDate)for(const problem of employmentIssues(effectiveProfile,date,item.locationId,config.employerName))issue(({'employment':'pay-profile','employment-date':'pay-profile-date','arrangement':'pay-special-arrangement','averaging':'pay-part-time-cycle','employment-pattern':'pay-pattern','ifa':'pay-ifa-terms','agreed-base':'pay-contract-rate'})[problem.code]||'pay-'+problem.code,'Employment terms for '+date+': '+problem.message,'5; 10–15; 20',true);
         if (date >= source.reviewBy) issue('pay-source-review', 'Load and review a newer award edition before costing this date.', '15; Schedule A', true);
         const calendar = (config.holidayCalendars || []).find(c => c.locationId === item.locationId && c.year === Number(date.slice(0,4)) && c.confirmed);
         if (!calendar) issue('pay-calendar', 'Review this location’s public holiday calendar in Award compliance.', '21, 27', true);
         windows = [];
+        rosteredIFA=rosteredHoursAgreement(effectiveProfile,date,item.locationId,config.employerName);
         if (effectiveProfile.employmentType === 'part-time') {
+          if(rosteredIFA){
+            windows=mode==='roster'?[{startAt:item.startAt,endAt:item.endAt}]:(item.ordinaryWindows||[]).filter(w=>w.locationId===item.locationId);
+            patternLimit=Infinity;
+            if(!windows.length)issue('pay-ifa-roster','No published roster covers this IFA timesheet. Publish the agreed roster before approving its calculated cost.','5; 13; 20',true);
+            if(!result.issues.some(i=>i.code==='pay-ifa-hours'))issue('pay-ifa-hours','The recorded signed IFA permits roster-based hours. Standard award rates, daily/weekly limits, penalties and overtime still apply.','5; 13; 20');
+          }else{
           const regular = effectiveProfile.pattern?.[(day+6)%7], variation = facts.variation;
           const agreed = variation?.reference && variation.agreedAt && Date.parse(variation.agreedAt) <= end ? variation : regular;
           if(!effectiveProfile.agreementReference)issue('pay-pattern-reference','Record the written regular working hours agreement reference in Users.','10.3–10.7',true);
@@ -185,6 +197,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
           const previousPattern=effectiveProfile.pattern?.[(day+5)%7];
           if(previousPattern?.overnight){const previousDate=M.shiftDate(date,-1);windows.push({startAt:M.instant(previousDate,previousPattern.start),endAt:M.instant(date,previousPattern.end)});patternLimit=Math.max(patternLimit,(M.minutes(previousPattern.end)+1440-M.minutes(previousPattern.start)-previousPattern.breakMinutes)*60);}
           if(variation?.reference&&date!==firstDate&&variation.overnight&&Date.parse(variation.agreedAt)<=end)windows.push({startAt:M.instant(firstDate,variation.start),endAt:M.instant(M.shiftDate(firstDate,1),variation.end)});
+          }
         } else if (effectiveProfile.employmentType === 'full-time' && mode === 'timesheets') {
           windows = (item.ordinaryWindows || []).filter(w=>M.localParts(w.startAt).date<=date&&M.localParts(w.endAt).date>=date);
           if (!item.ordinaryWindows?.length) issue('pay-roster', 'No published ordinary roster covers this full-time timesheet.', '20.2(b)–(c)', true);
@@ -214,12 +227,12 @@ function calculate({config, profiles, items, mode = 'roster'}) {
           if (profile.employmentType === 'part-time') {
             if (!windows.some(w => cursor >= Date.parse(w.startAt) && cursor < Date.parse(w.endAt)) || daily.ordinary >= patternLimit) overtime = true;
             const weekAgreed = getCounter(item.userId+':part-time:'+M.monday(date));
-            if (weekAgreed.ordinary >= profile.agreedWeeklyMinutes*60 && !facts.variation?.reference) overtime = true;
+            if (!rosteredIFA && weekAgreed.ordinary >= profile.agreedWeeklyMinutes*60 && !facts.variation?.reference) overtime = true;
           } else if (mode === 'timesheets' && !windows.some(w => cursor >= Date.parse(w.startAt) && cursor < Date.parse(w.endAt))) overtime = true;
           if (profile.employmentType==='part-time'&&mode==='timesheets'&&item.ordinaryWindows?.length&&!item.ordinaryWindows.some(w=>cursor>=Date.parse(w.startAt)&&cursor<Date.parse(w.endAt))) overtime=true;
         }
         // Split at exact counters and roster edges, including second-precision clocks.
-        const remaining=overtime?7200-daily.overtime:Math.min(39600-daily.ordinary,136800*cycleWeeks-weekly.ordinary,profile.employmentType==='part-time'?patternLimit-daily.ordinary:Infinity,profile.employmentType==='part-time'&&!facts.variation?.reference?profile.agreedWeeklyMinutes*60-getCounter(item.userId+':part-time:'+M.monday(date)).ordinary:Infinity);
+        const remaining=overtime?7200-daily.overtime:Math.min(39600-daily.ordinary,136800*cycleWeeks-weekly.ordinary,profile.employmentType==='part-time'?patternLimit-daily.ordinary:Infinity,profile.employmentType==='part-time'&&!rosteredIFA&&!facts.variation?.reference?profile.agreedWeeklyMinutes*60-getCounter(item.userId+':part-time:'+M.monday(date)).ordinary:Infinity);
         if(remaining>0){const edge=Math.round(cursor+remaining*1000);if(edge>cursor)next=Math.min(next,edge);}
         for(const w of [...windows,...(item.ordinaryWindows||[])])for(const edge of [Date.parse(w.startAt),Date.parse(w.endAt)])if(edge>cursor)next=Math.min(next,edge);
         const seconds=(next-cursor)/1000;

@@ -153,3 +153,21 @@ close actions; cancel/navigation guards protect drafts. Reset restores the same
 original form nodes and validation mode for the five-step invitation popup.
 The limited Award Overview editor and new-user checklist retain their existing
 workflows and do not gain account-editing permission from the new groups.
+
+## Individual Flexibility Agreements
+
+Pay Conditions offers Add Individual Flexibility Agreement (IFA), scoped to the
+employee’s selected employer location. Record the signed original’s reference,
+signing/start/end dates, varied terms, changes and better-off-overall assessment,
+and confirm signatures (including a parent/guardian where required), retention
+and the employee copy. The legal employer is taken from saved Employer setup.
+The existing Save employment details commits the record; preview/add/remove are
+draft-only. Other employer locations’ records remain mounted and unchanged.
+
+An active, confirmed work-times-only IFA explicitly permitting roster-based hours
+replaces the fixed part-time hours requirement for that employer. It does not
+waive standard award wages, penalties, minimum engagements or daily/weekly
+overtime. Timesheet costs require that employer location’s published roster;
+actual work outside roster windows attracts overtime. Other pay variations remain
+unsupported and require separate review. Expired, future or different-employer
+IFAs do not bypass missing regular hours. See docs/awards/README.md.

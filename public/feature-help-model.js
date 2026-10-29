@@ -21,7 +21,7 @@
   '/admin/settings':ids('appearance intelligence-appearance home-layout'),
   '/email-settings':ids('location-email order-email-template order-confirmation order-not-sent'),
   '/settings/devices':ids('manage-kiosks kiosk-use'),
-  '/settings/awards':ids('award-settings public-holidays'),
+  '/settings/awards':ids('award-settings individual-flexibility public-holidays'),
   '/labels':ids('print-labels label-templates label-history printer-problem'),
   '/opstack':ids('platform-console platform-settings platform-monthly account-invitations'),
   '/location-setup-step':ids('location-setup manage-users target-levels manage-kiosks'),

@@ -1,5 +1,6 @@
 const M=require('./public/rostering-model');
 const types=['full-time','part-time','casual'];
+const flexibilityTerms=['work-times','overtime','penalties','allowances','annual-leave-loading'];
 const kinds={'minimum-engagement':'Minimum paid engagement','daily-hours':'Daily paid hours','weekly-hours':'Weekly paid hours','minimum-rest':'Rest between shifts','unpaid-break':'Unpaid break duration','minimum-rate':'Minimum base hourly rate'};
 const exclusions=['Penalty and overtime pay','Paid rest breaks and break timing','Public holidays and allowances','Part-time variations and agreements','NES, leave and state-specific requirements'];
 const fail=message=>{throw Object.assign(Error(message),{status:400});};
@@ -15,7 +16,22 @@ function pack(input){
 }
 function calendarDate(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||value<'1900-01-01'||value>'2100-12-31'||!Number.isFinite(Date.parse(value+'T00:00:00Z'))||new Date(value+'T00:00:00Z').toISOString().slice(0,10)!==value)fail('Choose a valid employee date.');return value;}
 function age(dob,date){let result=Number(date.slice(0,4))-Number(dob.slice(0,4));if(date.slice(5)<dob.slice(5))result--;return result;}
-function profile(input,today){object(input);M.date(input.effectiveFrom);calendarDate(input.dateOfBirth);calendarDate(input.employmentStart);if(input.dateOfBirth>today||age(input.dateOfBirth,today)>120||input.employmentStart<input.dateOfBirth)fail('Check the birth date and employment start date.');if(!types.includes(input.employmentType)||!['1','2','3'].includes(input.classification))fail('Choose an employment type and award classification.');const agreedWeeklyMinutes=input.employmentType==='part-time'&&input.agreedWeeklyMinutes!=null?integer(input.agreedWeeklyMinutes,1,10080,'agreed weekly minutes'):null;return{effectiveFrom:input.effectiveFrom,dateOfBirth:input.dateOfBirth,employmentStart:input.employmentStart,employmentType:input.employmentType,classification:input.classification,agreedWeeklyMinutes,...employmentDetails(input)};}
+function profile(input,today){object(input);M.date(input.effectiveFrom);calendarDate(input.dateOfBirth);calendarDate(input.employmentStart);if(input.dateOfBirth>today||age(input.dateOfBirth,today)>120||input.employmentStart<input.dateOfBirth)fail('Check the birth date and employment start date.');if(!types.includes(input.employmentType)||!['1','2','3'].includes(input.classification))fail('Choose an employment type and award classification.');const agreedWeeklyMinutes=input.employmentType==='part-time'&&input.agreedWeeklyMinutes!=null?integer(input.agreedWeeklyMinutes,1,10080,'agreed weekly minutes'):null;return{effectiveFrom:input.effectiveFrom,dateOfBirth:input.dateOfBirth,employmentStart:input.employmentStart,employmentType:input.employmentType,classification:input.classification,agreedWeeklyMinutes,...employmentDetails(input),...(input.flexibilityAgreements!==undefined?{flexibilityAgreements:validateFlexibilityAgreements(input.flexibilityAgreements,input,today)}:{})};}
+function validateFlexibilityAgreements(input,employee,today){
+ if(!Array.isArray(input)||input.length>200)fail('Enter valid Individual Flexibility Agreement records.');
+ const ids=new Set();return input.map(raw=>{
+  object(raw);if(typeof raw.locationId!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(raw.locationId)||ids.has(raw.locationId))fail('Record one IFA per employer location in each dated employment record.');ids.add(raw.locationId);
+  const reference=text(raw.reference,500),employerName=text(raw.employerName,200),variationSummary=text(raw.variationSummary,2000),betterOffOverall=text(raw.betterOffOverall,2000);
+  if(reference.length<8||variationSummary.length<8||betterOffOverall.length<8)fail('Enter the signed IFA reference, varied terms and better-off-overall record (at least 8 characters each).');
+  const signedOn=calendarDate(raw.signedOn),startsOn=calendarDate(raw.startsOn),endsOn=raw.endsOn?calendarDate(raw.endsOn):null;
+  if(signedOn>today||signedOn<employee.employmentStart||startsOn<signedOn||endsOn&&endsOn<startsOn)fail('Check the IFA signing, employment and start/end dates.');
+  if(!Array.isArray(raw.terms)||!raw.terms.length||raw.terms.some(t=>!flexibilityTerms.includes(t))||new Set(raw.terms).size!==raw.terms.length)fail('Choose the award terms covered by the signed IFA.');
+  if(typeof raw.rosteredHours!=='boolean'||raw.rosteredHours&&!raw.terms.includes('work-times')||raw.confirmed!==true)fail('Confirm the signed IFA, required signatures and employee copy, and whether it permits roster-based hours.');
+  return{locationId:raw.locationId,employerName,reference,signedOn,startsOn,endsOn,terms:flexibilityTerms.filter(t=>raw.terms.includes(t)),rosteredHours:raw.rosteredHours,variationSummary,betterOffOverall,confirmed:true};
+ });
+}
+function activeFlexibilityAgreement(profile,date,locationId){return Array.isArray(profile?.flexibilityAgreements)?profile.flexibilityAgreements.find(v=>v&&v.locationId===locationId&&typeof v.startsOn==='string'&&v.startsOn<=date&&(!v.endsOn||v.endsOn>=date))||null:null;}
+function rosteredHoursAgreement(profile,date,locationId,employerName){const v=activeFlexibilityAgreement(profile,date,locationId);return Boolean(v&&v.confirmed===true&&v.rosteredHours===true&&Array.isArray(v.terms)&&v.terms.length===1&&v.terms[0]==='work-times'&&v.employerName===employerName);}
 function employmentDetails(input){
  const result={};
  if(input.arrangement!==undefined){if(!['standard','needs-review'].includes(input.arrangement))fail('Choose the award arrangement.');result.arrangement=input.arrangement;}
@@ -40,7 +56,7 @@ function evaluate({company,items,profiles,versions,locationId,weekStart,subjectI
   if(!p){add(item,'no-profile','Complete this employee’s award profile for '+date+'.',null,version);continue;}
   if(date<p.employmentStart||date<p.dateOfBirth){add(item,'profile-date','This shift predates the employee’s recorded employment or birth date.',null,version);continue;}
   const years=age(p.dateOfBirth,date),related=items.filter(other=>other.userId===item.userId),day=related.filter(other=>M.localParts(other.startAt).date===date),weekly=related.filter(other=>M.monday(M.localParts(other.startAt).date)===weekStart),paid=item.paidSeconds/60,elapsed=(Date.parse(item.endAt)-Date.parse(item.startAt))/60000;
-  if(p.employmentType==='part-time'&&!Number.isSafeInteger(p.agreedWeeklyMinutes))add(item,'part-time-hours-missing','Add agreed regular working hours before checking part-time weekly hours.');
+  if(p.employmentType==='part-time'&&!Number.isSafeInteger(p.agreedWeeklyMinutes)&&!rosteredHoursAgreement(p,date,locationId,company.employerName))add(item,'part-time-hours-missing','Add agreed regular working hours before checking part-time weekly hours.');
   if(p.employmentType==='part-time'&&Number.isSafeInteger(p.agreedWeeklyMinutes)&&weekly.reduce((sum,other)=>sum+other.paidSeconds/60,0)>p.agreedWeeklyMinutes)add(item,'part-time-hours','Paid hours exceed agreed part-time weekly hours. Review the written variation and overtime treatment.',null,version);
   if(M.monday(M.localParts(item.endAt).date)!==M.monday(date))add(item,'week-boundary','This shift crosses the weekly boundary. Review allocation of hours and breaks between weeks.',null,version);
   let matched=0;
@@ -61,4 +77,4 @@ function evaluate({company,items,profiles,versions,locationId,weekStart,subjectI
  if(!local.length&&!versions.some(v=>v.reviewedAt&&v.effectiveFrom<=weekStart&&v.effectiveTo>=weekStart))issues.push({subjectId:null,userId:null,code:'no-rules',message:'No reviewed rules cover this week. Import and review a dated rule set.',clause:null,versionId:null});
  return{enabled:true,status:issues.length?'review-required':local.length?'configured-checks-clear':'no-items',issues,coverage:[...coverage],exclusions,versionIds:[...versionIds],reviewRequired:issues.length>0};
 }
-module.exports={types,kinds,exclusions,pack,profile,evaluate,age,object,text,source,calendarDate};
+module.exports={types,kinds,exclusions,pack,profile,evaluate,age,object,text,source,calendarDate,flexibilityTerms,activeFlexibilityAgreement,rosteredHoursAgreement};

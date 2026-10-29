@@ -597,3 +597,4 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 
 @media screen{html[data-surface-style=liquid-glass] .roster-drag-ghost{background-color:var(--glass-surface);background-image:var(--glass-sheen);box-shadow:var(--glass-shadow)}}
 @media print{.roster-drag-ghost,.roster-card-actions{display:none!important}.roster-shift.is-dragging{opacity:1}.roster-cell .roster-shift[data-roster-draggable]>.roster-cost-trigger{position:static;margin:0 3px 0 auto}}
+.roster-variation-fields{min-width:0;border:0;padding:0;margin:0}
