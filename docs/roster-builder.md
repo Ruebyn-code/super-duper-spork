@@ -20,6 +20,10 @@ other roster sections and published readers keep their existing presentation.
   toolbar with their original details visible. Missing values remain unknown.
 - A stable marker restores the original summary slot when leaving maker mode,
   including resize to the phone reader. No new financial endpoint is fetched.
+- Compact staff rows and shift cards reduce padding and unused row space while
+  preserving time text, staff/position pickers, costs and award icons. The drag
+  grip sits beside the staff selector above the cost strip. Touch Add Shift
+  targets, inline validation/Undo and phone readers keep their native behaviour.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
   Today uses the server's Melbourne date; holiday stars remain native markers.
 - Award warnings use small red error icons beside staff names and on shift cards.
