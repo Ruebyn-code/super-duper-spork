@@ -63,3 +63,5 @@ The ordinary pencil editor, profile photos, invitation resends, filters and
 directory remain available. Existing users are not enrolled in a new checklist.
 
 Automatic rates use the employee’s accessible assigned location and show its name. Complete employer coverage and pay-period details through that location’s Employer setup tab or location setup checklist. Employee dated employment terms remain here.
+
+Employment type and award classification must be chosen explicitly for new profiles. The form groups essential employee/pay details and expands additional employment conditions when saved non-default values need attention. Award Overview can open the same editor without granting account-management permissions.

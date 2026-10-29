@@ -9,3 +9,4 @@
 .award-hourly-rates dt{font-weight:400;overflow-wrap:anywhere}.award-hourly-rates dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
 .award-hourly-rates .small{margin:8px 0 0;font-size:.75rem;line-height:1.5;color:var(--theme-muted,#52687b)}
 .award-hourly-rates [hidden]{display:none!important}
+.award-hourly-rates>details{margin-top:10px;font-size:.75rem}.award-hourly-rates>details>summary{cursor:pointer;color:var(--theme-primary-text,var(--primary))}

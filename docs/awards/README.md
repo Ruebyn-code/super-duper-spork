@@ -65,7 +65,7 @@ reasons; the display never guesses a zero or enables award settings.
 | Overtime meals | 17.4; p. 17 | $17.33 first meal unless supplied; further $15.66 after >4 eligible overtime h; recorded eligibility/notice and inability to return home required |
 | Uniform laundry | 17.5; pp. 17–18 | $6.42/week FT once per employer/week; $1.28/shift PT/casual, only if employee launders required clothing |
 | Travel, vehicles, reimbursements | 17.5–17.10; pp. 17–19 | Extra travel time at base/150%; own vehicle delivery 53c/km or other duties $1/km; actual reimbursements with a reason |
-| Rate rounding | Schedule A; pp. 42–48 | Junior base rounded to cents first; each percentage then rounded half-up to an hourly cent; line amounts rounded to cents |
+| Rate rounding | Schedule A; pp. 42–48 | Junior base from weekly rate ÷ 38 × age percentage, rounded to cents first; each percentage then rounded half-up to an hourly cent; line amounts rounded to cents |
 
 Work is evaluated in Australia/Melbourne, including DST. The app's ordinary
 week is Monday–Sunday. Rate bands split across midnight and birthdays. Overtime
@@ -140,3 +140,57 @@ calculation context. Existing approved pay snapshots stay frozen and native chan
 context warnings still require reopening and review. Already completed location
 setup records remain complete; unfinished ordinary locations need the new ninth
 Employer setup task. Head Office remains exempt.
+
+## Simpler setup and review
+
+Award compliance opens a read-only Overview, grouped by accessible trading
+location: Employer, Employees and Public holidays for the current Melbourne year.
+It reads saved details without configuring employers, creating profiles, reviewing
+calendars or fetching a provider. Ready for estimates means setup completeness
+for today, within the listed scope; it does not certify award or legal compliance
+or promise that future/historic shifts have complete inputs. Head Office has no
+store setup. Legacy company setups remain identified.
+
+Employer setup stays inside the location popup with one Save settings action.
+The automatic-wages switch controls native checks and wage calculations together;
+existing checks-only configurations remain unchanged until explicitly switched.
+Coverage and edition review stay explicit. Optional super/on-cost estimates are
+expandable, and open for saved values. Employee type and classification require
+an explicit choice for new profiles. Ordinary employment details and automatic
+rates are prominent; special conditions, cycle averaging and rate breakdowns are
+expandable, preserving saved values and all validations. Employee edits are also
+available directly in Overview through the same dated editor and awards.manage
+permission; this never grants account creation, role or email authority.
+
+Holiday rows default to compact all-day entries; part-day controls open for saved
+partial periods. All dates, regional/substitute/part-day review and the explicit
+whole-year confirmation remain required. Refreshes preserve unsaved calendar
+changes; stale calendar revisions must be reloaded explicitly. Roster review groups
+repeated messages while retaining affected-record counts and all blocking details.
+Pay details show breaks and totals first, with itemisation, allowances and written
+variations expandable. Existing allowances, agreements and warning review notes
+are preserved; no unsupported obligation is automatically waived.
+
+### Source audit and calculation corrections
+
+`ma000003-2026-07-rates.json` transcribes every Schedule A table, with the retained
+PDF digest. Tests independently compare **560** published ordinary, penalty and
+overtime entries for all four classification bands, adult/junior ages and
+permanent/casual employment. Clauses 15.1 note 1 and 15.2 require the junior base
+from the **unrounded weekly rate / 38**, then its age percentage and cent rounding,
+before penalties. Applying the age percentage to the rounded adult hourly rate
+was corrected: for example Level 3 in charge of one/no person at age 16 is a
+$14.95 base and $18.69 casual weekday rate; Level 3 in charge of two/more people
+at age 20 is a $27.25 base and $34.06 casual weekday rate.
+
+Overnight work now rechecks changed employment terms at each local date. A new
+special arrangement, missing classification band, incomplete pattern or below-
+minimum agreed rate after midnight withholds a complete cost instead of using
+standard terms through the shift. Existing ordinary/junior birthday splits,
+source dates, pay-period guards, overtime, breaks and conditional allowance tests
+remain. Approved snapshots are not rewritten; native changed-context warnings
+still require reopening and review.
+
+This audit uses the **included 1 July 2026 edition**, not a live certification of
+later variations. Coverage, classification duties, regional exceptions, special
+agreements, payroll/NES and procedural obligations still need employer review.

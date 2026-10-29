@@ -349,7 +349,7 @@
   'Open Rostering → Timesheets and choose the location and week.',
   'Review actual start/end times and recorded unpaid breaks. Submit a manual entry with a reason if work is missing.',
   'An authorised reviewer can approve, reject, reopen or correct an entry. Corrections require a reason and return it to pending approval.',
-  'Check rates and any award warnings before approval. Use Export CSV for permitted entries.'
+  'Check rates and award warnings before approval. Pay details shows breaks first; expand the calculation, allowances or written variation when needed. Use Export CSV for permitted entries.'
  ],{route:'/rostering#timesheets',permissions:['rostering.view'],notes:['Original clock events and correction history remain recorded. Approved timesheets retain their saved rate calculation after later changes.'],related:['shift-clock','labour-settings','award-settings']});
  add(c,'leave-availability','Manage availability and leave','Keep scheduling informed by when people can work.',[
   'Open Rostering → Availability to enter your recurring availability and dated changes.',
@@ -360,7 +360,7 @@
  add(c,'labour-settings','Set labour budgets, rates and positions','Configure the values used for roster planning.',[
   'Open Rostering → Labour settings with the appropriate management permission.',
   'Choose the authorised network, company or location budget scope and save the planned budget settings.',
-  'Configure effective-dated employee rates where permitted and review missing-rate warnings.',
+  'For automatic award rates, use Award compliance → Overview → Employee details or the user’s Employment & award editor. Legacy flat rates remain available where automatic wages are off.',
   'Use Positions to add or rename company positions and choose their shift-card colours, then Save positions.'
  ],{route:'/rostering#settings',permissions:['rostering.view'],notes:['Budget permissions differ by scope. Positions and colours are shared across the selected company’s locations. Employment and award terms are managed separately in Users.'],related:['award-settings','roster-forecasts','manage-users']});
 
@@ -674,11 +674,12 @@
   'Review saved changes, use Undo if needed and choose Finish editing.'
  ],{route:'/home',permissions:['home.view','appearance.manage'],notes:['Choose Head Office from the location selector before editing its dashboard. Creating Head Office needs no store setup. App edit is suspended on phones. Ordinary words, numbers and form inputs are not individual editable appearance targets.'],related:['appearance','home-dashboards']});
  add(c,'award-settings','Configure employment and award estimates','Review the settings used by native wage calculations.',[
-  'Open Admin → Locations → Edit location → Employer setup, or its location setup checklist. Confirm the location’s legal employer, award coverage and pay period, then press Save settings.',
-  'Edit employees under Admin → Users → Employment & award. Save dated employment type, birth date, classification and pay arrangement; Automatic award rates calculates the hourly amounts. Choose a rate date to inspect junior birthdays or later employment terms.',
-  'Review the edition, rule versions and holiday calendars in Award compliance. Inspect roster and timesheet calculation warnings after enabling the location’s settings.',
-  'Review imported rule updates before activating them; add required review notes on publish or approval.'
- ],{route:'/settings/awards',permissions:['awards.manage'],notes:['Each saved location has its own employer settings and separate overtime and minimum-engagement context. Employee terms remain in Users. Untouched legacy company setups retain their existing behavior until saved for a location. The calculator is an estimator with a defined supported scope, not complete payroll. Payroll payments, lodgements and employer review remain separate.'],related:['labour-settings','timesheets','public-holidays']});
+  'Open Settings → Award compliance. Overview shows Employer, Employees and Public holidays for each accessible trading location.',
+  'Choose Open setup for the location. Enter the legal employer and pay period, confirm award coverage and turn on automatic award wages, then Save settings. Optional employer cost estimates are expandable.',
+  'Expand Employee details and choose Edit details. Select the actual employment type and classification, complete the dated details and Save employment details. Automatic rates use the saved terms; additional conditions and late-night rates are expandable.',
+  'Choose Review dates. Check the full year’s holidays, including local, substitute and part-day periods; expand All day to edit times when needed. Confirm the review and Save location calendar.',
+  'Review roster and timesheet warnings and use Pay details for breaks, allowances or written variations. Missing wage inputs must be completed. Advanced rules and source details remain available for reviewed updates.'
+ ],{route:'/settings/awards',permissions:['awards.manage'],notes:['Setup readiness is not a compliance certificate. The calculator uses the included July 2026 edition. Special arrangements, classifications, regional exceptions, payroll and later award changes need employer review. Each saved location retains separate employer settings. Approved calculations stay frozen until explicitly reopened.'],related:['labour-settings','timesheets','public-holidays']});
 
  add(c,'platform-console','Use the Opstack owner and support console','Manage networks using a separate platform account.',[
   'Open Opstack console from the account dropdown and sign in with your Opstack owner or support credentials.',

@@ -48,7 +48,7 @@ test('full-time outside published roster, sixth day, and part-time pattern chang
 });
 test('minimum payments are additional entitlement and never change actual hours worked',()=>{
  let [p]=price([shift('2026-10-05','09:00','10:00')]);assert.equal(p.paidSeconds,3600);assert.equal(p.minimumPaymentSeconds,7200);assert.equal(p.costCents,3*3476);
- const pt={...profile,employmentType:'part-time',agreementReference:'Written test pattern 001',agreedWeeklyMinutes:180,pattern:Array(7).fill(null)};
+ const pt={...profile,employmentType:'part-time',agreementReference:'Written test pattern 001',agreedWeeklyMinutes:180,pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};
  [p]=price([shift('2026-10-11','09:00','10:00')],[pt]);assert.equal(p.minimumPaymentSeconds,10800);assert.equal(p.costCents,4*5562);
  const adjacent=price([shift('2026-10-05','09:00','11:00'),shift('2026-10-05','11:00','12:00')]);assert.equal(adjacent.reduce((sum,p)=>sum+p.minimumPaymentSeconds,0),0);assert.equal(adjacent.reduce((sum,p)=>sum+p.costCents,0),3*3476);
  const short=price([shift('2026-10-05','09:00','10:00'),shift('2026-10-05','10:00','11:00')]);assert.equal(short[0].minimumPaymentSeconds,0);assert.equal(short[1].minimumPaymentSeconds,3600);assert.equal(short.reduce((sum,p)=>sum+p.costCents,0),3*3476);
@@ -102,4 +102,24 @@ test('incomplete employer-wide work context blocks otherwise priced rows in the 
  assert.equal(rows[0].costCents,null);assert.equal(rows[1].costCents,null);assert.ok(rows[1].issues.some(i=>i.code==='pay-incomplete-context'&&i.blocking));
  const resolved=price([shift('2026-10-05','09:00','12:00',{locationId:'unknown-calendar'}),shift('2026-10-06','09:00','12:00')],[profile],{...config,holidayCalendars:[...config.holidayCalendars,{...config.holidayCalendars[0],locationId:'unknown-calendar'}]});
  assert.equal(resolved[1].costCents,10428);assert.notEqual(resolved[1].fingerprint,rows[1].fingerprint);
+});
+
+test('overnight work rechecks new dated employment terms instead of silently costing unsupported arrangements',()=>{
+ const worked=shift('2026-10-05','22:00','02:00');
+ for(const changes of [{arrangement:'needs-review'},{classification:'3',level3Band:null},{payBasis:'base-plus-penalties',baseRateCents:100},{employmentType:'part-time',agreedWeeklyMinutes:180,agreementReference:'Written agreement',pattern:undefined}]){
+  const later={...profile,id:'new-profile',effectiveFrom:'2026-10-06',...changes},result=price([worked],[profile,later])[0];assert.equal(result.complete,false);assert.equal(result.costCents,null);assert(result.issues.some(i=>i.blocking&&i.message.startsWith('Employment terms for 2026-10-06:')));
+ }
+ const valid={...profile,id:'new-profile',effectiveFrom:'2026-10-06',classification:'2'},priced=price([worked],[profile,valid])[0];assert.equal(priced.complete,true);assert.equal(priced.lines.at(-1).rateCents,4123);
+ assert(A.employmentIssues({...profile,dateOfBirth:undefined},'2026-10-05').some(i=>i.code==='employment'));assert.equal(A.employmentIssues(profile,'2026-10-05').length,0);
+});
+
+test('every published Schedule A adult and junior ordinary, penalty and overtime table entry matches the calculator',()=>{
+ const tables=require('./docs/awards/ma000003-2026-07-rates.json'),settings={...config,coverageConfirmed:true,sourceId:A.source.id},keys=['1','2','3-one','3-many'];assert.equal(tables.sha256,A.source.sha256);
+ for(const [name,adults]of Object.entries(tables.adult)){
+  const type=name.startsWith('casual')?'casual':'full-time',overtime=name.endsWith('Overtime'),rows=[...adults.map((cents,i)=>({classification:keys[i],age:30,cents})),...tables.junior[name]];
+  for(const row of rows){const employee={...profile,employmentType:type,dateOfBirth:(2026-row.age)+'-01-01',classification:row.classification.startsWith('3')?'3':row.classification,level3Band:row.classification==='3-one'?'one-or-none':row.classification==='3-many'?'two-or-more':null},label=name+' '+row.classification+' age '+row.age;
+   if(overtime){const base=A.baseRate(employee,'2026-10-05');assert.deepEqual([[1,false,0],[1,false,7200],[0,false,0],[1,true,0]].map(([day,holiday,seconds])=>A.roundRate(base,A.overtimePercent(type,day,holiday,seconds))),row.cents,label);}
+   else{const result=A.hourlyRates({config:settings,profile:employee,date:'2026-10-05'});assert.equal(result.ready,true,label);assert.deepEqual([result.rates.weekdayCents,result.rates.eveningCents,result.rates.overnightCents,result.rates.saturdayCents,...(employee.classification==='1'?[result.rates.sundayCents,null]:[null,result.rates.sundayCents]),result.rates.publicHolidayCents],row.cents,label);}
+  }
+ }
 });

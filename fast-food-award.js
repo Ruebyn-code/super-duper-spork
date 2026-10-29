@@ -10,6 +10,7 @@ const source = Object.freeze({
   amendments: ['PR799280', 'PR799284', 'PR799442'],
   sha256: 'fae4ca2b8dc7b5e902daf80ef91e63f2104637affd28be074aa79a1ce0478583',
   url: 'https://awards.fairwork.gov.au/MA000003.html',
+  weeklyRates: {'1':105680,'2':111910,'3-one':113640,'3-many':115040},
   adultRates: {'1': 2781, '2': 2945, '3-one': 2991, '3-many': 3027},
   allowances: {brokenHill: 4790, cold: 38, freezer: 97, meal: 1733, furtherMeal: 1566, laundryFullTime: 642, laundryShift: 128, deliveryKm: 53, otherKm: 100}
 });
@@ -21,7 +22,9 @@ function baseRate(profile, date) {
   const key = profile.classification === '3' ? (profile.level3Band === 'two-or-more' ? '3-many' : profile.level3Band === 'one-or-none' ? '3-one' : null) : profile.classification;
   if (!key || !source.adultRates[key]) return null;
   const years = age(profile.dateOfBirth, date), percent = years < 16 ? 40 : years < 21 ? (years - 11) * 10 : 100;
-  return roundRate(source.adultRates[key], percent);
+  // Clauses 15.1 note 1 and 15.2: apply the junior percentage to the
+  // unrounded weekly rate / 38, then round the junior hourly base to cents.
+  return Math.floor((source.weeklyRates[key]*percent+1900)/3800);
 }
 function periodStart(date, anchor, weeks = 1) {
   const days = Math.floor((Date.parse(date+'T00:00:00Z') - Date.parse(anchor+'T00:00:00Z')) / 86400000);
@@ -41,6 +44,20 @@ function overtimePercent(type, day, holiday, seconds) {
 }
 // Read-only ordinary hourly estimates use the same bases, percentages and cent
 // rounding as shift costing. They do not create work or replace shift facts.
+function employmentIssues(profile,date){
+ const issues=[],add=(code,message)=>issues.push({code,message});
+  if(!profile)add('employment','Add employment details covering this date.');
+  else{
+    try{validateProfile(profile,date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
+    catch{add('employment','Complete the employee’s birth date, employment type, classification and pay arrangement.');}
+    if(profile.effectiveFrom>date||profile.employmentStart>date||profile.dateOfBirth>date)add('employment-date','Choose a date covered by the employee’s saved employment details.');
+    if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
+    if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
+  }
+  if(profile?.employmentType==='part-time'&&(!profile.pattern||!profile.agreementReference))add('employment-pattern','Add the written part-time work pattern and agreement reference.');
+ if(profile){let minimum=null;try{minimum=baseRate(profile,date);}catch{}const base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(minimum)||!Number.isSafeInteger(base)||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
+ return issues;
+}
 function hourlyRates({config, profile, date}) {
   M.date(date);
   const issues=[],add=(code,message)=>issues.push({code,message});
@@ -50,14 +67,7 @@ function hourlyRates({config, profile, date}) {
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
   catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
   if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
-  if(!profile)add('employment','Save employment details covering this date.');
-  else{
-    try{validateProfile(profile,date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
-    catch{add('employment','Complete the employee’s birth date, employment type, classification and pay arrangement.');}
-    if(profile.effectiveFrom>date||profile.employmentStart>date||profile.dateOfBirth>date)add('employment-date','Choose a date covered by the employee’s saved employment details.');
-    if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
-    if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
-  }
+  issues.push(...employmentIssues(profile,date));
   const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null};
   if(issues.length)return result;
   const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
@@ -143,6 +153,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       const current = selectedProfile(item.userId, date), effectiveProfile = current || p;
       if (date !== previousDate) {
         previousDate = date;
+        if(date!==firstDate)for(const problem of employmentIssues(effectiveProfile,date))issue(({'employment':'pay-profile','employment-date':'pay-profile-date','arrangement':'pay-special-arrangement','averaging':'pay-part-time-cycle','employment-pattern':'pay-pattern','agreed-base':'pay-contract-rate'})[problem.code]||'pay-'+problem.code,'Employment terms for '+date+': '+problem.message,'10–15; 20',true);
         if (date >= source.reviewBy) issue('pay-source-review', 'Load and review a newer award edition before costing this date.', '15; Schedule A', true);
         const calendar = (config.holidayCalendars || []).find(c => c.locationId === item.locationId && c.year === Number(date.slice(0,4)) && c.confirmed);
         if (!calendar) issue('pay-calendar', 'Review this location’s public holiday calendar in Award compliance.', '21, 27', true);
@@ -316,4 +327,4 @@ function facts(input = {}) {
   }
   return result;
 }
-module.exports = {source, coverage, exclusions, calculate, hourlyRates, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};
+module.exports = {source, coverage, exclusions, calculate, hourlyRates, employmentIssues, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};
