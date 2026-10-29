@@ -421,9 +421,9 @@
  }
  function renderShiftCost(card,shift){
   let cost=card.querySelector('.roster-shift-cost');if(!Object.hasOwn(shift,'costCents')){cost?.remove();return;}
-  if(!cost){cost=button('',()=>showShiftCost(data.roster.shifts.find(item=>item.id===card.dataset.shiftId)||shift),'roster-shift-cost');card.append(cost);}
+  if(!cost){cost=button('',()=>showShiftCost(data.roster.shifts.find(item=>item.id===card.dataset.shiftId)||shift),'roster-shift-cost roster-cost-trigger');cost.setAttribute('aria-haspopup','dialog');cost.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.6-.7-1.5-1-3-1-4 0-4 4.5 0 4.5s4 4.5 0 4.5c-1.5 0-2.4-.3-3-1M12 5.5v13"/></svg>';card.append(cost);}
   const pending=rosterCostPending(shift),available=Number.isSafeInteger(shift.costCents),reason=shift.pay?.issues?.filter(issue=>issue.blocking).map(issue=>issue.message).join(' ')||'Check the employee’s dated employment details, employer award setup and location holiday calendar.';
-  cost.textContent=pending?'Updating cost…':available?money(shift.costCents):'Cost unavailable';cost.disabled=pending;cost.classList.toggle('is-unavailable',!available);cost.title=pending?'The saved shift cost will refresh after this edit.':available?'View shift cost details':reason;cost.setAttribute('aria-label','Shift cost for '+shift.username+': '+cost.textContent+(available?'':'. '+reason));
+  const label=pending?'Updating cost…':available?money(shift.costCents):'Cost unavailable';cost.disabled=pending;cost.classList.toggle('is-unavailable',!available);cost.title=pending?'The saved shift cost will refresh after this edit.':available?'View shift cost details':reason;cost.setAttribute('aria-label','Shift cost for '+shift.username+': '+label+(available?'':'. '+reason));
  }
  function showShiftCost(shift){
   if(shift.pay){payDetails(shift,'roster');return;}

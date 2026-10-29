@@ -308,12 +308,12 @@
   'On a phone, use My roster for your shifts and Team roster for a day’s published team schedule.',
   'Check overnight labels and shifts continuing from the previous night.',
   'Close the phone popup to return to the app; Open roster reopens it.'
- ],{route:'/rostering#roster',permissions:['rostering.view'],notes:['Ordinary staff views show published work. Manager edits remain drafts until published. Roster makers see shift costs and weekly staff totals; unknown costs show Cost unavailable, with the cause available by clicking it.'],related:['make-roster','shift-clock','leave-availability']});
+ ],{route:'/rostering#roster',permissions:['rostering.view'],notes:['Ordinary staff views show published work. Manager edits remain drafts until published. Roster makers open shift costs through each card’s dollar icon and see weekly staff totals. The cost popup shows missing details when a shift cannot be priced.'],related:['make-roster','shift-clock','leave-availability']});
  add(c,'make-roster','Build and edit a roster','Plan draft shifts using Staff, Stacked or Day view.',[
   'Open the roster maker with roster-management access. Select the week using the arrows, This week or the calendar. The outlook below the controls shows projected sales, labour budget, roster cost and budget remaining when permitted.',
   'Use the Staff, Stacked and Day buttons to choose a view. Press + inside a day/staff cell, then set the time, person and position in its compact shift card. Today is highlighted in the week grid.',
   'Move shifts with their grip; drag a Day-view bar to change staff or time. Check overlap or availability warnings.',
-  'Review the autosave status and the cost on each shift card. Staff view also shows each person’s weekly total. Open the small red error icon on a staff row or shift card for its award review. Click a cost for its calculation or missing pay details. Select a shift’s background and use Delete or Backspace to remove it; use Undo if needed.',
+  'Review the autosave status. Open the dollar icon on a shift card for its cost popup, then expand Itemised calculation for the breakdown or review missing pay details. Staff view shows each person’s weekly total. The red error icon opens its award review. Select a shift’s background and use Delete or Backspace to remove it; use Undo if needed.',
   'Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready.'
  ],{route:'/rostering#roster',permissions:['rostering.view','rostering.manage'],notes:['Autosaving does not publish. Vacant shifts have unknown costs until assigned and priced.'],related:['publish-roster','roster-forecasts','labour-settings']});
  add(c,'publish-roster','Publish a reviewed roster','Make saved draft shifts visible to staff.',[

@@ -1,8 +1,8 @@
-# Visible roster costs
+# Roster cost popups
 
-The desktop/tablet roster maker shows an authorised shift’s saved cost directly
-on its card, with the employee’s whole-week total beside their name in Staff
-view. Stacked view retains per-card and per-day costs. Day timeline bars label
+The desktop/tablet roster maker opens an authorised shift’s saved cost from a small dollar
+icon on its card, with the employee’s whole-week total beside their name in Staff
+view. Stacked cards use the same icon and retain per-day totals. Day timeline bars label
 the whole shift cost, including a continuing overnight shift; these are not
 additional daily expense allocations.
 
@@ -13,7 +13,9 @@ amounts. Unknown costs stay unknown; an actual zero is displayed as $0.00.
 Staff with no shifts have a $0.00 planning total. A total with any unpriced
 shift is unavailable rather than a misleading sum of only the priced shifts.
 
-Click a shift cost to open native Pay details. Blocking reasons are visible
+Click the dollar icon to open native Pay details, with gross wages, separate
+super/on-cost estimates and the expandable Itemised calculation. The card shows
+no inline amount. The icon retains the current cost in its accessible name. Blocking reasons are visible
 there when the calculator cannot price the work, including missing employment
 terms, source/pay-period coverage or reviewed holiday calendars. Legacy shifts
 without a rate show a read-only explanation and the existing award-settings
@@ -27,7 +29,7 @@ details, publishing review and Timesheets approval guards stay unchanged.
 Unknown checks without a visible owner retain a small status-row fallback icon.
 Icons with unsaved changes are disabled so they do not present stale reviews.
 
-Edits show Updating cost until the native serial save and recalculation finish.
+Edits disable the icon with an Updating cost accessible label until the native serial save and recalculation finish.
 Staff totals update alongside saved shift costs without replacing active input
 fields. Failed or uncertain saves keep their existing draft/error/undo handling.
 
