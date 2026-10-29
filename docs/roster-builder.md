@@ -17,7 +17,9 @@ other roster sections and published readers keep their existing presentation.
   Staff, Stacked and phone readers have no separate hourly sales panel. Home
   and Sales hourly forecasts retain their existing displays.
 - The same four permission-checked sales/budget/cost metrics sit below the
-  toolbar with their original details visible. Missing values remain unknown.
+  toolbar in a thin strip with reduced padding and gaps. All labels, figures
+  and original status details remain visible and wrap when needed; missing
+  values remain unknown. Phone/published-reader summaries keep their layout.
 - A stable marker restores the original summary slot when leaving maker mode,
   including resize to the phone reader. No new financial endpoint is fetched.
 - Compact staff rows and shift cards reduce padding and unused row space while
