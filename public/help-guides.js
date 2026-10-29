@@ -616,19 +616,20 @@
   'Switch to the company through the logo picker before adding its suppliers, stock and appearance.',
   'Give users the required location memberships and company permission assignments.'
  ],{route:'/admin/accounts#companies',permissions:['companies.manage'],notes:['New companies start with an empty catalogue. A company must retain an active location. Intelligence keys and budgets are also company-specific.'],related:['switch-location','manage-users','appearance','intelligence-setup']});
- add(c,'manage-users','Create or edit users','Assign access, credentials, phone numbers and profile details.',[
-  'Open Admin → Users and choose Create user or the pencil beside an account.',
-  'Set its username, permitted role, accessible locations and default location.',
-  'Enter a phone number for clock/kiosk PIN access. Its last four digits must be unique across the network.',
-  'Set a new password only when needed, or use the available account setup invitation workflow.',
-  'Save and tell affected users to sign in again after access or credential changes.'
- ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['You can only manage users and grant access within your own authority. Leave an existing password blank to keep it.'],related:['permissions','account-invitations','profile-photo','award-settings']});
+ add(c,'manage-users','Create or edit users','Set up a user with a guided checklist, permissions and roster details.',[
+  'Open Admin → Users and choose Create user. The User setup popup tracks each step as you complete it.',
+  'Set up Name & email, then Phone & clock PIN. Add their phone number for clock/kiosk access, or choose Skip for now. The last four phone digits must be unique across the network.',
+  'Review Permissions, including whether they apply to this company or the network, then choose accessible Locations and a default location.',
+  'Choose Review invitation, check the details and press Send invitation. Only this action creates the account and sends its password setup link. Check the delivery result.',
+  'Complete Roster details inside the popup after the user is created. Authorised managers can save dated employment, award classification, pay arrangements and part-time work patterns, plus hourly rates at assigned company locations when flat-rate costing is used. Save each changed section, then Continue and Finish user setup, or skip to finish later.',
+  'Use the pencil beside an existing user to edit their account, photo and employment details. Tell affected users to sign in again after access or sign-in changes.'
+ ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['You can only manage users and grant access within your own authority. Closing User setup before inviting retains the draft on this page; Discard draft clears it. Roster records are separate from account permissions. New users choose their own password; existing sign-ins continue to work. Roster setup does not create shifts or availability.'],related:['permissions','account-invitations','profile-photo','award-settings','labour-settings']});
  add(c,'account-invitations','Send account setup invitations','Let new users set up access through an expiring invitation.',[
-  'Configure account setup email sending in the available Settings or Opstack-owner controls.',
-  'Create or edit the user with the correct email and location/role access.',
-  'Use the available invitation action and review its sending status.',
-  'The recipient opens the setup link and chooses credentials. Reissue an invitation if it expires or details need changing.'
- ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['Hosted network account-email settings may be managed by the Opstack owner. Ask the appropriate administrator if this control is unavailable.'],related:['manage-users','location-email','support-request']});
+  'Configure the shared account setup email sender in the available Settings or Opstack-owner controls.',
+  'In Users, choose Create user and complete the Name & email, optional Phone & clock PIN, Permissions and Locations steps in User setup.',
+  'Choose Review invitation and press Send invitation, then check the delivery result. Continue to the new user’s roster details or finish them later.',
+  'The recipient opens the setup link and chooses a password. For a failed or expired invitation, edit the existing user and choose Resend setup email. An unconfirmed send should be checked with the email service first.'
+ ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['Hosted network account-email settings may be managed by the Opstack owner. Ask the appropriate administrator if this control is unavailable. Setup emails use the shared account sender, separate from location ordering emails.'],related:['manage-users','location-email','support-request']});
  add(c,'permissions','Choose detailed permission levels','Control feature access and individual actions separately from the Staff/Manager Home dashboard.',[
   'Open Settings → Permission levels. Search existing levels, edit one within your authority, or choose Duplicate to start from its current settings.',
   'Set the name, optional description and hierarchy. Choose Staff or Manager / Supervisor Home; sales access elsewhere remains a separate permission.',

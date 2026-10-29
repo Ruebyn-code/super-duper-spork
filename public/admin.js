@@ -107,6 +107,7 @@ function setAccountLocations(ids){
 }
 if($('account-location'))$('account-location').onchange=()=>{const input=[...document.querySelectorAll('#account-locations input')].find(input=>input.value===$('account-location').value);if(input)input.checked=true;};
 function returnAccountForm(){
+ window.userSetup?.reset();
  const home=$('account-form-home');if(!home)return;home.append($('account-form'));home.hidden=true;$('create-user').setAttribute('aria-expanded','false');
  document.querySelectorAll('.user-edit-panel,.user-editor-row').forEach(panel=>panel.hidden=true);document.querySelectorAll('.user-edit-toggle').forEach(button=>button.setAttribute('aria-expanded','false'));
 }
@@ -121,10 +122,11 @@ function resetAccountForm(){
  $('account-clock-pin-help').textContent='Optional now. Their clock PIN will use the last four digits; every user needs a different ending.';
  $('account-form-title').textContent='Invite user';$('account-save').textContent='Send invitation';$('account-email-help').textContent='We will send an account setup link from the shared Opstack email address. They choose their own password.';$('account-cancel').hidden=false;
 }
-function createUser(){resetAccountForm();window.userEmployment?.show(null,$('account-form'));$('account-form-home').hidden=false;$('create-user').setAttribute('aria-expanded','true');$('account-form').elements.username.focus({preventScroll:true});}
-if($('create-user'))$('create-user').onclick=()=>{if(!$('account-form-home').hidden)resetAccountForm();else createUser();};
-if($('account-cancel'))$('account-cancel').onclick=resetAccountForm;
+function createUser(){if(!appAccess.can('users.create'))return;if(window.userSetup?.active){window.userSetup.open();return;}resetAccountForm();window.userSetup.open({companyId:currentCompanyId,companyName:currentCompanyName,locationId:currentLocationId,locations:accountLocations});}
+if($('create-user'))$('create-user').onclick=createUser;
+if($('account-cancel'))$('account-cancel').onclick=()=>{if(window.userSetup?.active)window.userSetup.close();else resetAccountForm();};
 function editAccount(account,panel,button){
+ if(window.userSetup?.active){window.userSetup.open();window.userSetup.setStatus('Finish or discard the user setup draft before editing another account.');return;}
  if(accountEditId===account.id&&!panel.hidden){resetAccountForm();button.focus({preventScroll:true});return;}
  resetAccountForm();accountEditId=account.id;panel.prepend($('account-form'));accountPhotoEditor=profilePhotos.editor(account,{onSaved:value=>{account.photoUrl=value.photoUrl;}});$('account-form').prepend(accountPhotoEditor.element);adminUI.set(button,panel,true);panel.closest('.user-editor-row').hidden=false;
  const form=$('account-form');accountOriginalRole={id:account.role,scope:form.elements.roleScope.value};form.elements.username.value=account.username;form.elements.role.value=account.role;window.locationPickers?.refresh(form.elements.role);form.elements.locationId.value=account.locationId;setAccountLocations(account.locationIds||[account.locationId]);window.locationPickers?.refresh($('account-location'));form.elements.email.value=account.email||'';form.elements.email.required=Boolean(account.email);form.elements.email.disabled=!appAccess.can('users.email.manage');form.elements.phoneNumber.value=account.phoneNumber||'';updatePhonePinPreview();$('account-clock-pin-help').textContent='Clock PIN uses the last four digits. Every user needs a different ending.';$('account-phone').required=Boolean(account.phoneNumber);$('account-email-help').textContent=appAccess.can('users.email.manage')?'Changing this email requires the user to sign in again. Pending invitations must be resent to the new email.':'Only users with email management permission can change this address.';$('account-form-title').textContent='Edit account';$('account-save').textContent='Save account';form.elements.username.focus({preventScroll:true});window.userEmployment?.show(account.id,form);
@@ -178,7 +180,7 @@ window.addEventListener('hashchange',()=>{if(!$('account-form'))return;if(locati
 async function loadAccounts(){
  [accountData,accountLocations,accountCompanies]=await Promise.all([appAccess.can('users.manage')?api('/api/accounts','GET'):[],api('/api/locations?all=true','GET'),api('/api/companies','GET')]);
  if(appAccess.can('users.manage')){const catalogue=await api('/api/permission-levels','GET');accountLevels=catalogue.levels;const choices=$('account-form').elements.role;renderRoleChoices();if(!$('account-role-scope')){const label=el('label','Permission applies to'),scope=el('select');scope.name='roleScope';scope.id='account-role-scope';for(const [value,text] of [['company','This company only'],...(appAccess.can('roles.network')?[['network','Entire network']]:[])]){const option=el('option',text);option.value=value;scope.append(option);}const hint=el('small','This company keeps a separate permission assignment. Network-wide replaces this user’s company assignments.','small');scope.onchange=renderRoleChoices;label.append(scope,hint);choices.closest('label').after(label);}}
- $('create-user').classList.toggle('access-denied',!appAccess.can('users.manage'));
+ $('create-user').classList.toggle('access-denied',!appAccess.can('users.create'));
  const select=$('account-location'),previous=select.value,requested=accountFilterLoaded?null:new URLSearchParams(location.search).get('location');accountFilterLoaded=true;
  select.replaceChildren();for(const record of accountLocations.filter(record=>!record.archived)){const option=el('option',accountLocationName(record));option.value=record.id;select.append(option);}
  if(requested&&accountLocations.some(record=>record.id===requested&&!record.archived))accountLocationFilters.add(requested);
@@ -187,13 +189,25 @@ async function loadAccounts(){
  renderAccountFilters();const company=accountCompanies.find(company=>company.id===currentCompanyId);if(company){currentCompanyName=company.name;$('users-company-name').textContent=company.name;$('users-company-initials').textContent=userInitials(company.name);}const logo=$('users-company-logo'),source=window.appBootstrap?.hasLogo?'/logo':window.appBootstrap?.hasSidebarLogo?'/sidebar-logo':'';if(source){logo.src=companyAssetUrl(source);logo.hidden=false;$('users-company-initials').hidden=true;logo.onerror=()=>{logo.hidden=true;$('users-company-initials').hidden=false;};}
  const locationLabel=$('sidebar-location-name'),currentLocation=accountLocations.find(record=>record.id===currentLocationId);if(locationLabel&&currentLocation){locationLabel.textContent=currentLocation.name;$('sidebar-location').title=currentLocation.name;const option=$('sidebar-location-select')?.querySelector('option[value="'+currentLocationId+'"]');if(option)option.textContent=currentLocation.name;}setAccountLocations([select.value]);renderAccountList();if(appAccess.any(['locations.manage','email.manage'])&&typeof renderLocationAdmin==='function')renderLocationAdmin(accountLocations.filter(record=>record.companyId===currentCompanyId),accountData);if(appAccess.can('companies.manage'))window.renderCompanyAdmin?.(accountCompanies);
 }
+let accountSaving=false;
 if($('account-form'))$('account-form').onsubmit=async event=>{
- event.preventDefault();const button=$('account-save'),inviting=!accountEditId;button.disabled=true;$('account-message').textContent=inviting?'Sending invitation…':'Saving account…';
+ event.preventDefault();if(accountSaving)return;const button=$('account-save'),inviting=!accountEditId,knownAccounts=new Set(accountData.map(account=>account.id));let invitationInput;accountSaving=true;button.disabled=true;$('account-message').textContent=inviting?'Sending invitation…':'Saving account…';
  try{
   const body=Object.fromEntries(new FormData(event.target));body.companyId=currentCompanyId;if(!body.phoneNumber)delete body.phoneNumber;if(!body.email)delete body.email;
   if(accountEditId&&accountOriginalRole&&body.role===accountOriginalRole.id&&body.roleScope===accountOriginalRole.scope)body.preserveRole=true;body.locationIds=selectedAccountLocations();if(!body.locationIds.length)throw Error('Choose at least one location.');
-  const result=await api(accountEditId?'/api/accounts/'+accountEditId:'/api/account-invitations',accountEditId?'PUT':'POST',body);resetAccountForm();await loadAccounts();location.hash='accounts';$('account-message').textContent=inviting?result.delivery.message:'Account saved. Location, permission or sign-in email changes require that user to sign in again.';
- }catch(error){$('account-message').textContent=error.message;}finally{button.disabled=false;}
+  if(inviting)invitationInput=body;
+  window.userSetup?.setBusy(true);window.userSetup?.setStatus('Sending invitation…');
+  const result=await api(accountEditId?'/api/accounts/'+accountEditId:'/api/account-invitations',accountEditId?'PUT':'POST',body);
+  if(inviting&&window.userSetup?.active)await window.userSetup.invited(result.account,result.delivery.message);else resetAccountForm();
+  await loadAccounts();location.hash='accounts';$('account-message').textContent=inviting?result.delivery.message:'Account saved. Location, permission or sign-in email changes require that user to sign in again.';
+ }catch(error){
+  let recovered=false;
+  if(inviting&&invitationInput&&window.userSetup?.active&&!window.userSetup.created)try{
+   const records=await api('/api/accounts','GET'),input=invitationInput,created=records.find(account=>!knownAccounts.has(account.id)&&account.invitation&&account.username===input.username.trim()&&account.email===input.email?.trim().toLowerCase()&&account.role===input.role&&account.locationId===input.locationId&&JSON.stringify([...(account.locationIds||[])].sort())===JSON.stringify([...input.locationIds].sort()));
+   if(created){const message='User created. The response was interrupted; check the invitation status before resending.';await window.userSetup.invited(created,message);await loadAccounts();location.hash='accounts';$('account-message').textContent=message;recovered=true;}
+  }catch{}
+  if(!recovered){$('account-message').textContent=error.message;window.userSetup?.setStatus(error.message);}
+ }finally{accountSaving=false;window.userSetup?.setBusy(false);button.disabled=false;}
 };
 
 if($('logo-form'))$('logo-form').onsubmit=async event=>{event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;try{const file=$('logo-file').files[0];if(!file||!['image/png','image/jpeg'].includes(file.type)||file.size>2000000)throw Error('Choose a PNG or JPG smaller than 2 MB.');const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(Error('Could not read this image.'));reader.readAsDataURL(file);});await api('/api/logo','POST',{data});await refreshLogo();$('logo-message').textContent='Logo saved. Refresh any other open app pages to see it.';event.target.reset();}catch(error){$('logo-message').textContent=error.message;}finally{button.disabled=false;}};

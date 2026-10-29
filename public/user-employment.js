@@ -7,9 +7,10 @@
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),p=k=>parts.find(v=>v.type===k).value;return p('year')+'-'+p('month')+'-'+p('day');};
  async function api(path,method='GET',body){const session=await(await fetch('/api/session',{cache:'no-store'})).json(),r=await fetch('/api/awards'+path,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf,...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:body===undefined?undefined:JSON.stringify(body)}),result=await r.json();if(!r.ok)throw Error(result.error);return result;}
  function hide(){generation++;document.getElementById('user-employment')?.remove();}
- async function show(userId,form){
+ async function show(userId,form,options={}){
   hide();if(!appAccess.can('awards.manage'))return;
   const token=generation,section=node('fieldset',undefined,'user-employment');section.id='user-employment';section.append(node('legend','Employment & award'));form.append(section);
+  for(const name of ['input','change'])section.addEventListener(name,()=>options.onDirty?.());
   if(!userId){section.append(node('p','Create the user, then edit them to add their company employment details.','small feature-instruction'));return;}
   section.disabled=true;section.append(node('p','Loading employment details…','small'));
   try{
@@ -37,7 +38,7 @@
      if(type.value==='part-time'&&agreementReference.value.trim().length<8){status.textContent='Enter the written agreement reference (at least 8 characters).';agreementReference.focus();return;}
      if(type.value==='part-time'&&!pattern.some(Boolean)){status.textContent='Enter the written part-time pattern.';return;}
      const minutes=pattern.reduce((sum,d)=>sum+(d?Number(d.end.slice(0,2))*60+Number(d.end.slice(3))+(d.overnight?1440:0)-Number(d.start.slice(0,2))*60-Number(d.start.slice(3))-d.breakMinutes:0),0);
-     save.disabled=true;try{await api('/profiles','PUT',{revision:data.config.revision,userId,effectiveFrom:effective.value,dateOfBirth:dob.value,employmentStart:start.value,employmentType:type.value,classification:classification.value,level3Band:band.value||null,arrangement:arrangement.value,payBasis:basis.value,baseRateCents:basis.value==='base-plus-penalties'?Math.round(Number(base.value)*100):null,agreementReference:type.value==='part-time'?agreementReference.value:'',cycleWeeks:Number(cycle.value),cycleAnchor:anchor.value||null,laundersUniform:laundry.checked,superEligible:superEligible.value===''?null:superEligible.value==='yes',...(type.value==='part-time'?{pattern,agreedWeeklyMinutes:minutes}:{agreedWeeklyMinutes:null})});await show(userId,form);document.querySelector('#user-employment [role=status]').textContent='Employment details saved.';}catch(error){status.textContent=error.message;save.disabled=false;}
+     save.disabled=true;options.onBusy?.(true);try{await api('/profiles','PUT',{revision:data.config.revision,userId,effectiveFrom:effective.value,dateOfBirth:dob.value,employmentStart:start.value,employmentType:type.value,classification:classification.value,level3Band:band.value||null,arrangement:arrangement.value,payBasis:basis.value,baseRateCents:basis.value==='base-plus-penalties'?Math.round(Number(base.value)*100):null,agreementReference:type.value==='part-time'?agreementReference.value:'',cycleWeeks:Number(cycle.value),cycleAnchor:anchor.value||null,laundersUniform:laundry.checked,superEligible:superEligible.value===''?null:superEligible.value==='yes',...(type.value==='part-time'?{pattern,agreedWeeklyMinutes:minutes}:{agreedWeeklyMinutes:null})});await show(userId,form,options);document.querySelector('#user-employment [role=status]').textContent='Employment details saved.';options.onSaved?.();}catch(error){status.textContent=error.message;save.disabled=false;}finally{options.onBusy?.(false);}
     };section.append(save,status);
    }
    render();

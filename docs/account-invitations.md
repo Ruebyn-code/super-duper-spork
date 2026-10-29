@@ -4,7 +4,8 @@ An Opstack owner configures **Opstack console → Account setup emails** once fo
 
 1. Enter the sender email address on a domain verified in Resend.
 2. Add the Resend API key, enable account setup emails and save.
-3. In **Users**, create a user with their name, email, permissions and locations. Opstack sends an invitation from the shared sender.
+3. In **Users**, choose **Create user**. Complete the popup checklist for name/email, optional phone/PIN, permissions and locations, then **Review invitation → Send invitation**. This is the only account-creation/send action.
+   After creation, complete **Roster details** in the popup or finish them later. See [User setup](user-setup.md).
 4. The recipient opens the email, chooses and confirms a password, then signs in with their email.
 
 Links expire after 48 hours and can be used once. They remain valid across restarts. Pending users cannot sign in before completing setup. Open a pending user’s edit controls to resend an invitation; resending replaces the old link. Failed emails can be retried after correcting the shared sender settings.
