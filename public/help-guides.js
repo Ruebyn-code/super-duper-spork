@@ -663,7 +663,7 @@
  ],{route:'/settings#order-email',permissions:['email.manage'],notes:['Template edits do not resend past emails or change saved order quantities. Sender and recipient configuration remains separate.'],related:['location-email','order-confirmation']});
  add(c,'appearance','Change company appearance','Set company colours, logos and fonts in the correct scope.',[
   'Select the company, then open the blue account dropdown → Settings → App appearance.',
-  'Change the relevant colours, app/sidebar logo or available font settings and review the preview.',
+  'In Colours, choose Standard or Liquid Glass under Interface style and review the sample. Change company colours, app/sidebar logos or available font settings as needed.',
   'Save the section’s settings and check an ordinary app page in both themes.',
   'Use authorised shared sign-in controls only when changing the platform’s sign-in appearance.'
  ],{route:'/admin/settings#colours',permissions:['appearance.manage'],notes:['Company appearance is separate from OpStack intelligence styling and shared platform sign-in settings.'],related:['home-layout','intelligence-appearance','dark-mode']});
