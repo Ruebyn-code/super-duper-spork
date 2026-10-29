@@ -23,6 +23,10 @@
 .roster-staff-label{position:sticky;left:0;z-index:2;display:flex;flex-direction:column;justify-content:flex-start;gap:5px;padding:8px 4px;background:var(--theme-canvas,#f5f8fc);border:0;border-radius:0;box-shadow:none;min-width:0}
 .roster-staff-label strong{font:600 12px/1.4 Arial,sans-serif;overflow-wrap:anywhere;color:var(--theme-muted,#40576a)}
 .roster-staff-label small{font:10px Arial,sans-serif;color:var(--theme-muted,#8192a0)}
+.roster-staff-label .roster-staff-cost{font-weight:600;color:var(--theme-primary-text,var(--primary))}
+.roster-shift .roster-shift-cost{display:block;width:100%;min-height:25px;margin:0;padding:4px 7px;border:0;border-top:1px solid color-mix(in srgb,var(--primary) 12%,transparent);border-radius:0 0 7px 7px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font:600 10px/1.5 Arial,sans-serif;text-align:right;cursor:pointer}
+.roster-shift .roster-shift-cost:disabled{cursor:default;opacity:.7}
+.roster-shift .roster-shift-cost.is-unavailable,.roster-staff-cost.is-unavailable{color:var(--theme-muted,#627383)}
 .roster-staff-label[data-roster-staff=""] strong{color:var(--theme-muted,#7a8896)}
 .roster-cell{min-width:0;display:flex;flex-direction:column;gap:4px;padding:3px 0 5px;border:0;border-bottom:1px solid var(--theme-line,#e6edf3);border-radius:0;background:transparent;min-height:34px;transition:background .18s,box-shadow .18s}
 .roster-stack-column{min-height:100px}

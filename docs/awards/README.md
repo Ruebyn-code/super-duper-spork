@@ -33,6 +33,11 @@ JSON check imports remain available, but do not alter this engine's pay tables.
    from these saved terms. The preview shares native junior/loading/penalty
    helpers, uses the selected date, and preserves missing setup/source guards.
    It never stores a flat-rate copy or enables employer coverage.
+Roster makers can also open Pay details directly from a shift’s visible cost.
+Staff view shows the saved costs for each employee’s selected week. Missing
+employment, source or calendar details stay unknown and show their blocking
+reasons; the display never guesses a zero or enables award settings.
+
 5. Roster → Award checks → Pay details: review estimates and enter break timing,
    eligible allowances, reimbursements and any written part-time variation.
    Published rosters supply the ordinary window for full-time actual work.

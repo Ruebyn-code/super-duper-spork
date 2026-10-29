@@ -171,6 +171,8 @@
   const editors=[...rosterEditors.values()],error=editors.some(editor=>editor.error),pending=editors.some(editor=>editor.dirty);
   label.textContent=error?'Changes need attention':rosterSaving||pending?'Saving changes…':'All changes saved';
   label.classList.toggle('has-error',error);
+  for(const editor of rosterEditors.values())renderShiftCost(editor.card,editor.shift);
+  for(const staff of $('roster-days').querySelectorAll('.roster-staff-label'))renderStaffCost(staff,[...data.roster.shifts,...newRosterShifts.values()].filter(shift=>(shift.userId||'')===staff.dataset.rosterStaff));
  }
  function setRosterEditorError(editor,message){
   if(!message&&editor.error&&$('rostering-status').textContent===editor.error)status('');
@@ -187,7 +189,7 @@
   const result=await api('dashboard?week='+week);if(result.roster.revision!==data.roster.revision)for(const editor of rosterEditors.values())if(editor.dirty){editor.pending=false;editor.blocked=true;setRosterEditorError(editor,'The roster changed. Undo this edit and refresh before continuing.');}data=result;
   for(const editor of rosterEditors.values()){
    const saved=data.roster.shifts.find(shift=>shift.id===editor.shift.id);
-   if(saved&&!editor.dirty)Object.assign(editor.shift,saved);
+   if(saved&&!editor.dirty){Object.assign(editor.shift,saved);if(!Object.hasOwn(saved,'pay'))delete editor.shift.pay;editor.costPending=false;}
   }
   if(preserveBoard){rosterRenderKey='';renderRoster(true);}else{rosterRenderKey='';renderRoster();}
  }
@@ -198,7 +200,8 @@
    details[0].textContent=hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0));
    if(details[1])details[1].textContent=money(shifts.some(shift=>shift.costCents===null)?null:shifts.reduce((sum,shift)=>sum+shift.costCents,0))+' labour';
   }
-  for(const label of $('roster-days').querySelectorAll('.roster-staff-label'))label.querySelector('small').textContent=hours(data.roster.shifts.filter(shift=>(shift.userId||'')===label.dataset.rosterStaff).reduce((sum,shift)=>sum+shift.paidSeconds,0));
+  for(const label of $('roster-days').querySelectorAll('.roster-staff-label')){const shifts=data.roster.shifts.filter(shift=>(shift.userId||'')===label.dataset.rosterStaff);label.querySelector('small').textContent=hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0));renderStaffCost(label,shifts);}
+  for(const card of $('roster-days').querySelectorAll('.roster-shift[data-shift-id]')){const shift=data.roster.shifts.find(item=>item.id===card.dataset.shiftId);if(shift)renderShiftCost(card,shift);}
  }
  function settleRosterLayout(){
   if(rosterNeedsLayout&&!rosterInteractionActive()){rosterNeedsLayout=false;rosterRenderKey='';renderRoster();}
@@ -216,7 +219,7 @@
       const wasNew=editor.isNew,oldId=editor.shift.id,previousUser=editor.shift.userId;
       const result=await api(wasNew?'shifts':'shifts/'+oldId,wasNew?'POST':'PUT',rosterPayload(editor.shift,values));
       wrote=true;data.roster.revision=result.revision;data.roster.hasChanges=true;
-      newRosterShifts.delete(oldId);rosterEditors.delete(oldId);Object.assign(editor.shift,result.shift);editor.isNew=false;
+      newRosterShifts.delete(oldId);rosterEditors.delete(oldId);Object.assign(editor.shift,result.shift);editor.isNew=false;editor.costPending=true;
       editor.card.dataset.shiftId=result.shift.id;editor.card.dataset.layoutKey='shift:'+result.shift.id;delete editor.card.dataset.newShift;
       rosterEditors.set(result.shift.id,editor);editor.saved=values;
       const savedIndex=data.roster.shifts.findIndex(shift=>shift.id===oldId);if(savedIndex<0)data.roster.shifts.push(editor.shift);else data.roster.shifts[savedIndex]=editor.shift;
@@ -316,7 +319,7 @@
    for(const shift of data.roster.shifts)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
    for(const person of people){
     const shifts=boardShifts.filter(shift=>shift.userId===person.id),label=node('div',undefined,'roster-staff-label');
-    label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)),user(node('small',hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0)))));board.append(label);
+    label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)),user(node('small',hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0)))));renderStaffCost(label,shifts);board.append(label);
     for(let index=0;index<7;index++)board.append(rosterCell(M.shiftDate(week,index),person.id,shifts,manage));
    }
   }else{
@@ -364,7 +367,7 @@
    for(const {shift,start,end}of entries){
     if(end<=start)continue;let track=tracks.findIndex(until=>until<=start);if(track<0)track=tracks.length;tracks[track]=end;
     const carry=shift.date!==rosterDay,bar=node(manage&&!carry?'button':'div',undefined,'roster-day-shift'+(carry?' is-continuation':''));if(bar.tagName==='BUTTON')bar.type='button';bar.style.left=(start/1440*100)+'%';bar.style.width=((end-start)/1440*100)+'%';bar.style.top=(track*34+5)+'px';
-    const label=shift.start+' – '+shift.end+(shift.overnight?' +1':''),detail=hours(shift.paidSeconds)+' paid'+(shift.position?' · '+shift.position:'');bar.append(user(node('strong',label)),user(node('small',detail)));bar.title=shift.username+' · '+label+' · '+detail+' · '+shift.breakMinutes+'m unpaid break'+(carry?' · Continues from '+date(shift.date):'');bar.setAttribute('aria-label',bar.title);bar.dataset.timelineShift=shift.id;positionColour(bar,shift.position,shift.positionColor);
+    const label=shift.start+' – '+shift.end+(shift.overnight?' +1':''),detail=(Object.hasOwn(shift,'costCents')?'Shift cost '+(shift.costCents===null?'unavailable':money(shift.costCents))+' · ':'')+hours(shift.paidSeconds)+' paid'+(shift.position?' · '+shift.position:'');bar.append(user(node('strong',label)),user(node('small',detail)));bar.title=shift.username+' · '+label+' · '+detail+' · '+shift.breakMinutes+'m unpaid break'+(carry?' · Continues from '+date(shift.date):'');bar.setAttribute('aria-label',bar.title);bar.dataset.timelineShift=shift.id;positionColour(bar,shift.position,shift.positionColor);
     if(manage&&!carry){
      bar.setAttribute('aria-keyshortcuts','Backspace Delete');bar.addEventListener('focus',()=>selectRosterShift(shift.id));bar.addEventListener('pointerdown',event=>startRosterPress(event,shift,bar));bar.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});
      bar.onclick=async()=>{
@@ -394,6 +397,26 @@
   };
   refresh();return{wrap,position,reset(){selected=shift.position||'';position.value=selected;refresh();}};
  }
+ function rosterCostPending(shift){const editor=rosterEditors.get(shift.id);return Boolean(newRosterShifts.has(shift.id)||editor?.dirty||editor?.pending||editor?.costPending);}
+ function renderStaffCost(label,shifts){
+  let cost=label.querySelector('.roster-staff-cost');if(rosterView==='day'||!can('rostering.manage')||shifts.some(shift=>!Object.hasOwn(shift,'costCents'))){cost?.remove();return;}
+  if(!cost){cost=user(node('small',undefined,'roster-staff-cost'));label.append(cost);}
+  const pending=shifts.some(rosterCostPending),missing=shifts.some(shift=>!Number.isSafeInteger(shift.costCents)),amount=shifts.reduce((sum,shift)=>sum+(shift.costCents||0),0);
+  cost.textContent=pending?'Cost pending':missing?'Cost unavailable':money(amount)+' cost';cost.classList.toggle('is-unavailable',pending||missing);cost.title=missing?'One or more shifts need employment, rate or award details.':'Total shift cost for this staff member in the selected week.';
+ }
+ function renderShiftCost(card,shift){
+  let cost=card.querySelector('.roster-shift-cost');if(!Object.hasOwn(shift,'costCents')){cost?.remove();return;}
+  if(!cost){cost=button('',()=>showShiftCost(data.roster.shifts.find(item=>item.id===card.dataset.shiftId)||shift),'roster-shift-cost');card.append(cost);}
+  const pending=rosterCostPending(shift),available=Number.isSafeInteger(shift.costCents),reason=shift.pay?.issues?.filter(issue=>issue.blocking).map(issue=>issue.message).join(' ')||'Check the employee’s dated employment details, employer award setup and location holiday calendar.';
+  cost.textContent=pending?'Updating cost…':available?money(shift.costCents):'Cost unavailable';cost.disabled=pending;cost.classList.toggle('is-unavailable',!available);cost.title=pending?'The saved shift cost will refresh after this edit.':available?'View shift cost details':reason;cost.setAttribute('aria-label','Shift cost for '+shift.username+': '+cost.textContent+(available?'':'. '+reason));
+ }
+ function showShiftCost(shift){
+  if(shift.pay){payDetails(shift,'roster');return;}
+  const ui=makeDialog('Shift cost · '+shift.username);ui.save.remove();ui.cancel.textContent='Close';ui.form.append(user(node('p',hours(shift.paidSeconds)+' paid · '+money(shift.costCents))));
+  if(!Number.isSafeInteger(shift.costCents))ui.form.append(node('p',shift.userId===null?'Assign a staff member before calculating this shift.':data.summary?.nativePay?'Complete the employee’s employment and award details for this shift date.':'Automatic award calculations are not enabled and no dated hourly rate is saved for this employee.','roster-error'));
+  else ui.form.append(node('p','This estimate uses the employee’s saved hourly rate and paid shift hours.','roster-help'));
+  if(can('awards.manage')){const link=node('a','Open award settings');link.href='/settings/awards';ui.form.append(link);}ui.finish();
+ }
  function rosterCard(shift,manage){
   const isNew=newRosterShifts.has(shift.id),card=node('article',undefined,'roster-shift'+(shift.userId===null?' roster-vacant-shift':''));card.dataset.shiftId=shift.id;card.dataset.layoutKey='shift:'+shift.id;positionColour(card,shift.position,shift.positionColor);if(isNew)card.dataset.newShift='';
   const availability=shift.availability==='unavailable'?'Availability conflict':shift.availability==='unknown'?'Availability not entered':shift.userId===null?'Vacant shift':'Available';
@@ -419,6 +442,7 @@
    const position=user(node('span',shift.position?shift.position.split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase():'–','roster-position-static')),content=node('div',undefined,'roster-shift-content');position.title=shift.position||'No position';position.setAttribute('aria-label',shift.position||'No position');content.append(user(node('p',shift.start+' – '+shift.end+(shift.overnight?' +1':''),'roster-shift-time')),user(node('strong',shift.username)));card.append(position,content);card.classList.add('roster-readonly-shift');
   }
   const state=node('span',undefined,'roster-shift-state '+(shift.availability==='unavailable'?'conflict':shift.availability==='available'?'available':shift.userId===null?'vacant':'unknown'));state.title=availability;state.setAttribute('aria-label',availability);state.setAttribute('role','img');card.append(state);
+  renderShiftCost(card,shift);
   return card;
  }
  function startRosterPress(event,shift,card){
@@ -495,7 +519,7 @@
  }
  function payDetails(item,mode){
   const ui=makeDialog('Pay details · '+item.username),pay=item.pay||data.awardChecks?.[mode==='roster'?'roster':'timesheets']?.prices?.find(p=>p.subjectId===item.id),facts=item.awardFacts||{};
-  if(pay){const table=node('table',undefined,'roster-pay-table'),head=node('tr');head.append(node('th','Entitlement'),node('th','Hours / rate'),node('th','Amount'));table.append(head);for(const line of pay.lines){const row=node('tr');row.append(user(node('td',line.label+' · '+line.clause)),user(node('td',line.rateCents!==undefined?(line.seconds/3600).toFixed(2)+'h × '+money(line.rateCents):'—')),user(node('td',money(line.amountCents))));table.append(row);}ui.form.append(node('p',item.status==='approved'?'Saved approval calculation. Saving changed pay details reopens this timesheet.':'Wage estimate from the included July 2026 award edition.','roster-help'),table,user(node('p','Gross wages & allowances: '+money(pay.costCents)+' · Super estimate: '+money(pay.superEstimateCents)+' · Other on-cost estimate: '+money(pay.oncostEstimateCents),'roster-help')));if(!pay.complete)ui.form.append(node('p','Required details are missing. Complete the blocking warnings before approval.','roster-error'));}
+  if(pay){const table=node('table',undefined,'roster-pay-table'),head=node('tr');head.append(node('th','Entitlement'),node('th','Hours / rate'),node('th','Amount'));table.append(head);for(const line of pay.lines){const row=node('tr');row.append(user(node('td',line.label+' · '+line.clause)),user(node('td',line.rateCents!==undefined?(line.seconds/3600).toFixed(2)+'h × '+money(line.rateCents):'—')),user(node('td',money(line.amountCents))));table.append(row);}ui.form.append(node('p',item.status==='approved'?'Saved approval calculation. Saving changed pay details reopens this timesheet.':'Wage estimate from the included July 2026 award edition.','roster-help'),table,user(node('p','Gross wages & allowances: '+money(pay.costCents)+' · Super estimate: '+money(pay.superEstimateCents)+' · Other on-cost estimate: '+money(pay.oncostEstimateCents),'roster-help')));if(!pay.complete){ui.form.append(node('p','Required details are missing. Complete the blocking warnings before approval.','roster-error'));const reasons=node('ul',undefined,'roster-cost-issues');for(const issue of pay.issues.filter(issue=>issue.blocking))reasons.append(user(node('li',issue.message)));if(reasons.children.length)ui.form.append(reasons);}}
   const grid=node('div',undefined,'roster-dialog-grid'),mealStart=input('time','mealBreakStart',facts.mealBreakStart||''),rest=input('number','restBreaksTaken',facts.restBreaksTaken??''),unpaid=input('number','unpaidMinutes',item.breakMinutes??Math.round(item.breakSeconds/60)),controls={};unpaid.min=0;unpaid.step=1;rest.min=0;rest.max=20;rest.step=1;grid.append(field('Unpaid meal break start',mealStart));if(mode==='roster')grid.append(field('Unpaid meal break (minutes)',unpaid));else grid.append(field('Paid 10-minute rest breaks taken',rest));
   for(const [key,label]of [['coldMinutes','Cold work minutes (above/equal 0°C)'],['freezerMinutes','Cold work minutes (below 0°C)'],['deliveryKm','Own vehicle delivery km'],['otherKm','Own vehicle other duties km'],['travelMinutes','Extra travel — first leg (minutes)'],['returnTravelMinutes','Extra travel — return leg (minutes)'],['mealOvertimeMinutes','Eligible overtime after ordinary finish (minutes)']]){const control=input('number',key,facts[key]||'');control.min=0;control.max=1440;control.step='any';grid.append(field(label,control));controls[key]=control;}
   const travelStart=input('datetime-local','travelStartAt',facts.travelStartAt?localInput(facts.travelStartAt):''),returnTravelStart=input('datetime-local','returnTravelStartAt',facts.returnTravelStartAt?localInput(facts.returnTravelStartAt):'');grid.append(field('Extra travel first leg starts (Melbourne time)',travelStart),field('Extra travel return leg starts (Melbourne time)',returnTravelStart));
