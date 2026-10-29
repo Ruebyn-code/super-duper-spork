@@ -41,7 +41,7 @@
      const minutes=pattern.reduce((sum,d)=>sum+(d?Number(d.end.slice(0,2))*60+Number(d.end.slice(3))+(d.overnight?1440:0)-Number(d.start.slice(0,2))*60-Number(d.start.slice(3))-d.breakMinutes:0),0);
      save.disabled=true;options.onBusy?.(true);try{await api('/profiles','PUT',{revision:data.config.revision,userId,effectiveFrom:effective.value,dateOfBirth:dob.value,employmentStart:start.value,employmentType:type.value,classification:classification.value,level3Band:band.value||null,arrangement:arrangement.value,payBasis:basis.value,baseRateCents:basis.value==='base-plus-penalties'?Math.round(Number(base.value)*100):null,agreementReference:type.value==='part-time'?agreementReference.value:'',cycleWeeks:Number(cycle.value),cycleAnchor:anchor.value||null,laundersUniform:laundry.checked,superEligible:superEligible.value===''?null:superEligible.value==='yes',...(type.value==='part-time'?{pattern,agreedWeeklyMinutes:minutes}:{agreedWeeklyMinutes:null})});await show(userId,form,options);document.querySelector('#user-employment [role=status]').textContent='Employment details saved.';options.onSaved?.();}catch(error){status.textContent=error.message;save.disabled=false;}finally{options.onBusy?.(false);}
     };section.append(save,status);
-    ratePreview=window.awardHourlyRates?.mount(section,{userId,date:effectiveDate});
+    ratePreview=window.awardHourlyRates?.mount(section,{userId,date:effectiveDate,locationId:options.locationId||window.appLocationId});
    }
    render();
   }catch(error){if(token===generation){section.disabled=false;section.replaceChildren(node('legend','Employment & award'),node('p',error.message,'small'));}}

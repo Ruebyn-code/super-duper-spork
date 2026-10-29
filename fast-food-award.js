@@ -45,10 +45,10 @@ function hourlyRates({config, profile, date}) {
   M.date(date);
   const issues=[],add=(code,message)=>issues.push({code,message});
   const enabled=config.enabled===true&&config.localPayEnabled===true;
-  if(!enabled||config.coverageConfirmed!==true)add('employer-setup','Complete Employer setup in Award compliance and enable automatic award calculations.');
+  if(!enabled||config.coverageConfirmed!==true)add('employer-setup','Complete Employer setup in this location’s settings and enable automatic award calculations.');
   if(config.sourceId&&config.sourceId!==source.id)add('award-source','Review and activate the included award edition.');
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
-  catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in Award compliance.');}
+  catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
   if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
   if(!profile)add('employment','Save employment details covering this date.');
   else{

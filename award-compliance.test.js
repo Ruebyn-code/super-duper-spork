@@ -95,3 +95,47 @@ test('award hourly-rate reads require wage authority and the target user’s com
   const company=(await app.request(app.office,'/api/companies','POST',{name:'Other employer',locationName:'Other employer store'})).data,location=(await app.request(app.office,'/api/locations?all=true')).data.find(l=>l.companyId===company.id),outsider=(await app.request(app.office,'/api/accounts','POST',{username:'Other employer user',password:'member-test-password',role:'user',roleScope:'network',locationId:location.id})).data;assert(outsider.id);assert.equal((await app.request(app.office,'/api/awards/rates/'+outsider.id+'/today')).status,404);
  }finally{await app.close();}
 });
+
+test('location employer setup is explicit, revision checked and isolated from other locations and legacy settings',async()=>{
+ const app=await fixture();try{
+  const id=app.office.session.locationId,url='/api/awards/locations/'+id+'/employer',other=(await app.request(app.office,'/api/locations','POST',{name:'Second employer'})).data,otherURL='/api/awards/locations/'+other.id+'/employer';
+  assert.equal((await app.request(null,url)).status,401);assert.equal((await app.request(app.member,url)).status,403);
+  const before=await app.get(),read=await app.request(app.office,url);assert.equal(read.status,200);assert.equal(read.data.configured,false);for(const key of ['profiles','people','audit','holidayCalendars'])assert.equal(read.data[key],undefined);
+  await assert.rejects(fs.access(path.join(app.dir,'award-compliance.json')),{code:'ENOENT'});
+  const settings={revision:read.data.config.revision,employerName:'First store legal employer',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:read.data.native.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1,superBps:1200,oncostBps:300};
+  assert.equal((await app.request(app.office,url,'PUT',settings,{'X-CSRF-Token':''})).status,403);
+  assert.equal((await app.request(app.office,url,'PUT',{...settings,coverageConfirmed:false})).status,400);
+  const saved=await app.request(app.office,url,'PUT',settings);assert.equal(saved.status,200);assert.equal(saved.data.configured,true);assert.equal(saved.data.config.employerName,settings.employerName);
+  assert.equal((await app.request(app.office,url,'PUT',settings)).status,409);assert.equal((await app.get()).config.enabled,before.config.enabled);assert.equal((await app.request(app.office,otherURL)).data.configured,false);
+  let second=await app.request(app.office,otherURL);assert.equal((await app.request(app.office,otherURL,'PUT',{...settings,revision:second.data.config.revision,employerName:'Second store legal employer',payPeriodWeeks:2,superBps:null})).status,200);
+  assert.equal((await app.request(app.office,url)).data.config.payPeriodWeeks,1);assert.equal((await app.request(app.office,otherURL)).data.config.payPeriodWeeks,2);
+  await app.change('/settings',{employerName:'Changed legacy employer',enabled:false,coverageConfirmed:false,localPayEnabled:false},'PUT');assert.equal((await app.request(app.office,url)).data.config.employerName,settings.employerName);
+  await app.change('/profiles',{userId:app.memberRecord.id,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'casual',classification:'1',payBasis:'award',arrangement:'standard'},'PUT');await app.change('/calendar',{locationId:id,year:2026,confirmed:true,brokenHill:false,dates:[]},'PUT');
+  const shift=await app.request(app.office,'/api/rostering/shifts','POST',{weekStart:'2026-10-19',revision:0,userId:app.memberRecord.id,date:'2026-10-19',start:'09:00',end:'12:00',overnight:false,breakMinutes:0,position:'Kitchen'});assert.equal(shift.status,201);
+  const dashboard=(await app.request(app.office,'/api/rostering/dashboard?week=2026-10-19')).data;assert.equal(dashboard.roster.shifts[0].costCents,10428,'roster uses saved location employer while legacy company calculations are disabled');assert.equal((await app.request(app.office,'/api/awards/rates/'+app.memberRecord.id+'/today')).data.locationId,id);
+  const state=JSON.parse(await fs.readFile(path.join(app.dir,'award-compliance.json'),'utf8'));assert.equal(state.locationEmployers.length,2);assert.equal(state.audit.filter(a=>a.action==='location-employer-settings').length,2);
+  const company=(await app.request(app.office,'/api/companies','POST',{name:'Different company',locationName:'Private employer store'})).data;assert.equal((await app.request(app.office,'/api/awards/locations/'+company.locationId+'/employer')).status,404);
+  let roles=(await app.request(app.office,'/api/permission-levels')).data;roles=(await app.request(app.office,'/api/permission-levels','POST',{revision:roles.revision,name:'Local employer manager',scope:'company',level:30,permissions:['awards.manage']})).data;const role=roles.levels.find(r=>r.name==='Local employer manager');await app.request(app.office,'/api/accounts','POST',{username:'Local employer manager',password:'member-test-password',role:role.id,roleScope:'company',companyId:app.office.session.companyId,locationId:id});const helper=await app.login('Local employer manager');assert.equal((await app.request(helper,url)).status,200);assert.equal((await app.request(helper,otherURL)).status,404);assert.equal((await app.request(helper,otherURL,'PUT',{...settings,revision:(await app.get()).config.revision})).status,404);assert.equal((await app.request(helper,'/api/accounts')).status,403);
+  const office=(await app.request(app.office,'/api/locations/head-office','POST',{companyId:app.office.session.companyId})).data;assert.equal((await app.request(app.office,'/api/awards/locations/'+office.id+'/employer')).status,409);
+ }finally{await app.close();}
+});
+
+test('separate location employers keep their pay periods, overtime, minimum engagements and on-costs independent',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'location-employer-pay-'));try{
+  const A=require('./fast-food-award'),actor={id:'manager',username:'Manager',companyId:'one',locationId:'a',permissions:['awards.manage','locations.all']},locations=[{id:'a',name:'First store',companyId:'one'},{id:'b',name:'Second store',companyId:'one'}],person={id:'employee',username:'Employee',locationId:'a',locationIds:['a','b']},store=awards.createStore(dir,{people:async()=>[person],locations:async()=>locations,now:()=>Date.parse('2026-10-26T00:00:00Z')});
+  const settings={employerName:'Same display name is not an employer identity',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:A.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1,superBps:1200,oncostBps:200};
+  const change=async(method,input)=>store[method](actor,{...input,revision:(await store.get(actor)).config.revision});
+  await change('configure',settings);await change('saveProfile',{userId:person.id,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'casual',classification:'1',payBasis:'award',arrangement:'standard',superEligible:true});
+  for(const locationId of ['a','b'])await change('saveCalendar',{locationId,year:2026,confirmed:true,brokenHill:false,dates:[]});
+  const items=Array.from({length:6},(_,i)=>({id:'shift-'+i,userId:person.id,locationId:i<3?'a':'b',startAt:M.instant('2026-10-'+(19+i),'09:00'),endAt:M.instant('2026-10-'+(19+i),'17:00'),breakMinutes:0,paidSeconds:8*3600}));
+  const assess=locationId=>store.assess({...actor,locationId},{items,weekStart:'2026-10-19'});
+  assert((await assess('b')).prices.reduce((sum,p)=>sum+p.overtimeSeconds,0)>0,'legacy company employer still combines its locations');
+  const save=async(locationId,extra={})=>store.configureLocation(actor,locationId,{...settings,...extra,revision:(await store.get(actor)).config.revision});
+  await save('a');await save('b',{payPeriodWeeks:2,superBps:1000,oncostBps:400});
+  for(const locationId of ['a','b']){const result=await assess(locationId);assert(result.prices.every(p=>p.overtimeSeconds===0));assert(result.prices.every(p=>p.costCents!==null));assert(result.prices.every(p=>p.oncostEstimateCents===Math.round(p.costCents*(locationId==='a'?.02:.04))));assert.equal(await store.employerReady('one',locationId),true);}
+  assert.equal((await store.hourlyRates({...actor,locationId:'a'},person.id,'today')).rates.weekdayCents,3476);
+  await save('b',{payPeriodAnchor:'2026-07-06',payPeriodWeeks:2});assert.equal((await store.hourlyRates({...actor,locationId:'b'},person.id,'2026-07-01')).rates,null);assert.equal((await store.employerSetup(actor,'a')).config.payPeriodAnchor,'2026-06-29');
+  const adjacent=[{...items[0],id:'one-hour-a',startAt:M.instant('2026-10-19','09:00'),endAt:M.instant('2026-10-19','10:00'),paidSeconds:3600},{...items[0],id:'one-hour-b',locationId:'b',startAt:M.instant('2026-10-19','10:00'),endAt:M.instant('2026-10-19','11:00'),paidSeconds:3600}];
+  for(const locationId of ['a','b']){const check=await store.assess({...actor,locationId},{items:adjacent,weekStart:'2026-10-19'});assert.equal(check.prices[0].minimumPaymentSeconds,7200,'each employer pays its own minimum engagement');}
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

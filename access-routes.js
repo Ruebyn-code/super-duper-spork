@@ -28,13 +28,14 @@ function apiPermission(url,method){
  if(url.startsWith('/api/accounts'))return['users.manage'];
  if(url==='/api/account-invitations')return['users.manage'];
  if(url==='/api/account-email-settings')return['account-email.manage'];
+ if(url==='/api/locations'&&read)return['users.manage','locations.manage','email.manage','companies.manage','awards.manage'];
  if(url.startsWith('/api/locations'))return read?['users.manage','locations.manage','email.manage','companies.manage']:['locations.manage'];
  if(url.startsWith('/api/companies'))return read?null:['companies.manage'];
  if(['/api/logo','/api/sidebar-logo','/api/settings','/api/fonts','/api/interface-text','/api/element-overrides','/api/layout'].includes(url))return['appearance.manage'];
  return null;
 }
 function pagePermission(url){
- return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/wastage':['wastage.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
+ return({'/order-history':['orders.view'],'/learning-centre':['learning.view'],'/labels':['prep.view'],'/ops-management':['ops.view'],'/stock-transfers':['transfers.view'],'/wastage':['wastage.view'],'/settings/devices':['devices.manage'],'/settings/awards':['awards.manage'],'/rostering':['rostering.view'],'/knowledge-library':['knowledge.view'],'/communications':['comms.view'],'/':['orders.view'],'/cart':['orders.view'],'/stock-count':['counts.view'],'/sales':['sales.view','finances.view'],'/reporting':['reporting.view'],'/admin':['stock.manage','suppliers.manage'],'/admin/accounts':['users.manage','locations.manage','companies.manage','email.manage','awards.manage'],'/admin/settings':['appearance.manage'],'/admin/appearance/signin':['appearance.manage'],'/admin/appearance/setup':['appearance.manage'],'/email-settings':['email.manage'],'/settings':['ai.manage','appearance.manage','roles.manage','awards.manage','email.manage','account-email.manage','devices.manage']})[url]||null;
 }
 module.exports={apiPermission,pagePermission};
 

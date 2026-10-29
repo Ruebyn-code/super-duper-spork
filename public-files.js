@@ -29,6 +29,8 @@ module.exports={'/home-personal.js':'home-personal.js','/home-personal.css':'hom
   '/user-setup-roster.js':'user-setup-roster.js',
   '/user-setup.css':'user-setup.css',
   '/settings/awards':'award-settings.html',
+  '/location-employer-setup.js':'location-employer-setup.js',
+  '/location-employer-setup.css':'location-employer-setup.css',
   '/award-settings.js':'award-settings.js',
   '/award-settings.css':'award-settings.css',
   '/rostering':'rostering.html',

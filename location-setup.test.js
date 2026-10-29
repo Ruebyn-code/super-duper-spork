@@ -14,7 +14,7 @@ test('unfinished setup preserves platform access for everyone, identifies pendin
  const app=await fixture();try{
   assert.equal((await app.api(app.office,'/api/location-setup')).pendingCount,0);
   const store=await app.api(app.office,'/api/locations','POST',{name:'New shop',setupRequired:false,setupCreatorId:app.staff.session.id});
-  const state=await app.api(app.office,'/api/location-setup');assert.equal(state.blocked,false);assert.equal(state.reminderDue,true);assert.equal(state.locations[0].steps.length,8);assert(state.pendingLocationIds.includes(store.id));
+  const state=await app.api(app.office,'/api/location-setup');assert.equal(state.blocked,false);assert.equal(state.reminderDue,true);assert.equal(state.locations[0].steps.length,9);assert(state.pendingLocationIds.includes(store.id));
   for(const route of ['/api/sales','/api/home-totals','/api/search?q=home','/api/reporting','/api/invoices']){const r=await app.request(app.office,route);assert.equal(r.status,200,route);assert.notEqual(r.data.code,'LOCATION_SETUP');}
   assert.equal((await app.request(app.office,'/api/orders','POST',{items:[{id:'paper',quantity:1}]})).status,201);
   for(const actor of [app.other,app.staff]){assert.equal((await app.api(actor,'/api/location-setup')).blocked,false);assert.equal((await app.request(actor,'/api/sales')).status,200);}
@@ -38,17 +38,18 @@ test('five-minute reminders persist without restricting access before or after e
   assert.equal((await app.api(await app.login('Other manager'),'/api/location-setup')).pendingCount,0);
  }finally{await app.close();}
 });
-test('all eight saved setup tasks are required, stale settings are rechecked, and completion survives restart',async()=>{
+test('all nine saved setup tasks are required, stale settings are rechecked, and completion survives restart',async()=>{
  const app=await fixture();try{
   const store=await app.api(app.office,'/api/locations','POST',{name:'Ready shop',publicHolidayState:'VIC',tradingHours:Array.from({length:7},()=>({open:'09:00',close:'22:00'}))}),headers={'X-Location-Id':store.id};
   const person=await app.api(app.office,'/api/accounts','POST',{username:'Store manager',password:'setup-test-password',role:'user',locationId:store.id});
   const managers=await app.api(app.office,'/api/locations/'+store.id+'/managers');await app.api(app.office,'/api/locations/'+store.id+'/managers','PUT',{revision:managers.revision,userIds:[person.id],roleId:'franchisee'});
   await app.api(app.office,'/api/locations/'+store.id+'/email','PUT',{ORDER_FROM_EMAIL:'setup@example.test',RESEND_API_KEY:'fake-setup-test-provider-key',DELIVERY_EMAIL_ENABLED:true});
   const steps='/api/location-setup/steps/'+store.id;await app.api(app.office,steps+'/team','POST',{mode:'existing',userId:person.id},headers);
-  let state=await app.api(app.office,'/api/location-setup'),item=state.locations[0];assert.deepEqual(item.steps.map(s=>s.title),['Location name','Location state','Trading hours','Location manager','First user','Ordering sending email','Manual target level entry','Kiosk device']);assert.equal(item.steps.filter(s=>s.done).length,6);
+  let state=await app.api(app.office,'/api/location-setup'),item=state.locations[0];assert.deepEqual(item.steps.map(s=>s.title),['Location name','Location state','Trading hours','Location manager','First user','Employer setup','Ordering sending email','Manual target level entry','Kiosk device']);assert.equal(item.steps.filter(s=>s.done).length,6);
   assert.equal((await app.request(app.office,'/api/location-setup/complete','POST',{locationId:store.id,revision:item.revision})).status,409);
   const pars=await app.api(app.office,steps+'/par','GET',undefined,headers);for(const p of pars.products)if(!p.automatic)await app.api(app.office,'/api/products/'+p.id+'/par','PUT',{level:10},headers);
   await app.api(app.office,steps+'/devices','POST',{name:'Ready shop counter',requestId:crypto.randomUUID()},headers);
+  const employer=await app.api(app.office,'/api/awards/locations/'+store.id+'/employer');await app.api(app.office,'/api/awards/locations/'+store.id+'/employer','PUT',{revision:employer.config.revision,employerName:'Ready shop employer',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:employer.native.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1});
   state=await app.api(app.office,'/api/location-setup');assert(state.locations[0].steps.every(s=>s.done));assert(!JSON.stringify(state).includes('fake-setup-test-provider-key'));
   await app.api(app.office,'/api/locations/'+store.id,'PUT',{name:store.name,publicHolidayState:''});assert.equal((await app.request(app.office,'/api/location-setup/complete','POST',{locationId:store.id,revision:state.locations[0].revision})).status,409);
   await app.api(app.office,'/api/locations/'+store.id,'PUT',{name:store.name,publicHolidayState:'VIC'});state=await app.api(app.office,'/api/location-setup');const result=await app.api(app.office,'/api/location-setup/complete','POST',{locationId:store.id,revision:state.locations[0].revision});assert.equal(result.pendingCount,0);assert(!result.pendingLocationIds.includes(store.id));assert.equal((await app.api(app.office,'/api/locations')).find(l=>l.id===store.id).setupPending,false);

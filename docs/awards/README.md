@@ -12,9 +12,11 @@ JSON check imports remain available, but do not alter this engine's pay tables.
 
 ## Set up in the app
 
-1. Settings → Award compliance → Employer setup: confirm coverage and the legal
-   employer. All locations in one company are combined as one employer. Separate
-   legal employers must be separate companies.
+1. Admin → Locations → Edit location → **Employer setup**, or the Employer
+   setup step inside a new location’s setup popup. Enter this location’s legal
+   employer and explicitly confirm coverage. Use the popup’s single **Save settings**
+   action. Each saved location is a separate employer calculation context, even
+   when display names match. Its settings do not change another location.
 2. Enable checks and the included native edition. Enter a known pay-period
    start and weekly/fortnightly frequency. July rates start at the first full
    pay period beginning on or after 1 July 2026. Earlier periods need an earlier
@@ -55,7 +57,7 @@ reasons; the display never guesses a zero or enables award settings.
 | Casual loading | 11.2; p. 10 | 25 percentage points; never multiply penalties by 1.25 |
 | Late evening / early morning / weekends / holidays | 21; p. 27 | Split by local time and holiday period; Level 1 Sunday differs from Levels 2/3 |
 | Overtime rates | 20.6; pp. 25–26 | Mon–Sat first 2h 150%, later 200%; Sunday 200%; PH 250%; casual +25 points; no ordinary penalty stacking |
-| Overtime triggers | 10.9, 13, 20.2–20.4; pp. 9–12, 24–25 | 11 ordinary h/day; 38 ordinary h/week or configured 1–4-week cycle; combined company locations; FT/PT five-day default; PT pattern and recorded variations; FT actual work outside published roster |
+| Overtime triggers | 10.9, 13, 20.2–20.4; pp. 9–12, 24–25 | 11 ordinary h/day; 38 ordinary h/week or configured 1–4-week cycle; combined employer work; FT/PT five-day default; PT pattern and recorded variations; FT actual work outside published roster |
 | Minimum engagement | 10.2, 11.3 | PT/casual 3h; additional payment does not alter work timestamps |
 | Isolated Sunday overtime | 20.5 | Four-hour minimum, unless the manager records adjacent ordinary work |
 | Breaks | 14; pp. 13–14 | Paid 10-minute rests, 30–60-minute unpaid meals, five-hour gaps and first/last-hour checks; roster meal timing is an explicit midpoint estimate if omitted |
@@ -67,7 +69,7 @@ reasons; the display never guesses a zero or enables award settings.
 
 Work is evaluated in Australia/Melbourne, including DST. The app's ordinary
 week is Monday–Sunday. Rate bands split across midnight and birthdays. Overtime
-counters combine locations belonging to the employer; reporting costs stay with
+counters stay within each explicitly configured location employer; reporting costs stay with
 the shift's location. Overnight shifts' *displayed weekly total* belongs to the
 week in which the shift started; the engine's daily/cycle counters use the local
 date of each worked segment. Cycle anchors and complete work records are
@@ -77,7 +79,7 @@ Actual breaks come from clock events; marked paid rests remain paid time. Manual
 time does not invent break timestamps. Adjacent records are grouped as one continuous engagement, with the minimum-payment top-up on the last record. Isolated Sunday overtime is checked even when work continues into Monday. Minimum-payment top-ups use the highest
 rate encountered in the engagement: mixed-band short engagements require review.
 Weekly allowances are allocated to the first qualifying shift chronologically,
-across employer locations. Copied/moved assignments do not carry individual
+within the employer context. Copied/moved assignments do not carry individual
 written variations or allowance confirmations to a different user/date.
 
 Missing inputs elsewhere in an employee’s cycle or engagement also prevent complete calculation. Legacy flat-rate approvals are flagged for reopening and review when the native engine is enabled.
@@ -112,3 +114,29 @@ be established from recorded shifts:
 - Public holidays and conditional allowance facts are not guessed. A maintained
   holiday calendar and truthful work records remain required. Updates to this
   document do not arrive automatically from the Fair Work Commission.
+
+## Location settings and compatibility
+
+`award-compliance.json` retains dated employee profiles, holiday calendars and
+reviewed rule versions within the company. Its `locationEmployers` records hold
+only each location’s employer configuration, independent of the legacy company
+configuration. Native roster, timesheet and hourly-rate readers use the selected
+location’s employer. Work from other separately configured employers cannot
+supply overtime counters, continuous engagements, weekly allowances or missing
+context. Super and on-cost percentages are also local. Employee employment terms
+remain dated company records in Users; the rate preview identifies its location.
+
+The location editor uses the scoped `/api/awards/locations/:id/employer` GET/PUT,
+requires `awards.manage` and current accessible active company/location scope,
+and returns no employee profiles, holiday calendars or audit records. Saves use
+the existing company revision and atomic queue; stale writers cannot overwrite
+changed employment/calendar/settings data. Browsing never writes. Award compliance
+retains edition, rule, calendar and history tools and links to location setup.
+
+Untouched legacy company employer settings keep their former shared calculation
+context. Reading does not migrate them. The editor shows these existing values
+for review; an explicit Save settings creates a separate location record and
+calculation context. Existing approved pay snapshots stay frozen and native changed-
+context warnings still require reopening and review. Already completed location
+setup records remain complete; unfinished ordinary locations need the new ninth
+Employer setup task. Head Office remains exempt.

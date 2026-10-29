@@ -6,9 +6,9 @@
   const discard=node('button','Discard unsaved roster changes');discard.type='button';discard.hidden=true;
   const changed=()=>{discard.hidden=!dirty;if(!disposed)onState({busy:pending>0,dirty,saved});},busy=value=>{pending+=value?1:-1;changed();};
   if(assigned.length&&appAccess.can('awards.manage')){
-   busy(true);try{await window.userEmployment.show(account.id,host,{onDirty:()=>{dirty=true;changed();},onBusy:busy,onSaved:()=>{dirty=false;saved=true;changed();}});}finally{busy(false);}
+   busy(true);try{await window.userEmployment.show(account.id,host,{locationId:assigned.find(l=>l.id===window.appLocationId)?.id||assigned[0].id,onDirty:()=>{dirty=true;changed();},onBusy:busy,onSaved:()=>{dirty=false;saved=true;changed();}});}finally{busy(false);}
   }else if(assigned.length&&appAccess.can('rostering.view')&&appAccess.can('rostering.costs')){
-   preview=window.awardHourlyRates.mount(host,{userId:account.id,companyId});host.append(node('p','Ask a manager with employment access to complete or change this employee’s award details.','small'));
+   preview=window.awardHourlyRates.mount(host,{userId:account.id,companyId,locationId:assigned.find(l=>l.id===window.appLocationId)?.id||assigned[0].id});host.append(node('p','Ask a manager with employment access to complete or change this employee’s award details.','small'));
   }else host.append(node('p',assigned.length?'Ask a manager with employment or roster-cost access to finish these details.':'This user’s locations are in another company. Open that company to add their roster details.','small'));
   host.append(discard);discard.onclick=()=>{if(pending)return;onState({busy:false,dirty,saved,discard:true});};
   return{dispose(){disposed=true;preview?.destroy();},get dirty(){return dirty;},get saved(){return saved;}};

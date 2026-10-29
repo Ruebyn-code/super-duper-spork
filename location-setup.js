@@ -5,7 +5,7 @@ const {providerStatus}=require('./order-delivery');
 const {isHeadOfficeName}=require('./locations');
 const manualPar=require('./manual-par').createStore(),stockUsage=require('./stock-usage');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
-function createStore(dir,{locations,auth,catalogues,now=Date.now}){
+function createStore(dir,{locations,auth,catalogues,awards,now=Date.now}){
  const file=path.join(dir,'location-setup.json');let pending=Promise.resolve();
  async function read(){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(e){if(e.code==='ENOENT')return{locations:{},snoozes:{}};throw e;}}
  function mutate(change){const operation=pending.then(async()=>{const data=await read(),result=await change(data);await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(data,null,2),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return result;});pending=operation.catch(()=>{});return operation;}
@@ -25,6 +25,7 @@ function createStore(dir,{locations,auth,catalogues,now=Date.now}){
    {id:'hours',title:'Trading hours',description:'Enter opening and closing times for all seven days, or mark a day closed.',done:record.tradingHours.length===7&&record.tradingHours.every(Boolean),permission:'locations.manage',url:link('hours')},
    {id:'manager',title:'Location manager',description:'Assign a user with access to this location as its manager.',value:record.managers.map(p=>p.username).join(', ')||'Not assigned',done:record.managers.length>0,permission:'users.manage',url:link('managers')},
    {id:'team',title:'First user',description:'Create a new user or choose a user already on the app.',value:first?.username||'Not selected',done:Boolean(first),permission:'users.manage',url:stepPage},
+   {id:'employer',title:'Employer setup',description:'Confirm this location’s employer, award coverage and pay period for automatic wage calculations.',done:await awards.employerReady(record.companyId,record.id),permission:'awards.manage',url:link('employer')},
    {id:'sending',title:'Ordering sending email',description:'Save the sender email and API key, then enable automatic supplier emails.',done:providerStatus(env).email,permission:'email.manage',url:link('sending')},
    {id:'par',title:'Manual target level entry',description:'Enter initial target levels for stock at this location. Items with automatic usage keep their calculated target level.',value:parCount+' of '+products.length+' stock items ready',done:products.length>0&&parCount===products.length,permission:'stock.targets',url:stepPage},
    {id:'devices',title:'Kiosk device',description:'Add a new kiosk for this location and pair it using its setup code.',done:kioskReady,permission:'devices.pair',url:stepPage}

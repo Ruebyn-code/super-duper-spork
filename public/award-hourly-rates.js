@@ -10,11 +10,11 @@
    try{
     const selected=followToday?'today':picker.value;if(!selected)throw Error('Choose a date for the rates.');
     const response=await fetch('/api/awards/rates/'+encodeURIComponent(userId)+'/'+encodeURIComponent(selected),{cache:'no-store',signal:controller.signal,headers:{'X-Company-Id':companyId,...(locationId?{'X-Location-Id':locationId}:{})}}),data=await response.json();
-    if(disposed||version!==generation||dirty||!root.isConnected)return;if(!response.ok)throw Error(data.error||'Unable to calculate award rates.');if(data.companyId!==companyId||data.userId!==userId)throw Error('The selected company or user changed.');
+    if(disposed||version!==generation||dirty||!root.isConnected)return;if(!response.ok)throw Error(data.error||'Unable to calculate award rates.');if(data.companyId!==companyId||data.userId!==userId||data.locationId!==locationId)throw Error('The selected company or user changed.');
     picker.value=data.date;root.dataset.ready=String(data.ready);rates.replaceChildren();
-    if(!data.ready){status.textContent=data.issues.map(issue=>issue.message).join(' ');return;}
+    if(!data.ready){status.textContent=data.locationName+': '+data.issues.map(issue=>issue.message).join(' ');return;}
     for(const [title,key]of [['Award minimum base','minimumBaseCents'],...(data.payBasis==='base-plus-penalties'?[['Agreed base','baseCents']]:[]),['Weekday','weekdayCents'],['Saturday','saturdayCents'],['Sunday','sundayCents'],['Public holiday','publicHolidayCents'],['Weeknight · 10pm–midnight','eveningCents'],['Weekday · midnight–6am','overnightCents']]){const term=node('dt',title),value=node('dd');value.textContent=money(data.rates[key]);value.dataset.userText='';rates.append(term,value);}
-    status.textContent='Calculated from saved employment details.';rates.hidden=false;source.textContent=data.source.code+' · '+data.source.title+' · Edition effective '+data.source.effectiveFrom;source.dataset.userText='';source.hidden=false;
+    status.textContent='Calculated from saved employment details.';rates.hidden=false;source.textContent=data.locationName+' · '+data.source.code+' · '+data.source.title+' · Edition effective '+data.source.effectiveFrom;source.dataset.userText='';source.hidden=false;
    }catch(error){if(!disposed&&version===generation&&error.name!=='AbortError'){root.dataset.ready='false';status.textContent=error.message;}}
    finally{if(!disposed&&version===generation)refresh.disabled=dirty;}
   }

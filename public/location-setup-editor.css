@@ -3,6 +3,7 @@ html.setup-editor,html.setup-editor body{height:100%;min-height:0;margin:0;backg
 .setup-editor .app-shell{display:block!important;min-height:0!important;height:auto!important;padding:0!important}
 .setup-editor .app-page,.setup-editor main,.setup-editor .admin-content,.setup-editor .page-sidebar-content{width:100%!important;max-width:none!important;margin:0!important;padding:10px!important;box-sizing:border-box}
 .setup-editor[data-setup-task=details] body>.app-shell,.setup-editor[data-setup-task=hours] body>.app-shell,.setup-editor[data-setup-task=manager] body>.app-shell,.setup-editor[data-setup-task=sending] body>.app-shell{display:none!important}
+.setup-editor[data-setup-task=employer] body>.app-shell{display:none!important}
 .setup-editor[data-setup-task=state] body>.app-shell{display:none!important}
 .setup-editor:is([data-setup-task=details],[data-setup-task=state]) .location-general-settings>h3,.setup-editor:is([data-setup-task=details],[data-setup-task=state]) .location-general-settings>.admin-form-actions{display:none!important}
 .setup-editor[data-setup-task=details] .location-holiday-state,.setup-editor[data-setup-task=state] .location-general-settings>label:not(.location-holiday-state){display:none!important}

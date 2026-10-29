@@ -61,3 +61,5 @@ Finish user setup closes the checklist. Closing after creation and with no
 unsaved roster draft also releases the popup; existing saved records remain.
 The ordinary pencil editor, profile photos, invitation resends, filters and
 directory remain available. Existing users are not enrolled in a new checklist.
+
+Automatic rates use the employee’s accessible assigned location and show its name. Complete employer coverage and pay-period details through that location’s Employer setup tab or location setup checklist. Employee dated employment terms remain here.

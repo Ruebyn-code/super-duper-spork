@@ -588,13 +588,13 @@
  c='administration';
  add(c,'locations','Create, archive or restore a location','Keep one active list sectioned by Australian state.',[
   'Open Admin → Locations and choose Add location, or edit an existing row.',
-  'Set its name, state and available settings, then Save settings.',
+  'Set its name, state and available settings. Use Employer setup for this location’s legal employer, award coverage and pay period, then Save settings.',
   'Use the archive action for an inactive location when permitted.',
   'Open the separate Archived locations menu to find or restore archived stores.'
  ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Head Office can be created or opened from the location selector without setup. Its administrative location has no store-settings tabs. Active locations remain one list with state sections. Archiving keeps saved settings and history; native restrictions may prevent archiving a location still in use.'],related:['location-setup','trading-hours','location-managers','delivery-dates']});
  add(c,'location-setup','Complete a new location’s setup checklist','Finish the setup tasks inside the popup.',[
   'Create a location and open its highlighted setup entry or reminder.',
-  'Complete name, state, trading hours, location manager, first user, ordering email, initial/manual target levels and a new kiosk.',
+  'Complete name, state, trading hours, location manager, first user, employer setup, ordering email, initial/manual target levels and a new kiosk.',
   'Open each step inside the setup popup and save the actual settings there. First user can be new or an existing eligible account.',
   'Finish setup once every task is validated. Snooze the reminder for five minutes if needed.'
  ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Head Office is exempt from this store setup checklist and its reminders. Setup is non-blocking. Pending locations stay highlighted and tinted until completion. Kiosk setup creates a new device for this store rather than listing other stores’ devices.'],related:['locations','location-email','manage-kiosks'],keywords:['onboarding','setup checklist','first user','snooze']});
@@ -674,11 +674,11 @@
   'Review saved changes, use Undo if needed and choose Finish editing.'
  ],{route:'/home',permissions:['home.view','appearance.manage'],notes:['Choose Head Office from the location selector before editing its dashboard. Creating Head Office needs no store setup. App edit is suspended on phones. Ordinary words, numbers and form inputs are not individual editable appearance targets.'],related:['appearance','home-dashboards']});
  add(c,'award-settings','Configure employment and award estimates','Review the settings used by native wage calculations.',[
-  'Open Settings → Award compliance and review employer, pay period, rule versions and location holiday calendars.',
+  'Open Admin → Locations → Edit location → Employer setup, or its location setup checklist. Confirm the location’s legal employer, award coverage and pay period, then press Save settings.',
   'Edit employees under Admin → Users → Employment & award. Save dated employment type, birth date, classification and pay arrangement; Automatic award rates calculates the hourly amounts. Choose a rate date to inspect junior birthdays or later employment terms.',
-  'Review and enable the required settings, then inspect roster and timesheet calculation warnings.',
+  'Review the edition, rule versions and holiday calendars in Award compliance. Inspect roster and timesheet calculation warnings after enabling the location’s settings.',
   'Review imported rule updates before activating them; add required review notes on publish or approval.'
- ],{route:'/settings/awards',permissions:['awards.manage'],notes:['The calculator is an estimator with a defined supported scope, not complete payroll. Payroll payments, lodgements and employer review remain separate.'],related:['labour-settings','timesheets','public-holidays']});
+ ],{route:'/settings/awards',permissions:['awards.manage'],notes:['Each saved location has its own employer settings and separate overtime and minimum-engagement context. Employee terms remain in Users. Untouched legacy company setups retain their existing behavior until saved for a location. The calculator is an estimator with a defined supported scope, not complete payroll. Payroll payments, lodgements and employer review remain separate.'],related:['labour-settings','timesheets','public-holidays']});
 
  add(c,'platform-console','Use the Opstack owner and support console','Manage networks using a separate platform account.',[
   'Open Opstack console from the account dropdown and sign in with your Opstack owner or support credentials.',
