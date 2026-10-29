@@ -163,3 +163,21 @@ test('live pay previews are private scoped calculations with CSRF and never save
   let roles=(await app.request(app.office,'/api/permission-levels')).data;roles=(await app.request(app.office,'/api/permission-levels','POST',{revision:roles.revision,name:'Read saved rates only',scope:'company',level:30,permissions:['rostering.view','rostering.costs']})).data;await app.request(app.office,'/api/accounts','POST',{username:'Preview wage reader',password:'member-test-password',role:roles.levels.find(r=>r.name==='Read saved rates only').id,roleScope:'company',companyId:app.office.session.companyId,locationId:app.office.session.locationId});const reader=await app.login('Preview wage reader');assert.equal((await app.request(reader,url,'POST',body)).status,403);assert.equal((await app.request(reader,url.replace('preview','today'))).status,200);
  }finally{await app.close();}
 });
+
+
+test('optional regular hours can be saved and added later without allowing incomplete part-time costs or erasing approved snapshots',async()=>{
+ const app=await fixture();try{
+  const A=require('./fast-food-award'),locationId=app.office.session.locationId,terms={userId:app.memberRecord.id,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'part-time',classification:'1',payBasis:'award',cycleWeeks:1,agreementReference:'',agreedWeeklyMinutes:null};
+  assert.equal((await app.change('/settings',{employerName:'Optional hours employer',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:A.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1},'PUT')).status,200);
+  assert.equal((await app.change('/calendar',{locationId,year:2026,confirmed:true,brokenHill:false,dates:[]},'PUT')).status,200);
+  assert.equal((await app.change('/profiles',terms,'PUT')).status,200);assert.equal((await app.get()).profiles.find(p=>p.userId===terms.userId).pattern,undefined);
+  const saved=await fs.readFile(path.join(app.dir,'award-compliance.json'),'utf8'),rates=await app.request(app.office,'/api/awards/rates/'+terms.userId+'/today');assert.equal(rates.data.ready,true);assert.equal(rates.data.rates.weekdayCents,2781);assert(rates.data.setupIssues.some(i=>i.code==='employment-pattern'));assert(!JSON.stringify(rates.data).includes(terms.dateOfBirth));assert.equal(await fs.readFile(path.join(app.dir,'award-compliance.json'),'utf8'),saved);
+  const entry=(await app.request(app.office,'/api/rostering/manual-time','POST',{requestId:crypto.randomUUID(),userId:terms.userId,startAt:M.instant('2026-10-19','09:00'),endAt:M.instant('2026-10-19','12:00'),breakMinutes:0,reason:'Synthetic optional hours check'})).data,check=async()=>(await app.request(app.office,'/api/rostering/award-check?entryId='+entry.id)).data;
+  let result=await check();assert.equal(result.prices[0].costCents,null);assert(result.issues.some(i=>i.blocking&&i.code==='pay-pattern'));
+  assert.equal((await app.request(app.office,'/api/rostering/timesheets/'+entry.id,'PUT',{action:'approve',revision:entry.revision,awardFingerprint:result.fingerprint,awardReviewNote:'Missing hours cannot be waived'})).status,400);
+  const complete={...terms,agreementReference:'Written regular hours agreement',agreedWeeklyMinutes:180,pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};assert.equal((await app.change('/profiles',complete,'PUT')).status,200);
+  result=await check();assert.equal(result.prices[0].costCents,8343);const approved=await app.request(app.office,'/api/rostering/timesheets/'+entry.id,'PUT',{action:'approve',revision:entry.revision,awardFingerprint:result.fingerprint});assert.equal(approved.status,200);assert.equal(approved.data.costCents,8343);
+  assert.equal((await app.change('/profiles',terms,'PUT')).status,200);assert.equal((await app.get()).profiles.find(p=>p.userId===terms.userId).pattern,undefined);assert.equal((await app.request(app.office,'/api/rostering/dashboard?week=2026-10-19')).data.timesheets.find(e=>e.id===entry.id).costCents,8343);
+  assert.equal((await app.request(app.member,'/api/awards/profiles','PUT',{...terms,revision:(await app.get()).config.revision})).status,403);assert.equal((await app.request(app.office,'/api/awards/profiles','PUT',{...terms,revision:(await app.get()).config.revision},{'X-CSRF-Token':''})).status,403);
+ }finally{await app.close();}
+});

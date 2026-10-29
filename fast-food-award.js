@@ -54,12 +54,12 @@ function employmentIssues(profile,date){
     if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
     if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
   }
-  if(profile?.employmentType==='part-time'&&(!Array.isArray(profile.pattern)||!profile.pattern.some(Boolean)||!profile.agreementReference))add('employment-pattern','Add the written part-time work pattern and agreement reference.');
+  if(profile?.employmentType==='part-time'&&(!Array.isArray(profile.pattern)||!profile.pattern.some(Boolean)||!profile.agreementReference||!Number.isSafeInteger(profile.agreedWeeklyMinutes)||profile.agreedWeeklyMinutes<=0))add('employment-pattern','Add the written regular working hours and agreement reference to calculate complete part-time shift costs.');
  if(profile){let minimum=null;try{minimum=baseRate(profile,date);}catch{}const base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(minimum)||!Number.isSafeInteger(base)||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
  return issues;
 }
-// Ordinary hourly rates do not depend on a part-time work pattern. Draft-only
-// previews validate the rate inputs, then report remaining employment setup separately.
+// Ordinary hourly rates do not depend on regular working hours. Complete shift
+// calculations still require the written part-time agreement and hours.
 function hourlyInputIssues(profile,date){
  const issues=[],add=(code,message)=>issues.push({code,message});if(!profile)return[{code:'employment',message:'Choose the employee’s pay conditions.'}];
  try{calendarDate(profile.dateOfBirth);if(profile.dateOfBirth>date||age(profile.dateOfBirth,date)>120)throw Error();}catch{add('birth-date','Enter a valid date of birth for the rate date.');}
@@ -80,8 +80,9 @@ function hourlyRates({config, profile, date, preview=false}) {
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
   catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
   if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
-  issues.push(...(preview?hourlyInputIssues(profile,date):employmentIssues(profile,date)));
-  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,...(preview?{preview:true,setupIssues:employmentIssues(profile,date)}:{})};
+  const setupIssues=employmentIssues(profile,date);
+  issues.push(...(preview?hourlyInputIssues(profile,date):setupIssues.filter(i=>i.code!=='employment-pattern')));
+  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,setupIssues:preview?setupIssues:setupIssues.filter(i=>i.code==='employment-pattern'),...(preview?{preview:true}:{})};
   if(issues.length)return result;
   const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
   if(!Number.isSafeInteger(minimumBaseCents)||!Number.isSafeInteger(baseCents)||baseCents<minimumBaseCents){add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');return result;}
@@ -175,10 +176,10 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         if (effectiveProfile.employmentType === 'part-time') {
           const regular = effectiveProfile.pattern?.[(day+6)%7], variation = facts.variation;
           const agreed = variation?.reference && variation.agreedAt && Date.parse(variation.agreedAt) <= end ? variation : regular;
-          if(!effectiveProfile.agreementReference)issue('pay-pattern-reference','Record the written part-time agreement reference in Users.','10.3–10.7',true);
-          if (!effectiveProfile.pattern) issue('pay-pattern', 'Record the written part-time work pattern in Users.', '10.3–10.9', true);
+          if(!effectiveProfile.agreementReference)issue('pay-pattern-reference','Record the written regular working hours agreement reference in Users.','10.3–10.7',true);
+          if (!effectiveProfile.pattern) issue('pay-pattern', 'Add the written regular working hours in Users.', '10.3–10.9', true);
           if (agreed) {
-            try {const from = M.instant(date, agreed.start), to = M.instant(agreed.overnight ? M.shiftDate(date,1) : date, agreed.end); windows = [{startAt: from, endAt: to}]; patternLimit = (Date.parse(to)-Date.parse(from))/1000-(agreed.breakMinutes||0)*60;} catch {issue('pay-pattern', 'Check the written work pattern or variation.', '10.3–10.9', true);}
+            try {const from = M.instant(date, agreed.start), to = M.instant(agreed.overnight ? M.shiftDate(date,1) : date, agreed.end); windows = [{startAt: from, endAt: to}]; patternLimit = (Date.parse(to)-Date.parse(from))/1000-(agreed.breakMinutes||0)*60;} catch {issue('pay-pattern', 'Check the written regular working hours or variation.', '10.3–10.9', true);}
           } else patternLimit = 0;
           // A written overnight pattern belongs to its starting day.
           const previousPattern=effectiveProfile.pattern?.[(day+5)%7];

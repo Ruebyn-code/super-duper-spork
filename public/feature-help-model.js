@@ -83,7 +83,7 @@
   'Home greeting':'home-layout', 'Add a section':'home-layout', 'Add quick link':'home-layout',
   'Order delivery':'supplier-contacts order-not-sent', 'Order confirmation':'order-confirmation',
   'Order items':'order-history', 'Choose stock':'order-history',
-  'Employment & award':'award-settings labour-settings', 'Written part-time work pattern':'award-settings',
+  'Employment & award':'award-settings labour-settings', 'Regular working hours':'award-settings',
   'Read invoice with OpStack intelligence':'intelligence-invoices scan-invoice invoice-prices',
   'New permission level':'permissions', 'Edit permission level':'permissions',
  };

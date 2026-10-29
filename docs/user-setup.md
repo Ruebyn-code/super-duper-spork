@@ -25,7 +25,7 @@ remain unable to sign in until they choose their password from the setup link.
 Once the account is created, the fifth step opens inside the popup. Managers
 with awards.manage use the existing Employment & award editor, including dated
 employment, DOB, employer-selected classification, pay arrangement and written
-part-time pattern. Nothing changes the employer’s award configuration.
+regular working hours when added. Nothing changes the employer’s award configuration.
 Pay Conditions follows a two-column layout with Industry award, Employment type,
 Classification / level, Allowances and the existing pay arrangement. Pay Rates is
 a full-width box below the fields, with a one-column phone form. Hourly rates
@@ -85,7 +85,9 @@ It needs DOB, employment type, classification/band and a supported pay basis;
 missing employer/source/date coverage, unsupported arrangements and below-award
 bases withhold numbers. Ordinary rates may be shown before a part-time pattern
 or remaining employment dates are finished: those requirements appear separately
-under Before saving and continue to block normal saving/complete shift costs.
+under Employment setup. Dates and other required pay details still block saving;
+regular working hours can be added later, but complete part-time shift costs
+remain unavailable until written hours and an agreement reference are saved.
 No pattern, start date, salary or other unsupported arrangement is invented.
 Laundry appears separately as a weekly or per-shift allowance, not in hourly pay.
 
@@ -94,3 +96,27 @@ ignore late responses. Changing the employment effective date updates the previe
 date. Date-only inspection remains read-only. Preview inputs do not rebuild form
 fields, save drafts or clear setup dirty state. Closing/discarding retains native
 guards; only Save employment details applies the terms through normal revisions.
+
+
+## Optional regular working hours
+
+For part-time staff, **Add regular working hours** replaces the always-visible
+seven-day form. Existing saved hours open for editing. The button reveals the
+written agreement reference and Monday–Sunday hours with native meal/overnight
+fields. **Remove regular working hours** excludes those terms from the current
+draft; re-adding before saving restores the same field values. Switching
+employment types also preserves in-memory hours until an explicit save.
+
+Staff employment details can be saved without regular working hours. When hours
+are added, the full written agreement, seven-day pattern, paid minimum engagement,
+meal timing and matching weekly minutes are still validated. Only the normal
+**Save employment details** action writes the dated profile, with existing
+permissions, revision checks and audit history. Adding/removing never writes on
+its own and retains native unsaved-change guards.
+
+Saved and draft ordinary hourly rates do not require a work pattern; the pay box
+shows remaining setup separately. Full native part-time shift costs, overtime
+checks and approval still require the written hours and agreement. Missing hours
+remain unknown, never zero or an assumed schedule. Approved pay snapshots stay
+frozen. The internal `pattern` data keys and existing historical profiles remain
+compatible; there is no availability or roster creation from staff setup.

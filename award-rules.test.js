@@ -13,7 +13,7 @@ test('award rule sets validate dates, referenced values and bands without supply
 });
 test('award employee profiles require valid employment details and effective dates; age changes on the birthday',()=>{
  const value=rules.profile(profile,'2026-10-19');assert.equal(value.employmentType,'casual');assert.equal(rules.age(value.dateOfBirth,'2026-10-19'),17);assert.equal(rules.age(value.dateOfBirth,'2026-10-20'),18);
- for(const change of [{dateOfBirth:'2027-01-01'},{classification:'admin'},{employmentType:'contractor'},{employmentStart:'2000-01-01'},{employmentType:'part-time',agreedWeeklyMinutes:null}])assert.throws(()=>rules.profile({...profile,...change},'2026-10-19'));
+ for(const change of [{dateOfBirth:'2027-01-01'},{classification:'admin'},{employmentType:'contractor'},{employmentStart:'2000-01-01'},{employmentType:'part-time',agreedWeeklyMinutes:0}])assert.throws(()=>rules.profile({...profile,...change},'2026-10-19'));
  assert.equal(rules.profile({...profile,employmentType:'part-time',agreedWeeklyMinutes:1200},'2026-10-19').agreedWeeklyMinutes,1200);
 });
 test('award checks remain disabled by default; missing, draft, future and expired rules never produce a clear result',()=>{
@@ -43,4 +43,14 @@ test('overnight weeks and Melbourne DST use elapsed time and flag allocation for
 test('pending rule updates and shifts outside the selected week cannot silently produce a clear review',()=>{
  const current={...pack({rules:[rule('minimum-rest',600)]}),id:'reviewed',reviewedAt:'2026-01-01'},draft={...pack({effectiveFrom:'2026-10-19'}),id:'draft'},sunday=item('sun','2026-10-25','18:00','23:00'),monday=item('mon','2026-10-26','07:00','12:00');
  const result=evaluate([sunday,monday],{versions:[current,draft]});assert.ok(result.issues.some(i=>i.code==='unreviewed-update'));assert.ok(result.issues.some(i=>i.subjectId==='sun'&&i.code==='minimum-rest'));assert.ok(result.issues.every(i=>i.subjectId!=='mon'));assert.equal(evaluate([],{versions:[current]}).status,'no-items');
+});
+
+
+test('regular working hours can be omitted from staff setup but supplied agreements stay strictly validated',()=>{
+ const terms={...profile,employmentType:'part-time',payBasis:'award',agreedWeeklyMinutes:null},saved=rules.profile(terms,'2026-10-19');
+ assert.equal(saved.agreedWeeklyMinutes,null);assert.equal(saved.pattern,undefined);assert.equal(saved.agreementReference,undefined);
+ const hours=[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)],complete={...terms,pattern:hours,agreedWeeklyMinutes:180,agreementReference:'Written regular hours agreement'};
+ assert.equal(rules.profile(complete,'2026-10-19').pattern[0].start,'09:00');
+ for(const change of [{pattern:[]},{pattern:null},{pattern:Array(7).fill(null)},{agreedWeeklyMinutes:0},{agreedWeeklyMinutes:120},{agreementReference:''},{agreementReference:'short'},{pattern:[{...hours[0],end:'10:00'},...Array(6).fill(null)],agreedWeeklyMinutes:60},{pattern:[{...hours[0],breakMinutes:30},...Array(6).fill(null)],agreedWeeklyMinutes:150}])assert.throws(()=>rules.profile({...complete,...change},'2026-10-19'));
+ const checked=evaluate([item('pt','2026-10-19','09:00','12:00')],{profiles:[{...saved,userId:profile.userId}]});assert(checked.issues.some(i=>i.code==='part-time-hours-missing'));assert(!checked.issues.some(i=>i.code==='part-time-hours'));
 });

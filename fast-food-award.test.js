@@ -131,3 +131,12 @@ test('draft hourly previews change employment type and allowances without invent
  for(const changes of [{employmentType:''},{classification:''},{classification:'3',level3Band:null},{dateOfBirth:''},{dateOfBirth:'2030-01-01'},{arrangement:'needs-review'},{payBasis:'base-plus-penalties',baseRateCents:100},{payBasis:'base-plus-penalties',baseRateCents:100000001}])assert.equal(read({...draft,...changes}).rates,null);
  assert.equal(read(draft,{...settings,localPayEnabled:false}).rates,null);assert.equal(read(draft,{...settings,sourceId:'unsupported-edition'}).rates,null);
 });
+
+
+test('saved ordinary hourly rates remain available without regular working hours while complete part-time costs remain blocked',()=>{
+ const employee={...profile,employmentType:'part-time',agreedWeeklyMinutes:null,agreementReference:''},settings={...config,coverageConfirmed:true,sourceId:A.source.id},rates=A.hourlyRates({config:settings,profile:employee,date:'2026-10-05'});
+ assert.equal(rates.ready,true);assert.equal(rates.rates.weekdayCents,2781);assert(rates.setupIssues.some(i=>i.code==='employment-pattern'));assert.equal(rates.issues.length,0);
+ const work=shift('2026-10-05','09:00','12:00'),unpriced=price([work],[employee])[0];assert.equal(unpriced.complete,false);assert.equal(unpriced.costCents,null);assert(unpriced.issues.some(i=>i.blocking&&i.code==='pay-pattern'));
+ const agreed={...employee,agreedWeeklyMinutes:180,agreementReference:'Written regular hours agreement',pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};
+ assert.equal(price([work],[agreed])[0].costCents,8343);assert.equal(A.hourlyRates({config:settings,profile:agreed,date:'2026-10-05'}).setupIssues.length,0);
+});

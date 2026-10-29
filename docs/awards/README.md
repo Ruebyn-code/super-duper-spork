@@ -28,7 +28,9 @@ JSON check imports remain available, but do not alter this engine's pay tables.
 4. Users → edit user → Employment & award: enter dated employment details,
    classification, DOB, pay arrangement and applicable conditions. These are
    private employer records, independent of application permission levels.
-   Part-time users require a seven-day written work pattern, meal timing and an agreement reference; keep the original
+   Regular working hours are optional in staff setup: choose Add regular working
+   hours when ready. Complete part-time shift costs still require seven-day
+   written hours, meal timing and an agreement reference; keep the original
    agreement in the employer's records. Classification decisions are made by the
    employer using clause 12, not inferred from a user's app role.
    User setup and the employment editor display read-only automatic hourly rates
@@ -184,7 +186,7 @@ $14.95 base and $18.69 casual weekday rate; Level 3 in charge of two/more people
 at age 20 is a $27.25 base and $34.06 casual weekday rate.
 
 Overnight work now rechecks changed employment terms at each local date. A new
-special arrangement, missing classification band, incomplete pattern or below-
+special arrangement, missing classification band, incomplete supplied hours or below-
 minimum agreed rate after midnight withholds a complete cost instead of using
 standard terms through the shift. Existing ordinary/junior birthday splits,
 source dates, pay-period guards, overtime, breaks and conditional allowance tests
@@ -196,3 +198,12 @@ later variations. Coverage, classification duties, regional exceptions, special
 agreements, payroll/NES and procedural obligations still need employer review.
 
 Employee Pay Conditions and its full-width Pay Rates box now preview ordinary hourly amounts as type/classification/DOB and allowance selections change. This is a calculation only; full employment validation and explicit saves still apply. See [user setup](../user-setup.md#live-pay-selection-preview).
+
+
+Regular working hours are optional when saving an employee profile. Omitted
+hours/reference/minutes remain unset and are reported as missing by native full
+shift costing; they cannot be waived by a review note. Supplied hours retain full
+validation. Saved hourly-rate summaries may show the ordinary rate without hours,
+with the missing agreement in `setupIssues`, just as draft previews do. This does
+not make the employee ready for complete native shift costing or change approved
+snapshots. Existing pattern fields and dated records remain compatible.
