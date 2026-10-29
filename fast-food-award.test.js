@@ -123,3 +123,11 @@ test('every published Schedule A adult and junior ordinary, penalty and overtime
   }
  }
 });
+
+test('draft hourly previews change employment type and allowances without inventing hourly allowance amounts or work agreements',()=>{
+ const settings={...config,coverageConfirmed:true,sourceId:A.source.id},draft={...profile,laundersUniform:true},read=(p=draft,c=settings)=>A.hourlyRates({config:c,profile:p,date:'2026-10-05',preview:true});
+ const casual=read(),full=read({...draft,employmentType:'full-time'}),part=read({...draft,employmentType:'part-time',pattern:undefined,agreedWeeklyMinutes:null});assert.equal(casual.rates.weekdayCents,3476);assert.equal(full.rates.weekdayCents,2781);assert.equal(part.rates.weekdayCents,2781);assert(part.setupIssues.length);assert.equal(part.preview,true);
+ assert.deepEqual(casual.allowanceEstimates,[{label:'Uniform laundry',amountCents:128,unit:'shift'}]);assert.deepEqual(full.allowanceEstimates,[{label:'Uniform laundry',amountCents:642,unit:'week'}]);
+ for(const changes of [{employmentType:''},{classification:''},{classification:'3',level3Band:null},{dateOfBirth:''},{dateOfBirth:'2030-01-01'},{arrangement:'needs-review'},{payBasis:'base-plus-penalties',baseRateCents:100},{payBasis:'base-plus-penalties',baseRateCents:100000001}])assert.equal(read({...draft,...changes}).rates,null);
+ assert.equal(read(draft,{...settings,localPayEnabled:false}).rates,null);assert.equal(read(draft,{...settings,sourceId:'unsupported-edition'}).rates,null);
+});

@@ -2,7 +2,7 @@
 // MA000003, consolidated 1 July 2026. Money is cents; percentages are integers.
 // Source and supported scope are deliberately versioned with the calculator.
 const M = require('./public/rostering-model');
-const {age, profile: validateProfile} = require('./award-rules');
+const {age, profile: validateProfile, calendarDate} = require('./award-rules');
 const crypto = require('node:crypto');
 const source = Object.freeze({
   id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
@@ -49,16 +49,29 @@ function employmentIssues(profile,date){
   if(!profile)add('employment','Add employment details covering this date.');
   else{
     try{validateProfile(profile,date);if(!profile.payBasis||profile.classification==='3'&&!profile.level3Band)throw Error();}
-    catch{add('employment','Complete the employee’s birth date, employment type, classification and pay arrangement.');}
+    catch{add('employment','Complete the required employment details for this date.');}
     if(profile.effectiveFrom>date||profile.employmentStart>date||profile.dateOfBirth>date)add('employment-date','Choose a date covered by the employee’s saved employment details.');
     if(profile.arrangement==='needs-review')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
     if(profile.employmentType==='part-time'&&![1,4].includes(profile.cycleWeeks||1))add('averaging','Review the employee’s part-time averaging arrangement.');
   }
-  if(profile?.employmentType==='part-time'&&(!profile.pattern||!profile.agreementReference))add('employment-pattern','Add the written part-time work pattern and agreement reference.');
+  if(profile?.employmentType==='part-time'&&(!Array.isArray(profile.pattern)||!profile.pattern.some(Boolean)||!profile.agreementReference))add('employment-pattern','Add the written part-time work pattern and agreement reference.');
  if(profile){let minimum=null;try{minimum=baseRate(profile,date);}catch{}const base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(minimum)||!Number.isSafeInteger(base)||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
  return issues;
 }
-function hourlyRates({config, profile, date}) {
+// Ordinary hourly rates do not depend on a part-time work pattern. Draft-only
+// previews validate the rate inputs, then report remaining employment setup separately.
+function hourlyInputIssues(profile,date){
+ const issues=[],add=(code,message)=>issues.push({code,message});if(!profile)return[{code:'employment',message:'Choose the employee’s pay conditions.'}];
+ try{calendarDate(profile.dateOfBirth);if(profile.dateOfBirth>date||age(profile.dateOfBirth,date)>120)throw Error();}catch{add('birth-date','Enter a valid date of birth for the rate date.');}
+ if(!['full-time','part-time','casual'].includes(profile.employmentType))add('employment-type','Choose an employment type.');
+ if(!['1','2','3'].includes(profile.classification)||profile.classification==='3'&&!['one-or-none','two-or-more'].includes(profile.level3Band))add('classification','Choose the classification and any Level 3 supervisory band.');
+ if(!['award','base-plus-penalties'].includes(profile.payBasis))add('pay-basis','Choose a pay arrangement.');
+ if(profile.arrangement&&profile.arrangement!=='standard')add('arrangement','This employee’s special arrangement requires a separately reviewed calculation.');
+ for(const key of ['effectiveFrom','employmentStart'])if(profile[key]){try{calendarDate(profile[key]);if(profile[key]>date)add('employment-date','Choose a rate date covered by the employment details.');}catch{add('employment-date','Check the employment dates.');}}
+ if(!issues.length){const minimum=baseRate(profile,date),base=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimum;if(!Number.isSafeInteger(base)||base>10000000||base<minimum)add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');}
+ return issues;
+}
+function hourlyRates({config, profile, date, preview=false}) {
   M.date(date);
   const issues=[],add=(code,message)=>issues.push({code,message});
   const enabled=config.enabled===true&&config.localPayEnabled===true;
@@ -67,13 +80,14 @@ function hourlyRates({config, profile, date}) {
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
   catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
   if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
-  issues.push(...employmentIssues(profile,date));
-  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null};
+  issues.push(...(preview?hourlyInputIssues(profile,date):employmentIssues(profile,date)));
+  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,...(preview?{preview:true,setupIssues:employmentIssues(profile,date)}:{})};
   if(issues.length)return result;
   const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
   if(!Number.isSafeInteger(minimumBaseCents)||!Number.isSafeInteger(baseCents)||baseCents<minimumBaseCents){add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');return result;}
   const ordinary=(day,minute=720,holiday=false)=>roundRate(baseCents,ordinaryPercent(profile.employmentType,profile.classification,day,minute,holiday));
-  return{...result,ready:true,rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
+  const allowanceEstimates=profile.laundersUniform===true?[{label:'Uniform laundry',amountCents:profile.employmentType==='full-time'?source.allowances.laundryFullTime:source.allowances.laundryShift,unit:profile.employmentType==='full-time'?'week':'shift'}]:[];
+  return{...result,ready:true,allowanceEstimates,rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
 }
 function calculate({config, profiles, items, mode = 'roster'}) {
   if (!config.localPayEnabled || !config.enabled) return {enabled: false, results: [], coverage: [], exclusions};

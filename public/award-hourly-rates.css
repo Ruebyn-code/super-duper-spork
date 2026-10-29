@@ -10,3 +10,5 @@
 .award-hourly-rates .small{margin:8px 0 0;font-size:.75rem;line-height:1.5;color:var(--theme-muted,#52687b)}
 .award-hourly-rates [hidden]{display:none!important}
 .award-hourly-rates>details{margin-top:10px;font-size:.75rem}.award-hourly-rates>details>summary{cursor:pointer;color:var(--theme-primary-text,var(--primary))}
+.award-hourly-rates h4{font-size:1.1rem}.award-hourly-rates>dl dt:first-child{font-weight:600;padding-top:10px}.award-hourly-rates>dl dd:nth-child(2){font-size:1.25rem;line-height:1.3;color:var(--theme-primary-text,var(--primary));padding-top:10px}.award-hourly-rates[data-preview=true]{border-style:dashed}.award-hourly-rates[data-preview=true]>[role=status]{font-weight:600}
+@media(max-width:450px){.award-hourly-rates>dl dd:nth-child(2){font-size:1.05rem}.award-hourly-rates dl{gap:0 8px}}

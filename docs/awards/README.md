@@ -32,7 +32,7 @@ JSON check imports remain available, but do not alter this engine's pay tables.
    agreement in the employer's records. Classification decisions are made by the
    employer using clause 12, not inferred from a user's app role.
    User setup and the employment editor display read-only automatic hourly rates
-   from these saved terms. The preview shares native junior/loading/penalty
+   from saved terms or a clearly labelled preview of unsaved selections. The preview shares native junior/loading/penalty
    helpers, uses the selected date, and preserves missing setup/source guards.
    It never stores a flat-rate copy or enables employer coverage.
 Roster makers can also open Pay details directly from a shift’s visible cost.
@@ -194,3 +194,5 @@ still require reopening and review.
 This audit uses the **included 1 July 2026 edition**, not a live certification of
 later variations. Coverage, classification duties, regional exceptions, special
 agreements, payroll/NES and procedural obligations still need employer review.
+
+Employee Pay Conditions and its full-width Pay Rates box now preview ordinary hourly amounts as type/classification/DOB and allowance selections change. This is a calculation only; full employment validation and explicit saves still apply. See [user setup](../user-setup.md#live-pay-selection-preview).

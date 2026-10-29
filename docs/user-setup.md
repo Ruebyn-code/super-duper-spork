@@ -26,8 +26,11 @@ Once the account is created, the fifth step opens inside the popup. Managers
 with awards.manage use the existing Employment & award editor, including dated
 employment, DOB, employer-selected classification, pay arrangement and written
 part-time pattern. Nothing changes the employer’s award configuration.
-Hourly rates are calculated automatically from the saved date of birth, employment
-type, award classification and pay arrangement. The read-only panel shares the
+Pay Conditions follows a two-column layout with Industry award, Employment type,
+Classification / level, Allowances and the existing pay arrangement. Pay Rates is
+a full-width box below the fields, with a one-column phone form. Hourly rates
+update automatically from unsaved DOB, employment type, classification and pay
+arrangement selections; saved terms are shown until a field changes. The read-only panel shares the
 native calculator’s junior bases, casual loading, ordinary weekday/weekend,
 public-holiday and night percentages, and cent rounding. Dates can be inspected
 without changing account or employment data. A birthday or later effective
@@ -47,11 +50,11 @@ Managers with awards.manage can edit employment and view the calculated panel.
 Those with rostering.view and rostering.costs can read only the rate summary for
 users at their accessible selected location. The server response contains rates,
 source metadata and setup issues, never DOB, employment patterns, profile lists,
-other employees or audit data. The endpoint is a read: it never starts a feed,
-saves settings, creates a shift or changes another employee’s rates.
+other employees or audit data. Both saved reads and draft previews calculate only. They never start a feed,
+save settings, create a shift or change another employee’s rates.
 
-Unsaved employment changes hide the calculated values until saved, then refresh
-the summary. Rate-date selection and Refresh do not dirty the employment draft
+Unsaved changes immediately hide stale figures, then update the labelled draft
+preview. Saving refreshes the summary from the confirmed employment record. Rate-date selection and Refresh do not dirty the employment draft
 or submit the account form. Missing access remains a manager-help message.
 Skipping unchanged employment fields is allowed; the ordinary user editor can
 complete them later. Roster setup never changes staff availability, clocks time,
@@ -65,3 +68,29 @@ directory remain available. Existing users are not enrolled in a new checklist.
 Automatic rates use the employee’s accessible assigned location and show its name. Complete employer coverage and pay-period details through that location’s Employer setup tab or location setup checklist. Employee dated employment terms remain here.
 
 Employment type and award classification must be chosen explicitly for new profiles. The form groups essential employee/pay details and expands additional employment conditions when saved non-default values need attention. Award Overview can open the same editor without granting account-management permissions.
+
+## Live pay selection preview
+
+`POST /api/awards/rates/:userId/preview` takes a bounded `{date,profile}` body,
+requires awards.manage and CSRF, and reuses the saved-read location/employee
+access checks. Only allowlisted employment fields are accepted; employer settings
+and the included source always come from storage. Private DOB and pattern values
+never go in the URL or return DTO. Responses contain only derived rates, source,
+location/date, preview status and setup messages. There are no file writes, audits,
+feeds, provider calls, rate copies or operational records. Cost-only readers keep
+the saved GET endpoint and cannot post draft employment terms.
+
+The preview reuses native junior bases, loadings, percentages and cent rounding.
+It needs DOB, employment type, classification/band and a supported pay basis;
+missing employer/source/date coverage, unsupported arrangements and below-award
+bases withhold numbers. Ordinary rates may be shown before a part-time pattern
+or remaining employment dates are finished: those requirements appear separately
+under Before saving and continue to block normal saving/complete shift costs.
+No pattern, start date, salary or other unsupported arrangement is invented.
+Laundry appears separately as a weekly or per-shift allowance, not in hourly pay.
+
+Inputs debounce for 250 ms, immediately hide stale figures, abort prior work and
+ignore late responses. Changing the employment effective date updates the preview
+date. Date-only inspection remains read-only. Preview inputs do not rebuild form
+fields, save drafts or clear setup dirty state. Closing/discarding retains native
+guards; only Save employment details applies the terms through normal revisions.

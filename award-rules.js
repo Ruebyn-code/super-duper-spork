@@ -60,4 +60,4 @@ function evaluate({company,items,profiles,versions,locationId,weekStart,subjectI
  if(!local.length&&!versions.some(v=>v.reviewedAt&&v.effectiveFrom<=weekStart&&v.effectiveTo>=weekStart))issues.push({subjectId:null,userId:null,code:'no-rules',message:'No reviewed rules cover this week. Import and review a dated rule set.',clause:null,versionId:null});
  return{enabled:true,status:issues.length?'review-required':local.length?'configured-checks-clear':'no-items',issues,coverage:[...coverage],exclusions,versionIds:[...versionIds],reviewRequired:issues.length>0};
 }
-module.exports={types,kinds,exclusions,pack,profile,evaluate,age,object,text,source};
+module.exports={types,kinds,exclusions,pack,profile,evaluate,age,object,text,source,calendarDate};
