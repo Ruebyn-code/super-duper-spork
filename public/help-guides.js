@@ -312,7 +312,7 @@
  add(c,'make-roster','Build and edit a roster','Plan draft shifts using Staff, Stacked or Day view.',[
   'Open the roster maker with roster-management access. Select the week using the arrows, This week or the calendar. The outlook below the controls shows projected sales, labour budget, roster cost and budget remaining when permitted.',
   'Use the Staff, Stacked and Day buttons to choose a view. Press + inside a day/staff cell, then set the time, person and position in its compact shift card. Today is highlighted in the week grid.',
-  'Move shifts with their grip; drag a Day-view bar to change staff or time. Check overlap or availability warnings.',
+  'Drag the blank part of a shift card to move it; a mouse can also drag its staff name or position. On a tablet, use the blank bottom area. Drag a Day-view bar to change staff or time. The highlighted row/day shows the destination; Escape cancels. Check overlap or availability warnings.',
   'Review the autosave status. Open the dollar icon on a shift card for its cost popup, then expand Itemised calculation for the breakdown or review missing pay details. Staff view shows each person’s weekly total. The red error icon opens its award review. Select a shift’s background and use Delete or Backspace to remove it; use Undo if needed.',
   'Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready.'
  ],{route:'/rostering#roster',permissions:['rostering.view','rostering.manage'],notes:['Autosaving does not publish. Vacant shifts have unknown costs until assigned and priced.'],related:['publish-roster','roster-forecasts','labour-settings']});

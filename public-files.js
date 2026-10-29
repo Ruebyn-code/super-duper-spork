@@ -37,6 +37,7 @@ module.exports={'/home-personal.js':'home-personal.js','/home-personal.css':'hom
   '/award-settings.css':'award-settings.css',
   '/rostering':'rostering.html',
   '/roster-award-review.js':'roster-award-review.js',
+  '/roster-drag-model.js':'roster-drag-model.js',
   '/rostering.js':'rostering.js',
   '/rostering.css':'rostering.css',
   '/rostering-model.js':'rostering-model.js',

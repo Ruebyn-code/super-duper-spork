@@ -1,5 +1,5 @@
 (()=>{
- const $=id=>document.getElementById(id),M=rosteringModel,dayNames=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+ const $=id=>document.getElementById(id),M=rosteringModel,D=rosterDragModel,dayNames=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
  const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;},user=element=>{element.dataset.userText='';return element;},can=key=>appAccess.can(key),money=value=>value===null||value===undefined?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),hours=value=>(value/3600).toFixed(2)+' h',date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',timeZone:M.timeZone}).format(new Date(value+'T12:00:00Z')),time=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',timeZone:M.timeZone}).format(new Date(value)),uid=()=>crypto.randomUUID?.()||'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(Number(c)^crypto.getRandomValues(new Uint8Array(1))[0]&15>>Number(c)/4).toString(16));
  let session,data,week=M.monday(M.today()),section='',loading=0;
  let requiredReadingWasBlocked=false;
@@ -165,7 +165,7 @@
   syncRosterViewControls();const manage=can('rostering.manage');publication.textContent=!data.roster.publishedAt?'Draft':data.roster.hasChanges?'Unpublished changes':'Published';publication.dataset.state=!data.roster.publishedAt?'draft':data.roster.hasChanges?'changed':'published';$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
   if(preserveBoard)updateRosterBoardTotals();else renderRosterBoard(manage,summary);rosterRenderKey=key;updateRosterSaveStatus();}
  // The scheduling board moves shifts, independently of company App edit layouts.
- let rosterRenderKey='',rosterView='staff',rosterDay=M.today(),rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,rosterSaveTimer=0,rosterSaveTask=null,rosterNeedsLayout=false,selectedRosterShift=null,rosterDeleting=false,rosterDraggedAt=-Infinity;
+ let rosterRenderKey='',rosterView='staff',rosterDay=M.today(),rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,rosterSaveTimer=0,rosterSaveTask=null,rosterNeedsLayout=false,selectedRosterShift=null,rosterDeleting=false,rosterSuppressClick=false;
  const rosterEditors=new Map(),newRosterShifts=new Map(),deletedRosterShifts=[];
  const rosterDirty=()=>Boolean($('roster-days')?.querySelector('.roster-shift.is-dirty'));
  const rosterEditing=()=>document.body.classList.contains('app-edit-mode');
@@ -386,7 +386,7 @@
     if(manage&&!carry){
      bar.setAttribute('aria-keyshortcuts','Backspace Delete');bar.addEventListener('focus',()=>selectRosterShift(shift.id));bar.addEventListener('pointerdown',event=>startRosterPress(event,shift,bar));bar.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});
      bar.onclick=async()=>{
-      if(performance.now()-rosterDraggedAt<400)return;selectRosterShift(shift.id);
+      selectRosterShift(shift.id);
       if(rosterEditors.has(shift.id))return;
       if(!await flushRosterEdits())return;const holder=node('div',undefined,'roster-cell roster-day-editor'),card=rosterCard(data.roster.shifts.find(item=>item.id===shift.id)||shift,true);lane.after(holder);holder.append(card);selectRosterShift(shift.id);
      };
@@ -445,7 +445,7 @@
    if(shift.userId&&!data.people.some(person=>person.id===shift.userId)){const option=user(node('option',shift.username));option.value=shift.userId;staff.append(option);staff.value=shift.userId;}
    staff.setAttribute('aria-label','Staff for shift '+shift.start+' on '+shift.date);start.setAttribute('aria-label','Shift start time');end.setAttribute('aria-label','Shift end time');start.required=end.required=true;
    times.append(start,end);if(shift.overnight){const next=node('span','+1','roster-next-day');next.title='Ends next day';times.append(next);}staffField.append(staff);form.append(position.wrap,times,staffField);message.hidden=undo.hidden=true;message.setAttribute('role','status');card.append(form,message,undo);
-   const tools=node('div',undefined,'roster-shift-tools'),grip=button('⠿',()=>{selectRosterShift(shift.id);card.focus({preventScroll:true});},'roster-shift-grip');grip.setAttribute('aria-label','Drag shift for '+shift.username);grip.title='Drag to move this shift';tools.append(grip);card.append(tools);
+   const footer=node('div',undefined,'roster-card-actions'),surface=node('span',undefined,'roster-card-drag-surface');surface.setAttribute('aria-hidden','true');surface.title='Drag to move this shift';footer.append(surface);card.append(footer);card.dataset.rosterDraggable='';
    card.tabIndex=0;card.setAttribute('role','group');card.setAttribute('aria-label',shift.username+' · '+description);card.setAttribute('aria-keyshortcuts','Backspace Delete');card.addEventListener('focus',()=>selectRosterShift(shift.id));
    const editor={shift,card,form,message,undo,isNew,dirty:isNew,pending:false,error:'',read(){const assigned=staff.value||null;return{userId:assigned,start:readShiftTime(start),end:readShiftTime(end),position:position.position.value,allowUnavailable:assigned===shift.userId?shift.allowUnavailable:false};}};
    editor.saved=editor.read();rosterEditors.set(shift.id,editor);
@@ -461,22 +461,23 @@
   return card;
  }
  function startRosterPress(event,shift,card){
-  if(!event.isPrimary||event.button!==0||rosterSaving&&!rosterSaveTask||rosterDeleting||rosterEditing()||event.target.closest('input,select,.location-picker,button:not(.roster-shift-grip):not(.roster-day-shift)'))return;
+  const picker=event.target.closest('.roster-position-field .location-select-trigger,.roster-staff-field .location-select-trigger');
+  if(!event.isPrimary||event.button!==0||!can('rostering.manage')||section!=='roster'||phoneViewport.matches||appRequiredReading.blocked||rosterSaving&&!rosterSaveTask||rosterDeleting||rosterEditing()||event.target.closest('input,textarea,select,[contenteditable]')||event.target.closest('button')&&!picker&&!card.classList.contains('roster-day-shift'))return;
   const editor=rosterEditors.get(shift.id),candidate=editor?{...shift,...editor.read()}:shift;try{M.interval(candidate);}catch(error){status(error.message);return;}
   cancelRosterDrag();selectRosterShift(shift.id);
-  const press={shift,card,duration:M.minutes(candidate.end)-M.minutes(candidate.start)+(candidate.overnight?1440:0),displayStart:candidate.start,displayEnd:candidate.end,x:event.clientX,y:event.clientY,pointerId:event.pointerId,pointerType:event.pointerType,grip:Boolean(event.target.closest('.roster-shift-grip'))||card.classList.contains('roster-day-shift'),timeline:card.classList.contains('roster-day-shift')};rosterPress=press;
-  card.classList.add('is-pressing');if(rosterDirty())saveRosterEditors();press.timer=setTimeout(()=>beginRosterDrag(press),event.pointerType==='mouse'?250:press.grip?220:320);
+  const timeline=card.classList.contains('roster-day-shift'),press={shift,card,duration:M.minutes(candidate.end)-M.minutes(candidate.start)+(candidate.overnight?1440:0),displayStart:candidate.start,displayEnd:candidate.end,displayName:data.people.find(person=>person.id===candidate.userId)?.username||(candidate.userId?shift.username:'Vacant'),x:event.clientX,y:event.clientY,pointerId:event.pointerId,pointerType:event.pointerType,direct:timeline||Boolean(event.target.closest('.roster-card-drag-surface')),timeline};rosterPress=press;
+  card.classList.add('is-pressing');if(rosterDirty())saveRosterEditors();if(event.pointerType==='touch'&&!press.direct)press.timer=setTimeout(()=>beginRosterDrag(press),280);
  }
- function beginRosterDrag(press){
-  if(rosterPress!==press)return;clearTimeout(press.timer);
-  const rect=press.card.getBoundingClientRect(),ghost=node('div',undefined,'roster-drag-ghost');ghost.dataset.layoutUi='';ghost.setAttribute('aria-hidden','true');ghost.append(user(node('strong',press.shift.username)),user(node('span',press.displayStart+' – '+press.displayEnd)));ghost.style.width=Math.min(rect.width,260)+'px';document.body.append(ghost);
+ function beginRosterDrag(press,x=press.x,y=press.y){
+  if(rosterPress!==press)return;if(!press.card.isConnected){clearRosterPress();return;}clearTimeout(press.timer);window.locationPickers?.closeAll();
+  const rect=press.card.getBoundingClientRect(),ghost=node('div',undefined,'roster-drag-ghost'),width=Math.min(rect.width,280),height=Math.max(36,Math.min(rect.height,120)),offsetX=Math.max(0,Math.min(press.x-rect.left,width)),offsetY=Math.max(0,Math.min(press.y-rect.top,height));ghost.dataset.layoutUi='';ghost.setAttribute('aria-hidden','true');ghost.append(user(node('strong',press.displayName)),user(node('span',M.formatTimeInput(press.displayStart)+' – '+M.formatTimeInput(press.displayEnd))));ghost.style.width=width+'px';ghost.style.height=height+'px';ghost.style.transform='translate3d('+(x-offsetX)+'px,'+(y-offsetY)+'px,0)';positionColour(ghost,press.shift.position,press.shift.positionColor);document.body.append(ghost);
   const lane=press.timeline?press.card.closest('.roster-day-lane'):null;
-  rosterDrag={...press,ghost,initialX:press.x,initialY:press.y,moved:false,offsetX:Math.min(press.x-rect.left,260),offsetY:Math.min(press.y-rect.top,40),timelineOffset:lane?(press.x-rect.left)/lane.getBoundingClientRect().width*1440:0,target:null};rosterPress=null;press.card.classList.remove('is-pressing');press.card.classList.add('is-dragging');document.body.classList.add('roster-drag-active');
-  try{press.card.setPointerCapture(press.pointerId);}catch{}status('Drop on a day or staff row to move this shift.');moveRosterDrag(press.x,press.y);rosterFrame=requestAnimationFrame(scrollRosterDrag);
+  rosterDrag={...press,ghost,initialX:press.x,initialY:press.y,moved:Math.hypot(x-press.x,y-press.y)>D.threshold(press.pointerType),x,y,offsetX,offsetY,timelineOffset:lane?(press.x-rect.left)/lane.getBoundingClientRect().width*1440:0,target:null,lastFrame:performance.now(),scrollRemainders:[0,0,0]};rosterPress=null;press.card.classList.remove('is-pressing');press.card.classList.add('is-dragging');document.body.classList.add('roster-drag-active');
+  try{press.card.setPointerCapture(press.pointerId);}catch{}status('Drop on a day or staff row to move this shift.');moveRosterDrag(x,y);rosterFrame=requestAnimationFrame(scrollRosterDrag);
  }
  function clearRosterPress(){if(rosterPress){clearTimeout(rosterPress.timer);rosterPress.card.classList.remove('is-pressing');rosterPress=null;}}
  function moveRosterDrag(x,y){
-  const drag=rosterDrag;if(!drag)return;drag.moved=drag.moved||Math.hypot(x-drag.initialX,y-drag.initialY)>4;drag.x=x;drag.y=y;drag.ghost.style.transform='translate3d('+(x-drag.offsetX)+'px,'+(y-drag.offsetY)+'px,0)';
+  const drag=rosterDrag;if(!drag)return;drag.moved=drag.moved||Math.hypot(x-drag.initialX,y-drag.initialY)>D.threshold(drag.pointerType);drag.x=x;drag.y=y;drag.ghost.style.transform='translate3d('+(x-drag.offsetX)+'px,'+(y-drag.offsetY)+'px,0)';
   const hit=document.elementFromPoint(x,y),staff=hit?.closest('[data-roster-staff]');let cell=hit?.closest('[data-roster-drop]');
   if(!cell&&staff)cell=[...$('roster-days').querySelectorAll('[data-roster-drop]')].find(cell=>cell.dataset.rosterUser===staff.dataset.rosterStaff&&cell.dataset.rosterDate===drag.shift.date);
   if(drag.target!==cell){drag.target?.classList.remove('is-drop-target');drag.preview?.remove();drag.preview=null;drag.target=cell||null;drag.target?.classList.add('is-drop-target');}
@@ -484,26 +485,29 @@
   if(drag.timeline&&!staff&&cell?.classList.contains('roster-day-lane')&&drag.moved){
    const rect=cell.getBoundingClientRect(),duration=drag.duration,start=Math.max(0,Math.min(1425,Math.floor((2879-duration)/15)*15,Math.round(((x-rect.left)/rect.width*1440-drag.timelineOffset)/15)*15)),finish=start+duration,clock=minutes=>String(Math.floor(minutes%1440/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
    drag.times={start:clock(start),end:clock(finish),overnight:finish>=1440};
-   if(!drag.preview){drag.preview=node('div',undefined,'roster-drop-preview');cell.append(drag.preview);}drag.preview.style.left=start/1440*100+'%';drag.preview.style.width=Math.min(duration,1440-start)/1440*100+'%';drag.preview.textContent=M.formatTimeInput(drag.times.start)+' – '+M.formatTimeInput(drag.times.end);
+   if(!drag.preview){drag.preview=user(node('div',undefined,'roster-drop-preview'));cell.append(drag.preview);}drag.preview.style.left=start/1440*100+'%';drag.preview.style.width=Math.min(duration,1440-start)/1440*100+'%';drag.preview.textContent=M.formatTimeInput(drag.times.start)+' – '+M.formatTimeInput(drag.times.end);
   }
  }
- function scrollRosterDrag(){
-  const drag=rosterDrag;if(!drag)return;if(!drag.moved){rosterFrame=requestAnimationFrame(scrollRosterDrag);return;}const host=$('roster-days'),rect=host.getBoundingClientRect(),edge=44;
-  if(drag.y>=rect.top&&drag.y<=rect.bottom){if(drag.x<rect.left+edge)host.scrollLeft-=10;else if(drag.x>rect.right-edge)host.scrollLeft+=10;}
-  if(drag.y<rect.top+edge&&host.scrollTop>0)host.scrollTop-=10;else if(drag.y>rect.bottom-edge&&host.scrollTop<host.scrollHeight-host.clientHeight)host.scrollTop+=10;else if(drag.y<90)window.scrollBy(0,-10);else if(drag.y>innerHeight-70)window.scrollBy(0,10);
+ function scrollRosterDrag(timestamp){
+  const drag=rosterDrag;if(!drag)return;const elapsed=timestamp-drag.lastFrame;drag.lastFrame=timestamp;
+  if(drag.moved){const host=$('roster-days'),rect=host.getBoundingClientRect(),nearX=drag.x>=rect.left-52&&drag.x<=rect.right+52,nearY=drag.y>=rect.top-52&&drag.y<=rect.bottom+52,velocities=[nearY?D.edgeVelocity(drag.x,rect.left,rect.right):0,nearX?D.edgeVelocity(drag.y,rect.top,rect.bottom):0,nearX?D.edgeVelocity(drag.y,0,innerHeight,70):0];
+   for(let axis=0;axis<3;axis++){const step=D.scrollStep(drag.scrollRemainders[axis],velocities[axis],elapsed);drag.scrollRemainders[axis]=step.remainder;if(!step.delta)continue;if(axis===0)host.scrollLeft+=step.delta;else if(axis===1)host.scrollTop+=step.delta;else if(step.delta&&(drag.y<rect.top||drag.y>rect.bottom))window.scrollBy({top:step.delta,behavior:'instant'});}
+  }
   moveRosterDrag(drag.x,drag.y);rosterFrame=requestAnimationFrame(scrollRosterDrag);
  }
  function cancelRosterDrag(){clearRosterPress();cancelAnimationFrame(rosterFrame);if(rosterDrag){const drag=rosterDrag;rosterDrag=null;drag.ghost.remove();drag.preview?.remove();drag.card.classList.remove('is-dragging');drag.target?.classList.remove('is-drop-target');try{drag.card.releasePointerCapture(drag.pointerId);}catch{}}document.body.classList.remove('roster-drag-active');}
  async function dropRosterDrag(cancelled=false){
   if(!rosterDrag){clearRosterPress();return;}
-  const drag=rosterDrag,target=drag.target,shift=drag.shift,times=drag.times;cancelRosterDrag();if(drag.moved)rosterDraggedAt=performance.now();
+  const drag=rosterDrag,target=drag.target,shift=drag.shift,times=drag.times;cancelRosterDrag();if(drag.moved)rosterSuppressClick=true;
   if(cancelled||!target){status('Shift move cancelled.');settleRosterLayout();return;}
   if(!await flushRosterEdits())return;
   const date=target.dataset.rosterDate,userId='rosterUser'in target.dataset?(target.dataset.rosterUser||null):shift.userId;
   if(date===shift.date&&userId===shift.userId&&(!times||times.start===shift.start&&times.end===shift.end&&times.overnight===shift.overnight)){status('');return;}
   await saveBoardShift(shift,{date,userId,...(times||{}),allowUnavailable:false});
  }
- document.addEventListener('pointermove',event=>{if(rosterDrag&&event.pointerId===rosterDrag.pointerId){event.preventDefault();moveRosterDrag(event.clientX,event.clientY);}else if(rosterPress&&event.pointerId===rosterPress.pointerId&&Math.hypot(event.clientX-rosterPress.x,event.clientY-rosterPress.y)>4){if(rosterPress.pointerType==='mouse'||rosterPress.grip){const press=rosterPress;beginRosterDrag(press);event.preventDefault();moveRosterDrag(event.clientX,event.clientY);}else clearRosterPress();}},{passive:false});
+ document.addEventListener('pointermove',event=>{if(rosterDrag&&event.pointerId===rosterDrag.pointerId){event.preventDefault();rosterDrag.x=event.clientX;rosterDrag.y=event.clientY;rosterDrag.moved=rosterDrag.moved||Math.hypot(event.clientX-rosterDrag.initialX,event.clientY-rosterDrag.initialY)>D.threshold(rosterDrag.pointerType);}else if(rosterPress&&event.pointerId===rosterPress.pointerId&&Math.hypot(event.clientX-rosterPress.x,event.clientY-rosterPress.y)>D.threshold(rosterPress.pointerType)){if(rosterPress.pointerType!=='touch'||rosterPress.direct){const press=rosterPress;beginRosterDrag(press,event.clientX,event.clientY);event.preventDefault();}else clearRosterPress();}},{passive:false});
+ document.addEventListener('pointerdown',()=>{rosterSuppressClick=false;},true);
+ document.addEventListener('click',event=>{if(rosterSuppressClick&&event.detail>0){rosterSuppressClick=false;event.preventDefault();event.stopImmediatePropagation();}},true);
  document.addEventListener('pointerdown',event=>{
   if(!can('rostering.manage')||rosterEditing())return;
   const card=event.target.closest('[data-shift-id],button[data-timeline-shift]');
@@ -512,15 +516,16 @@
  });
  document.addEventListener('keydown',event=>{
   if(!['Backspace','Delete'].includes(event.key)||event.repeat||event.isComposing||event.ctrlKey||event.metaKey||event.altKey||section!=='roster'||appRequiredReading.blocked||!selectedRosterShift||!can('rostering.delete-shift')||rosterEditing()||rosterDrag||rosterPress||document.querySelector('.roster-award-popover:popover-open'))return;
-  if(event.target.closest('input,textarea,select,[contenteditable],[role="textbox"],[role="combobox"],dialog,[role="dialog"],.location-picker-menu,button:not(.roster-shift-grip):not(.roster-day-shift)'))return;
+  if(event.target.closest('input,textarea,select,[contenteditable],[role="textbox"],[role="combobox"],dialog,[role="dialog"],.location-picker-menu,button:not(.roster-day-shift)'))return;
   const card=event.target.closest('[data-shift-id],[data-timeline-shift]');if(!card&&event.target!==document.body)return;
   const shift=data.roster.shifts.find(shift=>shift.id===selectedRosterShift),element=$('roster-days').querySelector('[data-timeline-shift="'+selectedRosterShift+'"]');
   const editor=rosterEditors.get(selectedRosterShift)||(shift&&element?{shift,card:element,isNew:false}:null);if(!editor)return;
   event.preventDefault();removeBoardShift(editor);
  });
  document.addEventListener('touchmove',event=>{if(rosterDrag)event.preventDefault();},{passive:false});
- document.addEventListener('pointerup',event=>{if(rosterDrag&&event.pointerId===rosterDrag.pointerId){event.preventDefault();dropRosterDrag();}else clearRosterPress();});
- document.addEventListener('pointercancel',()=>dropRosterDrag(true));
+ document.addEventListener('pointerup',event=>{if(rosterDrag&&event.pointerId===rosterDrag.pointerId){event.preventDefault();moveRosterDrag(event.clientX,event.clientY);dropRosterDrag();}else if(rosterPress&&event.pointerId===rosterPress.pointerId)clearRosterPress();});
+ document.addEventListener('pointercancel',event=>{if((rosterDrag||rosterPress)?.pointerId===event.pointerId)dropRosterDrag(true);});
+ document.addEventListener('lostpointercapture',event=>{if(rosterDrag?.pointerId===event.pointerId&&event.target===rosterDrag.card)dropRosterDrag(true);});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&(rosterDrag||rosterPress)){event.preventDefault();dropRosterDrag(true);}});
  document.addEventListener('click',async event=>{const link=event.target.closest('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||link.target==='_blank'||link.hasAttribute('download')||!rosterDirty()&&!rosterSaving)return;const target=new URL(link.href,location.href);if(target.origin!==location.origin||target.pathname===location.pathname)return;event.preventDefault();event.stopPropagation();if(await flushRosterEdits())location.assign(target.href);},true);
  window.addEventListener('beforeunload',event=>{if(rosterDirty()||rosterSaving){event.preventDefault();event.returnValue='';}});window.addEventListener('app-edit-mode-changed',cancelRosterDrag);window.addEventListener('blur',()=>dropRosterDrag(true));

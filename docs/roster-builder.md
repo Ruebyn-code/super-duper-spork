@@ -23,9 +23,11 @@ other roster sections and published readers keep their existing presentation.
 - A stable marker restores the original summary slot when leaving maker mode,
   including resize to the phone reader. No new financial endpoint is fetched.
 - Compact staff rows and shift cards reduce padding and unused row space while
-  preserving time text, staff/position pickers, cost-popup and award icons. The drag
-  grip sits beside the staff selector above the cost icon. Touch Add Shift
-  targets, inline validation/Undo and phone readers keep their native behaviour.
+  preserving time text, staff/position pickers, cost-popup and award icons. Drag
+  the blank part of a card or its staff/position selector with a mouse; an
+  ordinary click still opens the selector. The icon-free footer provides a broad
+  touch drag surface, while quick swipes elsewhere retain scrolling. Touch Add
+  Shift targets, inline validation/Undo and phone readers stay native.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
   Today uses the server's Melbourne date; holiday stars remain native markers.
 - Award warnings use small red error icons beside staff names and on shift cards.
@@ -40,6 +42,12 @@ other roster sections and published readers keep their existing presentation.
 - Empty cells retain keyboard-accessible + actions and full accessible labels;
   the full Add Shift text appears on hover/focus and stays visible for touch.
   Shift fields, position selectors, costs and warnings retain their native nodes.
+- Drag previews keep the grab position, use 12-hour times and update once per
+  animation frame. Edge scrolling eases with pointer distance and elapsed time,
+  preserving fractional pixels across display refresh rates. The release checks
+  the latest pointer target; Escape, pointer cancellation or lost capture cancels
+  without moving a shift. Fields and cost/award/Undo buttons remain clickable,
+  and pending edits, validation, revisions and final saves use the native paths.
 - The Day timeline uses 12-hour labels and native time formatting without changing
   the true hourly scale, overnight intervals, carryovers or drag geometry.
 
