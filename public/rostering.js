@@ -100,7 +100,7 @@
  }
  function renderHourlySales(){
   const phone=phoneViewport.matches;
-  window.rosterHourlySales?.render({before:phone?$('phone-roster-shifts'):$('roster-days'),projection:data?.summary?.projection,weekStart:week,fixedDate:phone?(phoneRosterScope==='team'?phoneRosterDay:null):(rosterView==='day'?rosterDay:null),phone,hidden:section!=='roster'||appRequiredReading.blocked});
+  window.rosterHourlySales?.render({before:phone?$('phone-roster-shifts'):$('roster-days'),projection:data?.summary?.projection,weekStart:week,fixedDate:phone?(phoneRosterScope==='team'?phoneRosterDay:null):(rosterView==='day'?rosterDay:null),phone,collapsed:can('rostering.manage')&&!phone,hidden:section!=='roster'||appRequiredReading.blocked});
  }
  function renderPhoneRoster(){
   syncPhoneRosterMode();if(!data||!phoneViewport.matches)return;
@@ -145,11 +145,24 @@
   }catch(error){if(version===loading)status(error.message);}
  }
  async function view(){if(!session||appRequiredReading.blocked)return;let next=location.hash.slice(1)||'roster';if(next==='clock'){next='roster';history.replaceState(null,'','#roster');}if(section==='roster'&&next!=='roster'&&(rosterSaving||rosterDirty())){if(!await flushRosterEdits()){history.replaceState(null,'','#roster');return;}}if(!['roster','timesheets','availability','leave','settings'].includes(next)||next==='settings'&&!settingsAccess())next='roster';if(phoneViewport.matches&&location.hash==='#settings')history.replaceState(null,'','#roster');if(next!==section)phoneRosterKey='';if(next==='roster'&&section!=='roster')phoneRosterDismissed=false;section=next;syncPhoneRosterMode();$('roster-toolbar-controls').hidden=phoneViewport.matches||section!=='roster';for(const tools of document.querySelectorAll('[data-roster-tools]'))tools.hidden=tools.dataset.rosterTools!==section;for(const panel of document.querySelectorAll('[data-roster-panel]'))panel.hidden=panel.dataset.rosterPanel!==section;for(const link of document.querySelectorAll('[data-roster-view]')){if(link.dataset.rosterView===section)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}if(data)renderSection();load();}
- function renderSection(){if(!data)return;const render={roster:renderRoster,timesheets:renderTimesheets,availability:renderAvailability,leave:renderLeave,settings:renderSettings};render[section||'roster']();syncPhoneRosterMode();appAccess.apply(session);}
- function renderRoster(preserveBoard=false){renderPhoneRoster();if(phoneViewport.matches)return;const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,data.awardChecks,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'+((summary.projection.daily||[]).some(day=>day.holiday?.status==='adjusted')?' · Holiday adjustment applied':'')),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+(summary.nativePay?' shifts need employment or award details':' shifts need staff or hourly rates'):hours(summary.plannedSeconds)+(summary.nativePay?' · Gross wages & allowances':'')+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents<0?'negative':'positive'));}
+
+ // Presentation changes move existing controls; native saves, views and permissions stay authoritative.
+ const metricsSlot=document.createComment('Roster summary position');$('roster-metrics').before(metricsSlot);
+ const builderViews=node('div',undefined,'roster-view-switch roster-builder-views');builderViews.id='roster-builder-views';builderViews.hidden=true;builderViews.setAttribute('role','group');builderViews.setAttribute('aria-label','Roster view');
+ for(const [value,title]of [['staff','Staff'],['stacked','Stacked'],['day','Day']]){const choice=button(title,()=>changeRosterView(value));choice.dataset.builderView=value;choice.setAttribute('aria-label',title+' view');window.appWording?.label(choice,title);builderViews.append(choice);}
+ $('roster-toolbar-controls').prepend(builderViews);
+ const copyLabel=node('span','Copy week','roster-builder-copy-label');window.appWording?.label(copyLabel,'Copy week');$('roster-copy').append(copyLabel);
+ const publication=node('span','','roster-publication-badge');publication.id='roster-publication-badge';publication.hidden=true;document.querySelector('.roster-board-toolbar').prepend(publication);
+ function syncBuilderPresentation(){
+  const builder=section==='roster'&&can('rostering.manage')&&!phoneViewport.matches;document.body.classList.toggle('roster-builder',builder);builderViews.hidden=!builder;publication.hidden=!builder;
+  if(builder)document.querySelector('.rostering-heading').after($('roster-metrics'));else metricsSlot.after($('roster-metrics'));
+ }
+ function staffIdentity(label,person){const avatar=user(node('span',person.id?person.username.trim().split(/\s+/).slice(0,2).map(word=>Array.from(word)[0]||'').join('').toUpperCase():'–','roster-person-avatar'));avatar.setAttribute('aria-hidden','true');label.prepend(avatar);}
+ function renderSection(){if(!data)return;syncBuilderPresentation();const render={roster:renderRoster,timesheets:renderTimesheets,availability:renderAvailability,leave:renderLeave,settings:renderSettings};render[section||'roster']();syncPhoneRosterMode();appAccess.apply(session);}
+ function renderRoster(preserveBoard=false){renderPhoneRoster();if(phoneViewport.matches)return;const summaryKey=data.summary?Object.fromEntries(['projection','effectiveBudget','budgetCents','plannedCostCents','unpricedShifts','plannedSeconds','plannedPercent','remainingCents'].map(key=>[key,data.summary[key]])):null,key=JSON.stringify([data.weekStart,rosterView,rosterDay,can('rostering.manage'),data.roster,data.people,data.positions,data.awardChecks,summaryKey]);if(key===rosterRenderKey&&$('roster-days').querySelector('.roster-board,.roster-day-board'))return;const summary=data.summary,metrics=$('roster-metrics');metrics.replaceChildren();metrics.hidden=!summary;if(summary){const budget=summary.effectiveBudget;metrics.append(metric('Projected sales',money(summary.projection.projectedSalesCents),summary.projection.weeksRecorded+'/4 completed sales weeks'+((summary.projection.daily||[]).some(day=>day.holiday?.status==='adjusted')?' · Holiday adjustment applied':'')),metric('Labour budget',money(summary.budgetCents),budget?budget.scope[0].toUpperCase()+budget.scope.slice(1)+' '+(budget.mode==='percent'?(budget.value/100).toFixed(2)+'%':'weekly budget'):'Set a labour budget in Labour settings'),metric('Roster cost',money(summary.plannedCostCents),summary.unpricedShifts?summary.unpricedShifts+(summary.nativePay?' shifts need employment or award details':' shifts need staff or hourly rates'):hours(summary.plannedSeconds)+(summary.nativePay?' · Gross wages & allowances':'')+(summary.plannedPercent!==null?' · '+summary.plannedPercent.toFixed(1)+'% of forecast':'')),metric('Budget remaining',money(summary.remainingCents),summary.remainingCents===null?'Needs a budget, forecast and hourly rates':summary.remainingCents<0?'Roster is over budget':'After rostered labour',summary.remainingCents===null?'':summary.remainingCents<0?'negative':'positive'));}
   for(const card of metrics.children)card.title=[...card.children].map(part=>part.textContent).join(' · ');
   renderAwardPanel($('roster-award-checks'),data.awardChecks?.roster);for(const card of $('roster-days').querySelectorAll('[data-shift-id]'))markAwardCard(card);
-  syncRosterViewControls();const manage=can('rostering.manage');$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
+  syncRosterViewControls();const manage=can('rostering.manage');publication.textContent=!data.roster.publishedAt?'Draft':data.roster.hasChanges?'Unpublished changes':'Published';publication.dataset.state=!data.roster.publishedAt?'draft':data.roster.hasChanges?'changed':'published';$('roster-view-title').textContent=manage?'Weekly roster':'My published shifts';$('roster-published-status').textContent=data.roster.publishedAt?'Published '+date(M.localParts(data.roster.publishedAt).date)+' by '+data.roster.publishedBy+(manage&&data.roster.hasChanges?' · Unpublished changes':''):manage?'Draft — publish to make shifts visible to users.':'No roster has been published for this week.';$('roster-manager-actions').hidden=!manage;$('roster-copy').disabled=data.roster.shifts.length>0;$('roster-publish').disabled=!data.roster.hasChanges&&Boolean(data.roster.publishedAt);
   if(preserveBoard)updateRosterBoardTotals();else renderRosterBoard(manage,summary);rosterRenderKey=key;updateRosterSaveStatus();}
  // The scheduling board moves shifts, independently of company App edit layouts.
  let rosterRenderKey='',rosterView='staff',rosterDay=M.today(),rosterSaving=false,rosterPress=null,rosterDrag=null,rosterFrame=0,rosterSaveTimer=0,rosterSaveTask=null,rosterNeedsLayout=false,selectedRosterShift=null,rosterDeleting=false,rosterDraggedAt=-Infinity;
@@ -170,7 +183,7 @@
   const label=$('roster-save-status');if(!label)return;
   const editors=[...rosterEditors.values()],error=editors.some(editor=>editor.error),pending=editors.some(editor=>editor.dirty);
   label.textContent=error?'Changes need attention':rosterSaving||pending?'Saving changes…':'All changes saved';
-  label.classList.toggle('has-error',error);
+  label.classList.toggle('has-error',error);label.dataset.state=error?'error':rosterSaving||pending?'saving':'saved';
   for(const editor of rosterEditors.values())renderShiftCost(editor.card,editor.shift);
   for(const staff of $('roster-days').querySelectorAll('.roster-staff-label'))renderStaffCost(staff,[...data.roster.shifts,...newRosterShifts.values()].filter(shift=>(shift.userId||'')===staff.dataset.rosterStaff));
  }
@@ -309,7 +322,7 @@
   }
   for(let index=0;index<7;index++){
    const day=M.shiftDate(week,index),shifts=data.roster.shifts.filter(item=>item.date===day),header=node('div',undefined,'roster-board-day');
-   header.dataset.rosterDate=day;header.append(user(node('strong',dayNames[index].slice(0,3)+' '+date(day))),user(node('small',hours(shifts.reduce((sum,item)=>sum+item.paidSeconds,0)))));
+   header.dataset.rosterDate=day;header.classList.toggle('is-today',day===data.today);header.append(user(node('strong',dayNames[index].slice(0,3)+' '+date(day))),user(node('small',hours(shifts.reduce((sum,item)=>sum+item.paidSeconds,0)))));
    if(summary){const cost=shifts.some(item=>item.costCents===null)?null:shifts.reduce((sum,item)=>sum+item.costCents,0);header.append(user(node('small',money(cost)+' labour','roster-day-cost')));}
    window.publicHolidayMarkers?.mark(header.querySelector('strong'),day);board.append(header);
   }
@@ -319,7 +332,7 @@
    for(const shift of data.roster.shifts)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
    for(const person of people){
     const shifts=boardShifts.filter(shift=>shift.userId===person.id),label=node('div',undefined,'roster-staff-label');
-    label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)),user(node('small',hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0)))));renderStaffCost(label,shifts);board.append(label);
+    label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)),user(node('small',hours(shifts.reduce((sum,shift)=>sum+shift.paidSeconds,0)))));renderStaffCost(label,shifts);staffIdentity(label,person);board.append(label);
     for(let index=0;index<7;index++)board.append(rosterCell(M.shiftDate(week,index),person.id,shifts,manage));
    }
   }else{
@@ -337,6 +350,7 @@
  }
  function syncRosterViewControls(){
   if(M.monday(rosterDay)!==week)rosterDay=week;
+  for(const control of builderViews.children)control.setAttribute('aria-pressed',String(control.dataset.builderView===rosterView));
   $('roster-view').value=rosterView;window.locationPickers?.refresh($('roster-view'));
   const picker=$('roster-day');$('roster-day-control').hidden=rosterView!=='day';
   if(picker.dataset.week!==week){picker.replaceChildren();for(let index=0;index<7;index++){const day=M.shiftDate(week,index),option=user(node('option',dayNames[index].slice(0,3)+' '+date(day)));option.value=day;picker.append(option);}picker.dataset.week=week;}
@@ -348,11 +362,11 @@
  function renderDailyRoster(manage,shifts){
   const host=$('roster-days');host.classList.add('roster-daily-scroll');host.setAttribute('aria-label','Daily roster hourly timeline');
   const board=node('div',undefined,'roster-day-board'),corner=node('div',undefined,'roster-board-corner'),axis=node('div',undefined,'roster-day-hours');corner.append(node('strong','Staff'),user(node('small',date(rosterDay))));window.publicHolidayMarkers?.mark(corner.querySelector('small'),rosterDay);
-  for(let hour=0;hour<24;hour++){const tick=user(node('span',String(hour).padStart(2,'0')+':00'));axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);
+  for(let hour=0;hour<24;hour++){const tick=user(node('span',(hour%12||12)+(hour<12?'am':'pm')));axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);
   const visible=dailyShifts(),people=[...(manage?[{id:null,username:'Vacant'}]:[]),...data.people];
   for(const shift of visible)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
   for(const person of people){
-   const label=node('div',undefined,'roster-staff-label'),lane=node('div',undefined,'roster-day-lane');label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)));lane.dataset.rosterDrop='';lane.dataset.rosterDate=rosterDay;lane.dataset.rosterUser=person.id||'';lane.setAttribute('aria-label',person.username+' on '+rosterDay);
+   const label=node('div',undefined,'roster-staff-label'),lane=node('div',undefined,'roster-day-lane');label.dataset.rosterStaff=person.id||'';label.append(user(node('strong',person.username)));staffIdentity(label,person);lane.dataset.rosterDrop='';lane.dataset.rosterDate=rosterDay;lane.dataset.rosterUser=person.id||'';lane.setAttribute('aria-label',person.username+' on '+rosterDay);
    if(manage){const add=button('+',()=>addBoardShift(rosterDay,person.id),'roster-cell-add roster-day-add');add.setAttribute('aria-label','Add shift on '+rosterDay+' for '+person.username);label.append(add);}board.append(label,lane);
   }
   updateDailyShiftBars();
@@ -367,7 +381,7 @@
    for(const {shift,start,end}of entries){
     if(end<=start)continue;let track=tracks.findIndex(until=>until<=start);if(track<0)track=tracks.length;tracks[track]=end;
     const carry=shift.date!==rosterDay,bar=node(manage&&!carry?'button':'div',undefined,'roster-day-shift'+(carry?' is-continuation':''));if(bar.tagName==='BUTTON')bar.type='button';bar.style.left=(start/1440*100)+'%';bar.style.width=((end-start)/1440*100)+'%';bar.style.top=(track*34+5)+'px';
-    const label=shift.start+' – '+shift.end+(shift.overnight?' +1':''),detail=(Object.hasOwn(shift,'costCents')?'Shift cost '+(shift.costCents===null?'unavailable':money(shift.costCents))+' · ':'')+hours(shift.paidSeconds)+' paid'+(shift.position?' · '+shift.position:'');bar.append(user(node('strong',label)),user(node('small',detail)));bar.title=shift.username+' · '+label+' · '+detail+' · '+shift.breakMinutes+'m unpaid break'+(carry?' · Continues from '+date(shift.date):'');bar.setAttribute('aria-label',bar.title);bar.dataset.timelineShift=shift.id;positionColour(bar,shift.position,shift.positionColor);
+    const label=M.formatTimeInput(shift.start)+' – '+M.formatTimeInput(shift.end)+(shift.overnight?' +1':''),detail=(Object.hasOwn(shift,'costCents')?'Shift cost '+(shift.costCents===null?'unavailable':money(shift.costCents))+' · ':'')+hours(shift.paidSeconds)+' paid'+(shift.position?' · '+shift.position:'');bar.append(user(node('strong',label)),user(node('small',detail)));bar.title=shift.username+' · '+label+' · '+detail+' · '+shift.breakMinutes+'m unpaid break'+(carry?' · Continues from '+date(shift.date):'');bar.setAttribute('aria-label',bar.title);bar.dataset.timelineShift=shift.id;positionColour(bar,shift.position,shift.positionColor);
     if(manage&&!carry){
      bar.setAttribute('aria-keyshortcuts','Backspace Delete');bar.addEventListener('focus',()=>selectRosterShift(shift.id));bar.addEventListener('pointerdown',event=>startRosterPress(event,shift,bar));bar.addEventListener('contextmenu',event=>{if(rosterPress||rosterDrag)event.preventDefault();});
      bar.onclick=async()=>{
