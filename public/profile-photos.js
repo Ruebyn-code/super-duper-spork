@@ -15,7 +15,7 @@
   remove.onclick=()=>{draft=null;show();message.textContent='Save photo to remove the current photo.';state();};
   save.onclick=async()=>{if(busy||preparing||draft===undefined)return;busy=true;state();message.textContent='Saving photo…';try{const result=await api(draft===null?'DELETE':'PUT',{revision,mime:'image/jpeg',...(draft===null?{}:{data:draft})});revision=result.revision;photoUrl=result.photoUrl;draft=undefined;updates.set(person.id,photoUrl);show();notify(actor,person.id,photoUrl);onSaved(result);message.textContent=photoUrl?'Profile photo saved.':'Profile photo removed.';}catch(error){if(error.status===409)try{const current=await api();revision=current.revision;photoUrl=current.photoUrl;}catch{}message.textContent=error.message;}finally{busy=false;if(!stopped)state();}};
   show();state();(async()=>{try{actor=await(await fetch('/api/session',{cache:'no-store'})).json();const current=await api();if(stopped)return;revision=current.revision;photoUrl=current.photoUrl;ready=true;show();}catch(error){if(!stopped)message.textContent=error.message;}finally{if(!stopped)state();}})();
-  return{element:host,get saving(){return busy||preparing;},destroy(){stopped=true;host.remove();}};
+  return{element:host,get dirty(){return draft!==undefined;},get saving(){return busy||preparing;},destroy(){stopped=true;host.remove();}};
  }
  window.profilePhotos={paint,editor,notify};
 })();

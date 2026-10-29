@@ -622,7 +622,7 @@
   'Review Permissions, including whether they apply to this company or the network, then choose accessible Locations and a default location.',
   'Choose Review invitation, check the details and press Send invitation. Only this action creates the account and sends its password setup link. Check the delivery result.',
   'After creating the user, open Roster details. Choose Pay Conditions and preview Pay Rates underneath. For part-time staff, Add regular working hours opens the optional hours form; these are needed for complete shift costs. Save employment details, then Continue and Finish user setup, or skip for now.',
-  'Use the pencil beside an existing user to edit their account, photo and employment details. Tell affected users to sign in again after access or sign-in changes.'
+  'Use the pencil beside a user, then choose Personal, Pay Conditions, Time & Attendance or Leave & Availability. Groups keep unsaved fields. Save account details, photos and employment terms with their own Save actions. Sign in again after access or sign-in changes.'
  ],{route:'/admin/accounts#accounts',permissions:['users.manage'],notes:['You can only manage users and grant access within your own authority. Closing User setup before inviting retains the draft on this page; Discard draft clears it. Roster records are separate from account permissions. Pay Rates requires the location employer’s automatic award calculations to be enabled; missing setup is shown in the rate panel. New users choose their own password; existing sign-ins continue to work. Roster setup does not create shifts or availability.'],related:['permissions','account-invitations','profile-photo','award-settings','labour-settings']});
  add(c,'account-invitations','Send account setup invitations','Let new users set up access through an expiring invitation.',[
   'Configure the shared account setup email sender in the available Settings or Opstack-owner controls.',
@@ -752,7 +752,7 @@
   'For courses, checklists or Library content, also check the assignment or audience. Sign in again after account changes.'
  ],{notes:['Choosing Manager Home does not grant sales or management access. Help guides describe all features; their screen links are offered only when your current permissions allow them.'],related:['permissions','switch-location','support-request']});
  add(c,'clock-problem','Your PIN or clock action is unavailable','Check the saved phone ending, published shift and current stage.',[
-  'Ask a user manager to verify your phone number and unique last four digits.',
+  'Ask a user manager to open your Personal settings and verify your phone number. Time & Attendance shows the clock PIN from its unique last four digits.',
   'Check that the shift is assigned, published, at this location and on the correct Melbourne day.',
   'Use the action offered for the current work/break stage. Early starts require a different authorised manager’s approval.',
   'After repeated wrong PINs, allow the limit to expire or ask a user manager to reset PIN access by saving the phone number again.'

@@ -120,3 +120,36 @@ checks and approval still require the written hours and agreement. Missing hours
 remain unknown, never zero or an assumed schedule. Approved pay snapshots stay
 frozen. The internal `pattern` data keys and existing historical profiles remain
 compatible; there is no availability or roster creation from staff setup.
+
+
+## Grouped employee settings
+
+The pencil beside an existing user opens a native employee settings menu:
+
+- **Personal** contains the existing photo, name, sign-in email, phone, permission
+  scope and location access controls.
+- **Pay Conditions** lazily loads the existing dated Employment & award editor
+  only with awards.manage. Dates, classifications, live rates, optional Regular
+  working hours and explicit Save employment details remain native.
+- **Time & Attendance** shows the phone-derived clock PIN, the existing Timesheets
+  link with roster access, and an authorised shortcut to Regular working hours.
+- **Leave & Availability** links to the existing roster leave and availability
+  screens when roster viewing is permitted. It does not invent employee-specific
+  leave balances, change availability or submit a request.
+
+The desktop menu is a company-styled vertical card with matching icons and
+chevrons, beside the active panel; phones stack the same labelled menu above the
+fields. Keyboard Up/Down/Home/End selects groups. Original controls stay mounted
+when switching so account, photo and pay drafts keep their values. Opening groups
+or following the hours shortcut never saves or calls providers.
+
+Account saves validate only original account controls and reveal Personal for
+invalid fields; an unconfigured award profile does not prevent unrelated
+account maintenance. Unfinished pay/photo drafts must be saved or explicitly
+cancelled before an account save can close the editor. Employment saves do not
+save personal account fields. Existing server permissions, location/company
+scopes, CSRF and revisions remain authoritative. Busy saves freeze category and
+close actions; cancel/navigation guards protect drafts. Reset restores the same
+original form nodes and validation mode for the five-step invitation popup.
+The limited Award Overview editor and new-user checklist retain their existing
+workflows and do not gain account-editing permission from the new groups.
