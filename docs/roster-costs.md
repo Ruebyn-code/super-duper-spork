@@ -19,6 +19,14 @@ terms, source/pay-period coverage or reviewed holiday calendars. Legacy shifts
 without a rate show a read-only explanation and the existing award-settings
 destination when authorised. Merely opening details never saves or publishes.
 
+Small red award error icons on staff rows and shift cards open a separate,
+read-only review of the current native checks. Staff icons cover the selected
+week; shift icons cover that shift plus applicable staff/general checks. The
+compact popover replaces the large top Roster warning panel, while native Pay
+details, publishing review and Timesheets approval guards stay unchanged.
+Unknown checks without a visible owner retain a small status-row fallback icon.
+Icons with unsaved changes are disabled so they do not present stale reviews.
+
 Edits show Updating cost until the native serial save and recalculation finish.
 Staff totals update alongside saved shift costs without replacing active input
 fields. Failed or uncertain saves keep their existing draft/error/undo handling.

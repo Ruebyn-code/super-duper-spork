@@ -313,12 +313,12 @@
   'Open the roster maker with roster-management access. Select the week using the arrows, This week or the calendar. The outlook below the controls shows projected sales, labour budget, roster cost and budget remaining when permitted.',
   'Use the Staff, Stacked and Day buttons to choose a view. Press + inside a day/staff cell, then set the shift time, person and position. Today is highlighted in the week grid.',
   'Move shifts with their grip; drag a Day-view bar to change staff or time. Check overlap or availability warnings.',
-  'Review the autosave status and the cost on each shift card. Staff view also shows each person’s weekly total. Click a cost for its calculation or the details needed to price it. Select a shift’s background and use Delete or Backspace to remove it; use Undo if needed.',
+  'Review the autosave status and the cost on each shift card. Staff view also shows each person’s weekly total. Open the small red error icon on a staff row or shift card for its award review. Click a cost for its calculation or missing pay details. Select a shift’s background and use Delete or Backspace to remove it; use Undo if needed.',
   'Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready.'
  ],{route:'/rostering#roster',permissions:['rostering.view','rostering.manage'],notes:['Autosaving does not publish. Vacant shifts have unknown costs until assigned and priced.'],related:['publish-roster','roster-forecasts','labour-settings']});
  add(c,'publish-roster','Publish a reviewed roster','Make saved draft shifts visible to staff.',[
   'Check people, times, positions, breaks and the selected week.',
-  'Resolve invalid or overlapping shifts and review availability, leave and cost warnings.',
+  'Resolve invalid or overlapping shifts and review availability, leave and cost warnings. Open the small red award error icon beside the staff name or on a shift card to read that person’s checks.',
   'Wait for draft saves to finish, then choose Publish roster.',
   'When award checks require a review note, review the warning and enter the required note before completing publication.'
  ],{route:'/rostering#roster',permissions:['rostering.view','rostering.manage'],notes:['Previously published schedules stay visible to staff until the next publication. A copied or autosaved draft is not yet published.'],related:['make-roster','award-settings']});
@@ -678,7 +678,7 @@
   'Choose Open setup for the location. Enter the legal employer and pay period, confirm award coverage and turn on automatic award wages, then Save settings. Optional employer cost estimates are expandable.',
   'Expand Employee details → Edit details. Choose employment type, classification and allowances; Pay Rates underneath updates without saving. Add regular working hours is optional during setup; complete part-time shift costs need written hours and an agreement. Press Save employment details.',
   'Choose Review dates. Check the full year’s holidays, including local, substitute and part-day periods; expand All day to edit times when needed. Confirm the review and Save location calendar.',
-  'Review roster and timesheet warnings and use Pay details for breaks, allowances or written variations. Missing wage inputs must be completed. Advanced rules and source details remain available for reviewed updates.'
+  'Open the small red award error icon on roster staff rows or shift cards to read current checks. Review timesheet warnings and use Pay details for breaks, allowances or written variations. Missing wage inputs must be completed. Advanced rules and source details remain available for reviewed updates.'
  ],{route:'/settings/awards',permissions:['awards.manage'],notes:['Setup readiness is not a compliance certificate. The calculator uses the included July 2026 edition. Special arrangements, classifications, regional exceptions, payroll and later award changes need employer review. Each saved location retains separate employer settings. Approved calculations stay frozen until explicitly reopened.'],related:['labour-settings','timesheets','public-holidays']});
 
  add(c,'platform-console','Use the Opstack owner and support console','Manage networks using a separate platform account.',[

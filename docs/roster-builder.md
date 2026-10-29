@@ -22,6 +22,15 @@ other roster sections and published readers keep their existing presentation.
   including resize to the phone reader. No new financial endpoint is fetched.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
   Today uses the server's Melbourne date; holiday stars remain native markers.
+- Award warnings use small red error icons beside staff names and on shift cards.
+  Open an icon for a compact, read-only review scoped to that employee or shift;
+  repeated issues are grouped with their clause and affected-shift count. Day
+  view uses the staff-name icon rather than nesting controls in timeline bars.
+  There is no large Roster award panel at the top. Checks without a visible
+  staff/shift owner retain a small Other award checks icon beside roster status.
+  Unsaved edits disable outdated icons until native recalculation finishes.
+  Escape/Close restores focus; review never saves, deletes, publishes or waives
+  a blocking issue. Native publishing review and Timesheets checks remain.
 - Empty cells retain keyboard-accessible + actions and full accessible labels;
   the full Add Shift text appears on hover/focus and stays visible for touch.
   Shift fields, position selectors, costs and warnings retain their native nodes.
