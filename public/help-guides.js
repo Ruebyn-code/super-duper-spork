@@ -324,9 +324,9 @@
  ],{route:'/rostering#roster',permissions:['rostering.view','rostering.manage'],notes:['Previously published schedules stay visible to staff until the next publication. A copied or autosaved draft is not yet published.'],related:['make-roster','award-settings']});
  add(c,'roster-forecasts','Use hourly sales and labour forecasts on rosters','Compare demand and budget while planning shifts.',[
   'Open the roster’s sales and budget summary with the required financial summary access.',
-  'Expand Hourly sales projections and select a trading date. Day view follows its selected day.',
-  'Compare the chart or hourly breakdown with planned staffing and the day’s budget.',
-  'Review overnight hours marked +1 day and any missing-history explanation.'
+  'Choose Day view and select the roster date. Projected sales appear directly beneath each hour of the timeline.',
+  'Compare the amounts beneath the hours with planned staffing and the day’s budget. Home and Sales → Hourly sales keep their own forecast views.',
+  'After-midnight hours use the previous trading day when that location traded overnight. A dash means the forecast is unavailable; hover over the hour for its date or missing-data reason.'
  ],{route:'/rostering#roster',permissions:['rostering.view'],notes:['These are the same forecasts as Hourly sales. Viewing them does not import sales or change shifts. Staff without summary access keep the ordinary published-roster view.'],related:['hourly-projections','labour-settings']});
  add(c,'shift-clock','Start and finish a shift','Record your actual work using your unique staff PIN.',[
   'Open the blue Shift clock and enter the last four digits of your saved phone number.',

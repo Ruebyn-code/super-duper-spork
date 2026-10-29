@@ -13,8 +13,9 @@ other roster sections and published readers keep their existing presentation.
   never copies. Publish roster remains separate from autosaves and copy actions.
 - Draft, Unpublished changes and Published badges derive from the existing
   published snapshot and change flag. Save status preserves pending/error states.
-- Hourly projections start collapsed for makers and keep their open/closed
-  choice during refresh, leaving the grid visible until explicitly expanded.
+- Hourly projections appear directly beneath the 24 hour labels in Day view.
+  Staff, Stacked and phone readers have no separate hourly sales panel. Home
+  and Sales hourly forecasts retain their existing displays.
 - The same four permission-checked sales/budget/cost metrics sit below the
   toolbar with their original details visible. Missing values remain unknown.
 - A stable marker restores the original summary slot when leaving maker mode,

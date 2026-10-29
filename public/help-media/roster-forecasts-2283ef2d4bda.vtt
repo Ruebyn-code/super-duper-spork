@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Open the roster’s sales and budget summary with the required financial summary access.
+
+2
+00:00:06.000 --> 00:00:13.125
+Step 2: Choose Day view and select the roster date. Projected sales appear directly beneath each hour of the timeline.
+
+3
+00:00:13.125 --> 00:00:22.125
+Step 3: Compare the amounts beneath the hours with planned staffing and the day’s budget. Home and Sales → Hourly sales keep their own forecast views.
+
+4
+00:00:22.125 --> 00:00:32.708
+Step 4: After-midnight hours use the previous trading day when that location traded overnight. A dash means the forecast is unavailable; hover over the hour for its date or missing-data reason.

@@ -27,3 +27,20 @@ test('rosters use the matching movable public holiday profile and exact 20% grow
  const state=await app.api(app.office,'/api/hourly-sales?date=2026-04-03');await app.api(app.office,'/api/hourly-sales/confirm','POST',{requestId:crypto.randomUUID(),revision:0,hoursHash:state.hoursHash,sourceName:'holiday.csv',sourceLocation:'Office',basis:'trading',fullDays:true,mode:'fill',days:[{date:'2025-04-18',hours:Array.from({length:24},(_,h)=>h===11?80000:h===18?120000:0),reportedTotalCents:200000}]});
  const projection=(await dashboard(app,app.office,'2026-03-30')).summary.projection,day=projection.hourly.days.find(day=>day.date==='2026-04-03');assert.equal(day.holiday.growthPercent,20);assert.equal(day.method,'holiday');assert.equal(day.projectedSalesCents,240000);assert.equal(day.hours[11],96000);assert.equal(day.hours[18],144000);assert.deepEqual(day,(await app.api(app.office,'/api/hourly-sales?date=2026-04-03')).forecast);assert.equal(app.calls(),0);
 });
+
+const {hour}=require('./public/roster-hourly-sales');
+const hours=Array.from({length:7},()=>({closed:false,open:'09:00',close:'23:00'})),projection={hourly:{tradingHours:hours,days:[{date:'2026-10-26',hours:Array(24).fill(1250)},{date:'2026-10-27',hours:Array(24).fill(2500)}]}};
+test('Day header preserves saved forecast cents, zero, unavailable and missing permissions without changing projections',()=>{
+ const data=structuredClone(projection);data.hourly.days[1].hours[0]=0;data.hourly.days[1].hours[2]=null;const before=JSON.stringify(data);
+ assert.equal(hour(data,'2026-10-27',0).salesCents,0);assert.equal(hour(data,'2026-10-27',1).salesCents,2500);assert.equal(hour(data,'2026-10-27',2).salesCents,null);assert.equal(hour(null,'2026-10-27',1),null);assert.equal(hour(data,'2026-10-28',1).salesCents,null);assert.equal(JSON.stringify(data),before);
+ for(const invalid of [-1,24,1.5])assert.throws(()=>hour(data,'2026-10-27',invalid));
+});
+test('Day hourly sales follow the importers overnight opening date and keep week-boundary forecasts unknown',()=>{
+ const data=structuredClone(projection);data.hourly.tradingHours[0].close='02:00';
+ assert.deepEqual(hour(data,'2026-10-27',1),{salesCents:1250,tradingDate:'2026-10-26',reason:''});assert.equal(hour(data,'2026-10-27',2).salesCents,2500);
+ data.hourly.tradingHours[6].close='02:00';const monday=hour(data,'2026-10-26',1);assert.equal(monday.tradingDate,'2026-10-25');assert.equal(monday.salesCents,null);
+ data.hourly.tradingHours[0].close='00:00';assert.equal(hour(data,'2026-10-27',0).tradingDate,'2026-10-27');
+ data.hourly.tradingHours[0].close='09:00';assert.equal(hour(data,'2026-10-27',8).tradingDate,'2026-10-26');assert.equal(hour(data,'2026-10-27',9).tradingDate,'2026-10-27');
+ data.hourly.tradingHours[0]={closed:true};assert.equal(hour(data,'2026-10-27',1).salesCents,2500);
+ data.hourly.tradingHours[0]=null;assert.equal(hour(data,'2026-10-27',1).salesCents,null);assert.match(hour(data,'2026-10-27',1).reason,/trading hours/);
+});

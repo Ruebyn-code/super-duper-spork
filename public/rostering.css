@@ -578,3 +578,7 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 .roster-builder .rostering-heading>.rostering-heading-copy{flex:0 0 auto;min-width:210px;max-width:none}.roster-builder .rostering-heading-copy h1{max-width:none;overflow:visible;text-overflow:clip}.roster-builder .rostering-heading-copy p{max-width:260px}
 }
 @media print{.roster-builder .roster-builder-views,.roster-builder .roster-builder-copy-label,.roster-builder .roster-publication-badge,.roster-builder .roster-person-avatar{display:none!important}}
+
+/* Projected sales belong beneath the corresponding calendar hour in Day view. */
+.roster-day-hours.has-hourly-sales{min-height:60px}.roster-day-hours.has-hourly-sales>[data-roster-hour]{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;min-width:0;padding:8px 2px 8px 3px;font-variant-numeric:tabular-nums}.roster-day-hours .roster-hour-sales{display:block;font:600 9px/1.3 Arial,sans-serif;white-space:nowrap;color:var(--theme-primary-text,var(--primary));font-variant-numeric:tabular-nums}.roster-day-hours .roster-hour-sales.is-unavailable{color:var(--theme-muted,#627383)}.roster-board-corner .roster-hour-sales-label{font-size:9px;color:var(--theme-primary-text,var(--primary))}
+.roster-day-hours .roster-hour-sales{max-width:100%;overflow:hidden;text-overflow:ellipsis}

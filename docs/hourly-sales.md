@@ -27,8 +27,25 @@ Missing/incomplete hourly profiles leave the hourly projection unavailable; they
 
 ## Rosters
 
-Rostering shows **Hourly sales projections** above the scheduling board for users who can already see roster sales/budget summaries. Expand the panel, choose a trading date and use the chart or **View hourly breakdown** table to compare each hour while planning shifts. Day view follows the roster's selected day; Week view lets you choose any of its seven trading dates. The same panel is available in the phone roster popup for authorised users, where it starts collapsed. Team roster follows the selected day. Ordinary published-roster readers keep their existing access without financial forecasts.
+Rostering shows hourly projected sales directly beneath each time label in **Day
+view**, for users with the existing roster sales/budget summary access. Staff,
+Stacked and phone roster views do not show hourly sales, and there is no separate
+forecast panel or chart above the board. Home and Sales → Hourly sales retain
+their own existing displays.
 
-These are the same forecasts as Sales → Hourly sales, with the same exact daily total, weekly-report priority, historical cutoff, matching holiday and sales-growth adjustment. A missing hourly profile displays its reason instead of invented sales. Hours use AM/PM; overnight profiles start at opening, and after-midnight hours are marked **+1 day** against their opening trading date. The chart describes trading dates, while the daily staff timeline continues to describe calendar dates. Viewing or changing the forecast date never saves shifts, publishes a roster, imports a report or calls intelligence. Hourly report changes refresh roster forecasts when returning to the page, while open roster edits are preserved.
+The amounts reuse the same server-derived hourly forecasts, exact daily allocation,
+weekly-report priority, historical cutoff and holiday/yearly growth adjustment.
+The Day staff timeline describes calendar hours, so after-midnight values follow
+the importer's existing rule: if the previous trading day closed after midnight,
+its hours before closing belong under the following calendar day's early hours.
+Closed previous days and a midnight closing do not carry hours forward; a 24-hour
+09:00–09:00 trading day carries hours before 09:00. Missing previous trading hours,
+hourly history or an out-of-week prior trading date show a dash with a reason,
+never guessed zeroes or a different day's sales. Explicit zeroes show $0.00.
+Hover titles identify the hourly interval, original trading date when different,
+and missing-history/fallback reasons. No extra history is fetched or recalculated
+for header display. Switching dates or views never saves shifts, publishes,
+imports reports or calls intelligence; native draft guards and phone salary
+privacy remain unchanged.
 
 Hourly times display in 12-hour format with AM/PM in the chart, table and scanned-hour editor. Printed ranges are read as interval totals: **11:01–12:00 → 11:00 AM–12:00 PM**, **12:01 PM–1:00 PM → 12:00 PM–1:00 PM**, and **11:01 PM–12:00 AM → 11:00 PM–12:00 AM**. The app maps copied source labels deterministically; it never moves an amount to the range’s ending hour. Unsupported half-hour, multi-hour or ambiguous ranges are omitted with a warning, rather than combined or split. Conflicting duplicate rows leave the hour unrecorded; matching duplicates count once. Internal clock-hour buckets remain 00:00–23:00. Overnight display keeps after-midnight hours with their opening trading date and marks them **+1 day**. A daylight-saving repeated clock hour belongs to the same bucket; review the export’s combined hourly amount. This is a sales distribution, not a timestamped transaction or payroll ledger. Location and company access is enforced on every read and import, and payroll/calendar review records and provider keys never appear in hourly responses.

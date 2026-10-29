@@ -99,8 +99,7 @@
   person.append(user(node('strong',shift.username)));if(shift.position)person.append(user(node('small',shift.position)));content.append(times,person);if(shift.overnight)content.append(node('small','Ends next day','phone-roster-card-overnight'));card.append(position,content);wrap.append(day,card);window.publicHolidayMarkers?.mark(day,shift.date);return wrap;
  }
  function renderHourlySales(){
-  const phone=phoneViewport.matches;
-  window.rosterHourlySales?.render({before:phone?$('phone-roster-shifts'):$('roster-days'),projection:data?.summary?.projection,weekStart:week,fixedDate:phone?(phoneRosterScope==='team'?phoneRosterDay:null):(rosterView==='day'?rosterDay:null),phone,collapsed:can('rostering.manage')&&!phone,hidden:section!=='roster'||appRequiredReading.blocked});
+  window.rosterHourlySales?.renderAxis($('roster-days').querySelector('.roster-day-hours'),{projection:data?.summary?.projection,date:rosterDay,hidden:section!=='roster'||phoneViewport.matches||rosterView!=='day'||appRequiredReading.blocked});
  }
  function renderPhoneRoster(){
   syncPhoneRosterMode();if(!data||!phoneViewport.matches)return;
@@ -362,7 +361,7 @@
  function renderDailyRoster(manage,shifts){
   const host=$('roster-days');host.classList.add('roster-daily-scroll');host.setAttribute('aria-label','Daily roster hourly timeline');
   const board=node('div',undefined,'roster-day-board'),corner=node('div',undefined,'roster-board-corner'),axis=node('div',undefined,'roster-day-hours');corner.append(node('strong','Staff'),user(node('small',date(rosterDay))));window.publicHolidayMarkers?.mark(corner.querySelector('small'),rosterDay);
-  for(let hour=0;hour<24;hour++){const tick=user(node('span',(hour%12||12)+(hour<12?'am':'pm')));axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);
+  for(let hour=0;hour<24;hour++){const tick=user(node('span',(hour%12||12)+(hour<12?'am':'pm')));tick.dataset.rosterHour=String(hour);axis.append(tick);}axis.setAttribute('aria-label','Hours from midnight to midnight');board.append(corner,axis);host.append(board);renderHourlySales();
   const visible=dailyShifts(),people=[...(manage?[{id:null,username:'Vacant'}]:[]),...data.people];
   for(const shift of visible)if(!people.some(person=>person.id===shift.userId))people.push({id:shift.userId,username:shift.username});
   for(const person of people){

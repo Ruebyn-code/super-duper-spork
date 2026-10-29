@@ -1,18 +1,26 @@
-(()=>{
- const M=rosteringModel,node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;},value=(tag,text,cls)=>{const n=node(tag,text,cls);n.dataset.userText='';return n;};
- const money=cents=>cents===null||cents===undefined?'—':new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(cents/100),dateLabel=date=>new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T12:00:00Z')),clock=hour=>(hour%12||12)+':00 '+(hour<12?'AM':'PM');
- const root=node('details',undefined,'roster-hourly-panel'),summary=node('summary'),caption=node('strong','Hourly sales projections'),total=value('span','','roster-hourly-total'),body=node('div',undefined,'roster-hourly-body'),label=node('label','Trading date'),picker=node('select'),context=value('p','','roster-hourly-context'),method=node('p','','roster-hourly-method feature-instruction'),message=node('p','','roster-hourly-message'),scroll=node('div',undefined,'roster-hourly-scroll'),chart=node('div',undefined,'roster-hourly-chart'),breakdown=node('details',undefined,'roster-hourly-breakdown'),table=node('table'),rows=node('tbody');
- let state,key='',selectedDate='',selectedWeek='',mounted=false,lastDay='';root.id='roster-hourly-sales';root.hidden=true;root.dataset.layoutUi=root.dataset.copyEditor='';picker.id='roster-hourly-date';label.htmlFor=picker.id;label.append(picker);summary.append(caption,total);root.append(summary,body);body.append(label,context,method,message,scroll,breakdown);scroll.append(chart);scroll.tabIndex=0;scroll.setAttribute('role','region');scroll.setAttribute('aria-label','Hourly projected sales chart; scroll to see all hours');chart.setAttribute('aria-hidden','true');breakdown.append(node('summary','View hourly breakdown'),table);const head=node('thead'),heading=node('tr');for(const text of ['Hour','Projected sales']){const th=node('th',text);th.scope='col';heading.append(th);}head.append(heading);table.append(node('caption','Hourly sales projections for the selected trading date'),head,rows);
- function paint(){
-  const forecasts=state.projection.hourly.days,dates=forecasts.map(day=>day.date),fixed=state.fixedDate&&dates.includes(state.fixedDate);if(fixed)selectedDate=state.fixedDate;else if(!dates.includes(selectedDate))selectedDate=dates[0];
-  picker.value=selectedDate;label.hidden=Boolean(fixed);const forecast=forecasts.find(day=>day.date===selectedDate);if(!forecast)return;
-  const index=(new Date(selectedDate+'T00:00:00Z').getUTCDay()+6)%7,hours=state.projection.hourly.tradingHours?.[index],opening=hours&&!hours.closed?Number(hours.open.slice(0,2)):0,overnight=hours&&!hours.closed&&hours.close<=hours.open,order=Array.from({length:24},(_,i)=>overnight?(opening+i)%24:i),available=Array.isArray(forecast.hours);
-  total.textContent=dateLabel(selectedDate)+' · '+(available?money(forecast.projectedSalesCents):'Unavailable');context.textContent='Trading date: '+dateLabel(selectedDate)+(overnight?' · After-midnight hours marked +1 day belong to this trading date.':'');window.publicHolidayMarkers?.mark(context,selectedDate);
-  method.textContent=forecast.method==='holiday'?'Last year’s matching public holiday, adjusted for sales growth.':'Matching weekdays from the last four completed weeks, scaled to the daily forecast.';message.textContent=forecast.reason||'';message.hidden=!message.textContent;scroll.hidden=breakdown.hidden=!available;chart.replaceChildren();rows.replaceChildren();
-  if(!available){lastDay='';return;}const maximum=Math.max(1,...forecast.hours);
-  for(const hour of order){const amount=forecast.hours[hour],next=overnight&&hour<opening,text=clock(hour)+' – '+clock((hour+1)%24)+(next?' +1 day':''),column=node('div',undefined,'roster-hourly-column'),bar=node('span',undefined,'roster-hourly-bar');bar.style.height=(amount/maximum*60)+'px';column.title=text+' · '+money(amount);column.append(value('strong',money(amount)),bar,value('small',(hour%12||12)+' '+(hour<12?'AM':'PM')+(next?' +1':'')));chart.append(column);const tr=node('tr'),th=value('th',text);th.scope='row';tr.append(th,value('td',money(amount)));rows.append(tr);}
-  if(lastDay!==selectedDate){scroll.scrollLeft=overnight?0:opening*64;lastDay=selectedDate;}
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./rostering-model'):root.rosteringModel);if(typeof module==='object'&&module.exports)module.exports=api;else root.rosterHourlySales=api;})(globalThis,M=>{
+ const amount=value=>Number.isSafeInteger(value)&&value>=0;
+ // The Day timeline is a calendar day. Follow the importer’s same previous-day
+ // overnight rule without changing the underlying trading-date projections.
+ function hour(projection,date,index){
+  M.date(date);if(!Number.isInteger(index)||index<0||index>23)throw Error('Choose an hour from 0 to 23.');
+  const hourly=projection?.hourly,previousIndex=(new Date(date+'T00:00:00Z').getUTCDay()+5)%7,previous=hourly?.tradingHours?.[previousIndex];
+  if(!hourly)return null;
+  if(!previous)return{salesCents:null,tradingDate:null,reason:'Set the previous day’s trading hours to align overnight hourly sales.'};
+  const carries=!previous.closed&&previous.close<=previous.open&&index*60<M.minutes(previous.close),tradingDate=carries?M.shiftDate(date,-1):date,forecast=hourly.days?.find(day=>day.date===tradingDate),salesCents=forecast?.hours?.[index];
+  return{salesCents:amount(salesCents)?salesCents:null,tradingDate,reason:forecast?.reason||(!forecast?'Hourly projection is unavailable for trading date '+tradingDate+'.':!amount(salesCents)?'Complete the hourly sales history for this trading date.':'')};
  }
- picker.onchange=()=>{selectedDate=picker.value;paint();};
- window.rosterHourlySales={render(next){state=next;if(root.nextSibling!==next.before)next.before.before(root);root.hidden=next.hidden||!next.projection?.hourly;if(root.hidden)return;if(!mounted){root.open=!next.phone&&!next.collapsed;mounted=true;}root.classList.toggle('roster-hourly-phone',next.phone);const nextKey=JSON.stringify([next.weekStart,next.fixedDate,next.projection.hourly]);if(nextKey===key)return;key=nextKey;if(selectedWeek!==next.weekStart){selectedWeek=next.weekStart;selectedDate='';lastDay='';picker.replaceChildren();for(const day of next.projection.hourly.days){const option=value('option',dateLabel(day.date));option.value=day.date;picker.append(option);}}paint();}};
-})();
+ const money=value=>new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(value/100),clock=index=>(index%12||12)+(index<12?'am':'pm');
+ function renderAxis(axis,{projection,date,hidden=false}={}){
+  if(!axis)return;const enabled=!hidden&&Boolean(projection?.hourly),corner=axis.previousElementSibling;
+  axis.classList.toggle('has-hourly-sales',enabled);axis.setAttribute('aria-label',enabled?'Hours and projected sales from midnight to midnight':'Hours from midnight to midnight');
+  corner?.querySelector('.roster-hour-sales-label')?.remove();
+  if(enabled&&corner){const caption=axis.ownerDocument.createElement('small');caption.className='roster-hour-sales-label';caption.textContent='Projected sales';corner.append(caption);}
+  for(const tick of axis.querySelectorAll('[data-roster-hour]')){
+   tick.querySelector('.roster-hour-sales')?.remove();tick.removeAttribute('title');if(!enabled)continue;
+   const index=Number(tick.dataset.rosterHour),result=hour(projection,date,index),value=axis.ownerDocument.createElement('small');value.className='roster-hour-sales';value.dataset.userText='';value.dataset.hourlyDate=result.tradingDate||'';value.textContent=result.salesCents===null?'—':money(result.salesCents);value.classList.toggle('is-unavailable',result.salesCents===null);tick.append(value);
+   tick.title=clock(index)+' – '+clock((index+1)%24)+' · Projected sales '+(result.salesCents===null?'unavailable':money(result.salesCents))+(result.tradingDate&&result.tradingDate!==date?' · Trading date '+result.tradingDate:'')+(result.reason?' · '+result.reason:'');
+  }
+ }
+ return{hour,renderAxis};
+});
