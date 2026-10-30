@@ -85,12 +85,12 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,signingNow=invitationNow,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
+function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,passwordNow=Date.now,signingNow=invitationNow,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
   const photoStore=profilePhotos.createStore(dataDir);
-  const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow,emailRoot:platformDataDir}),invitationAttempts=new Map();
+  const auth=createAuth(dataDir,{clockNow:rosteringNow,invitationNow,passwordNow,emailRoot:platformDataDir}),invitationAttempts=new Map();
   const locationStore=locations.createStore(dataDir,auth);
   const companyStore=companies.createStore(dataDir,locationStore,{defaultsRoot:platformDataDir});
   const kioskStore=kioskDevices.createStore(dataDir,{networkId:network.id,now:kioskNow,location:id=>locationStore.get(id),context:(actor,id)=>auth.forCompany(actor,id),openStaff:async(pin,id)=>companyStore.context(await locationStore.sessionContext(await auth.openKiosk(pin,id),id)),staffSession:async(token,id)=>{const raw=await auth.session({headers:{cookie:'admin_session='+token}});return raw?companyStore.context(await locationStore.sessionContext(raw,id)):null;},closeStaff:token=>auth.logout(token)});

@@ -6,7 +6,7 @@ const {supportIdentity,parsedBody}=require('./platform-identity');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const cookies=req=>Object.fromEntries((req.headers.cookie||'').split(';').map(part=>{const at=part.indexOf('=');return[part.slice(0,at).trim(),part.slice(at+1)];}).filter(([name])=>name));
 function createPlatformServer(root,options,createNetworkServer){
- const store=platformStore.createStore(root,{now:options.invitationNow}),sessions=new Map(),attempts=new Map(),services=new Map();
+ const store=platformStore.createStore(root,{now:options.invitationNow,passwordNow:options.passwordNow||Date.now}),sessions=new Map(),reserveAttempt=require('./login-limiter')({now:options.passwordNow||Date.now}),services=new Map();
  const origin=req=>options.publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
  const cookie=(req,name,value,maxAge=28800)=>`${name}=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${origin(req).startsWith('https:')?'; Secure':''}`;
  const addCookie=(res,value)=>res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),value]);
@@ -16,7 +16,7 @@ function createPlatformServer(root,options,createNetworkServer){
  const primary=service({id:'default',slug:'default',name:'Existing network',active:true});
  async function body(req,limit=16000){let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>limit)fail('Request is too large.',413);}try{return JSON.parse(raw);}catch{fail('Invalid JSON.');}}
  function trusted(req){if(req.headers['content-type']!=='application/json'||(req.headers.origin&&req.headers.origin!==origin(req)))fail('Invalid request origin or content type.',403);}
- function rate(req,kind,max){const key=kind+':'+req.socket.remoteAddress,now=Date.now();let record=attempts.get(key);if(!record||record.until<=now){record={count:0,until:now+15*60000};attempts.set(key,record);}if(record.count>=max)fail('Too many attempts. Try again in 15 minutes.',429);return{failure:()=>record.count++,success:()=>attempts.delete(key)};}
+ function rate(req,kind,max){return reserveAttempt(kind+':'+req.socket.remoteAddress,max);}
  async function discoverNetwork(input){
   const identity=typeof input?.username==='string'?input.username.trim():'',candidates=[];
   for(const network of (await store.summary()).networks.filter(network=>network.active)){

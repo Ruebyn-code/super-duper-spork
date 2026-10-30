@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Configure the shared account setup email sender in the available Settings or Opstack-owner controls.
+
+2
+00:00:06.000 --> 00:00:14.708
+Step 2: In Users, choose Create user and complete the Name &amp; email, optional Phone &amp; clock PIN, Permissions and Locations steps in User setup.
+
+3
+00:00:14.708 --> 00:00:23.417
+Step 3: Choose Review invitation and press Send invitation, then check the delivery result. Continue to the new user’s roster details or finish them later.
+
+4
+00:00:23.417 --> 00:00:40.875
+Step 4: The recipient opens the setup link and chooses a unique password of 15–256 characters. Several unrelated words work well; common or repeated passwords are rejected. For a failed or expired invitation, edit the existing user and choose Resend setup email. An unconfirmed send should be checked with the email service first.
