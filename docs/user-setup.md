@@ -156,7 +156,8 @@ compatible; there is no availability or roster creation from staff setup.
 
 ## Grouped employee settings
 
-The pencil beside an existing user opens a native employee settings menu:
+The pencil beside an existing user opens a native **User settings** popup, named
+for that employee, with the existing settings menu:
 
 - **Personal** contains the existing photo, name, sign-in email, phone, permission
   scope and location access controls.
@@ -169,9 +170,10 @@ The pencil beside an existing user opens a native employee settings menu:
   screens when roster viewing is permitted. It does not invent employee-specific
   leave balances, change availability or submit a request.
 
-The desktop menu is a company-styled vertical card with matching icons and
-chevrons, beside the active panel; phones stack the same labelled menu above the
-fields. Keyboard Up/Down/Home/End selects groups. Original controls stay mounted
+The desktop popup has a company-styled vertical menu beside an independently
+scrolling settings panel. Phones stack the same labelled menu above the fields
+in a scrolling body. The employee heading and native save/close controls remain
+visible. Keyboard Up/Down/Home/End selects groups. Original controls stay mounted
 when switching so account, photo and pay drafts keep their values. Opening groups
 or following the hours shortcut never saves or calls providers.
 
@@ -185,6 +187,16 @@ close actions; cancel/navigation guards protect drafts. Reset restores the same
 original form nodes and validation mode for the five-step invitation popup.
 The limited Award Overview editor and new-user checklist retain their existing
 workflows and do not gain account-editing permission from the new groups.
+
+Close, Escape, Cancel edit and a click on the backdrop share the existing
+unsaved-change confirmation. Busy account, employment, document and photo work
+cannot be closed. Native account errors and the permitted Remove/Resend actions
+remain inside the popup; successful account changes return to the directory.
+Closing restores focus to the pencil and returns the original form/actions to
+their directory slots, so opening another user or Create user cannot duplicate
+controls or carry the previous staff member's draft. The persistent shell's
+shared navigation is inert while a modal is open. Opening or switching settings
+never writes an account, employment profile or operational record.
 
 ## Individual Flexibility Agreements
 
