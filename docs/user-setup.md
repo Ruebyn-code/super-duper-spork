@@ -170,10 +170,13 @@ for that employee, with the existing settings menu:
   screens when roster viewing is permitted. It does not invent employee-specific
   leave balances, change availability or submit a request.
 
-The desktop popup has a company-styled vertical menu beside an independently
-scrolling settings panel. Phones stack the same labelled menu above the fields
-in a scrolling body. The employee heading and native save/close controls remain
-visible. Keyboard Up/Down/Home/End selects groups. Original controls stay mounted
+The desktop popup has a narrow company-styled vertical menu beside an independently
+scrolling settings panel. Wide screens show three columns of personal/pay fields;
+smaller screens retain readable fields. Tablets and phones use a compact row of
+all four labelled groups above the fields. Header, photo controls, field spacing
+and the shared action row stay compact, with save/close controls visible. Keyboard
+Up/Down/Home/End selects groups; Left/Right also works in the horizontal row.
+Original controls stay mounted
 when switching so account, photo and pay drafts keep their values. Opening groups
 or following the hours shortcut never saves or calls providers.
 
