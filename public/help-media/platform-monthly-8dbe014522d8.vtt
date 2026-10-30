@@ -13,5 +13,5 @@ Step 2: In Sales, edit each location’s recurring fee and any notes. Changes be
 Step 3: In Expenses, enter the month’s named costs and choose Save expenses.
 
 4
-00:00:20.375 --> 00:00:26.375
-Step 4: Review Sales, Expenses and Profit, resolving unconfigured fees before using the final result.
+00:00:20.375 --> 00:00:30.958
+Step 4: Review Sales, Expenses and Profit, resolving unconfigured fees before using the final result. Collections shows separately imported GoCardless results; choose Live or Sandbox and check coverage and sync status.

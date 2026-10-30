@@ -29,6 +29,10 @@ function createPlatformServer(root,options,createNetworkServer){
   if(matches.length>1)fail('These sign-in details belong to more than one network. Enter your network code to continue.',409);
   return matches[0];
  }
+ const goCardless=require('./opstack-gocardless').createStore(root,{fetchImpl:options.fetchImpl,now:options.goCardlessNow||Date.now,publicOrigin:options.publicOrigin,
+  ownerActive:async(id,version)=>version?(await store.account(id,version))?.role==='owner':(await store.summary()).accounts.some(a=>a.id===id&&a.role==='owner'&&!a.disabled&&!a.pending),
+  locations:async()=>{const result=[];for(const network of (await store.summary()).networks){let values;try{values=JSON.parse(await fs.readFile(path.join(store.folder(network),'locations.json'),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;values=[];}for(const location of values)result.push({id:location.id,name:location.name,networkId:network.id,networkName:network.name,archived:Boolean(location.archived)});}return result;}
+ });
  async function deliver(req,issued,company,inviter,network,setupPath){const delivery=await invitations.send({...issued,origin:origin(req),company,inviter,network,setupPath},{env:await accountEmails.read(root),fetchImpl:options.fetchImpl});return delivery;}
  const server=http.createServer(async(req,res)=>{
   const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));};
@@ -36,6 +40,7 @@ function createPlatformServer(root,options,createNetworkServer){
    const url=new URL(req.url,'http://localhost'),route=url.pathname;
    if(cookies(req).opstack_kiosk&&(/^\/api\/opstack\//.test(route)||route==='/opstack'))fail('The Opstack console is not available on a paired kiosk.',403);
    if(options.migrationMode||route==='/healthz')return primary.emit('request',req,res);
+   const gcWebhook=route.match(/^\/api\/opstack\/gocardless\/webhook\/(sandbox|live)$/);if(gcWebhook){if(req.method!=='POST')fail('Unsupported webhook action.',405);let size=0;const chunks=[];for await(const chunk of req){size+=chunk.length;if(size>512000)fail('Webhook is too large.',413);chunks.push(chunk);}await goCardless.webhook(gcWebhook[1],Buffer.concat(chunks),req.headers['webhook-signature']);res.writeHead(204,{'Cache-Control':'no-store'});return res.end();}
    if(publicFiles[route]&&!publicFiles[route].endsWith('.html'))return primary.emit('request',req,res);
    if(req.method==='GET'&&url.searchParams.get('platform')==='1'&&(['/logo','/sidebar-logo','/interface-text','/element-overrides','/font-library','/layouts'].includes(route)||(route==='/appearance'&&url.searchParams.get('console')==='1')))return primary.emit('request',req,res);
    const entry=await session(req);
@@ -63,7 +68,11 @@ function createPlatformServer(root,options,createNetworkServer){
      if(req.method==='POST'&&networkRoute[2]==='open'){if(!network.active)fail('Activate this network before opening it.',409);const input=await body(req);addCookie(res,cookie(req,'opstack_support',network.id));await store.audit(account,'network.opened',{networkId:network.id});return json(200,{url:input.appearance&&owner?'/admin/settings?platform=1#colours':'/home'});}
     }
     if(!owner)fail('Opstack owner access required.',403);
-    if(route==='/api/opstack/monthly-report'&&req.method==='GET')return json(200,await monthlyReports.report(root,(await store.summary()).networks,url.searchParams.get('month')||undefined));
+    if(route==='/api/opstack/gocardless'&&req.method==='GET')return json(200,await goCardless.settings(account,url.searchParams.get('environment')||'sandbox'));
+    if(route==='/api/opstack/gocardless'&&req.method==='PUT'){const result=await goCardless.save(account,await body(req));await store.audit(account,'gocardless.settings.updated',{environment:result.environment,enabled:result.enabled});return json(200,result);}
+    if(route==='/api/opstack/gocardless/links'&&req.method==='PUT'){const result=await goCardless.link(account,await body(req,512000));await store.audit(account,'gocardless.links.updated',{environment:result.environment});return json(200,result);}
+    if(route==='/api/opstack/gocardless/sync'&&req.method==='POST'){const input=await body(req);if(!/^[a-f0-9-]{36}$/i.test(input?.requestId||''))fail('Choose a valid sync reference.');return json(202,await goCardless.start(account,input.environment,input.requestId));}
+    if(route==='/api/opstack/monthly-report'&&req.method==='GET'){const result=await monthlyReports.report(root,(await store.summary()).networks,url.searchParams.get('month')||undefined);return json(200,{...result,collections:await goCardless.report(result.month,url.searchParams.get('collectionEnvironment')||'live')});}
     const feeRoute=route.match(/^\/api\/opstack\/monthly-report\/fees\/([a-f0-9-]+|default)\/([a-zA-Z0-9-]{1,100})$/);
     if(feeRoute&&req.method==='PUT'){const input=await body(req);await monthlyReports.saveFee(root,(await store.summary()).networks,feeRoute[1],feeRoute[2],input);await store.audit(account,'report.fee.updated',{networkId:feeRoute[1],locationId:feeRoute[2],month:input.month});return json(200,{saved:true});}
     if(route==='/api/opstack/monthly-report/expenses'&&req.method==='PUT'){const input=await body(req,128000),saved=await monthlyReports.saveExpenses(root,input);await store.audit(account,'report.expenses.updated',{month:input.month});return json(200,saved);}
@@ -119,7 +128,9 @@ function createPlatformServer(root,options,createNetworkServer){
  let schedulerTimer,schedulerFlight,stopping=false;
  server.runScheduledReports=()=>{if(stopping||options.migrationMode)return Promise.resolve({processed:0});if(schedulerFlight)return schedulerFlight;const task=(async()=>{let processed=0;for(const network of (await store.summary()).networks.filter(item=>item.active)){if(stopping)break;const result=await service(network).networkServices.reportStore.tick();processed+=result.processed;}return{processed};})();schedulerFlight=task;return task.finally(()=>{schedulerFlight=null;});};
  server.on('listening',()=>{if(options.reportScheduler===false||options.migrationMode)return;const tick=()=>server.runScheduledReports().catch(()=>console.error('Scheduled report check failed; check report configuration and server storage.'));schedulerTimer=setInterval(tick,60000);schedulerTimer.unref();tick();});
- server.on('close',()=>{stopping=true;clearInterval(schedulerTimer);});
+ let gcTimer;server.runGoCardlessSync=()=>goCardless.tick();server.waitForGoCardlessSync=()=>goCardless.wait();server.goCardless=goCardless;
+ server.on('listening',()=>{if(options.goCardlessScheduler===false||options.migrationMode)return;const tick=()=>goCardless.tick().catch(()=>console.error('GoCardless sync check failed; check the owner console.'));gcTimer=setInterval(tick,60000);gcTimer.unref();tick();});
+ server.on('close',()=>{stopping=true;clearInterval(schedulerTimer);clearInterval(gcTimer);goCardless.stop();});
  server.platformStore=store;return server;
 }
 module.exports={createPlatformServer};

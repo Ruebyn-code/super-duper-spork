@@ -723,8 +723,17 @@
   'As an Opstack owner, open Opstack console → Monthly report and select a month.',
   'In Sales, edit each location’s recurring fee and any notes. Changes begin in the selected month and carry forward until another change.',
   'In Expenses, enter the month’s named costs and choose Save expenses.',
-  'Review Sales, Expenses and Profit, resolving unconfigured fees before using the final result.'
- ],{notes:['This owner-only platform report is separate from tenant sales and expenses. It records fees and costs without sending invoices or collecting payments.'],related:['platform-console','business-reports']});
+  'Review Sales, Expenses and Profit, resolving unconfigured fees before using the final result. Collections shows separately imported GoCardless results; choose Live or Sandbox and check coverage and sync status.'
+ ],{notes:['This owner-only platform report is separate from tenant sales and expenses. It records fees and costs without sending invoices or collecting payments.'],related:['gocardless-sync','platform-console','business-reports']});
+
+ add(c,'gocardless-sync','Connect GoCardless and sync collections','Import location payment results into the owner console without changing payments.',[
+  'Sign in to OpStack console as an owner and open Billing. Start with Sandbox and enter a reporting API access token from the matching GoCardless dashboard. Blank fields preserve saved credentials.',
+  'Set the server’s APP_ORIGIN to the public HTTPS app address. Register the webhook address shown in Billing in the same GoCardless environment, enter the matching webhook signing secret and Save connection. Keep Sandbox and Live credentials separate.',
+  'Choose Test connection & sync. Wait for Connected and a completed sync time. Every import reads all pages before replacing the prior snapshot; failures retain the last successful data and show an error.',
+  'Match each imported AUD subscription to its OpStack network and location. Choose Save location links and confirm that the links apply to imported history. Unlinked payments stay outside location collection totals.',
+  'Enable automatic sync and Save connection. Verified notifications queue a refresh; the server also checks periodically at 15-minute intervals. It resumes checks after restarts while the approving account remains an active owner. Manage subscriptions, debit authorities and payment changes in GoCardless.',
+  'Open Monthly report → Collections. Live is the default; select Sandbox explicitly to inspect test results. Confirmed payments, pending amounts, failures, refunds and chargebacks appear by location. Paid payouts and deducted fees are account-wide. Sales retains configured fees, separately from Collections.'
+ ],{route:'/opstack#billing',related:['platform-monthly','platform-console'],notes:['The connection makes read-only provider requests and never creates charges, changes subscriptions, sends payment emails or issues refunds. Collection months use charge dates and latest status; paid refunds use Melbourne creation dates; account payouts and fees use arrival dates. No GST or tax invoices are inferred. Keys and bank details are never shown in reports. Missing coverage displays an em dash; failed syncs show the last retained results.'],keywords:['billing','GoCardless','direct debit','automatic sync','webhook','payments','subscription','collections']});
 
  c='labels';
  add(c,'print-labels','Prepare and print prep labels','Check calculated label details before printing.',[

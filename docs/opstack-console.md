@@ -34,6 +34,14 @@ Each network card shows its sign-in URL. All URLs use the same Opstack sign-in b
 
 ## Monthly report
 
+Owners can configure GoCardless under **Billing**, using separate Sandbox and Live
+API tokens and webhook signing secrets. Save connection, run **Test connection &
+sync**, link imported AUD subscriptions to locations and enable automatic sync.
+The HTTPS webhook address is displayed once APP_ORIGIN is configured. Scheduled
+checks and verified notifications import payment results; the integration only
+reads GoCardless and never creates charges or changes subscriptions. See
+[GoCardless setup and report basis](gocardless.md).
+
 Open **Opstack console → Monthly report** as an Opstack owner. Support and network users cannot access this financial report. Choose the month with Previous/Next, This month or the expanding calendar control; its month/year menus use the in-app selectors.
 
 **Sales** lists locations grouped by network, with each network's subtotal. New networks and locations appear automatically from their Melbourne creation month. Use a location's edit icon to set its recurring monthly fee and optional notes. The amount carries forward until another fee is set, and changes begin in the selected month. Earlier months and any later scheduled changes remain intact. Fees apply to a full month; blank means no fee configured and 0 means free. Archived locations and suspended networks retain their saved fees until you change or clear them.
@@ -41,6 +49,14 @@ Open **Opstack console → Monthly report** as an Opstack owner. Support and net
 **Expenses** contains Opstack's named monthly cost entries, amounts and optional notes. Add/remove entries and choose **Save expenses**. Expenses apply only to the selected month. Switching tabs retains drafts; save or reload changes before switching months. Concurrent edits require reloading rather than overwriting another owner's changes.
 
 The report uses the compact weekly-report layout: tinted table headers, network subtotals, a total row and overview cards directly underneath. Sales and Expenses share the month controls at the top. The overview shows Sales, Profit and Expenses. Sales adds configured location fees once; Expenses adds that month's saved costs. Profit is Sales minus Expenses, coloured green for positive, red for negative and yellow for zero. Unconfigured location fees leave Profit unavailable and show how many fees need entering. These amounts are platform reporting records and do not alter tenant sales, ordering budgets or expenses. Report edits do not send invoices or collect payments.
+
+**Collections** separately shows confirmed GoCardless payments, pending amounts,
+failures, refunds and chargebacks by linked location. Paid payouts and deducted
+fees are explicitly account-wide. Live is the default; Sandbox must be selected
+and remains labelled. Check the coverage date, last sync and any errors before
+using retained results. These figures are not added to configured fee income or
+written into manual expenses. Missing history displays an em dash. Existing
+unsaved expense drafts survive collection refreshes and environment changes.
 
 ## Storage and activity
 
