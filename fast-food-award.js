@@ -95,6 +95,7 @@ function hourlyRates({config, profile, date, preview=false, locationId=config.lo
 }
 function calculate({config, profiles, items, mode = 'roster'}) {
   if (!config.localPayEnabled || !config.enabled) return {enabled: false, results: [], coverage: [], exclusions};
+  const calendarFor=(locationId,date)=>(config.holidayCalendars||[]).find(c=>c.locationId===locationId&&c.year===Number(date.slice(0,4))&&c.confirmed)||(mode==='roster'?(config.planningCalendars||[]).find(c=>c.locationId===locationId&&c.year===Number(date.slice(0,4))&&c.automatic===true):null);
   const results = [], counters = new Map(), weeklyAllowances = new Set();
   // Adjacent records form one continuous engagement, including location moves.
   // Apply minimum payment once, on the final record, rather than per clock row.
@@ -118,11 +119,12 @@ function calculate({config, profiles, items, mode = 'roster'}) {
   const selectedProfile = (id, date) => profiles.filter(p => p.userId === id && p.effectiveFrom <= date).sort((a,b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
   for (const item of [...items].sort((a,b) => a.startAt.localeCompare(b.startAt) || a.id.localeCompare(b.id))) {
     const start = Date.parse(item.startAt), end = Date.parse(item.endAt), firstDate = getParts(start).date;
-    const result = {subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: source.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], complete: true, estimated: mode === 'roster'};
+    const result = {subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: source.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], notices: [], complete: true, estimated: mode === 'roster'};
     const issue = (code, message, clause, blocking = false) => {
       if (!result.issues.some(i => i.code === code)) result.issues.push({subjectId: item.id, userId: item.userId, code, message, clause, versionId: source.id, blocking});
       if (blocking) result.complete = false;
     };
+    const planningNotice=calendar=>{if(calendar?.automatic&&!result.notices.some(n=>n.code==='automatic-holidays'))result.notices.push({code:'automatic-holidays',message:'Roster estimate uses automatic '+calendar.state+' public holidays. Review local substitutions and the calendar before approving actual pay.'});};
     const add = (label, seconds, rateCents, clause, kind, date) => {
       const last = result.lines.at(-1);
       if (last && last.label === label && last.rateCents === rateCents && last.date === date && last.kind === kind) last.seconds += seconds;
@@ -175,7 +177,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         previousDate = date;
         if(date!==firstDate)for(const problem of employmentIssues(effectiveProfile,date,item.locationId,config.employerName))issue(({'employment':'pay-profile','employment-date':'pay-profile-date','arrangement':'pay-special-arrangement','averaging':'pay-part-time-cycle','employment-pattern':'pay-pattern','ifa':'pay-ifa-terms','agreed-base':'pay-contract-rate'})[problem.code]||'pay-'+problem.code,'Employment terms for '+date+': '+problem.message,'5; 10–15; 20',true);
         if (date >= source.reviewBy) issue('pay-source-review', 'Load and review a newer award edition before costing this date.', '15; Schedule A', true);
-        const calendar = (config.holidayCalendars || []).find(c => c.locationId === item.locationId && c.year === Number(date.slice(0,4)) && c.confirmed);
+        const calendar = calendarFor(item.locationId,date);planningNotice(calendar);
         if (!calendar) issue('pay-calendar', 'Review this location’s public holiday calendar in Award compliance.', '21, 27', true);
         windows = [];
         rosteredIFA=rosteredHoursAgreement(effectiveProfile,date,item.locationId,config.employerName);
@@ -203,7 +205,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
           if (!item.ordinaryWindows?.length) issue('pay-roster', 'No published ordinary roster covers this full-time timesheet.', '20.2(b)–(c)', true);
         }
       }
-      const profile = effectiveProfile, calendar = (config.holidayCalendars || []).find(c => c.locationId === item.locationId && c.year === Number(date.slice(0,4))), holiday = calendar?.dates.some(h => h.date === date && minute >= M.minutes(h.start) && minute < (h.end === '24:00' ? 1440 : M.minutes(h.end))) || false;
+      const profile = effectiveProfile, calendar = calendarFor(item.locationId,date), holiday = calendar?.dates.some(h => h.date === date && minute >= M.minutes(h.start) && minute < (h.end === '24:00' ? 1440 : M.minutes(h.end))) || false;
       const base = baseRate(profile, date);
       if (base === null || !profile.payBasis) {issue('pay-profile', 'Complete employment details in Users for all dates worked.', '12, 15', true); break;}
       const contractBase = profile.payBasis === 'base-plus-penalties' ? profile.baseRateCents : base;
@@ -300,7 +302,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         const travelStart=Date.parse(leg.startAt),finish=travelStart+leg.minutes*60000;
         if(!Number.isFinite(travelStart)){issue('pay-travel-time','Record when extra travel occurred so Sunday and public holiday rates can be applied.','17.6',true);continue;}
         let numerator=0;
-        for(let cursor=travelStart;cursor<finish;){const part=getParts(cursor),day=new Date(part.date+'T12:00:00Z').getUTCDay(),minute=M.minutes(part.time),calendar=(config.holidayCalendars||[]).find(c=>c.locationId===item.locationId&&c.year===Number(part.date.slice(0,4))&&c.confirmed),holiday=calendar?.dates.some(h=>h.date===part.date&&minute>=M.minutes(h.start)&&minute<(h.end==='24:00'?1440:M.minutes(h.end)));if(!calendar)issue('pay-calendar','Review the public holiday calendar for all extra travelling dates.','17.6, 27',true);const next=Math.min(finish,(Math.floor(cursor/60000)+1)*60000);numerator+=(next-cursor)*roundRate(baseRate(selectedProfile(item.userId,part.date)||p,part.date),day===0||holiday?150:100);cursor=next;}
+        for(let cursor=travelStart;cursor<finish;){const part=getParts(cursor),day=new Date(part.date+'T12:00:00Z').getUTCDay(),minute=M.minutes(part.time),calendar=calendarFor(item.locationId,part.date),holiday=calendar?.dates.some(h=>h.date===part.date&&minute>=M.minutes(h.start)&&minute<(h.end==='24:00'?1440:M.minutes(h.end)));planningNotice(calendar);if(!calendar)issue('pay-calendar','Review the public holiday calendar for all extra travelling dates.','17.6, 27',true);const next=Math.min(finish,(Math.floor(cursor/60000)+1)*60000);numerator+=(next-cursor)*roundRate(baseRate(selectedProfile(item.userId,part.date)||p,part.date),day===0||holiday?150:100);cursor=next;}
         allowance('Extra travelling time',Math.floor((numerator+1800000)/3600000),'17.6(c)');
       }
       allowance('Reimbursement · '+(facts.reimbursementReason||''),facts.reimbursementCents||0,'17.5–17.10');

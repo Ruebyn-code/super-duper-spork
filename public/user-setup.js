@@ -15,7 +15,7 @@
   {id:'phone',title:'Phone & clock PIN',optional:true,controls:()=>[field('phoneNumber')],summary:()=>field('phoneNumber').value.trim()?'Phone added · PIN ending '+field('phoneNumber').value.replace(/\D/g,'').slice(-4):'Skipped for now'},
   {id:'permissions',title:'Permissions',controls:()=>[field('role'),field('roleScope')].filter(Boolean),summary:()=>[field('role')?.selectedOptions[0]?.label,field('roleScope')?.selectedOptions[0]?.label].filter(Boolean).join(' · ')},
   {id:'locations',title:'Locations',controls:()=>[field('locationId'),...form.querySelectorAll('#account-locations input')],summary:()=>{const count=form.querySelectorAll('#account-locations input:checked').length;return count+' location'+(count===1?'':'s')+' · Default: '+(field('locationId').selectedOptions[0]?.label||'Not selected');}},
-  {id:'roster',title:'Roster details',optional:true,controls:()=>[],summary:()=>rosterState.saved?'Roster details saved':rosterDone?'Finish later from Users or Labour settings':'Available after the user is created'}
+  {id:'roster',title:'Roster details',optional:true,controls:()=>[],summary:()=>rosterState.ready?'Roster setup ready':rosterDone?'Finish later from Users or Labour settings':'Available after the user is created'}
  ];
  const signature=step=>JSON.stringify(step.controls().map(control=>[control.name,control.type==='checkbox'?control.checked:control.value]));
  const done=step=>step.id==='roster'?rosterDone:created?true:confirmed.get(step.id)===signature(step);
@@ -51,7 +51,7 @@
   if(step.id==='permissions'&&controls.some(control=>!control.value||!control.selectedOptions[0]||control.selectedOptions[0].disabled))return invalid(step,'Choose an available permission level and scope.',field('role'));
   return true;
  }
- function continueStep(){const step=steps.find(item=>item.id===stage);if(!step||!validate(step))return;if(step.id==='roster'){rosterDone=true;showStage('overview');return;}confirmed.set(step.id,signature(step));const index=steps.indexOf(step);showStage(index===3?'overview':steps[index+1].id);}
+ function continueStep(){const step=steps.find(item=>item.id===stage);if(!step||!validate(step))return;if(step.id==='roster'){if(!rosterState.ready){setStatus('Complete the roster setup check, or choose Skip for now to finish it later.');return;}rosterDone=true;showStage('overview');return;}confirmed.set(step.id,signature(step));const index=steps.indexOf(step);showStage(index===3?'overview':steps[index+1].id);}
  function closeDialog(){if(busy)return;if(created&&!rosterState.dirty)reset();else if(dialog.open)dialog.close();presentation();trigger.focus({preventScroll:true});}
  function reset(){
   if(!active)return;busy=false;fields.inert=false;
@@ -78,7 +78,7 @@
  }
  form.addEventListener('submit',event=>{if(!allowSubmit()){event.preventDefault();event.stopImmediatePropagation();}},true);
  for(const eventName of ['input','change'])form.addEventListener(eventName,event=>{if(!active||!fields.contains(event.target)||busy)return;changed=true;setStatus('');for(const step of steps)if(!done(step))confirmed.delete(step.id);refresh();});
- next.onclick=continueStep;skip.onclick=continueStep;back.onclick=()=>showStage('overview');finish.onclick=()=>{for(const step of steps.slice(0,4))if(!validate(step)||!done(step))return;showStage('review');};complete.onclick=()=>{if(!rosterDone||busy)return;reset();home.hidden=true;trigger.focus({preventScroll:true});};
+ next.onclick=continueStep;skip.onclick=()=>{if(stage==='roster'){if(busy||rosterState.dirty)return;rosterDone=true;showStage('overview');}else continueStep();};back.onclick=()=>showStage('overview');finish.onclick=()=>{for(const step of steps.slice(0,4))if(!validate(step)||!done(step))return;showStage('review');};complete.onclick=()=>{if(!rosterDone||busy)return;reset();home.hidden=true;trigger.focus({preventScroll:true});};
  discard.onclick=()=>{if(busy)return;reset();form.reset();trigger.focus({preventScroll:true});};
  close.onclick=closeDialog;dialog.addEventListener('cancel',event=>{event.preventDefault();closeDialog();});dialog.addEventListener('close',presentation);
  const hasDraft=()=>active&&(created?rosterState.dirty:changed||confirmed.size>0);

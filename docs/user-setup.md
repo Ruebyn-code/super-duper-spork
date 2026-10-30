@@ -232,3 +232,22 @@ the invited OpStack account before viewing or signing. Login directs pending
 employee signatures to onboarding and Home lists outstanding signing tasks.
 Each signer uses their own account and fresh email verification; guardians need
 a separate appropriately limited account. See [Employment agreements](employment-documents.md).
+
+### Automatic roster setup check
+
+Pay Rates now includes a read-only Roster setup check for the selected location and
+date, both for unsaved previews and saved terms. It combines the employer/source
+checks, complete employment requirements and holiday availability. Ordinary hourly
+rates alone do not mean a part-time shift is ready: written regular hours or a
+confirmed, current roster-hours IFA for that employer remain necessary.
+
+Onboarding Continue requires saved, ready setup for the server's current date.
+Explicit Skip for now still finishes account setup and labels roster details for
+later; it never claims missing pay details are ready. Previews, inspection of
+historical dates and unsaved fields cannot complete that check. Employer settings
+remain in the location popup and must be configured once by an authorised user.
+
+Roster estimates use the selected location's automatic state holidays when no
+confirmed calendar exists. Confirmed local/part-day calendars take priority.
+Neither previews nor roster reads review or save payroll calendars. Variable work
+allowances still need actual quantities/conditions in Timesheets.

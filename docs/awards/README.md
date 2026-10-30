@@ -240,3 +240,23 @@ there are no custom percentages or blanket overtime waivers. Expiry, changed
 employers and dated terms are rechecked across midnight. Approved snapshots remain
 frozen, with normal changed-context warnings. The one-off shift variation remains
 optional; its disabled hidden fields do not participate in form validation.
+
+### Automatic planning calendars and staff readiness
+
+Native roster costing now accepts ephemeral state holiday calendars from the
+server-owned `award-roster-planning` helper. Confirmed location/year calendars win;
+unconfirmed drafts cannot replace automatic state estimates. Dates cover the
+shift and extra-travel years. Missing state plus no confirmed calendar still
+withholds costs. The calculator uses the same selected calendar at validation,
+holiday/part-day rate boundaries and travelling-time calculations. Broken Hill is
+never inferred from NSW.
+
+This fallback is exclusively for `mode: roster`. Actual timesheet calculations,
+calendar confirmations, employer setup and frozen approvals retain their existing
+guards. Planning provenance appears as a nonblocking notice in Pay details.
+
+The scoped saved/preview rate DTO includes `rosterSetup` readiness, combining all
+ordinary rate issues, complete employment requirements and holiday availability.
+No private profile, agreement reference or calendar audit is added to this DTO.
+Readiness is setup completeness for a date/location, not certification of legal
+compliance or a substitute for actual-work facts and future award reviews.

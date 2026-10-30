@@ -12,3 +12,5 @@
 .award-hourly-rates>details{margin-top:10px;font-size:.75rem}.award-hourly-rates>details>summary{cursor:pointer;color:var(--theme-primary-text,var(--primary))}
 .award-hourly-rates h4{font-size:1.1rem}.award-hourly-rates>dl dt:first-child{font-weight:600;padding-top:10px}.award-hourly-rates>dl dd:nth-child(2){font-size:1.25rem;line-height:1.3;color:var(--theme-primary-text,var(--primary));padding-top:10px}.award-hourly-rates[data-preview=true]{border-style:dashed}.award-hourly-rates[data-preview=true]>[role=status]{font-weight:600}
 @media(max-width:450px){.award-hourly-rates>dl dd:nth-child(2){font-size:1.05rem}.award-hourly-rates dl{gap:0 8px}}
+
+.award-roster-readiness{padding:10px;border:1px solid var(--theme-line,#d7e3ee);border-radius:8px;background:var(--theme-surface,#fff);font-size:.8rem}.award-roster-readiness[data-ready=true]{border-color:color-mix(in srgb,var(--primary,#008cff) 50%,var(--theme-line,#d7e3ee))}.award-roster-readiness strong{color:var(--theme-text,#172b3a)}.award-roster-readiness ul{margin:8px 0 0;padding-left:20px;line-height:1.5}.award-roster-readiness ul:empty{display:none}

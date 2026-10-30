@@ -17,7 +17,7 @@ Click the dollar icon to open native Pay details, with gross wages, separate
 super/on-cost estimates and the expandable Itemised calculation. The card shows
 no inline amount. The icon retains the current cost in its accessible name. Blocking reasons are visible
 there when the calculator cannot price the work, including missing employment
-terms, source/pay-period coverage or reviewed holiday calendars. Legacy shifts
+terms, source/pay-period coverage or a location state/reviewed holiday calendar. Legacy shifts
 without a rate show a read-only explanation and the existing award-settings
 destination when authorised. Merely opening details never saves or publishes.
 
@@ -46,3 +46,11 @@ and meal conditions are confirmed in Timesheets → Pay details → Actual allow
 details and reimbursements. Uniform laundry continues to cost automatically from
 the saved dated profile; other selections never invent amounts or waive an
 entitlement for actual work.
+
+Roster-only holiday estimates fall back to the automatic state calendar, including
+part-day periods, travel dates and overnight year boundaries. A confirmed saved
+calendar takes priority. Pay details shows the automatic-calendar provenance
+without adding a publication error. Actual timesheet approvals still require
+reviewed calendars; automatic generation never changes stored settings or approved
+snapshots. Staff Pay Conditions shows the remaining setup blockers before a
+manager finishes onboarding.

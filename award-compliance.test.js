@@ -232,3 +232,17 @@ test('allowance choices reject malformed, conflicting, unauthorised and stale wr
   const after=(await app.get()).profiles.find(p=>p.userId===employee.userId);assert.deepEqual(after.allowanceSelections,['laundry']);assert.equal(after.classification,'1');
  }finally{await app.close();}
 });
+
+test('saved staff setup immediately supplies native roster costs using location state; reads and previews never save reviews',async()=>{const app=await fixture();try{
+ const A=require('./fast-food-award'),id=app.office.session.locationId,userId=app.memberRecord.id;
+ assert.equal((await app.request(app.office,'/api/locations/'+id,'PUT',{name:'Automatic costing store',publicHolidayState:'VIC'})).status,200);
+ await app.change('/settings',{employerName:'Automatic cost employer',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:A.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1},'PUT');
+ const terms={userId,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'casual',classification:'1',payBasis:'award',arrangement:'standard'};assert.equal((await app.change('/profiles',terms,'PUT')).status,200);
+ const file=path.join(app.dir,'award-compliance.json'),before=await fs.readFile(file,'utf8'),url='/api/awards/rates/'+userId;
+ const saved=(await app.request(app.office,url+'/today')).data;assert.equal(saved.rosterSetup.ready,true);assert.equal(saved.rosterSetup.calendar.automatic,true);assert(!JSON.stringify(saved).includes(terms.dateOfBirth));
+ const draft=(await app.request(app.office,url+'/preview','POST',{date:'2026-10-19',profile:{...terms,userId:undefined,employmentType:'part-time'}})).data;assert.equal(draft.ready,true);assert.equal(draft.rosterSetup.ready,false);assert(draft.rosterSetup.issues.some(i=>i.code==='employment-pattern'));
+ assert.equal((await app.request(app.office,'/api/rostering/shifts','POST',{weekStart:'2026-10-19',revision:0,userId,date:'2026-10-19',start:'09:00',end:'12:00',overnight:false,breakMinutes:0,position:'Kitchen'})).status,201);
+ const board=(await app.request(app.office,'/api/rostering/dashboard?week=2026-10-19')).data;assert.equal(board.roster.shifts[0].costCents,10428);assert.equal(board.summary.unpricedShifts,0);assert(board.awardChecks.roster.prices[0].notices.some(n=>n.code==='automatic-holidays'));assert(!board.awardChecks.roster.issues.some(i=>i.code==='pay-calendar'));assert.equal(await fs.readFile(file,'utf8'),before);
+ const M=require('./public/rostering-model'),actual=await app.request(app.office,'/api/rostering/manual-time','POST',{requestId:crypto.randomUUID(),userId,startAt:M.instant('2026-10-19','09:00'),endAt:M.instant('2026-10-19','12:00'),breakMinutes:0,reason:'Test actual work'});assert.equal(actual.status,200);
+ const check=(await app.request(app.office,'/api/rostering/award-check?entryId='+actual.data.id)).data;assert(check.issues.some(i=>i.code==='pay-calendar'));assert.equal(check.prices[0].costCents,null);
+ }finally{await app.close();}});
