@@ -91,7 +91,7 @@ function hourlyRates({config, profile, date, preview=false, locationId=config.lo
   if(!Number.isSafeInteger(minimumBaseCents)||!Number.isSafeInteger(baseCents)||baseCents<minimumBaseCents){add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');return result;}
   const ordinary=(day,minute=720,holiday=false)=>roundRate(baseCents,ordinaryPercent(profile.employmentType,profile.classification,day,minute,holiday));
   const allowanceEstimates=profile.laundersUniform===true?[{label:'Uniform laundry',amountCents:profile.employmentType==='full-time'?source.allowances.laundryFullTime:source.allowances.laundryShift,unit:profile.employmentType==='full-time'?'week':'shift'}]:[];
-  return{...result,ready:true,allowanceEstimates,rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
+  return{...result,ready:true,allowanceEstimates,conditionalAllowances:require('./public/employee-allowances-model').selected(profile).filter(c=>!c.automatic).map(({id,label})=>({id,label})),rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
 }
 function calculate({config, profiles, items, mode = 'roster'}) {
   if (!config.localPayEnabled || !config.enabled) return {enabled: false, results: [], coverage: [], exclusions};
@@ -288,7 +288,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       result.mealMinutesByDate=facts.mealEligible?(facts.mealOvertimeMinutes?{[firstDate]:facts.mealOvertimeMinutes}:afterFinishByDate):{};
       if(engagement.items.at(-1).id===item.id){
         const ids=new Set(engagement.items.map(i=>i.id)),rows=[...results.filter(r=>ids.has(r.subjectId)),result],dailyMeals={};
-        if(rows.reduce((sum,r)=>sum+r.overtimeSeconds,0)>3600&&rows.some(r=>r.overtimeSeconds>0&&!engagement.items.find(i=>i.id===r.subjectId)?.awardFacts?.mealConditionsReviewed))issue('pay-meal-allowance','Confirm overtime meal eligibility, notice and whether a meal was supplied in Pay details.','17.4');
+        if(rows.reduce((sum,r)=>sum+r.overtimeSeconds,0)>3600&&rows.some(r=>r.overtimeSeconds>0&&!engagement.items.find(i=>i.id===r.subjectId)?.awardFacts?.mealConditionsReviewed))issue('pay-meal-allowance','Confirm overtime meal eligibility, notice and whether a meal was supplied in Timesheets → Pay details.','17.4');
         for(const row of rows)for(const [date,minutes]of Object.entries(row.mealMinutesByDate||{}))dailyMeals[date]=(dailyMeals[date]||0)+minutes;
         for(const [date,minutes]of Object.entries(dailyMeals))if(minutes>60){
           const supplied=engagement.items.some(i=>i.awardFacts?.mealSupplied);

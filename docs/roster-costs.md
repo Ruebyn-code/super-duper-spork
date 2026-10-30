@@ -38,3 +38,11 @@ staff do not receive new cost fields. The phone published-team reader retains
 its existing private schedule-only data, without attaching draft shift prices
 to published shifts. Financial expense reports, approved wage snapshots,
 budgets, pay rules, native validation and employer-wide costing are unchanged.
+
+Choose allowances in onboarding or employee Pay Conditions. The roster cost
+popup has a Staff allowances shortcut and no allowance-entry controls. Break and
+variation saves preserve previously recorded allowance facts. Variable quantities
+and meal conditions are confirmed in Timesheets → Pay details → Actual allowance
+details and reimbursements. Uniform laundry continues to cost automatically from
+the saved dated profile; other selections never invent amounts or waive an
+entitlement for actual work.

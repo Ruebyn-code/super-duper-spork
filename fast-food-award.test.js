@@ -161,3 +161,13 @@ test('IFA permission to use rostered hours is confined to its employer and dates
  const futureSigned={...workingHoursIFA,signedOn:'2026-10-06',startsOn:'2026-10-06'},regular={...ifaEmployee,flexibilityAgreements:[futureSigned],agreedWeeklyMinutes:180,agreementReference:'Retained regular written hours',pattern:[{start:'09:00',end:'12:00',overnight:false,breakMinutes:0},...Array(6).fill(null)]};assert.equal(A.hourlyRates({config:{...ifaConfig,coverageConfirmed:true},profile:regular,date:'2026-10-05',locationId:'one'}).ready,true);
  const pt={...regular,flexibilityAgreements:[]},noVariation=price([shift('2026-10-05','09:00','14:00')],[pt],ifaConfig)[0];assert.equal(noVariation.complete,true);assert.equal(noVariation.overtimeSeconds,7200);assert.equal(noVariation.costCents,16687);
 });
+
+test('onboarding choices retain native laundry amounts, do not invent variable work and never suppress recorded entitlements',()=>{
+ const choices=require('./public/employee-allowances-model'),all=choices.choices.map(c=>c.id),p={...profile,laundersUniform:true,allowanceSelections:all},simple=shift('2026-10-19','09:00','12:00');
+ const one=price([simple],[p])[0];assert.equal(one.allowanceCents,128);assert.equal(one.costCents,3*3476+128);
+ const summary=A.hourlyRates({config:{...config,coverageConfirmed:true},profile:p,date:'2026-10-19'});assert.deepEqual(summary.allowanceEstimates,[{label:'Uniform laundry',amountCents:128,unit:'shift'}]);assert.equal(summary.conditionalAllowances.length,7);
+ const actual={...simple,awardFacts:{deliveryKm:10,coldMinutes:30,reimbursementCents:1500,reimbursementReason:'Required work supplies'}};
+ const without={...profile,laundersUniform:false,allowanceSelections:[]},withChoices={...without,allowanceSelections:['delivery','cold','reimbursement']};
+ const a=price([actual],[without],config,'timesheets')[0],b=price([actual],[withChoices],config,'timesheets')[0];assert.equal(a.allowanceCents,530+19+1500);assert.equal(a.costCents,b.costCents);assert.equal(a.fingerprint,b.fingerprint);
+ assert.deepEqual(choices.selected({...profile,laundersUniform:true}).map(c=>c.id),['laundry']);
+});

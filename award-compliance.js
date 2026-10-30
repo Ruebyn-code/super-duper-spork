@@ -31,8 +31,8 @@ function createStore(dir,{people,locations,now=Date.now,fetchImpl=globalThis.fet
   return{userId,companyId:actor.companyId,locationId:store.id,locationName:store.name,...native.hourlyRates({config:employerConfig(state,actor.companyId,store.id),profile,date,locationId:store.id})};
  }
  async function previewRates(actor,userId,input){
-  need(actor);rules.object(input);rules.object(input.profile);const allowed=new Set(['effectiveFrom','dateOfBirth','employmentStart','employmentType','classification','level3Band','arrangement','payBasis','baseRateCents','cycleWeeks','cycleAnchor','laundersUniform','superEligible','agreementReference','pattern','agreedWeeklyMinutes','flexibilityAgreements']);if(Object.keys(input).some(k=>!['date','profile'].includes(k))||Object.keys(input.profile).some(k=>!allowed.has(k)))fail('Choose valid employment preview fields.');
-  const date=input.date==='today'?M.today(now()):input.date;M.date(date);const store=await rateLocation(actor,userId),state=await read(),profile={...input.profile};
+  need(actor);rules.object(input);rules.object(input.profile);const allowed=new Set(['effectiveFrom','dateOfBirth','employmentStart','employmentType','classification','level3Band','arrangement','payBasis','baseRateCents','cycleWeeks','cycleAnchor','allowanceSelections','laundersUniform','superEligible','agreementReference','pattern','agreedWeeklyMinutes','flexibilityAgreements']);if(Object.keys(input).some(k=>!['date','profile'].includes(k))||Object.keys(input.profile).some(k=>!allowed.has(k)))fail('Choose valid employment preview fields.');
+  const date=input.date==='today'?M.today(now()):input.date;M.date(date);const store=await rateLocation(actor,userId),state=await read(),profile={...input.profile};if(profile.allowanceSelections!==undefined){profile.allowanceSelections=require('./public/employee-allowances-model').validate(profile.allowanceSelections);const laundry=profile.allowanceSelections.includes('laundry');if(profile.laundersUniform!=null&&profile.laundersUniform!==laundry)fail('The laundry allowance choices do not match.');profile.laundersUniform=laundry;}
   return{userId,companyId:actor.companyId,locationId:store.id,locationName:store.name,...native.hourlyRates({config:employerConfig(state,actor.companyId,store.id),profile,date,preview:true,locationId:store.id})};
  }
  const employerFields=['enabled','coverageConfirmed','employerName','localPayEnabled','sourceId','payPeriodAnchor','payPeriodWeeks','superBps','oncostBps'];
@@ -51,7 +51,9 @@ function createStore(dir,{people,locations,now=Date.now,fetchImpl=globalThis.fet
    const config=company(state,actor.companyId);checkRevision(config,input);
    const previous=state.profiles.find(p=>p.companyId===actor.companyId&&p.userId===input.userId&&p.effectiveFrom===input.effectiveFrom),inherited=previous||state.profiles.filter(p=>p.companyId===actor.companyId&&p.userId===input.userId&&p.effectiveFrom<=input.effectiveFrom).sort((a,b)=>b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
    // Older employment writers cannot silently erase signed employer records.
-   const value=rules.profile({...input,...(input.flexibilityAgreements===undefined&&inherited?.flexibilityAgreements?{flexibilityAgreements:inherited.flexibilityAgreements}:{})},M.today(now()));
+   const savedAllowances=input.allowanceSelections===undefined&&inherited?.allowanceSelections?[...inherited.allowanceSelections]:undefined;
+   if(savedAllowances&&typeof input.laundersUniform==='boolean'){const index=savedAllowances.indexOf('laundry');if(input.laundersUniform&&index<0)savedAllowances.push('laundry');else if(!input.laundersUniform&&index>=0)savedAllowances.splice(index,1);}
+   const value=rules.profile({...input,...(savedAllowances?{allowanceSelections:savedAllowances}:{}),...(input.flexibilityAgreements===undefined&&inherited?.flexibilityAgreements?{flexibilityAgreements:inherited.flexibilityAgreements}:{})},M.today(now()));
    const stores=await locations(),person=(await people()).find(p=>p.id===input.userId);
    for(const record of value.flexibilityAgreements||[]){
     const old=inherited?.flexibilityAgreements?.find(v=>v.locationId===record.locationId);

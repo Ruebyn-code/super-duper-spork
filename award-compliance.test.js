@@ -206,3 +206,29 @@ test('signed roster-hours IFAs remove only the scoped fixed-hours blocker and su
   const own=(await app.request(app.member,'/api/rostering/dashboard?week=2026-10-19')).data;assert(!JSON.stringify(own).includes(ifa.reference));assert(!JSON.stringify(own).includes('betterOffOverall'));
  }finally{await app.close();}
 });
+
+test('staff onboarding saves dated allowance selections, previews without writing and retains them through older employment writers',async()=>{
+ const app=await fixture();try{
+  const A=require('./fast-food-award');await app.change('/settings',{employerName:'Test legal employer',enabled:true,coverageConfirmed:true,localPayEnabled:true,sourceId:A.source.id,payPeriodAnchor:'2026-06-29',payPeriodWeeks:1},'PUT');
+  const employee={userId:app.memberRecord.id,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'casual',classification:'1',payBasis:'award',arrangement:'standard'};
+  const first=await app.change('/profiles',{...employee,allowanceSelections:['delivery','laundry','cold']},'PUT');assert.equal(first.status,200);assert.deepEqual(first.data.allowanceSelections,['laundry','cold','delivery']);assert.equal(first.data.laundersUniform,true);
+  const url='/api/awards/rates/'+employee.userId,read=(await app.request(app.office,url+'/today')).data;assert.deepEqual(read.allowanceEstimates,[{label:'Uniform laundry',amountCents:128,unit:'shift'}]);assert.deepEqual(read.conditionalAllowances.map(c=>c.id),['cold','delivery']);assert(!JSON.stringify(read).includes(employee.dateOfBirth));
+  const file=path.join(app.dir,'award-compliance.json'),before=await fs.readFile(file,'utf8');const preview=await app.request(app.office,url+'/preview','POST',{date:'2026-10-19',profile:{...employee,userId:undefined,allowanceSelections:['meal'],laundersUniform:false}});assert.equal(preview.status,200);assert.deepEqual(preview.data.allowanceEstimates,[]);assert.deepEqual(preview.data.conditionalAllowances.map(c=>c.id),['meal']);assert.equal(await fs.readFile(file,'utf8'),before);
+  const older=await app.change('/profiles',{...employee,classification:'2'},'PUT');assert.equal(older.status,200);assert.deepEqual(older.data.allowanceSelections,['laundry','cold','delivery']);assert.equal(older.data.laundersUniform,true);
+  const nullable=await app.change('/profiles',{...employee,laundersUniform:null},'PUT');assert.equal(nullable.status,200);assert.deepEqual(nullable.data.allowanceSelections,['laundry','cold','delivery']);assert.equal(nullable.data.laundersUniform,true);
+  const next=await app.change('/profiles',{...employee,effectiveFrom:'2026-10-20',laundersUniform:false},'PUT');assert.deepEqual(next.data.allowanceSelections,['cold','delivery']);assert.equal(next.data.laundersUniform,false);assert.equal((await app.request(app.office,url+'/2026-10-19')).data.allowanceEstimates[0].amountCents,128);assert.deepEqual((await app.request(app.office,url+'/2026-10-20')).data.allowanceEstimates,[]);
+  const cleared=await app.change('/profiles',{...employee,effectiveFrom:'2026-10-20',allowanceSelections:[]},'PUT');assert.equal(cleared.status,200);assert.deepEqual(cleared.data.allowanceSelections,[]);assert.equal(cleared.data.laundersUniform,false);
+ }finally{await app.close();}
+});
+test('allowance choices reject malformed, conflicting, unauthorised and stale writes without altering staff or pay data',async()=>{
+ const app=await fixture();try{
+  const employee={userId:app.memberRecord.id,effectiveFrom:'2026-10-01',dateOfBirth:'1995-01-01',employmentStart:'2026-01-01',employmentType:'casual',classification:'1',payBasis:'award',allowanceSelections:['laundry']};const created=await app.change('/profiles',employee,'PUT');assert.equal(created.status,200);
+  for(const allowanceSelections of [['invalid'],['laundry','laundry'],'laundry',[null],{laundry:true}])assert.equal((await app.change('/profiles',{...employee,allowanceSelections},'PUT')).status,400);
+  assert.equal((await app.change('/profiles',{...employee,laundersUniform:false},'PUT')).status,400);
+  assert.equal((await app.request(app.office,'/api/awards/profiles','PUT',{...employee,revision:0})).status,409);
+  assert.equal((await app.request(app.member,'/api/awards/profiles','PUT',{...employee,revision:1})).status,403);
+  assert.equal((await app.request(app.office,'/api/awards/profiles','PUT',{...employee,revision:1},{'X-CSRF-Token':''})).status,403);
+  const preview='/api/awards/rates/'+employee.userId+'/preview';assert.equal((await app.request(app.office,preview,'POST',{date:'2026-10-19',profile:{...employee,userId:undefined,allowanceSelections:['bad']}})).status,400);
+  const after=(await app.get()).profiles.find(p=>p.userId===employee.userId);assert.deepEqual(after.allowanceSelections,['laundry']);assert.equal(after.classification,'1');
+ }finally{await app.close();}
+});

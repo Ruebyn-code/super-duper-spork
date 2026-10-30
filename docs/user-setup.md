@@ -91,6 +91,38 @@ remain unavailable until written hours and an agreement reference are saved.
 No pattern, start date, salary or other unsupported arrangement is invented.
 Laundry appears separately as a weekly or per-shift allowance, not in hourly pay.
 
+## Allowances during staff onboarding
+
+In the new user's Roster details step, open **Allowances** in Pay Conditions and
+tick the relevant choices. Existing employees use the same chooser through
+Users → pencil → Pay Conditions. Choices include uniform laundry, cold/freezer
+work, own-vehicle deliveries/other duties, extra travelling time, overtime meals
+and work expense reimbursements. **Save employment details** commits the choices
+to the dated company employment profile. Opening the chooser and previewing
+rates only change the current draft; account saves and invitations remain separate.
+
+Uniform laundry retains the native per-engagement or weekly award calculation
+and appears separately in Pay Rates. Other selections identify usual work
+conditions, and the preview labels them **Actual work in Timesheets**. They do
+not guess kilometres, minutes, expenses, notice, meal eligibility or supplied
+meals. Those facts are confirmed through Timesheets → Pay details → **Actual
+allowance details and reimbursements**, with a reason before approval. The
+calculator still pays recorded eligible work even when its category was not
+selected at onboarding. Broken Hill remains location/calendar-based.
+
+Roster Pay details contains breaks and optional written variations, plus a staff
+settings shortcut, without allowance-entry controls. Saving those roster fields
+preserves all existing allowance facts. Native API writers remain compatible;
+moving an existing shift to another person/date retains the existing stale-fact
+clearing rules. Saved and approved histories are never rewritten by the chooser.
+
+`allowanceSelections` is an allowlisted, duplicate-free array. `laundersUniform`
+remains the compatible calculator flag; conflicting explicit values are rejected.
+Older employment writers preserve existing selections when they omit the array,
+and an explicit legacy laundry flag changes only that selection. New effective
+dates inherit omitted selections; an explicit empty array clears them. Standard
+employment authority, scope, CSRF, profile revisions and audits still apply.
+
 Inputs debounce for 250 ms, immediately hide stale figures, abort prior work and
 ignore late responses. Changing the employment effective date updates the preview
 date. Date-only inspection remains read-only. Preview inputs do not rebuild form

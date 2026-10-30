@@ -43,8 +43,10 @@ Staff view shows the saved costs for each employee’s selected week. Missing
 employment, source or calendar details stay unknown and show their blocking
 reasons; the display never guesses a zero or enables award settings.
 
-5. Roster → Award checks → Pay details: review estimates and enter break timing,
-   eligible allowances, reimbursements and any written part-time variation.
+5. Select staff allowances during onboarding or in Users → Pay Conditions.
+   Roster → Pay details uses saved settings and accepts break timing or optional
+   written variations. Variable allowance quantities, reimbursements and meal
+   conditions are confirmed in Timesheets → Pay details after the work.
    Published rosters supply the ordinary window for full-time actual work.
 6. Clock paid rest and unpaid meal breaks separately. For manual/corrected
    timesheets, enter the meal start in Pay details. Approvals with missing pay
