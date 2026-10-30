@@ -4,6 +4,7 @@
 const M = require('./public/rostering-model');
 const {age, profile: validateProfile, calendarDate, activeFlexibilityAgreement, rosteredHoursAgreement} = require('./award-rules');
 const crypto = require('node:crypto');
+const breakPlanner=require('./award-break-plan');
 const source = Object.freeze({
   id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
   effectiveFrom: '2026-07-01', reviewBy: '2027-07-01',
@@ -131,6 +132,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       else result.lines.push({label, seconds, rateCents, clause, kind, date});
     };
     const p = selectedProfile(item.userId, firstDate);
+    if(mode==='roster'&&engagements.get(item.id)?.items.length>1&&engagements.get(item.id).items.some(i=>i.breakPlan))issue('pay-break-engagement','Adjacent cards form one continuous engagement. Combine them before automatically planning breaks.','14',true);
     const firstIFA=activeFlexibilityAgreement(p,firstDate,item.locationId);
     if(firstIFA){if(rosteredHoursAgreement(p,firstDate,item.locationId,config.employerName))issue('pay-ifa-hours','The recorded signed IFA permits roster-based hours. Standard award rates, daily/weekly limits, penalties and overtime still apply.','5; 13; 20');else issue('pay-ifa-terms','Review this IFA separately. Its employer, working-hours confirmation or varied pay terms are not supported by the standard calculator.','5',true);}
     if(config.sourceId&&config.sourceId!==source.id)issue('pay-source-activation','Review and activate the included award edition before calculating new costs.','15; Schedule A',true);
@@ -145,8 +147,13 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) issue('pay-period-invalid', 'Complete the shift’s start and finish times.', '13', true);
     const facts = item.awardFacts || {}, recorded = item.breaks || [];
     let breaks = recorded.filter(b => b.endAt).map(b => ({start: Date.parse(b.startAt), end: Date.parse(b.endAt), paid: b.paid === true}));
+    if(mode==='roster'&&item.breakPlan){
+      const shift={date:firstDate,start:getParts(start).time,end:getParts(end).time,overnight:getParts(end).date!==firstDate,locationId:item.locationId,awardFacts:facts},plan=item.breakPlan,problems=breakPlanner.validate({shift,breaks:plan.breaks,agreement:breakPlanner.agreementMeal(shift,p,config.employerName)});
+      if(plan.version!==breakPlanner.version||plan.status!=='ready'||problems.length||plan.unpaidMinutes!==item.breakMinutes)issue('pay-break-plan','Review the saved planned breaks. '+(problems.map(i=>i.message).join(' ')||'Save the shift to recalculate its current automatic break plan.'),'14',true);
+      else breaks=plan.breaks.map(b=>({start:Date.parse(b.startAt),end:Date.parse(b.endAt),paid:b.kind==='rest'}));
+    }
     const unpaidMinutes = item.breakMinutes || 0;
-    if (!breaks.length && unpaidMinutes) {
+    if (!breaks.length && unpaidMinutes && !(mode==='roster'&&item.breakPlan)) {
       let breakStart;
       const plannedMeal=mode==='roster'&&!rosteredHoursAgreement(p,firstDate,item.locationId,config.employerName)?p?.pattern?.[(new Date(firstDate+'T12:00:00Z').getUTCDay()+6)%7]?.mealBreakStart:null;
       const mealBreakStart=facts.mealBreakStart||plannedMeal;
@@ -165,7 +172,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     breaks.sort((a,b)=>a.start-b.start);
     const unpaid = breaks.filter(b => !b.paid), paidBreaks = breaks.filter(b => b.paid);
     const paidTotal = Math.max(0, (end-start)/1000 - unpaid.reduce((sum,b) => sum+(b.end-b.start)/1000, 0));
-    result.paidSeconds=paidTotal;breakData.set(item.id,{breaks,restCount:facts.restBreaksTaken??paidBreaks.filter(b=>b.end-b.start>=600000).length});
+    result.paidSeconds=paidTotal;breakData.set(item.id,{breaks,restCount:mode==='roster'&&item.breakPlan?paidBreaks.filter(b=>b.end-b.start>=600000).length:facts.restBreaksTaken??paidBreaks.filter(b=>b.end-b.start>=600000).length});
     if ((facts.coldMinutes||0)+(facts.freezerMinutes||0) > paidTotal/60) issue('pay-cold-duration','Cold work minutes cannot exceed paid time or overlap each other.','17.3',true);
     if (p && p.cycleWeeks > 1) issue('pay-averaging', 'Hours are averaged over the configured cycle. Review the completed cycle before payroll.', '9, 11.1, 13.2, 20');
     const afterFinishByDate={};
@@ -268,7 +275,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         const paidTotal=engagement.paidSeconds,start=Date.parse(engagement.items[0].startAt),end=Date.parse(engagement.endAt),breaks=engagement.items.flatMap(i=>breakData.get(i.id)?.breaks||[]).sort((a,b)=>a.start-b.start),unpaid=breaks.filter(b=>!b.paid),paidBreaks=breaks.filter(b=>b.paid);
       const requiredRest = paidTotal >= 32400 && unpaid.length < 2 ? 2 : paidTotal >= 14400 ? 1 : 0;
       const rests=engagement.items.reduce((sum,i)=>sum+(breakData.get(i.id)?.restCount||0),0);
-      if (requiredRest && (mode === 'roster' || rests < requiredRest)) issue('pay-rest-breaks', mode==='roster' ? 'Provide '+requiredRest+' paid 10-minute rest break(s); these remain paid time.' : 'Recorded paid rest breaks are below the entitlement. Confirm what was taken.', '14.1');
+      if (requiredRest && (mode === 'roster'&&!item.breakPlan || rests < requiredRest)) issue('pay-rest-breaks', mode==='roster' ? 'Provide '+requiredRest+' paid 10-minute rest break(s); these remain paid time.' : 'Recorded paid rest breaks are below the entitlement. Confirm what was taken.', '14.1');
       if (paidTotal >= 18000 && (unpaid.length < 1 || unpaid.some(b => b.end-b.start < 1800000 || b.end-b.start > 3600000)) || paidTotal >= 32400 && unpaid.length >= 2 && unpaid.some(b => b.end-b.start < 1800000 || b.end-b.start > 3600000)) issue('pay-meal-break', 'Review unpaid meal breaks: each must be 30–60 minutes, with no more than five hours worked without a meal break.', '14.1, 14.5');
       if(requiredRest===2&&mode!=='roster'){const middle=start+(end-start)/2;if(!paidBreaks.some(b=>b.end<=middle&&b.end-b.start>=600000)||!paidBreaks.some(b=>b.start>=middle&&b.end-b.start>=600000))issue('pay-rest-timing','Confirm one paid rest break occurred in each half of this shift.','14.1');}
       const allBreaks = [...breaks].sort((a,b)=>a.start-b.start);
@@ -353,7 +360,7 @@ function facts(input = {}) {
   if (input.variation) {
     const v=input.variation; M.minutes(v.start);M.minutes(v.end);
     if (typeof v.reference !== 'string' || v.reference.trim().length < 8 || v.reference.length > 500 || !Number.isFinite(Date.parse(v.agreedAt)) || !Number.isInteger(v.breakMinutes) || v.breakMinutes < 0 || v.breakMinutes > 180 || typeof v.overnight !== 'boolean') throw invalid('Record the written variation reference, agreement time and agreed hours.');
-    result.variation={start:v.start,end:v.end,overnight:v.overnight,breakMinutes:v.breakMinutes,reference:v.reference.trim(),agreedAt:new Date(v.agreedAt).toISOString()};
+    if(v.mealBreakStart)M.minutes(v.mealBreakStart);result.variation={...(v.mealBreakStart?{mealBreakStart:v.mealBreakStart}:{}),start:v.start,end:v.end,overnight:v.overnight,breakMinutes:v.breakMinutes,reference:v.reference.trim(),agreedAt:new Date(v.agreedAt).toISOString()};
   }
   return result;
 }

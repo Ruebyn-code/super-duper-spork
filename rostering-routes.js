@@ -1,6 +1,7 @@
 async function route({req,url,params,session,store,body,json,fail}){
  if(!url.startsWith('/api/rostering/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  const input=()=>body(req,512000);
+ if(url==='/api/rostering/break-plan'&&req.method==='POST'){json(200,await store.previewBreaks(session,await input()));return true;}
  if(url==='/api/rostering/award-check'&&req.method==='GET'){json(200,await store.checkTime(session,params.get('entryId')));return true;}
  if(url==='/api/rostering/clock-status'&&req.method==='GET'){json(200,await store.clockStatus(session));return true;}
  if(url==='/api/rostering/dashboard'&&req.method==='GET'){json(200,await store.dashboard(session,params.get('week')));return true;}

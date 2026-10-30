@@ -5,21 +5,21 @@ WEBVTT
 Step 1: Open a saved shift’s dollar icon for Costs, then select Details. The header shows the employee, date, paid duration, position and saved publication status. In Details, change the date within this week, staff member, 12-hour times or position.
 
 2
-00:00:13.375 --> 00:00:23.958
-Step 2: Choose Breaks to set the unpaid meal-break start and minutes. The tab badge shows unpaid minutes, not a fabricated count of paid rest breaks. Confirm actual breaks in Timesheets.
+00:00:13.375 --> 00:00:27.375
+Step 2: Choose Breaks to review the automatic paid rest and unpaid meal timetable. Plans update when shift times change and respect recorded part-time meals. Custom timing must pass the award checks. Save shift applies popup edits; actual breaks are clocked separately.
 
 3
-00:00:23.958 --> 00:00:36.417
+00:00:27.375 --> 00:00:39.833
 Step 3: Choose Costs to see gross wages and allowances, separate super and on-cost estimates, and Itemised calculation. Missing costs stay unavailable with their blocking reasons. Saved estimates are labelled while you edit; Save shift recalculates them.
 
 4
-00:00:36.417 --> 00:00:48.875
+00:00:39.833 --> 00:00:52.292
 Step 4: Use Notes for shift instructions. All popup fields keep their draft when switching tabs. Save shift applies the changes together to the roster draft. Cancel, Escape and the close button ask before discarding unsaved changes.
 
 5
-00:00:48.875 --> 00:01:01.333
+00:00:52.292 --> 00:01:04.750
 Step 5: Choose Warnings to review the current saved shift’s award and availability checks. Review required details in staff Pay Conditions or the location employer setup. Warnings update after saving; this view does not certify legal compliance.
 
 6
-00:01:01.333 --> 00:01:16.917
+00:01:04.750 --> 00:01:20.333
 Step 6: Choose Status for this shift’s Draft, Published or Unpublished changes status. Copy shift and Duplicate open a review before creating one draft copy. Delete shift keeps native Undo. Leave opens existing leave tools. Publish week explicitly publishes all saved shifts using the normal award review.

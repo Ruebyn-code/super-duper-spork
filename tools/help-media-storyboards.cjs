@@ -19,4 +19,5 @@ add('individual-flexibility','award-employee','award-ifa','award-ifa','award-ifa
 add('employment-signing','users','employment-documents-pay','employment-documents-review','agreements-reader','agreements-sign','agreements-complete');add('employment-templates','employment-template-list','employment-template-body','employment-template-fields','employment-template-ready','employment-documents-review');
 add('staff-allowances','user-roster','staff-allowances','staff-allowances-preview','timesheet-allowances');
 add('shift-details','shift-details','shift-breaks','shift-costs','shift-notes','shift-warnings','shift-status');
+add('automatic-breaks','auto-breaks-plan','auto-breaks-plan','auto-breaks-short','auto-breaks-custom','auto-breaks-conflict','auto-breaks-staff');
 module.exports=stories;

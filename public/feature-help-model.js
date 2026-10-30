@@ -10,7 +10,7 @@
   '/wastage':ids('wastage stock-count count-sleeves'),
   '/stock-transfers':ids('stock-transfers transfer-approvals'),
   '/sales':ids('daily-sales weekly-report weekly-import sales-projections public-holidays holiday-forecasts hourly-import hourly-projections ordering-budget platform-fees invoice-expenses weekly-costs operating-expenses sales-missing hourly-not-imported'),
-  '/rostering':ids('view-roster make-roster shift-details publish-roster roster-forecasts timesheets leave-availability labour-settings shift-clock early-start clock-breaks clock-problem award-settings staff-allowances'),
+  '/rostering':ids('view-roster make-roster shift-details automatic-breaks publish-roster roster-forecasts timesheets leave-availability labour-settings shift-clock early-start clock-breaks clock-problem award-settings staff-allowances'),
   '/ops-management':ids('complete-checklist checklist-builder checklist-responses checklist-planners hourly-checklists checklist-audiences checklist-history intelligence-checklists intelligence-planners'),
   '/learning-centre':ids('take-course in-store-training course-builder course-questions assign-training training-reports intelligence-questions'),
   '/communications':ids('team-chat publish-post rich-content required-reading intelligence-writing'),

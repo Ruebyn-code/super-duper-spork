@@ -84,3 +84,31 @@ while the overview is open, and context/revision changes reject stale saves.
 A desktop editor resized to a phone pauses with draft values retained, hiding
 editing controls and financial details; ordinary phone readers gain no new
 editor or wage entry points.
+
+### Automatic planned breaks
+
+Native-award locations plan paid rests and unpaid meals on explicit shift creation
+and updates. The server stores `breakPlan` with its source version, mode, ISO
+intervals, unpaid minutes and readiness issues; it does not create clock events,
+agreements or actual-pay deductions. Standard plans cover continuous shifts up to
+sixteen elapsed hours, keep meals within 30–60 minutes, paid rests at 10 minutes,
+work gaps within five hours and breaks outside first/last hours. Two required paid
+rests fall in separate shift halves. Written part-time meals are preserved,
+including with an hours-only IFA, unless an explicit recorded variation changes
+them. Adjacent cards need a combined-engagement review instead of separate plans.
+
+Breaks in the shift popup defaults to Automatic and debounces read-only native
+POST previews. Custom overrides are checked before saving. Changing employee or
+work date resets automatic planning; custom plans survive other omitted-field
+writers, and copies regenerate for their target. Invalid custom schedules are
+rejected atomically. Unsupported automatic plans withhold complete roster costs
+and publication. Publication revalidates current agreements, plan edition and
+plan/paid-time consistency; a review note cannot waive these checks.
+
+Existing shifts are not migrated on reads. Saved custom meal choices are retained;
+legacy shifts show a preview until explicit Save shift. Published snapshots and
+approved timesheets are frozen. Native costing uses planned intervals only in
+roster mode, counts rests as paid and leaves actual break checks unchanged. The
+clock uses the published meal count without claiming any break was taken. Staff
+can expand only the published break timetable on desktop and phone schedules;
+public team DTOs contain no plan issues, agreements, rates or private work facts.
