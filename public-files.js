@@ -37,6 +37,8 @@ module.exports={'/employee-allowances-model.js':'employee-allowances-model.js','
   '/award-settings.css':'award-settings.css',
   '/rostering':'rostering.html',
   '/roster-award-review.js':'roster-award-review.js',
+  '/roster-shift-dialog.js':'roster-shift-dialog.js',
+  '/roster-shift-dialog.css':'roster-shift-dialog.css',
   '/roster-drag-model.js':'roster-drag-model.js',
   '/rostering.js':'rostering.js',
   '/rostering.css':'rostering.css',

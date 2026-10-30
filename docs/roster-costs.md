@@ -54,3 +54,33 @@ without adding a publication error. Actual timesheet approvals still require
 reviewed calendars; automatic generation never changes stored settings or approved
 snapshots. Staff Pay Conditions shows the remaining setup blockers before a
 manager finishes onboarding.
+
+### Tabbed shift overview
+
+Saved roster-card dollar icons open Costs in the native company-styled overview;
+select Details to edit the shift. Six labelled keyboard tabs retain the original
+shift/pay fields: Details, Breaks, Costs, Notes, Warnings and Status. Timesheet Pay
+details keeps its existing actual-work and approval workflow. Roster popup edits
+are explicit, combined Save shift writes, separate from inline card autosaves and
+week publication. Opening, switching tabs or dismissing a clean view never writes.
+
+The header uses server-calculated saved costs and paid time. Unsaved edits label
+the saved assessment and replace the header amount with Save to recalculate.
+Warnings include the same native subject/staff/general checks as the red icons.
+Saved shift publication compares dated shift fields and recorded pay facts with
+its published snapshot; other shifts remain Published when only one changes.
+Ordinary published readers keep their original snapshot and wage privacy.
+
+Copy and Duplicate review one target day and employee (Duplicate defaults to
+Vacant), then use the native revision/CSRF/overlap/availability-checked creator.
+They omit recorded facts and written variations. Uncertain creates freeze instead
+of offering an unsafe retry. Delete uses native Undo. Publish week is labelled
+and confirmed as a whole-week action and retains current award fingerprints and
+review notes. Leave opens existing tools and never submits another employee's
+request. Opening or using tabs cannot perform any of these actions.
+
+Close, Escape and backdrop share dirty/busy guards, parent navigation is inert
+while the overview is open, and context/revision changes reject stale saves.
+A desktop editor resized to a phone pauses with draft values retained, hiding
+editing controls and financial details; ordinary phone readers gain no new
+editor or wage entry points.
