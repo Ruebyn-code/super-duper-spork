@@ -2,24 +2,24 @@ WEBVTT
 
 1
 00:00:00.000 --> 00:00:11.208
-Step 1: Invite the employee through Users first. Set up the legal employer at their location and the platform’s Account setup emails sender. Creating, reviewing or saving a draft sends no contract emails.
+Step 1: Invite the employee through Users first. Save their Pay Conditions and set up the location’s legal employer and platform Account setup emails sender. Staff must activate their own account before signing.
 
 2
-00:00:11.208 --> 00:00:25.833
-Step 2: Open My agreements from the blue account dropdown, then New agreement. Select the employee’s existing account and employer location. Paste the complete reviewed agreement text, record the state, dates, legal names and review reference, and confirm employer authority and ordinary execution requirements.
+00:00:11.208 --> 00:00:27.708
+Step 2: Open Users → edit staff → Pay Conditions → Employment documents. Select the reviewed contract, IFA or both. OpStack fills saved staff and employer details, employment type and available native pay rates. Confirm legal names and the effective date; missing required fields must be completed in saved settings.
 
 3
-00:00:25.833 --> 00:00:39.542
-Step 3: Save draft, then Review and send. Read the exact document and press Send for signatures. The version is now fixed and each named signing account receives an invitation. Prepare revised version creates a separate draft and retains earlier signatures.
+00:00:27.708 --> 00:00:42.667
+Step 3: Choose Review selected documents, read each exact filled document and press Send selected documents. All selected versions become fixed and each named signer is emailed. These documents also become account-onboarding tasks. A lost response uses Retry the same send without creating duplicate documents.
 
 4
-00:00:39.542 --> 00:00:55.125
+00:00:42.667 --> 00:00:58.250
 Step 4: Staff activate their invited account and sign in. Pending employee signatures open their onboarding page and appear in Home → Your work. Open the agreement, read or download it, request an email code and verify it. Codes expire after ten minutes; verification does not sign.
 
 5
-00:00:55.125 --> 00:01:12.583
+00:00:58.250 --> 00:01:15.708
 Step 5: Type the full legal name shown for your account’s signing role. Confirm electronic consent and intention, then Sign agreement → Confirm signature. Required guardians use their own separate accounts; IFAs for employees under 18 require that signature too. You may decline or request paper signing without consenting to an electronic signature.
 
 6
-00:01:12.583 --> 00:01:29.417
+00:01:15.708 --> 00:01:32.542
 Step 6: When all named parties have signed, download the completed copy and signing record from My agreements. Every party is also emailed a completed copy. Browser print can save the downloaded HTML copy as PDF. Provider acceptance is not proof of email delivery; completed copies remain available in the app.

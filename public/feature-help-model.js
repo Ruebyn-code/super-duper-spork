@@ -1,7 +1,7 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.opstackFeatureHelp=factory();})(globalThis,()=>{
  const ids=text=>text.split(/\s+/).filter(Boolean);
  const pages={
-  '/employment-documents':ids('employment-signing individual-flexibility manage-users account-invitations'),
+  '/employment-documents':ids('employment-signing employment-templates individual-flexibility manage-users account-invitations'),
   '/home':ids('home-dashboards location-rankings daily-sales overnight-sales hourly-import hourly-projections ordering-budget transfer-approvals scan-invoice intelligence-invoices invoice-prices invoice-expenses home-layout navigation switch-location profile-photo dark-mode platform-search kiosk-use sales-missing'),
   '/':ids('place-order shared-cart target-levels order-when order-rounding delivery-dates delivery-cutoffs delivery-quantities delivery-shortages receiving-orders delivery-exceptions order-confirmation order-not-sent'),
   '/cart':ids('shared-cart place-order ordering-budget order-confirmation order-not-sent'),
@@ -17,7 +17,7 @@
   '/knowledge-library':ids('read-library publish-library library-categories rich-content intelligence-writing'),
   '/reporting':ids('business-reports location-rankings operational-reports report-details report-exports scheduled-reports reports-not-arriving'),
   '/admin':ids('stock-settings supplier-contacts count-sleeves order-rounding target-levels order-when stock-price-changes delivery-dates'),
-  '/admin/accounts':ids('manage-users account-invitations permissions locations location-setup trading-hours location-managers companies location-email order-confirmation delivery-dates delivery-cutoffs delivery-exceptions public-holidays'),
+  '/admin/accounts':ids('employment-templates manage-users account-invitations permissions locations location-setup trading-hours location-managers companies location-email order-confirmation delivery-dates delivery-cutoffs delivery-exceptions public-holidays'),
   '/settings':ids('permissions order-email-template account-invitations manage-kiosks award-settings intelligence-setup intelligence-appearance intelligence-limits intelligence-problem appearance'),
   '/admin/settings':ids('appearance intelligence-appearance home-layout'),
   '/email-settings':ids('location-email order-email-template order-confirmation order-not-sent'),

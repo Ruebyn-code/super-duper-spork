@@ -1,5 +1,31 @@
 # Employment agreements and account onboarding
 
+In Users → edit staff → Pay Conditions, Employment documents selects reviewed
+contracts, IFAs or both. The same panel is available in the new-user setup’s
+Roster details step. Save account and employment changes first. Names, email,
+phone, location, legal employer, state, dates, employment type, classification,
+regular hours and available native hourly rates fill from saved records. Rates
+are dated to the agreement’s selected effective date; unavailable rates and other
+missing required fields block sending instead of becoming guessed values.
+
+Edit contract & IFA templates opens an email-style template editor with field
+insertion and a live staff/example preview. Shared templates are company-scoped
+and require users.manage, awards.manage and locations.all to edit. Authorised
+location managers can use Ready templates for staff they can manage. Templates
+keep Draft/Ready/Archived states and private revisions; edited terms need review
+again. No legal terms are generated or supplied as automatically approved text.
+Archive retains issued documents and template history.
+
+Review selected documents is read-only. Send selected documents rechecks saved
+staff, pay, employer and template details against the reviewed snapshot, fixes
+all selected documents atomically and reserves each invitation before provider
+calls. Nothing is sent by selecting templates, opening previews or saving pay.
+Uncertain responses freeze the same retry payload; retries cannot duplicate
+documents or invitations. Each issued source retains its template ID, revision
+and content digest; future edits or archival never change issued copies or
+signatures. Account-only signing, independent legal review and the existing
+single-document drafting workflow below remain available.
+
 Open My agreements from the blue account dropdown. A manager with users.manage
 and awards.manage can prepare agreements only for employees they can manage at
 an accessible trading location. Employee, employer representative and any guardian

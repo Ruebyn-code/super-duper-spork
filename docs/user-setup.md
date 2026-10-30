@@ -174,8 +174,13 @@ IFAs do not bypass missing regular hours. See docs/awards/README.md.
 
 ## Employment agreements during staff onboarding
 
-After inviting a user, prepare and send their reviewed agreements through My
-agreements (also linked from existing employee Pay Conditions). They must activate
+After inviting a user, save their employment details and select reviewed contract
+and IFA templates in the Roster details step’s Employment documents panel. The
+same panel is in existing employee Pay Conditions, with an email-style shared
+template editor, saved staff/pay autofill and Review selected documents → Send
+selected documents. Template editing needs company-wide employment authority;
+selection uses native staff/employer-location access. Pay saves never send emails.
+My agreements retains individual drafting and signing history. They must activate
 the invited OpStack account before viewing or signing. Login directs pending
 employee signatures to onboarding and Home lists outstanding signing tasks.
 Each signer uses their own account and fresh email verification; guardians need
