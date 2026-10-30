@@ -1,5 +1,5 @@
 (function(root){
- const pages=['help','location-setup-step','order-history','index','home','cart','sales','reporting','stock-count','stock-transfers','wastage','admin','accounts','settings','settings-hub','kiosk-devices','kiosk','award-settings','communications','rostering','knowledge-library','learning-centre','ops-management','labels','login','accept-invite','setup'];
+ const pages=['employment-documents','help','location-setup-step','order-history','index','home','cart','sales','reporting','stock-count','stock-transfers','wastage','admin','accounts','settings','settings-hub','kiosk-devices','kiosk','award-settings','communications','rostering','knowledge-library','learning-centre','ops-management','labels','login','accept-invite','setup'];
  const validId=value=>typeof value==='string'&&/^[a-zA-Z0-9_.:-]{1,240}$/.test(value)&&!['__proto__','constructor','prototype'].includes(value);
  function key(attributes){
   for(const [attribute,kind] of [['data-product-id','product'],['data-supplier-id','supplier'],['data-account-id','account'],['data-location-id','location'],['data-company-id','company']])if(attributes[attribute])return kind+':'+attributes[attribute];

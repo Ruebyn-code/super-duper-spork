@@ -5,7 +5,7 @@
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;},data=(tag,text,cls)=>{const n=node(tag,text,cls);n.dataset.userText='';return n;};
  let actor=null,identity='',generation=0,loading=false,queued=false,timer=null,last=null;
  const key=a=>JSON.stringify([a?.id,a?.companyId,a?.locationId,a?.permissions,a?.actionPermissions]);
- const labels={checklist:'Checklist',course:'Course',practical:'Practical training',signoff:'Trainer sign-off',post:'Post',chat:'Conversation'},states={overdue:'Overdue','in-progress':'In progress','not-started':'To do','awaiting-signoff':'Awaiting sign-off',scheduled:'Scheduled'};
+ const labels={agreement:'Employment agreement',checklist:'Checklist',course:'Course',practical:'Practical training',signoff:'Trainer sign-off',post:'Post',chat:'Conversation'},states={overdue:'Overdue','in-progress':'In progress','not-started':'To do','awaiting-signoff':'Awaiting sign-off',scheduled:'Scheduled'};
  const date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',...(value.includes('T')?{hour:'numeric',minute:'2-digit',hour12:true}:{}),timeZone:'Australia/Melbourne'}).format(new Date(value.includes('T')?value:value+'T01:00:00Z'));
  function focusKey(){const current=document.activeElement;return root.contains(current)?current.dataset.personalFocus:null;}
  function restoreFocus(key){if(key)[...root.querySelectorAll('[data-personal-focus]')].find(n=>n.dataset.personalFocus===key)?.focus({preventScroll:true});}

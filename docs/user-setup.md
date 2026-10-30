@@ -171,3 +171,12 @@ overtime. Timesheet costs require that employer location’s published roster;
 actual work outside roster windows attracts overtime. Other pay variations remain
 unsupported and require separate review. Expired, future or different-employer
 IFAs do not bypass missing regular hours. See docs/awards/README.md.
+
+## Employment agreements during staff onboarding
+
+After inviting a user, prepare and send their reviewed agreements through My
+agreements (also linked from existing employee Pay Conditions). They must activate
+the invited OpStack account before viewing or signing. Login directs pending
+employee signatures to onboarding and Home lists outstanding signing tasks.
+Each signer uses their own account and fresh email verification; guardians need
+a separate appropriately limited account. See [Employment agreements](employment-documents.md).

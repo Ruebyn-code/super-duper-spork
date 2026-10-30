@@ -1,6 +1,7 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.opstackFeatureHelp=factory();})(globalThis,()=>{
  const ids=text=>text.split(/\s+/).filter(Boolean);
  const pages={
+  '/employment-documents':ids('employment-signing individual-flexibility manage-users account-invitations'),
   '/home':ids('home-dashboards location-rankings daily-sales overnight-sales hourly-import hourly-projections ordering-budget transfer-approvals scan-invoice intelligence-invoices invoice-prices invoice-expenses home-layout navigation switch-location profile-photo dark-mode platform-search kiosk-use sales-missing'),
   '/':ids('place-order shared-cart target-levels order-when order-rounding delivery-dates delivery-cutoffs delivery-quantities delivery-shortages receiving-orders delivery-exceptions order-confirmation order-not-sent'),
   '/cart':ids('shared-cart place-order ordering-budget order-confirmation order-not-sent'),

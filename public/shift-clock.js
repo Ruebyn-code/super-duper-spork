@@ -34,7 +34,7 @@
  function remember(key){seen.add(key);try{sessionStorage.setItem('opstack-clock-prompt:'+key,'true');}catch{}}
  function clearPins(){staff.input.value=manager.input.value='';}
  function hide(){clearPins();dock.hidden=true;if(approval.open)approval.close();if(dialog.open)dialog.close();}
- function open(automatic=false){if(!state||phase()==='idle'||blocked()||document.querySelector('dialog[open]:not(#shift-clock-dialog)'))return;if(automatic&&remembered(phaseKey()))return;if(!dialog.open){dialog.showModal();if(!staff.panel.hidden&&!staff.input.disabled)staff.input.focus({preventScroll:true});}remember(phaseKey());}
+ function open(automatic=false){if(automatic&&location.pathname==='/employment-documents')return;if(!state||phase()==='idle'||blocked()||document.querySelector('dialog[open]:not(#shift-clock-dialog)'))return;if(automatic&&remembered(phaseKey()))return;if(!dialog.open){dialog.showModal();if(!staff.panel.hidden&&!staff.input.disabled)staff.input.focus({preventScroll:true});}remember(phaseKey());}
  function focusStage(){if(approval.open&&!manager.input.disabled)manager.input.focus({preventScroll:true});else if(dialog.open&&!staff.panel.hidden&&!staff.input.disabled)staff.input.focus({preventScroll:true});}
  function digitalTime(){const parts=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',hourCycle:'h23',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date(now())),hour=parts.find(p=>p.type==='hour').value,minute=parts.find(p=>p.type==='minute').value,value=hour+minute;display.setAttribute('aria-label',hour+':'+minute);if(value===lastDigits)return;lastDigits=value;for(let i=0;i<4;i++)digits[i].forEach((piece,n)=>piece.classList.toggle('is-lit',digitSegments[Number(value[i])][n]==='1'));}
  function render(){

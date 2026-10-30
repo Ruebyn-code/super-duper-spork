@@ -4,6 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const publicFiles=require('./public-files');
+const employmentDocuments=require('./employment-documents');
 const serveHelpMedia=require('./help-media').createMediaServer(path.join(__dirname,'public/help-media'),require('./public/help-media-manifest'));
 const globalSearch=require('./global-search');
 const publicHolidays=require('./australian-public-holidays'),supplierDeliveryDays=require('./supplier-delivery-days'),deliveryCalendar=require('./delivery-calendar'),deliveryPlanning=require('./delivery-planning'),orderFulfilment=require('./order-fulfilment'),deliveryClock=require('./delivery-time');
@@ -19,7 +20,7 @@ const {appOrigin,runtimeConfig,prepareDataDirectory}=require('./runtime-config')
 const {createAuth}=require('./auth');
 const {isSupport,parsedBody,supportIdentity}=require('./platform-identity');
 const {createPlatformServer}=require('./opstack-router');
-const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation}=require('./permissions');
+const {headOffice,managesUsers,locationIds,can,any:canAny,canAccessLocation,canAssign}=require('./permissions');
 const {apiPermission,pagePermission,actionPermission}=require('./access-routes');
 const profilePhotos=require('./profile-photos');
 const locationHoursModel=require('./public/location-hours-model');
@@ -84,7 +85,7 @@ function validateOrder(body, menu, requester = '') {
   });
   return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
-function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
+function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,signingNow=invitationNow,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
   publicOrigin=appOrigin(publicOrigin);
   const requestOrigin=req=>publicOrigin||`http${req.socket.encrypted?'s':''}://${req.headers.host}`;
   const secureCookie=req=>publicOrigin?publicOrigin.startsWith('https://'):Boolean(req.socket.encrypted);
@@ -104,6 +105,34 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const communicationStore=communications.createStore(dataDir,{people:communicationPeople,now:communicationsNow,extraMediaAccess:async(actor,record)=>await libraryStore.canReadMedia(actor,record)||await learningStore.canReadMedia(actor,record)});
   const catalogueStore=catalogues.createStore(dataDir,menu),supplierDeliveryDaysStore=supplierDeliveryDays.createStore(dataDir);
   const awardStore=awardCompliance.createStore(dataDir,{people:()=>auth.directory(),locations:()=>auth.levels.locations(),now:rosteringNow,fetchImpl});
+  const employmentDocumentStore=employmentDocuments.createStore(dataDir,{
+    now:signingNow,fetchImpl,network:network.id==='default'?undefined:network.slug,
+    emailEnvironment:()=>accountEmailSettings.read(platformDataDir),
+    authorize:async(actor,manage=false)=>{
+      if(!actor||actor.kiosk||isSupport(actor))fail('Use your own signed-in account for employment agreements.',403);
+      const raw=await auth.session({headers:{cookie:'admin_session='+actor.token}});if(!raw||raw.id!==actor.id)fail('Sign in again before accessing employment agreements.',401);
+      const current=await companyStore.context(await locationStore.sessionContext(raw,actor.locationId));if(current.companyId!==actor.companyId)fail('The selected company changed.',409);
+      if(manage&&(!can(current,'users.manage')||!can(current,'awards.manage')))fail('User and employment management permissions are required.',403);
+      if((await communicationStore.required(current)).due.length)fail('Read or snooze the required posts before continuing.',428);return current;
+    },
+    recipients:async(actor,userId,locationId)=>{
+      if(!can(actor,'users.manage')||!can(actor,'awards.manage'))fail('User and employment management permissions are required.',403);
+      const [people,stores]=await Promise.all([auth.list(actor),locationStore.accessible(actor)]),active=stores.filter(l=>!l.archived&&l.companyId===actor.companyId&&!locations.isHeadOfficeName(l.name));
+      const eligible=people.filter(p=>active.some(l=>locationIds(p).includes(l.id))),issuer=(await auth.directory()).find(p=>p.id===actor.id);
+      if(!userId)return{people:eligible.map(({id,username,email,locationIds:ids,locationId:defaultId})=>({id,username,email:email||'',locationIds:ids||[defaultId]})),locations:active.map(({id,name,publicHolidayState})=>({id,name,state:publicHolidayState||''})),issuer:{id:issuer.id,name:issuer.username,email:issuer.email||''}};
+      const location=active.find(l=>l.id===locationId),employee=eligible.find(p=>p.id===userId);if(!location||!employee||!locationIds(employee).includes(locationId))fail('Choose a manageable employee assigned to this employer location.',403);
+      return{employee,issuer,location,people:eligible.filter(p=>locationIds(p).includes(locationId))};
+    },
+    canReadRetained:async(actor,doc)=>{if(!can(actor,'users.manage')||!can(actor,'awards.manage')||!can(actor,'locations.all')||!can(actor,'network.access')||!doc.employeeAuthority||!canAssign(actor,doc.employeeAuthority))return false;const location=(await auth.levels.locations()).find(l=>l.id===doc.locationId&&l.companyId===actor.companyId),account=(await auth.directory()).find(a=>a.id===doc.employeeId);if(account&&location&&!location.archived)return false;return Boolean(location&&canAccessLocation(actor,location));},
+    employer:async(actor,locationId)=>{const data=await awardStore.employerSetup(actor,locationId);if(!data.config.employerName?.trim())fail('Complete the legal employer name in this location’s Employer setup first.');return data.config.employerName;},
+    checkIssued:async doc=>{
+      const stores=await auth.levels.locations(),location=stores.find(l=>l.id===doc.locationId&&l.companyId===doc.companyId&&!l.archived);if(!location)fail('This employer location is no longer active.',409);
+      const accounts=await auth.directory(),issuer=accounts.find(a=>a.id===doc.parties.find(p=>p.role==='employer').userId);if(!issuer)fail('The issuing employer representative is no longer active.',409);
+      const current=await auth.forCompany(issuer,doc.companyId);if(!can(current,'users.manage')||!can(current,'awards.manage')||!canAccessLocation(current,location))fail('The issuing employer representative no longer has authority.',403);
+      const manageable=await auth.list(current);for(const p of doc.parties){const account=accounts.find(a=>a.id===p.userId);if(!account||account.email?.toLowerCase()!==p.email||!locationIds(account).includes(doc.locationId)&&p.role!=='employer')fail('A signer’s account, email or location changed. Ask the issuer to review this request.',409);if(p.role==='employee'&&!manageable.some(a=>a.id===p.userId))fail('Employee management authority changed. Ask the issuer to review this request.',403);}
+      if((await awardStore.employerSetup(current,doc.locationId)).config.employerName!==doc.legalEmployer)fail('The legal employer changed. Review this signing request.',409);
+    }
+  });
   const locationSetupStore=locationSetup.createStore(dataDir,{locations:locationStore,auth,catalogues:catalogueStore,awards:awardStore,now:locationNow});
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
@@ -115,7 +144,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   },now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
-  const homePersonal=require('./home-personal').createReader({ops:opsStore,learning:learningStore,comms:communicationStore,now:communicationsNow});
+  const homePersonal=require('./home-personal').createReader({ops:opsStore,learning:learningStore,comms:communicationStore,agreements:employmentDocumentStore,now:communicationsNow});
   const homeInsights=require('./home-insights').createReader({dir:dataDir,locations:actor=>locationStore.accessible(actor),context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),history:()=>usageHistory(dataDir),salesStore,weekly:weeklySalesReportStore,ops:opsStore,now:communicationsNow});
   const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
   const manualParStore=manualPar.createStore();
@@ -137,6 +166,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
     try {
       const requestUrl=new URL(req.url,'http://localhost'),embeddedContent=req.headers['sec-fetch-dest']==='iframe'||requestUrl.searchParams.get('__opstack_content')==='1';requestUrl.searchParams.delete('__opstack_content');req.url=requestUrl.pathname;
       res.setHeader('Cache-Control','no-store');
+      if(req.url==='/employment-documents'||req.url.startsWith('/api/employment-documents')){res.setHeader('Cache-Control','private, no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','SAMEORIGIN');res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'self'; form-action 'self'");}
       if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
       if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
       if(await serveHelpMedia(req,res,requestUrl)||await publicAssets.serve(req,res,requestUrl))return;
@@ -224,7 +254,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/employment-documents','/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
       const setupStepRoute=req.url.match(/^\/api\/location-setup\/steps\/([a-zA-Z0-9-]+)\/(team|par|devices)$/);
       if(setupStepRoute){
@@ -297,6 +327,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(await learningCentre.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:learningStore,body,json,fail}))return;
       if(await knowledgeLibraryRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:libraryStore,body,json,fail}))return;
       if(req.url==='/api/award-source'&&req.method==='GET'){if(!can(session,'awards.manage'))fail('Award settings permission required.',403);res.writeHead(200,{'Content-Type':'application/pdf','Cache-Control':'private, no-store'});return res.end(await fs.readFile(path.join(__dirname,'docs/awards/ma000003-2026-07.pdf')));}
+      if(await employmentDocuments.route({req,url:req.url,params:requestUrl.searchParams,session,store:employmentDocumentStore,body,json,origin:publicOrigin||requestOrigin(req)}))return;
       if(await awardCompliance.route({req,url:req.url,session,store:awardStore,body,json,fail}))return;
       if(kioskStaff&&['/api/rostering/clock','/api/rostering/clock-unlock','/api/rostering/clock-status'].includes(req.url)){const value=await rosteringStore.clockStatus(session);if(value.entry&&value.entry.locationId!==kioskDevice.locationId)fail('You are clocked in at another location. Use that location’s time clock.',409);}
       if(await rosteringRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:rosteringStore,body,json,fail}))return;
@@ -637,7 +668,8 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(accountRoute&&req.method==='PUT')return json(200,await auth.update(session,accountRoute[1],await body(req),id=>locationStore.get(id,{active:true})));
       if(accountRoute&&req.method==='DELETE'){const removed=await auth.remove(session,accountRoute[1]);await photoStore.purge(accountRoute[1]);return json(200,removed);}
 
-      if(req.method==='GET'&&['/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&req.url==='/employment-documents'&&!session){const id=requestUrl.searchParams.get('document'),target='/employment-documents'+(/^[a-f0-9-]{36}$/i.test(id||'')?'?document='+id:'');res.writeHead(303,{Location:'/login?returnTo='+encodeURIComponent(target)+(network.id==='default'?'':'&network='+encodeURIComponent(network.slug))});return res.end();}
+      if(req.method==='GET'&&['/employment-documents','/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&!(req.url==='/communications'&&requiredReading?.due.length)&&pagePermission(req.url)&&!canAny(session,pagePermission(req.url))){res.writeHead(303,{Location:['/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup','/email-settings'].includes(req.url)?'/':'/home'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {

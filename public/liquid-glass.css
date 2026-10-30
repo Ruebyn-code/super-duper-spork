@@ -44,14 +44,14 @@
     .report-panel,.report-metric,.library-card,.learning-card,.ops-task-card,
     .history-card,.settings-option,.transfer-card,.timesheet-card,.leave-request-card,
     .user-record,.account-location-group,.location-row,.permission-level-card,
-    .device-card,.award-location-card,.wastage-card,.stocktake-panel,
+    .device-card,.award-location-card,.wastage-card,.stocktake-panel,.agreement-card,
     .communications-sidebar,.communication-post,.conversation-panel,
     .library-reader,.learning-reader,.ops-builder,.label-template-card,
     .help-guide-card,.help-panel,.cart-page>aside,.rostering-weekbar,
     #roster-metrics,.roster-board-scroll,.weekly-report-panel
   ):not(.ai-settings,.ai-draft-dialog,.scheduled-dialog,[data-permission="ai.manage"],
     .positive,.negative,.warning,.danger,.success,.completed,.ops-task-completed,
-    .is-selected,.selected,.active,.has-save-error,.has-error,.is-overdue,.overdue,[data-setup-pending=true],
+    .is-selected,.selected,.active,.needs-signature,.has-save-error,.has-error,.is-overdue,.overdue,[data-setup-pending=true],
     .ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,
     .formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *){
     background-color:var(--glass-surface);
