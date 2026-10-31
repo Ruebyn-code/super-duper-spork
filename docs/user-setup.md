@@ -251,3 +251,11 @@ Roster estimates use the selected location's automatic state holidays when no
 confirmed calendar exists. Confirmed local/part-day calendars take priority.
 Neither previews nor roster reads review or save payroll calendars. Variable work
 allowances still need actual quantities/conditions in Timesheets.
+
+Annual leave and super are calculated automatically for supported saved employment.
+Super defaults to the standard 12% estimate and age/weekly-hour eligibility; saved
+overrides remain explicit in Additional employment conditions. The Annual leave
+balance link opens the selected employee in Rostering → Leave. Set a verified
+starting balance there once for existing staff; approved ordinary-hour snapshots
+and confirmed paid absence hours then accrue automatically. See
+[Employee benefits](employee-benefits.md).

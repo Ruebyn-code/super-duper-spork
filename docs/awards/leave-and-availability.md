@@ -39,10 +39,13 @@ Annual leave cashing out is a payment arrangement rather than time away, so it i
 not a roster absence type. Annual leave in advance and TOIL requests still require
 the agreements and other conditions in the relevant award clauses.
 
-These are request/review records. They do not calculate or accrue leave balances,
-deduct entitlements, generate leave pay/loading, change timesheets, or add costs
-to labour budgets or financial reports. Those payroll functions remain outside
-the existing wage estimator's supported scope.
+These remain absence request/review records, separate from payroll payments.
+Automatic tracked annual-leave balances now use a known starting point, approved
+ordinary hours and confirmed paid absence hours. Approval can prefill supported
+hours; missing historical data and unknown hours remain unavailable rather than
+becoming zero. Annual-leave provisions and super estimates also appear separately
+in roster Costs. See [Automatic annual leave and super](../employee-benefits.md)
+for the supported rules, reservations, holiday handling and limitations.
 
 ## Access and roster behaviour
 

@@ -107,18 +107,16 @@ be established from recorded shifts:
   permitted exception separately.
 - Individual flexibility, TOIL, training wages (including the external
   Miscellaneous Award schedule), supported wages, higher contractual benefits,
-  accident pay, leave/loading, termination and redundancy.
+  accident pay, actual leave pay/loading, termination and redundancy.
 - NES, state-specific employment/public holiday/child-employment obligations,
   tax, payslips, pay runs, bank payments, STP and payroll lodgements.
-- The award refers super obligations to legislation and does not supply a
-  statutory percentage. Optional super is an **estimate** on ordinary-time wage
-  lines, including ordinary minimum-payment top-ups, excluding overtime and all
-  allowances. Actual OTE, allowance treatment, eligibility and payment deadlines
-  need separate review. Other on-costs are a user-configured gross percentage.
-  Neither is included in the gross-wage roster/budget total.
-- Public holidays and conditional allowance facts are not guessed. A maintained
-  holiday calendar and truthful work records remain required. Updates to this
-  document do not arrive automatically from the Fair Work Commission.
+- The award refers super obligations to legislation. Standard eligibility and the
+  12% rate are now automatic planning estimates; ordinary cold/regional allowances
+  are included when their allocation is known. Unsupported allocations remain
+  unavailable. Contribution caps, payroll remittance and non-standard eligibility
+  remain outside the estimator. Annual leave has verified ordinary-hour tracking
+  and a separate provision, not actual leave pay. See [employee benefits](../employee-benefits.md).
+
 
 ## Location settings and compatibility
 

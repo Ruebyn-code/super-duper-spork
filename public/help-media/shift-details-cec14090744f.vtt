@@ -9,17 +9,17 @@ Step 1: Open a saved shift’s dollar icon for Costs, then select Details. The h
 Step 2: Choose Breaks to review the automatic paid rest and unpaid meal timetable. Plans update when shift times change and respect recorded part-time meals. Custom timing must pass the award checks. Save shift applies popup edits; actual breaks are clocked separately.
 
 3
-00:00:27.375 --> 00:00:39.833
-Step 3: Choose Costs to see gross wages and allowances, separate super and on-cost estimates, and Itemised calculation. Missing costs stay unavailable with their blocking reasons. Saved estimates are labelled while you edit; Save shift recalculates them.
+00:00:27.375 --> 00:00:41.083
+Step 3: Choose Costs to see gross wages and allowances, separate super, annual leave provision, employer and on-cost estimates, and Itemised calculation. Missing costs stay unavailable with their blocking reasons. Saved estimates are labelled while you edit; Save shift recalculates them.
 
 4
-00:00:39.833 --> 00:00:52.292
+00:00:41.083 --> 00:00:53.542
 Step 4: Use Notes for shift instructions. All popup fields keep their draft when switching tabs. Save shift applies the changes together to the roster draft. Cancel, Escape and the close button ask before discarding unsaved changes.
 
 5
-00:00:52.292 --> 00:01:05.042
+00:00:53.542 --> 00:01:06.292
 Step 5: Choose Warnings to see the saved shift’s scheduling issues, including availability and configured shift/rest limits. Pay and award reviews are kept out of roster building. Missing wage setup is explained in Costs. Warnings update after saving.
 
 6
-00:01:05.042 --> 00:01:21.250
+00:01:06.292 --> 00:01:22.500
 Step 6: Choose Status for this shift’s Draft, Published or Unpublished changes status. Copy shift and Duplicate open a review before creating one draft copy. Delete shift keeps native Undo. Leave opens existing leave tools. Publish week explicitly publishes all saved shifts without an award review or review note.

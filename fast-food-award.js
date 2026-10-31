@@ -5,6 +5,7 @@ const M = require('./public/rostering-model');
 const {age, profile: validateProfile, calendarDate, activeFlexibilityAgreement, rosteredHoursAgreement} = require('./award-rules');
 const crypto = require('node:crypto');
 const breakPlanner=require('./award-break-plan');
+const benefits=require('./employee-benefits');
 const source = Object.freeze({
   id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
   effectiveFrom: '2026-07-01', reviewBy: '2027-07-01',
@@ -16,7 +17,7 @@ const source = Object.freeze({
   allowances: {brokenHill: 4790, cold: 38, freezer: 97, meal: 1733, furtherMeal: 1566, laundryFullTime: 642, laundryShift: 128, deliveryKm: 53, otherKm: 100}
 });
 const coverage = ['Adult and junior minimum rates', 'Casual loading', 'Evening, weekend and configured public holiday penalties', 'Daily and weekly/cycle overtime', 'Part-time agreed pattern, optional variations and recorded roster-hours IFAs', 'Full-time work outside the published roster', 'Minimum engagements and isolated Sunday overtime', 'Recorded break entitlements and timing', 'Configured clothing, cold work, vehicle, meal and travel allowances', 'Itemised wage estimates and approval snapshots'];
-const exclusions = ['Award coverage and classification decisions', 'Six-day/four-day arrangements (five ordinary days used)', 'IFA pay variations, TOIL, supported wages and traineeships', 'Leave, accident pay, termination, redundancy and deductions', 'NES, state child-employment laws, tax, payslips and payroll lodgement', 'Super eligibility, OTE adjustments and employer on-cost obligations (estimates only)', 'Future award changes after this uploaded edition'];
+const exclusions = ['Award coverage and classification decisions', 'Six-day/four-day arrangements (five ordinary days used)', 'IFA pay variations, TOIL, supported wages and traineeships', 'Actual leave pay/loading, accident pay, termination, redundancy and deductions', 'NES, state child-employment laws, tax, payslips and payroll lodgement', 'Non-standard super eligibility, contribution caps, payments and unsupported OTE adjustments (estimates only)', 'Future award changes after this uploaded edition'];
 const invalid=message=>Object.assign(Error(message),{status:400});
 const roundRate = (cents, percent) => Math.floor((cents * percent + 50) / 100);
 function baseRate(profile, date) {
@@ -120,7 +121,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
   const selectedProfile = (id, date) => profiles.filter(p => p.userId === id && p.effectiveFrom <= date).sort((a,b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
   for (const item of [...items].sort((a,b) => a.startAt.localeCompare(b.startAt) || a.id.localeCompare(b.id))) {
     const start = Date.parse(item.startAt), end = Date.parse(item.endAt), firstDate = getParts(start).date;
-    const result = {subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: source.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], notices: [], complete: true, estimated: mode === 'roster'};
+    const result = {benefitSegments:[],subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: source.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], notices: [], complete: true, estimated: mode === 'roster'};
     const issue = (code, message, clause, blocking = false) => {
       if (!result.issues.some(i => i.code === code)) result.issues.push({subjectId: item.id, userId: item.userId, code, message, clause, versionId: source.id, blocking});
       if (blocking) result.complete = false;
@@ -248,6 +249,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         const percent = overtime ? overtimePercent(profile.employmentType,day,holiday,daily.overtime) : ordinaryPercent(profile.employmentType,profile.classification,day,minute,holiday);
         const rate = roundRate(appliedBase,percent), label = overtime ? 'Overtime '+percent+'%' : holiday ? 'Public holiday '+percent+'%' : day === 6 || day === 0 ? 'Weekend '+percent+'%' : minute < 360 || minute >= 1320 ? 'Evening '+percent+'%' : 'Ordinary '+percent+'%';
         add(label,seconds,rate,overtime?'20.6':'21; Schedule A',overtime?'overtime':'ordinary',date);
+        result.benefitSegments.push({date,startAt:new Date(cursor).toISOString(),endAt:new Date(next).toISOString(),seconds,label,ordinary:!overtime,employmentType:profile.employmentType,adult:age(profile.dateOfBirth,date)>=18,superEligible:profile.superEligible,rateCents:rate,appliedBaseCents:appliedBase,minimumBaseCents:base,weekendExtraPercent:day===0||day===6?ordinaryPercent(profile.employmentType,profile.classification,day,720,false)-100:0});
         if (overtime) {
           daily.overtime = Math.round((daily.overtime+seconds)*1000)/1000; result.overtimeSeconds += seconds;
           if (windows.length && cursor >= Math.max(...windows.map(w => Date.parse(w.endAt)))){afterFinishByDate[date]=(afterFinishByDate[date]||0)+seconds/60;}
@@ -318,11 +320,8 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       if (line.kind==='allowance') result.allowanceCents += line.amountCents;
       else {line.amountCents = Math.floor((Math.round(line.seconds*1000)*line.rateCents+1800000)/3600000); result.wageCents += line.amountCents;}
     }
-    const ordinaryWageCents=result.lines.filter(line=>line.kind==='ordinary'||line.kind==='minimum-payment'&&line.ordinaryForSuper).reduce((sum,line)=>sum+line.amountCents,0);
-    if (config.superBps !== null && config.superBps !== undefined && p?.superEligible !== null && p?.superEligible !== undefined) result.superEstimateCents = p.superEligible ? Math.round(ordinaryWageCents*config.superBps/10000) : 0;
     result.oncostEstimateCents = Math.round((result.wageCents+result.allowanceCents)*(config.oncostBps||0)/10000);
     if (result.complete) result.costCents = result.wageCents+result.allowanceCents;
-    if (result.costCents !== null && result.superEstimateCents !== null) result.employerEstimateCents = result.costCents+result.superEstimateCents+result.oncostEstimateCents;
     result.profileId = p?.id || null;
     result.fingerprint = crypto.createHash('sha256').update(JSON.stringify(result)).digest('hex');
     results.push(result);
@@ -336,6 +335,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     if(row.complete&&(badByUser.get(row.userId)||[]).some(other=>{const otherDate=getParts(Date.parse(itemById.get(other.subjectId).startAt)).date;return otherDate>=from&&otherDate<until||groupIds.has(other.subjectId);})){row.complete=false;row.costCents=null;row.employerEstimateCents=null;row.issues.push({subjectId:row.subjectId,userId:row.userId,code:'pay-incomplete-context',message:'Complete this employee’s other work details in the same cycle or continuous engagement before relying on overtime and minimum payments.',clause:'10, 11, 13, 20',versionId:source.id,blocking:true});}
     row.fingerprint=crypto.createHash('sha256').update(JSON.stringify({...row,fingerprint:undefined})).digest('hex');
   }
+  benefits.apply(results,config);for(const result of results)result.fingerprint=crypto.createHash('sha256').update(JSON.stringify({...result,fingerprint:undefined})).digest('hex');
   return {enabled:true, source, results, coverage, exclusions};
 }
 function facts(input = {}) {

@@ -1,3 +1,4 @@
+const {paidTypes}=require('./annual-leave');
 const crypto=require('node:crypto'),M=require('./public/rostering-model'),{can,locationIds}=require('./permissions');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 // The award references the NES rather than creating separate leave balances.
@@ -34,7 +35,7 @@ function create({now=Date.now,people}){
  function overlaps(state,actor,userId,period){return(state.leave||[]).filter(record=>record.companyId===actor.companyId&&record.userId===userId&&blocking(record)&&M.overlap(record,period));}
  function assertAvailable(state,actor,userId,period){if(userId&&overlaps(state,actor,userId,period).length)fail('This user is unavailable during approved leave. Move or reassign the shift, or have the leave cancellation reviewed.',409);}
  const canRead=(actor,record)=>actor.id===record.userId||record.locationId===actor.locationId&&can(actor,'rostering.leave.approve')&&(!privateLeave(record)||can(actor,'rostering.leave.confidential'));
- function view(actor,record){return{...record,typeName:types.find(type=>type.id===record.type)?.name||record.type,canReview:record.locationId===actor.locationId&&record.userId!==actor.id&&can(actor,'rostering.leave.approve')&&(!privateLeave(record)||can(actor,'rostering.leave.confidential'))};}
+ function view(actor,record){return{...record,trackPaidHours:paidTypes.has(record.type),typeName:types.find(type=>type.id===record.type)?.name||record.type,canReview:record.locationId===actor.locationId&&record.userId!==actor.id&&can(actor,'rostering.leave.approve')&&(!privateLeave(record)||can(actor,'rostering.leave.confidential'))};}
  function list(state,actor){return{types,noticeDays:14,earliestDate:M.shiftDate(M.today(now()),14),canRequest:can(actor,'rostering.leave'),canApprove:can(actor,'rostering.leave.approve'),requests:(state.leave||[]).filter(record=>record.companyId===actor.companyId&&canRead(actor,record)).map(record=>({...view(actor,record),conflictingShifts:new Set((state.weeks||[]).filter(week=>week.companyId===actor.companyId&&week.locationId===actor.locationId).flatMap(week=>can(actor,'rostering.manage')?[...week.draft,...week.published]:week.published).filter(shift=>shift.userId===record.userId&&M.overlap(M.interval(shift),record)).map(shift=>shift.id)).size})).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||a.startDate.localeCompare(b.startDate))};}
  async function save(state,actor,input){
   if(!can(actor,'rostering.leave'))fail('Leave request permission required.',403);if(!input||typeof input!=='object'||Array.isArray(input))fail('Enter valid leave details.');if(input.userId&&input.userId!==actor.id)fail('Submit your own leave request.',403);
@@ -54,10 +55,11 @@ function create({now=Date.now,people}){
    if(!review)fail('You cannot review this leave request or approve your own leave.',403);
    if(['approve','reject'].includes(input.action)&&record.status==='pending'){if(input.action==='reject'&&!reason)fail('Enter a reason for declining leave.');next=input.action==='approve'?'approved':'rejected';}
    else if(input.action==='cancel'&&['approved','cancellation-requested'].includes(record.status)){if(!reason)fail('Enter a reason for cancelling approved leave.');next='cancelled';}
+   else if(input.action==='confirm-hours'&&['approved','cancellation-requested'].includes(record.status)){if(!input.confirmedPaidDays)fail('Confirm the ordinary paid leave hours.');next=record.status;}
    else if(input.action==='keep-approved'&&record.status==='cancellation-requested'){if(!reason)fail('Enter a reason for declining cancellation.');next='approved';}
    else fail('Choose an action available for this leave request.',409);
   }
-  record.status=next;record.revision++;record.updatedAt=stamp();record.audit.push({action:input.action,by:actor.id,at:stamp(),reason});return view(actor,record);
+  const beforePaidDays=record.paidDays;if(input.confirmedPaidDays!==undefined&&['approve','confirm-hours'].includes(input.action))record.paidDays=structuredClone(input.confirmedPaidDays);record.status=next;record.revision++;record.updatedAt=stamp();record.audit.push({action:input.action,by:actor.id,at:stamp(),reason,...(input.confirmedPaidDays!==undefined?{beforePaidDays,afterPaidDays:record.paidDays}:{})});return view(actor,record);
  }
  return{list,save,change,overlaps,assertAvailable};
 }

@@ -21,3 +21,5 @@ add('staff-allowances','user-roster','staff-allowances','staff-allowances-previe
 add('shift-details','shift-details','shift-breaks','shift-costs','shift-notes','shift-warnings','shift-status');
 add('automatic-breaks','auto-breaks-plan','auto-breaks-plan','auto-breaks-short','auto-breaks-custom','auto-breaks-conflict','auto-breaks-staff');
 module.exports=stories;
+
+add('annual-leave-super','benefits-balance','benefits-opening','benefits-paid-hours','benefits-costs');

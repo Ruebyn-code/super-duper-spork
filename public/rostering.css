@@ -609,3 +609,7 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 .roster-shift-issues{border-color:var(--theme-danger-text,#b42318);width:360px;max-height:min(340px,calc(100dvh - 16px));pointer-events:auto}
 .roster-shift-issues h3{color:var(--theme-danger-text,#b42318)}
 @media print{.roster-shift-issues{display:none!important}}
+
+.annual-leave-balance{margin:0 0 18px;padding:14px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:var(--theme-surface,#fff)}.annual-leave-balance h3{margin:0 0 10px}.annual-leave-balance>label{display:block;max-width:280px;margin-bottom:12px}.annual-leave-balance .roster-metrics{margin-bottom:10px}.annual-leave-balance .roster-metric{padding:10px}.annual-leave-balance .roster-metric>strong{font-size:19px}
+
+#roster-metrics .roster-metric{position:relative}.roster-week-benefits-trigger{position:absolute;top:3px;right:4px;display:grid;place-items:center;width:22px;height:22px;min-height:22px;padding:0;border:0;border-radius:5px;background:var(--theme-primary-soft,#eaf5ff);color:var(--theme-primary-text,var(--primary));font:700 13px Arial,sans-serif}.roster-week-benefits-trigger:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
