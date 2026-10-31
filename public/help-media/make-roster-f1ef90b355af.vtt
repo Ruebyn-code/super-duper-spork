@@ -13,9 +13,9 @@ Step 2: Use the Staff, Stacked and Day buttons to choose a view. Press + inside 
 Step 3: Drag the blank part of a shift card to move it; a mouse can also drag its staff name or position. On a tablet, use the blank bottom area. Drag a Day-view bar to change staff or time. The highlighted row/day shows the destination; Escape cancels. Check overlap or availability warnings.
 
 4
-00:00:47.667 --> 00:01:05.125
-Step 4: Review autosave status. Open a card’s dollar icon for its tabbed shift popup. The shift popup groups Details, Breaks, Costs, Notes, Warnings and Status; Save shift applies popup edits to the draft. Expand Itemised calculation for pay lines. Staff view retains weekly totals, and the red error icon opens award review.
+00:00:47.667 --> 00:01:13.250
+Step 4: Review autosave status. Open a card’s dollar icon for its tabbed shift popup. The shift popup groups Details, Breaks, Costs, Notes, Warnings and Status; Save shift applies popup edits to the draft. Expand Itemised calculation for pay lines. Staff view retains weekly totals. A red border takes priority for availability, configured shift-length/award or save issues: hover over the card’s top to read them, or click the red icon. Keyboard focus also shows the issues; Escape dismisses them.
 
 5
-00:01:05.125 --> 00:01:15.375
-Step 5: Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready.
+00:01:13.250 --> 00:01:32.250
+Step 5: Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready. Green borders mark shifts matching their published version; editing one removes its green until republished. Red issue borders take priority and do not mean every issue blocks publication.

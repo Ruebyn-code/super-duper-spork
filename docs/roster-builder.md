@@ -30,6 +30,19 @@ other roster sections and published readers keep their existing presentation.
   Shift targets, inline validation/Undo and phone readers stay native.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
   Today uses the server's Melbourne date; holiday stars remain native markers.
+- Each saved shift has a green border only when it matches its own published
+  snapshot. Availability/approved-leave conflicts, current scoped award checks
+  (including configured shift-length limits), unresolved break plans and failed
+  saves take priority with a red border in Staff, Stacked and Day views. Other
+  employees’ shift issues are excluded. Green denotes publication, not compliance.
+  Unsaved/pending changes suppress stale green and saved checks until recalculated;
+  a failed save retains its current error. Position colours, selection/focus,
+  native dragging and actual calculations remain unchanged.
+- Hover over the top of a red card/bar or focus the card to read its current issues.
+  The theme-aware tooltip stays above clipped grids, can be hovered for reading,
+  and closes with Escape, scrolling or context changes without moving focus or
+  writing data. Click the existing red icon for a persistent review. Phone sheets
+  retain published-only privacy and their existing presentation.
 - Award warnings use small red error icons beside staff names and on shift cards.
   Open an icon for a compact, read-only review scoped to that employee or shift;
   repeated issues are grouped with their clause and affected-shift count. Day

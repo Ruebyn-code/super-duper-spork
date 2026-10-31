@@ -292,7 +292,7 @@ button.roster-day-shift{cursor:grab;touch-action:none}
 .roster-award-panel{margin:0 0 9px;padding:9px 12px;border:1px solid var(--theme-line,#edcf9e);border-radius:8px;background:var(--theme-warning-soft,#fff7e9);color:var(--theme-warning-text,#6b4b1d);font:11px/1.5 Arial,sans-serif}
 .roster-award-panel.is-clear{background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,white));border-color:color-mix(in srgb,var(--primary) 20%,var(--theme-line,white));color:var(--theme-text,#324b60)}
 .roster-award-panel summary{cursor:pointer;font-weight:600}.roster-award-panel p{margin:7px 0;font-size:11px}.roster-award-panel ul,.roster-award-review-list{padding-left:18px;font:11px/1.6 Arial,sans-serif}.roster-award-panel a{color:var(--theme-primary-text,var(--primary))}
-.roster-cell .roster-shift.has-award-warning{outline:1px dashed #cb8d2b;outline-offset:1px}.roster-award-note{font:11px/1.6 Arial,sans-serif;color:var(--theme-muted,#627383)}.roster-award-review-note{width:100%;box-sizing:border-box;min-height:75px}
+.roster-award-note{font:11px/1.6 Arial,sans-serif;color:var(--theme-muted,#627383)}.roster-award-review-note{width:100%;box-sizing:border-box;min-height:75px}
 .roster-award-panel[hidden]{display:none}
 .roster-pay-rows{display:grid;gap:5px;margin:10px 0}.roster-pay-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--theme-line,#dce5ed);font:12px Arial,sans-serif}.roster-pay-row button{font-size:10px;padding:6px 8px;flex-shrink:0}.roster-pay-table{width:100%;table-layout:fixed;border-collapse:collapse;font:11px/1.5 Arial,sans-serif;margin:10px 0}.roster-pay-table td,.roster-pay-table th{padding:7px 4px;text-align:left;border-bottom:1px solid var(--theme-line,#dce5ed);overflow-wrap:anywhere}.roster-pay-table th:last-child,.roster-pay-table td:last-child{text-align:right}.roster-dialog label:has(>input[type=checkbox]){display:flex;align-items:flex-start;gap:8px;margin:10px 0;flex-direction:row}.roster-dialog label>input[type=checkbox]{width:16px;height:16px;flex-shrink:0;margin:0}
 
@@ -600,3 +600,11 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 .roster-variation-fields{min-width:0;border:0;padding:0;margin:0}
 
 .roster-deletion-feedback[hidden]{display:none!important}
+
+/* Publication belongs to this saved shift. Issues override the green published border. */
+#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=published]{--shift-status-border:var(--theme-success-text,#28774e);border-color:var(--shift-status-border)}
+#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=error]{--shift-status-border:var(--theme-danger-text,#b42318);border-color:var(--shift-status-border)}
+#roster-days :is(.roster-shift,.roster-day-shift):is([data-shift-feedback=published],[data-shift-feedback=error])::after{content:"";position:absolute;inset:0;border:2px solid var(--shift-status-border);border-radius:inherit;pointer-events:none;z-index:2}
+.roster-shift-issues{border-color:var(--theme-danger-text,#b42318);width:360px;max-height:min(340px,calc(100dvh - 16px));pointer-events:auto}
+.roster-shift-issues h3{color:var(--theme-danger-text,#b42318)}
+@media print{.roster-shift-issues{display:none!important}}
