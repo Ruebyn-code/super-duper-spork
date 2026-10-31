@@ -28,6 +28,11 @@ after approval and retains quantities and notes.
 
 ## Recommendations and shortages
 
+Delivery-based quantities apply to items using **Automatic usage (current)**.
+An item set to **Projected sales** uses its explicit weekly sales-ratio target;
+supplier dates, ordering deadlines and receipt history remain available. See
+[Target calculations](target-calculations.md).
+
 For a fully configured schedule with both a next and following delivery, the
 delivery target covers expected use from now until the following arrival. It uses
 the same item consumption average from up to four completed Sunday–Saturday usage

@@ -17,7 +17,7 @@ function createStore(dir,{locations,auth,catalogues,awards,now=Date.now}){
   if(!access)return{name:'A new company location',restricted:true,steps:[]};
   const [env,catalogue,people,manual,deviceState]=await Promise.all([delivery.deliveryEnvironment(dir,record.id),catalogues.read(record.companyId),auth.managerDirectory(),manualPar.read(dir,record.id),fs.readFile(path.join(dir,'kiosk-devices.json'),'utf8').then(JSON.parse,error=>{if(error.code==='ENOENT')return{devices:[]};throw error;})]);
   const products=catalogue.products.filter(p=>!p.archived),localActor={...context,locationId:record.id,locationName:record.name},par=await stockUsage.parLevels(dir,localActor,products,{manualLevels:manual,now:new Date(now())}),firstCandidate=people.find(p=>p.id===data.locations[record.id]?.firstUserId&&!p.invitation),first=firstCandidate&&canAccessLocation(await auth.forCompany(firstCandidate,record.companyId),record)?firstCandidate:null;
-  const parCount=products.filter(p=>Number.isInteger(par.levels[p.id]?.level)).length,kioskReady=deviceState.devices.some(d=>d.locationId===record.id&&d.companyId===record.companyId&&d.status!=='revoked');
+  const parCount=products.filter(p=>Number.isInteger(par.levels[p.id]?.level)||par.levels[p.id]?.source==='projected_sales').length,kioskReady=deviceState.devices.some(d=>d.locationId===record.id&&d.companyId===record.companyId&&d.status!=='revoked');
   const link=tab=>'/admin/accounts?location='+encodeURIComponent(record.id)+'&setupTab='+tab+'#locations',stepPage='/location-setup-step';
   const steps=[
    {id:'details',title:'Location name',description:'Enter the name for this location.',value:record.name,done:Boolean(record.name?.trim()),permission:'locations.manage',url:link('general')},

@@ -69,6 +69,7 @@ html.stock-settings-open,html.stock-settings-open body{overflow:hidden}
 .stock-admin-page #stock-form .stock-target-settings h3{font-size:14px;margin:0 0 4px}
 .stock-admin-page #stock-form .stock-target-settings p{margin:4px 0;font-size:12px;line-height:1.5}
 .stock-admin-page #stock-form .stock-target-settings input{max-width:220px}
+.stock-admin-page #stock-form .stock-target-settings>label{display:block;margin-top:10px}.stock-admin-page #stock-form .stock-target-settings>label[hidden],.stock-admin-page #stock-form #stock-target-sales-fields[hidden]{display:none}.stock-admin-page #stock-form #stock-target-sales-fields{margin-top:10px}.stock-admin-page #stock-form #stock-target-sales-fields input{width:100%;max-width:none}
 .stock-admin-page #stock-form .stock-order-when-setting{margin:10px 0;padding:10px 12px;border:1px solid var(--theme-line,#d3dfea);border-radius:8px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
 .stock-admin-page #stock-form .stock-order-when-setting>span{display:block;font-size:12px;font-weight:600}
 .stock-admin-page #stock-form .stock-order-when-setting>strong{display:block;margin-top:4px;font-size:16px}

@@ -23,3 +23,11 @@ test('automatic target levels skip manual writes, and a failed stock save never 
  await assert.rejects(state.save(updated,12,{stock:async()=>{throw Error('Save failed');},target:async()=>target++}),error=>!error.partial);
  assert.equal(target,0);assert.equal(state.level,10);
 });
+
+test('calculation-only changes skip company writes and retain completed manual/item saves through a failed calculation retry',async()=>{
+ const usage={mode:'usage',salesBaseCents:null,quantityThousandths:null},sales={mode:'sales',salesBaseCents:100000,quantityThousandths:500},state=model.create({id:'cups',body,calculation:usage}),calls=[];let failure=true;
+ const io={stock:async()=>{throw Error('Unchanged company item');},target:async()=>calls.push('manual'),calculation:sales,saveCalculation:async()=>{calls.push('calculation');if(failure)throw Error('Save failed');}};
+ await assert.rejects(state.save(body,20,io),e=>e.partial);failure=false;await state.save(body,20,io);await state.save(body,20,io);assert.deepEqual(calls,['manual','calculation','calculation']);
+ // Even returning to the old choice after an uncertain save must check the server.
+ failure=true;await assert.rejects(state.save(body,20,{...io,calculation:usage}));failure=false;await state.save(body,20,io);assert.equal(calls.length,5);
+});

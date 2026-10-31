@@ -13,9 +13,9 @@ Step 2: Use Item details for name, supplier, price, supplier SKU, category and o
 Step 3: Use Pack &amp; counting for unit amount, storage group and smaller-pack conversion.
 
 4
-00:00:18.500 --> 00:00:24.500
-Step 4: Use Ordering rules for minimum quantities, rounding and the selected location’s manual target.
+00:00:18.500 --> 00:00:25.958
+Step 4: Use Ordering rules for minimum quantities, rounding and the selected location’s Target calculation: Automatic usage (current) or Projected sales.
 
 5
-00:00:24.500 --> 00:00:31.000
+00:00:25.958 --> 00:00:32.458
 Step 5: Press Save changes once for the whole popup. Correct any highlighted field if its tab opens.

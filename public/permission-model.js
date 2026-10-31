@@ -34,7 +34,7 @@
   ['invoices.delete','Delete invoices','Remove saved invoices from expenses','invoices.edit'],
   ['stock.create','Create stock items','Add stock items to the company catalogue','stock.manage'],
   ['stock.delete','Delete stock items','Remove stock items from the catalogue','stock.manage'],
-  ['stock.targets','Edit manual target levels','Set manual target levels for the selected location','stock.manage'],
+  ['stock.targets','Edit target calculations','Set usage or projected-sales target calculations and manual fallback levels for the selected location','stock.manage'],
   ['suppliers.create','Create suppliers','Add suppliers to the company catalogue','suppliers.manage'],
   ['suppliers.delete','Delete suppliers','Remove unused suppliers','suppliers.manage'],
   ['users.create','Create and invite users','Create users and send or resend setup invitations','users.manage'],

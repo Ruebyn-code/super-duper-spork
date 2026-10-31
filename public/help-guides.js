@@ -103,23 +103,23 @@
   'Compare opening count, orders and confirmed transfer effects with the following Sunday’s closing count.',
   'Investigate missing counts or negative usage before relying on the automatic target.'
  ],{route:'/stock-count#usage',permissions:['counts.view'],notes:['A stock count is a snapshot, so several counts are not added together as stock on hand. Missing quantities remain unknown.'],related:['target-levels','stock-transfers']});
- add(c,'target-levels','Understand automatic and manual target levels','Use completed item usage to guide replenishment.',[
-  'Review Target level beside an item in Ordering or Stock count.',
-  'The ordinary weekly target averages up to four completed Sunday–Saturday usage cycles and rounds up to whole ordered packs.',
-  'If no usable cycle exists, an authorised stock manager can edit the item → Ordering rules → Manual target level for the selected location.',
-  'Save changes. Completed usage supersedes the manual fallback as soon as it becomes available.'
- ],{route:'/stock-count#usage',permissions:['counts.view'],notes:['Two Sunday counts can provide the first completed cycle; five consecutive Sunday counts can provide four. Zero usage is valid. An active timed delivery plan uses a delivery-coverage target for recommendations while retaining the saved weekly target.'],related:['order-when','delivery-quantities','stock-settings'],keywords:['par','manual par','four weeks','average','usage']});
+ add(c,'target-levels','Choose target level calculations','Use item usage or a quantity per projected sales amount.',[
+  'Edit a stock item, open Ordering rules and find Target calculation for the selected location.',
+  'Choose Automatic usage (current) to keep up to four completed usage cycles, with a manual fallback before usable usage is available.',
+  'Choose Projected sales and enter a sales amount plus item quantity. For $1,000 and 0.5 boxes, $10,000 projected sales gives a target of 5 boxes.',
+  'Press Save changes. Check the weekly target in Ordering or Stock count, then review the recommendation before adding it to the cart.'
+ ],{route:'/admin#stock',permissions:['stock.manage'],notes:['The method is saved per item and location. Projected sales uses Ordering’s original weekly forecast, including holidays and Sunday’s next-week rollover; a missing forecast stays unavailable. Its weekly target takes priority over delivery coverage. Order when remains automatic from usage, and minimum/rounding rules still apply to orders. Switching back retains the saved ratio.'],related:['order-when','delivery-quantities','stock-settings'],keywords:['par','manual par','four weeks','average','usage','sales ratio','1000','0.5','pita']});
  add(c,'order-when','Understand the automatic Order when level','Know when the system recommends replenishing stock.',[
   'Find Order when in the item’s Ordering details or Stock count row.',
-  'Without an active timed delivery plan, it is based on average weekly usage across the available completed cycles.',
+  'For weekly targets it is based on average weekly usage across the available completed cycles. The Projected sales method changes the target, while this usage trigger stays automatic.',
   'Above that level, the recommendation is zero. At or below it, the system recommends enough to reach the target, subject to ordering rules.',
   'Use your physical stock count and review the suggestion before adding it to the cart.'
- ],{notes:['For a target of 10 boxes with 10 in stock, no additional boxes are needed. Delivery plans replace the weekly trigger with delivery coverage. Order when is calculated automatically.'],related:['target-levels','delivery-quantities'],keywords:['reorder','trigger','minimum stock','10 boxes']});
+ ],{notes:['For a target of 10 boxes with 10 in stock, no additional boxes are needed. With the Automatic usage method, delivery plans can replace the weekly trigger with delivery coverage. Order when is calculated automatically.'],related:['target-levels','delivery-quantities'],keywords:['reorder','trigger','minimum stock','10 boxes']});
  add(c,'stock-settings','Add or edit stock items','Keep item details, pack sizes and ordering rules together.',[
   'Open Ordering → Stock items. Choose Add new stock or the pencil beside an existing item.',
   'Use Item details for name, supplier, price, supplier SKU, category and optional photo.',
   'Use Pack & counting for unit amount, storage group and smaller-pack conversion.',
-  'Use Ordering rules for minimum quantities, rounding and the selected location’s manual target.',
+  'Use Ordering rules for minimum quantities, rounding and the selected location’s Target calculation: Automatic usage (current) or Projected sales.',
   'Press Save changes once for the whole popup. Correct any highlighted field if its tab opens.'
  ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Close retains the current item’s draft for reopening; Cancel edit discards it. Remove stock is inside Item details → More actions. Company stock changes apply across that company.'],related:['count-sleeves','order-rounding','stock-price-changes'],keywords:['catalogue','SKU','photo','category','item settings']});
  add(c,'order-rounding','Set minimum quantities and rounding','Match recommendations and cart quantities to supplier pack rules.',[
@@ -178,7 +178,7 @@
   'The app estimates usage from now until the following arrival using completed item usage and available sales forecast patterns.',
   'Estimated available stock and eligible confirmed incoming quantities reduce the recommendation. For 10 needed, 3 available and 2 incoming, the starting recommendation is 5.',
   'In Stock count, enter the physical quantity to calculate the recommendation against that count. Check shortage and overdue warnings before adding it.'
- ],{notes:['Incoming stock must arrive before the end of the coverage period. Unknown or overdue deliveries need review. Ordering’s available-stock estimate needs a saved count no more than 28 days old; a fresh physical count is preferable. Missing sales uses average weekly usage spread across days; missing item usage retains the normal/manual fallback.'],related:['delivery-shortages','receiving-orders','target-levels','stock-count']});
+ ],{notes:['Incoming stock must arrive before the end of the coverage period. Unknown or overdue deliveries need review. Ordering’s available-stock estimate needs a saved count no more than 28 days old; a fresh physical count is preferable. For the Automatic usage method, missing sales uses average weekly usage spread across days and missing item usage retains the normal/manual fallback. Projected sales uses its selected weekly target instead of delivery coverage.'],related:['delivery-shortages','receiving-orders','target-levels','stock-count']});
  add(c,'delivery-shortages','Understand shortage and overdue warnings','Check whether stock can last until the next arrival.',[
   'Read May run out before delivery beneath an item in Ordering or beside its Stock count details.',
   'Check the most recent count and any received stock, then verify pending orders and their arrival dates.',

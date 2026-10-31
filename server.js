@@ -156,6 +156,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const homeInsights=require('./home-insights').createReader({dir:dataDir,locations:actor=>locationStore.accessible(actor),context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),history:()=>usageHistory(dataDir),salesStore,weekly:weeklySalesReportStore,ops:opsStore,now:communicationsNow});
   const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
   const manualParStore=manualPar.createStore();
+  const targetCalculations=require('./target-calculations'),targetCalculationStore=targetCalculations.createStore();
   function fail(message,status=400){const error=new Error(message);error.status=status;throw error;}
   async function body(req,limit=16000){if(req[parsedBody]!==undefined)return req[parsedBody];const chunks=[];let length=0;for await(const chunk of req){const bytes=Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk);length+=bytes.length;if(length>limit)fail('Request is too large.',413);chunks.push(bytes);}try{return JSON.parse(Buffer.concat(chunks,length).toString('utf8'));}catch{fail('Invalid JSON.');}}
   function name(value,label,max=100){if(typeof value !== 'string'||!value.trim()||value.length>max)fail('Enter a valid '+label+'.');return value.trim();}
@@ -273,7 +274,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const base={locationId:id,locationName:session.locationName,companyId:session.companyId};
         if(req.method==='GET'){
           if(task==='team'){const[users,roles,state]=await Promise.all([auth.list(session),auth.permissionLevels(session),locationSetupStore.status(session,id)]);return json(200,{...base,selectedUserId:state.locations.find(l=>l.id===id)?.firstUserId||null,users:users.filter(u=>!u.invitation).map(u=>({id:u.id,username:u.username})),roles:roles.levels.filter(r=>r.assignable).map(r=>({id:r.id,name:r.name}))});}
-          if(task==='par'){const[catalogue,manual]=await Promise.all([readCatalogue(),manualParStore.read(dataDir,id)]),levels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels:manual});return json(200,{...base,products:catalogue.products.filter(p=>!p.archived).map(p=>({id:p.id,name:p.name,sku:p.sku||'',unitAmount:p.unitAmount||'',supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name||'',manualLevel:levels.levels[p.id]?.manualLevel??null,automatic:levels.levels[p.id]?.source==='usage',level:levels.levels[p.id]?.level??null}))});}
+          if(task==='par'){const[catalogue,manual]=await Promise.all([readCatalogue(),manualParStore.read(dataDir,id)]),levels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:usageHistory,manualLevels:manual});return json(200,{...base,products:catalogue.products.filter(p=>!p.archived).map(p=>({id:p.id,name:p.name,sku:p.sku||'',unitAmount:p.unitAmount||'',supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name||'',manualLevel:levels.levels[p.id]?.manualLevel??null,automatic:['usage','projected_sales'].includes(levels.levels[p.id]?.source),calculationSource:levels.levels[p.id]?.source,level:levels.levels[p.id]?.level??null}))});}
           return json(200,{...base,network:network.slug||'default'});
         }
         if(req.method!=='POST'||task==='par')fail('Unsupported setup action.',405);
@@ -684,9 +685,22 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const catalogue=await readCatalogue();
         const manualLevels=await manualParStore.read(dataDir,session.locationId||session.id);
         const history=await usageHistory(dataDir),now=deliveryNow(),parLevels=await stockUsage.parLevels(dataDir,session,catalogue.products,{reader:async()=>history,manualLevels,now:new Date(now)});
-        let products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:parLevels.levels[p.id],ordering:parLevels.suggestions[p.id]}));
+        let products=catalogue.products.map(p=>({...p,supplier:catalogue.suppliers.find(s=>s.id===p.supplierId)?.name,par:{...parLevels.levels[p.id],...(can(session,'stock.targets')?{calculationSettings:parLevels.calculationSettings[p.id]||targetCalculations.initial()}: {})},ordering:parLevels.suggestions[p.id]}));
         const deliveryDays=await supplierDeliveryDaysStore.read(session.locationId,session.companyId),planned=await deliveryPlanning.build(dataDir,session,products,deliveryDays.schedules,await locationStore.get(session.locationId),parLevels.levels,parLevels.stockTake,history,{now});products=planned.products;const suppliers=catalogue.suppliers.map(supplier=>({...(can(session,'suppliers.manage')?supplier:{id:supplier.id,name:supplier.name}),deliveryDays:deliveryDays.schedules.find(row=>row.supplierId===supplier.id)?.days||[],deliveryPlan:planned.plans.get(supplier.id)||null}));
         return json(200,req.url==='/api/menu'?products:{...catalogue,suppliers,products,parWindow:parLevels.window,stockTake:parLevels.stockTake});
+      }
+      const targetCalculationRoute=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)\/target-calculation$/);
+      if(targetCalculationRoute&&req.method==='PUT'){
+        const input=await body(req);return json(200,await targetCalculationStore.save(dataDir,session,targetCalculationRoute[1],input,async()=>{
+          const current=kioskCookie?(await kioskStore.worker(await kioskStore.device(req)))?.actor:await auth.session(req);
+          if(!current||current.id!==session.id||current.csrf!==session.csrf)fail('Sign in again before saving the target calculation.',401);
+          if(kioskCookie&&(current.locationId!==session.locationId||current.companyId!==session.companyId))fail('This kiosk location changed.',403);
+          const selected=await companyStore.context(await locationStore.sessionContext(current,session.locationId));
+          if(selected.companyId!==session.companyId||selected.locationId!==session.locationId)fail('The company or location changed.',409);
+          if(!can(selected,'stock.manage')||!can(selected,'stock.targets'))fail('Target calculation permission required.',403);
+          if(!isSupport(selected)&&(await communicationStore.required(selected)).due.length)fail('Read or snooze required posts before saving.',428);
+          if(!(await readCatalogue()).products.some(p=>p.id===targetCalculationRoute[1]))fail('Stock not found.',404);
+        }));
       }
       const manualParRoute=req.url.match(/^\/api\/products\/([a-zA-Z0-9-]+)\/par$/);
       if(manualParRoute&&req.method==='PUT'){
