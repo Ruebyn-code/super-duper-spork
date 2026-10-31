@@ -30,6 +30,20 @@ Staff Home starts with operational quick links, Attention, today’s checklists,
 
 Store Manager Home has a compact two-column dashboard with **Today at a glance** above its sections when the user has both Home and View daily sales permission. It groups projected sales and labour budget together in two boxes: **Today** for the full trading day, and **This hour** for the current hour with cumulative figures through the **end of the current hour**. These are forecasts, not actual sales or payroll costs. Expand the hourly breakdown to see opening hour through the current hour. Open roster appears only with roster viewing permission and retains the phone roster popup.
 
+Today also shows **Rostered cost** for users with roster viewing and existing
+roster wage authority (manage, approve or costs). It sums complete shifts dated
+to the displayed opening trading day, including each whole overnight shift,
+using only saved published wage/allowance estimates or historical published
+hourly rates. Draft edits, actual clocking, super and leave provisions are excluded.
+No published shifts shows $0; any unavailable shift price makes the whole figure
+unavailable, with an aggregate reason rather than a misleading partial total.
+The cost remains independent of missing sales forecasts. Ordinary Home/sales
+viewers receive no wage field, and Staff/Head Office Home retain their existing
+exclusions. Reads do not calculate new award prices, poll providers or change
+rosters, rates, approvals or budgets. The metric follows the existing Melbourne
+trading-date rollover and refreshes with the rest of Today at a glance.
+
+
 The summary reuses the roster’s daily forecast (four completed weeks, weekly-report-first revenue and matching public holidays with yearly growth), plus the same saved hourly patterns as Hourly sales and Rostering. It does not use Sunday’s upcoming ordering week. Labour budgets inherit Location → Company → Network. A percentage applies to the day’s forecast, rounded once; a fixed weekly amount is divided among all seven daily forecasts by sales weight. The daily budget is then divided among forecast hours by sales weight, allocating remainder cents consistently so totals reconcile. No budget, incomplete history or missing hourly pattern remains unavailable; real zeroes stay zero. No staff pay, rates, raw hourly reports or private budget settings are returned.
 
 Daily sales entry and its hourly-scan action appear only on the Store dashboard, with the existing permissions and trading window. Head Office does not display or fetch the entry panel; authorised Head Office users can still enter sales through Sales → Daily sales.

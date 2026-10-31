@@ -25,3 +25,6 @@ body[data-home-dashboard=staff] :is(#home-operations,#home-totals,#ordering-budg
 .home-operations-current{background:color-mix(in srgb,var(--secondary) 13%,var(--theme-surface,#fff))}
 .home-board-profile[hidden]{display:none}.home-board-profile{display:flex;align-items:center;gap:6px;font-size:11px;margin:0}.home-board-profile select{width:auto;min-height:32px;margin:0;font-size:11px;padding:5px 8px}
 @media(max-width:600px){.home-operations{padding:10px;margin-bottom:10px}.home-operations-heading{align-items:start;gap:8px}.home-operations-heading h2{font-size:17px}.home-operations-roster{font-size:11px;padding:8px}.home-operations-group{padding:9px}.home-operations-metric strong{font-size:21px}.home-operations-cards{grid-template-columns:1fr;gap:7px}}
+
+.home-operations-rostered{grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding-top:9px;border-top:1px solid var(--theme-line,#dce5ed)}.home-operations-rostered>small{grid-column:1/-1}.home-operations-rostered[hidden]{display:none!important}
+@media(max-width:720px){.home-operations-rostered{grid-template-columns:minmax(0,1fr)}}

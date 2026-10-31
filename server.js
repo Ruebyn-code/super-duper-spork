@@ -549,8 +549,8 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(req.url==='/api/home-operations'&&req.method==='GET'){
         if(!homeOperations.canView(session))fail('Manager Home and daily sales viewing permission are required.',403);
         const now=locationNow(),location=await locationStore.status(session.locationId,now),target=homeOperations.context(location,now);
-        const [projection,hourly,budget]=await Promise.all([sales.rosterProjection(dataDir,session,target.weekStart,{now:new Date(now)}),hourlySalesStore.read(session),rosteringStore.homeBudget(session)]);
-        return json(200,homeOperations.calculate(session,{now,location,projection,hourly,budget}));
+        const [projection,hourly,budget,rostered]=await Promise.all([sales.rosterProjection(dataDir,session,target.weekStart,{now:new Date(now)}),hourlySalesStore.read(session),rosteringStore.homeBudget(session),homeOperations.canViewRosterCost(session)?rosteringStore.homeRosteredCost(session,target.date):Promise.resolve(undefined)]);
+        return json(200,homeOperations.calculate(session,{now,location,projection,hourly,budget,rostered}));
       }
       if(req.url==='/api/home-totals'&&req.method==='GET'){
         if(session.homeDashboard==='staff')fail('Sales totals are not shown on Staff Home.',403);
