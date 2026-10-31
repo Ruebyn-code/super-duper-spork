@@ -53,6 +53,7 @@ function actionPermission(url,method){
  if(url==='/api/products'&&method==='POST')return 'stock.create';
  if(/^\/api\/products\/[^/]+$/.test(url)&&method==='DELETE')return 'stock.delete';
  if(/^\/api\/products\/[^/]+\/(?:par|target-calculation)$/.test(url))return 'stock.targets';
+ if(/^\/api\/locations\/[^/]+\/target-calculation$/.test(url))return 'stock.targets';
  if(url==='/api/suppliers'&&method==='POST')return 'suppliers.create';
  if(/^\/api\/suppliers\/[^/]+$/.test(url)&&method==='DELETE')return 'suppliers.delete';
  if(url==='/api/companies'&&method==='POST')return 'companies.create';

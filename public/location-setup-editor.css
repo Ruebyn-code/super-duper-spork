@@ -24,3 +24,5 @@ html.setup-editor,html.setup-editor body{height:100%;min-height:0;margin:0;backg
 
 .setup-editor .location-settings-dialog{padding:0!important;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#172c3b)}
 .setup-editor .location-settings-body{padding:8px}.setup-editor #location-email-editor{margin:0;padding:6px;border:0;box-shadow:none;background:transparent}.setup-editor #location-email-editor>h2,.setup-editor #location-email-editor>h3{margin-top:0}
+
+.setup-editor[data-setup-task=details] .location-target-calculation{display:none!important}

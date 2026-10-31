@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.083
+Step 1: When adding a location, choose Target level system once. It applies to every current and future stock item at that location.
+
+2
+00:00:08.083 --> 00:00:15.833
+Step 2: In location setup, open Target level system. Automatic usage (current) keeps the existing usage/manual fallback; Projected sales enables item ratios.
+
+3
+00:00:15.833 --> 00:00:26.417
+Step 3: For Projected sales, enter the sales amount and item quantity in setup or Stock items → Ordering rules. $1,000 and 0.5 boxes gives 5 boxes for $10,000 projected sales.
+
+4
+00:00:26.417 --> 00:00:35.417
+Step 4: Save and review the target in Ordering or Stock count. Change the shared system later in Edit location → General → Target level system.

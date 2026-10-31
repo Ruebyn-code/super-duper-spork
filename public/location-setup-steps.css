@@ -12,9 +12,11 @@
 .setup-par-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--theme-line,#dce5ed)}
 .setup-par-row strong{font-size:12px;overflow-wrap:anywhere}
 .setup-par-row small{display:block;font-size:11px;line-height:1.4;color:var(--theme-muted,#526574)}
+.setup-par-row-sales{grid-template-columns:minmax(0,1fr) minmax(200px,280px)}.setup-target-ratio{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.setup-target-ratio label{font-size:10px!important}.setup-target-ratio input{width:100%;min-width:0}
 #setup-step-fields .setup-par-row input{margin:0}
 #setup-step-result{font-size:13px;overflow-wrap:anywhere;line-height:1.6}
 .setup-pair-code{display:block;font:600 24px monospace;padding:12px;border:1px solid var(--theme-line,#dce5ed);border-radius:8px;text-align:center;margin:12px 0}
 .setup-pair-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .setup-step-page [hidden]{display:none!important}
 @media(max-width:600px){#setup-step-fields :is(input,select){font-size:16px}.setup-step-page{padding:6px!important}.setup-par-row{grid-template-columns:minmax(0,1fr) 85px;gap:8px}}
+@media(max-width:600px){.setup-par-row-sales{grid-template-columns:minmax(0,1fr)}.setup-target-ratio{grid-template-columns:repeat(2,minmax(0,1fr))}}

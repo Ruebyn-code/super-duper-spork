@@ -104,11 +104,11 @@
   'Investigate missing counts or negative usage before relying on the automatic target.'
  ],{route:'/stock-count#usage',permissions:['counts.view'],notes:['A stock count is a snapshot, so several counts are not added together as stock on hand. Missing quantities remain unknown.'],related:['target-levels','stock-transfers']});
  add(c,'target-levels','Choose target level calculations','Use item usage or a quantity per projected sales amount.',[
-  'Edit a stock item, open Ordering rules and find Target calculation for the selected location.',
-  'Choose Automatic usage (current) to keep up to four completed usage cycles, with a manual fallback before usable usage is available.',
-  'Choose Projected sales and enter a sales amount plus item quantity. For $1,000 and 0.5 boxes, $10,000 projected sales gives a target of 5 boxes.',
-  'Press Save changes. Check the weekly target in Ordering or Stock count, then review the recommendation before adding it to the cart.'
- ],{route:'/admin#stock',permissions:['stock.manage'],notes:['The method is saved per item and location. Projected sales uses Ordering’s original weekly forecast, including holidays and Sunday’s next-week rollover; a missing forecast stays unavailable. Its weekly target takes priority over delivery coverage. Order when remains automatic from usage, and minimum/rounding rules still apply to orders. Switching back retains the saved ratio.'],related:['order-when','delivery-quantities','stock-settings'],keywords:['par','manual par','four weeks','average','usage','sales ratio','1000','0.5','pita']});
+  'When adding a location, choose Target level system once. It applies to every current and future stock item at that location.',
+  'In location setup, open Target level system. Automatic usage (current) keeps the existing usage/manual fallback; Projected sales enables item ratios.',
+  'For Projected sales, enter the sales amount and item quantity in setup or Stock items → Ordering rules. $1,000 and 0.5 boxes gives 5 boxes for $10,000 projected sales.',
+  'Save and review the target in Ordering or Stock count. Change the shared system later in Edit location → General → Target level system.'
+ ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Each location chooses one system; item quantities remain separate because stock items use different amounts. Missing ratios or forecasts stay unavailable. Projected sales uses Ordering’s original weekly forecast, including holidays and Sunday’s next-week rollover, in place of delivery coverage. Order when and order rounding stay unchanged. Switching systems retains ratios. Older locations keep legacy item choices until a shared system is selected.'],related:['location-setup','order-when','delivery-quantities','stock-settings'],keywords:['par','manual par','four weeks','average','usage','sales ratio','1000','0.5','pita','all stock','location system']});
  add(c,'order-when','Understand the automatic Order when level','Know when the system recommends replenishing stock.',[
   'Find Order when in the item’s Ordering details or Stock count row.',
   'For weekly targets it is based on average weekly usage across the available completed cycles. The Projected sales method changes the target, while this usage trigger stays automatic.',
@@ -119,7 +119,7 @@
   'Open Ordering → Stock items. Choose Add new stock or the pencil beside an existing item.',
   'Use Item details for name, supplier, price, supplier SKU, category and optional photo.',
   'Use Pack & counting for unit amount, storage group and smaller-pack conversion.',
-  'Use Ordering rules for minimum quantities, rounding and the selected location’s Target calculation: Automatic usage (current) or Projected sales.',
+  'Use Ordering rules for minimum quantities and rounding. The location’s target system is shown here; enter this item’s sales ratio when Projected sales is selected.',
   'Press Save changes once for the whole popup. Correct any highlighted field if its tab opens.'
  ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Close retains the current item’s draft for reopening; Cancel edit discards it. Remove stock is inside Item details → More actions. Company stock changes apply across that company.'],related:['count-sleeves','order-rounding','stock-price-changes'],keywords:['catalogue','SKU','photo','category','item settings']});
  add(c,'order-rounding','Set minimum quantities and rounding','Match recommendations and cart quantities to supplier pack rules.',[
@@ -610,14 +610,14 @@
  c='administration';
  add(c,'locations','Create, archive or restore a location','Keep one active list sectioned by Australian state.',[
   'Open Admin → Locations and choose Add location, or edit an existing row.',
-  'Set its name, state and available settings. Use Employer setup for this location’s legal employer, award coverage and pay period, then Save settings.',
+  'Set its name, state and Target level system for all stock items. Use Employer setup for legal employer and pay settings, then Save settings.',
   'Use the archive action for an inactive location when permitted.',
   'Open the separate Archived locations menu to find or restore archived stores.'
  ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Head Office can be created or opened from the location selector without setup. Its administrative location has no store-settings tabs. Active locations remain one list with state sections. Archiving keeps saved settings and history; native restrictions may prevent archiving a location still in use.'],related:['location-setup','trading-hours','location-managers','delivery-dates']});
  add(c,'location-setup','Complete a new location’s setup checklist','Finish the setup tasks inside the popup.',[
   'Create a location and open its highlighted setup entry or reminder.',
-  'Complete name, state, trading hours, location manager, first user, employer setup, ordering email, initial/manual target levels and a new kiosk.',
-  'Open each step inside the setup popup and save the actual settings there. First user can be new or an existing eligible account.',
+  'Complete name, state, trading hours, location manager, first user, employer setup, ordering email, Target level system and a new kiosk.',
+  'Open each step inside the popup. Target level system chooses one method for all stock and offers manual fallback or item sales quantities. Partial saves retain unfinished entries.',
   'Finish setup once every task is validated. Snooze the reminder for five minutes if needed.'
  ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Head Office is exempt from this store setup checklist and its reminders. Setup is non-blocking. Pending locations stay highlighted and tinted until completion. Kiosk setup creates a new device for this store rather than listing other stores’ devices.'],related:['locations','location-email','manage-kiosks'],keywords:['onboarding','setup checklist','first user','snooze']});
  add(c,'trading-hours','Set trading hours and overnight closing','Save all seven days with closed and unknown days distinguished.',[

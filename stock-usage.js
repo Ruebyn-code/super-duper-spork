@@ -82,7 +82,7 @@ function orderingSuggestions(counts,products,session,levels,transfers=[]){
 async function parLevels(dir,session,products,{reader=readHistory,now=new Date(),manualLevels={}}={}){
  const window=par.windowFor(now),history=await reader(dir);
  const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)),par.defaultTimeZone,history.transfers);
- const result=par.calculate(records,products,session,{now,manualLevels}),calculations=require('./target-calculations'),settings=await calculations.read(dir,session);
+ const result=par.calculate(records,products,session,{now,manualLevels}),calculations=require('./target-calculations'),settings=await calculations.resolve(dir,session,products);
  if(Object.values(settings).some(value=>value.mode==='sales')){const projection=(await require('./sales').createStore().report(dir,session,undefined,{now})).orderingProjection;result.levels=calculations.apply(result.levels,settings,projection);}
  const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers);
  return {...result,calculationSettings:settings,stockTake:suggestions.stockTake,suggestions:suggestions.items};

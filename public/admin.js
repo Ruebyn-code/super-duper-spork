@@ -2,7 +2,7 @@ const money=n=>n===null?'Price pending':new Intl.NumberFormat('en-AU',{style:'cu
 let products=[],suppliers=[],editingId=null,csrf='';
 const $=id=>document.getElementById(id);
 let stockSaveState=null;
-let stockTargetSettings={mode:'usage',salesBaseCents:null,quantityThousandths:null},stockTargetRevision=0,stockTargetProduct=null;
+let stockTargetSettings={mode:'usage',salesBaseCents:null,quantityThousandths:null},stockTargetRevision=0,stockTargetProduct=null,stockLocationTargetMode=null,stockTargetLocationMode=null;
 if($('stock-count-group-select')){for(const group of stockCountGroups.groups){const option=el('option',group.name);option.value=group.id;option.defaultSelected=group.id==='dry';$('stock-count-group-select').append(option);}}
 if($('stock-form')){const add=appWording.label(el('button','Add new stock','admin-create-button'),'Add new stock');add.type='button';add.id='add-stock-shortcut';add.dataset.adminViews='stock';add.setAttribute('aria-haspopup','dialog');add.setAttribute('aria-controls','stock-item-dialog');$('stock-item-dialog').before(add);add.onclick=()=>{if(window.stockItemEditor.busy)return;if(editingId===null&&stockSaveState){window.stockItemEditor.open(add);return;}resetStockForm();prepareTarget(null);stockSaveState=stockItemSave.create({calculation:stockTargetSettings});$('stock-cancel').hidden=false;window.stockItemEditor.open(add);};}
 function updateStockOrderRule(){
@@ -29,7 +29,7 @@ function expandStockEditor(id){window.stockItemEditor?.open(document.querySelect
 function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;}
 async function api(url,method,body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':csrf},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to save changes.');return data;}
 function prepareTarget(product){
- stockTargetProduct=product;const saved=product?.par?.calculationSettings;stockTargetSettings=saved?{mode:saved.mode,salesBaseCents:saved.salesBaseCents,quantityThousandths:saved.quantityThousandths}:{mode:product?.par?.source==='projected_sales'?'sales':'usage',salesBaseCents:null,quantityThousandths:null};stockTargetRevision=saved?.revision||0;
+ stockTargetProduct=product;const saved=product?.par?.calculationSettings;stockTargetLocationMode=saved?.locationMode||stockLocationTargetMode;stockTargetSettings=saved?{mode:saved.mode,salesBaseCents:saved.salesBaseCents,quantityThousandths:saved.quantityThousandths}:{mode:stockTargetLocationMode||(product?.par?.source==='projected_sales'?'sales':'usage'),salesBaseCents:null,quantityThousandths:null};stockTargetRevision=saved?.revision||0;
  $('stock-target-calculation').value=stockTargetSettings.mode;$('stock-target-sales-amount').value=stockTargetSettings.salesBaseCents===null?'1000':stockTargetSettings.salesBaseCents/100;$('stock-target-sales-quantity').value=stockTargetSettings.quantityThousandths===null?'':stockTargetSettings.quantityThousandths/1000;
  const input=$('stock-manual-par'),automatic=(product?.par?.weeksRecorded||0)>0;input.value=product?.par?.manualLevel??'';input.disabled=automatic||!appAccess.can('stock.targets');
  $('stock-target-location').textContent=currentLocationName;
@@ -38,8 +38,8 @@ function prepareTarget(product){
 }
 function updateTargetCalculation(){
  const sales=$('stock-target-calculation').value==='sales',allowed=appAccess.can('stock.targets'),automatic=(stockTargetProduct?.par?.weeksRecorded||0)>0;
- $('stock-target-calculation').disabled=!allowed;$('stock-target-sales-fields').hidden=!sales;$('stock-manual-par-label').hidden=sales;$('stock-manual-par').disabled=sales||automatic||!allowed;
- for(const id of ['stock-target-sales-amount','stock-target-sales-quantity']){$(id).disabled=!sales||!allowed;$(id).required=sales&&allowed;}
+ $('stock-target-calculation').disabled=!allowed||Boolean(stockTargetLocationMode);$('stock-target-calculation-label').hidden=Boolean(stockTargetLocationMode);$('stock-target-location-system').hidden=!stockTargetLocationMode;$('stock-target-location-system').textContent=stockTargetLocationMode?'Target calculation: '+(stockTargetLocationMode==='sales'?'Projected sales':'Automatic usage')+' · Set for the whole location':'';$('stock-target-sales-fields').hidden=!sales;$('stock-manual-par-label').hidden=sales;$('stock-manual-par').disabled=sales||automatic||!allowed;
+ for(const id of ['stock-target-sales-amount','stock-target-sales-quantity']){$(id).disabled=!sales||!allowed;$(id).required=sales&&allowed&&(!stockTargetLocationMode||stockTargetSettings.quantityThousandths!==null||$('stock-target-sales-quantity').value.trim()!=='');}
  const base=Number($('stock-target-sales-amount').value),quantity=Number($('stock-target-sales-quantity').value),example=$('stock-target-sales-example');example.textContent=$('stock-target-sales-quantity').value.trim()&&base>0&&Number.isFinite(quantity)&&quantity>=0?'For $10,000 projected sales: '+new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(10000/base*quantity)+' ordered units / packs.':'Enter the quantity of this item per sales amount, in ordered units / packs.';
  if(sales)$('stock-target-hint').textContent=stockTargetProduct?.par?.source==='projected_sales'?(stockTargetProduct.par.calculationReason||'Saved weekly target: '+new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(stockTargetProduct.par.level)+' ordered units / packs · '+stockTargetProduct.par.projectionWeekStart+' – '+stockTargetProduct.par.projectionWeekEnd):'Uses Ordering’s weekly projected sales. Supplier delivery dates remain available; this option uses a weekly target.';
  else $('stock-target-hint').textContent=automatic?'Automatic target level: '+Math.ceil(stockTargetProduct.par.average)+' · '+stockTargetProduct.par.weeksRecorded+' completed week(s). Manual entry is unavailable while usage history supplies the target level.':'Used until completed usage history is available. Leave blank to remove the manual target level.';
@@ -49,7 +49,7 @@ function updateTargetCalculation(){
  window.locationPickers?.refresh($('stock-target-calculation'));
 }
 for(const id of ['stock-target-calculation','stock-target-sales-amount','stock-target-sales-quantity'])$(id)?.addEventListener(id==='stock-target-calculation'?'change':'input',updateTargetCalculation);
-function targetCalculationInput(){if(!appAccess.can('stock.targets'))return undefined;return $('stock-target-calculation').value==='sales'?{mode:'sales',salesBaseCents:Math.round(Number($('stock-target-sales-amount').value)*100),quantityThousandths:Math.round(Number($('stock-target-sales-quantity').value)*1000)}:{...stockTargetSettings,mode:'usage'};}
+function targetCalculationInput(){if(!appAccess.can('stock.targets')||stockTargetLocationMode==='usage'||stockTargetLocationMode==='sales'&&stockTargetSettings.quantityThousandths===null&&!$('stock-target-sales-quantity').value.trim())return undefined;return $('stock-target-calculation').value==='sales'?{mode:'sales',salesBaseCents:Math.round(Number($('stock-target-sales-amount').value)*100),quantityThousandths:Math.round(Number($('stock-target-sales-quantity').value)*1000)}:{...stockTargetSettings,mode:'usage'};}
 function stockBody(form){
  const body=Object.fromEntries(new FormData(form));delete body.manualParLevel;
  for(const key of ['targetCalculationMode','targetSalesAmount','targetSalesQuantity'])delete body[key];
@@ -59,7 +59,7 @@ function stockBody(form){
  for(const key of ['roundDownThreshold','roundUpThreshold'])if(body[key]!==undefined)body[key]=body[key].trim()===''?null:Number(body[key]);
  delete body.stock;if(stockPhoto!==undefined)body.photo=stockPhoto;return body;
 }
-async function reload(){const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;
+async function reload(){const data=await api('/api/catalogue','GET');products=data.products;suppliers=data.suppliers;stockLocationTargetMode=data.targetCalculation?.mode||null;
   const selected=$('supplier-select').value;$('supplier-select').replaceChildren();
   if(!suppliers.length){const option=el('option','Add a supplier first');option.value='';$('supplier-select').append(option);}
   for(const supplier of suppliers){const option=el('option',supplier.name);option.value=supplier.id;$('supplier-select').append(option);}

@@ -1,9 +1,16 @@
 # Target calculations
 
-In **Ordering → Stock items**, edit an item, open **Ordering rules**, then choose
-**Target calculation** for the selected location. The existing **Save changes**
-button saves it with the other popup changes. Closing retains a draft; switching
-methods or editing the ratio never writes or places an order.
+Choose **Target level system** in **Add location** or the location setup popup.
+The choice applies to every current and future stock item at that location.
+Change it later in **Edit location → General**, using the existing single
+**Save settings** action. Head Office has no stock setup.
+
+In the setup popup, **Target level system** also offers the stock list: enter
+manual fallback levels for Usage, or a sales amount and quantity for each item
+for Projected sales. Search, partial saves, draft retention and native item writes
+remain available. Each sales ratio can also be edited under **Stock items → Edit
+item → Ordering rules**. Items show the inherited location system as read-only.
+Closing or switching options retains drafts without saving or placing an order.
 
 - **Automatic usage (current)** keeps the existing average from up to four complete
   Sunday–Saturday usage cycles, whole-pack target rounding and manual fallback
@@ -27,12 +34,19 @@ usage, the normal target-minus-count recommendation applies. Stock counts,
 counting-unit conversions and confirmed transfer adjustments retain their native
 meaning. Reads never create counts, orders, receipts or financial records.
 
-The method and ratio belong to each location and item, separately from company
-stock details and legacy manual levels. Switching to usage restores that method
-and retains the saved ratio for later. Old stock/manual-target writers never
-reset a selection. New locations retain usage by default. A configured sales
-calculation satisfies the location setup's target-setting task without inventing
-a forecast; its manual-entry row stays read-only.
+The method belongs to the location; ratios still belong to individual items at
+that location. Selecting a method never rewrites ratios, counts, usage or company
+stock. Switching back to Usage retains every ratio. Old item writers cannot
+override the location system, and old location writers preserve omitted settings.
+New stores default to Usage unless Projected sales is selected. Existing locations
+without a shared selection retain their legacy item choices until explicitly
+choosing a location system.
+
+Sales-selected items without a ratio remain unavailable, with a setup reason.
+No usage/manual fallback or guessed coefficient is substituted. The setup task is
+ready only when every active item has a saved ratio (including zero), even before
+a forecast exists; Usage still requires its native automatic/manual target.
+Incomplete partial saves leave the setup highlight in place.
 
 `target-calculations.js` stores private, atomic, revisioned records under
 `target-calculations/<location>.json`, with actor/time attribution. Native
@@ -44,3 +58,13 @@ The shared popup retains successful stock/manual/calculation saves across retrie
 an uncertain calculation must be checked again even if the user returns to an old
 choice. Orders-only viewers receive operational target quantities and week dates,
 without ratio settings, underlying sales totals or private audits.
+
+The shared policy is stored in `locations.json` as `targetCalculationMode` and
+`targetCalculationRevision`. Creation uses native location creation authority;
+explicit method selection also requires target authority. Later changes require
+location management plus target authority, CSRF, current location/company access
+and required reading, rechecked inside the native queue. PUT
+`/api/locations/:id/target-calculation` is the scoped setup writer; ordinary
+location settings use their existing writer with the same checks and revision.
+Identical retries are accepted, stale conflicting choices are rejected, archived
+locations must be restored first and Head Office is exempt.

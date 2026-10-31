@@ -12,6 +12,8 @@ function normalize(value){
 function fileFor(dir,actor){if(!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.locationId||'')||!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.companyId||''))fail('Choose a location.');return path.join(dir,'target-calculations',actor.locationId+'.json');}
 async function state(dir,actor){try{const value=JSON.parse(await fs.readFile(fileFor(dir,actor),'utf8'));if(value.companyId!==actor.companyId||value.locationId!==actor.locationId)fail('Target calculations belong to another location.',409);if(!value.items||typeof value.items!=='object'||Array.isArray(value.items))throw Error('Target calculations could not be read.');return value;}catch(error){if(error.code==='ENOENT')return{companyId:actor.companyId,locationId:actor.locationId,items:{}};throw error;}}
 async function read(dir,actor){if(!actor.locationId)return{};const saved=await state(dir,actor);return Object.fromEntries(Object.entries(saved.items).map(([id,value])=>{if(!/^[a-zA-Z0-9-]+$/.test(id)||!Number.isSafeInteger(value.revision)||value.revision<1)throw Error('Target calculations could not be read.');return[id,{...normalize(value),revision:value.revision}];}));}
+async function policy(dir,actor){if(!actor.locationId)return{mode:null,revision:0};let locations;try{locations=JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return{mode:null,revision:0};throw error;}const location=locations.find(l=>l.id===actor.locationId&&(l.companyId||'default')===actor.companyId);return{mode:['usage','sales'].includes(location?.targetCalculationMode)?location.targetCalculationMode:null,revision:location?.targetCalculationRevision||0};}
+async function resolve(dir,actor,products){const [saved,location]=await Promise.all([read(dir,actor),policy(dir,actor)]);return Object.fromEntries(products.map(p=>{const value=saved[p.id]||initial();return[p.id,{...value,mode:location.mode||value.mode,locationMode:location.mode,locationRevision:location.revision}];}));}
 function createStore(){
  const pending=new Map();
  async function save(dir,actor,id,input,authorize){
@@ -29,8 +31,9 @@ function createStore(){
 }
 function apply(levels,settings,projection){return Object.fromEntries(Object.entries(levels).map(([id,current])=>{
  const setting=settings[id];if(setting?.mode!=='sales')return[id,current];let level=null,reason=null;
- if(!Number.isSafeInteger(projection?.projectedSalesCents)||projection.projectedSalesCents<0)reason='A complete weekly sales projection is needed for this target.';
+ if(!Number.isSafeInteger(setting.quantityThousandths)||!Number.isSafeInteger(setting.salesBaseCents)||setting.salesBaseCents<1)reason='Set this item’s quantity per sales amount to calculate its target.';
+ else if(!Number.isSafeInteger(projection?.projectedSalesCents)||projection.projectedSalesCents<0)reason='A complete weekly sales projection is needed for this target.';
  else{const numerator=BigInt(projection.projectedSalesCents)*BigInt(setting.quantityThousandths),base=BigInt(setting.salesBaseCents),thousandths=(numerator+base/2n)/base;if(thousandths>1000000000n)reason='The calculated target exceeds 1,000,000 ordered units.';else level=Number(thousandths)/1000;}
  return[id,{...current,source:'projected_sales',level,projectionWeekStart:projection?.weekStart||null,projectionWeekEnd:projection?.weekEnd||null,calculationReason:reason}];
 }));}
-module.exports={initial,normalize,read,createStore,apply};
+module.exports={initial,normalize,read,policy,resolve,createStore,apply};
