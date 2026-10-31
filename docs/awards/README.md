@@ -80,8 +80,11 @@ week in which the shift started; the engine's daily/cycle counters use the local
 date of each worked segment. Cycle anchors and complete work records are
 essential for averaging. Partial cycles remain estimates.
 
-Actual breaks come from clock events; marked paid rests remain paid time. Manual
-time does not invent break timestamps. Adjacent records are grouped as one continuous engagement, with the minimum-payment top-up on the last record. Isolated Sunday overtime is checked even when work continues into Monday. Minimum-payment top-ups use the highest
+Actual breaks come from clock events or explicitly confirmed, reasoned timed
+corrections. Marked paid rests remain paid time. Manual time does not invent break
+timestamps. The separate Timesheets Breaks editor previews native checks without
+provider polling, retains originals and reopens approval; see
+[Timesheet cards](../timesheet-cards.md). Adjacent records are grouped as one continuous engagement, with the minimum-payment top-up on the last record. Isolated Sunday overtime is checked even when work continues into Monday. Minimum-payment top-ups use the highest
 rate encountered in the engagement: mixed-band short engagements require review.
 Weekly allowances are allocated to the first qualifying shift chronologically,
 within the employer context. Copied/moved assignments do not carry individual

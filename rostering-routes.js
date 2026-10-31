@@ -1,6 +1,7 @@
 async function route({req,url,params,session,store,body,json,fail}){
  if(!url.startsWith('/api/rostering/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  const input=()=>body(req,512000);
+ const actualBreaks=url.match(/^\/api\/rostering\/timesheets\/([a-f0-9-]+)\/breaks-preview$/);if(actualBreaks&&req.method==='POST'){json(200,await store.previewActualBreaks(session,actualBreaks[1],await input()));return true;}
  if(url==='/api/rostering/annual-leave'&&req.method==='GET'){json(200,await store.annualLeave(session,params.get('userId')||session.id));return true;}
  const balance=url.match(/^\/api\/rostering\/annual-leave\/([a-zA-Z0-9-]+)$/);if(balance&&req.method==='PUT'){json(200,await store.saveAnnualLeave(session,balance[1],await input()));return true;}
  if(url==='/api/rostering/leave-hours-preview'&&req.method==='POST'){json(200,await store.previewLeaveHours(session,await input()));return true;}

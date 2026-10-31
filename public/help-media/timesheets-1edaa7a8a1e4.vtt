@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:15.583
+Step 1: Open Rostering → Timesheets and choose the location and week. Published shifts appear as Rostered cards before clock-in. These are plans, not worked time: they do not add actual wages, approved hours, leave accrual or CSV work rows. Filter Rostered shifts to see them separately.
+
+2
+00:00:15.583 --> 00:00:33.667
+Step 2: Review actual clock-in/out, paid hours and the matched roster. Authorised wage viewers also see the published roster cost, worked wage cost and dollar variance, plus hours variance. Positive dollar variance means a higher worked cost; negative means lower. Unknown or ambiguous matches stay unavailable. A uniquely linked work record replaces its Rostered card.
+
+3
+00:00:33.667 --> 00:00:56.125
+Step 3: Use the separate Breaks button to add, edit or remove actual paid rests and unpaid meals after clock-out. Enter the real start and finish, review the live award preview, enter a reason and explicitly Save breaks. Paid rests remain paid. Existing untimed unpaid totals need explicit replacement confirmation. Saving reopens approved work; original clock events and before/after evidence remain in History. Rostered cards show planned breaks only.
+
+4
+00:00:56.125 --> 00:01:18.583
+Step 4: Use Correct for actual start/finish changes, or Add worked times on a completed Rostered card if clocking was missed; confirm the actual times and a reason. Approval runs fresh pay and award checks, including required employment and reviewed holiday calendars. Exceptions stay visible and review notes do not waive entitlements or certify legal compliance. Pay details keeps actual allowances and reimbursements. Export CSV includes recorded work only.

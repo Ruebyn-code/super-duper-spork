@@ -12,7 +12,7 @@
   return{...shift,...interval,basis:'Published roster'};
  }
  function describe(entry,{published=[],entries=[],check}={}){
-  const roster=reference(entry,published,entries),issues=(check?.issues||[]).filter(i=>i.subjectId===entry.id||!i.subjectId&&(!i.userId||i.userId===entry.userId)).map(i=>({...i}));
+  const roster=entry.rosterReference||reference(entry,published,entries),issues=(check?.issues||[]).filter(i=>i.subjectId===entry.id||!i.subjectId&&(!i.userId||i.userId===entry.userId)).map(i=>({...i}));
   if(!entry.endAt)issues.unshift({code:'missing-finish',message:'Clock-out time is missing. Complete or correct the timesheet.',blocking:true});
   if(entry.longShift)issues.unshift({code:'long-shift',message:'This record exceeds 24 hours. Review and correct the times.',blocking:true});
   const varianceSeconds=roster&&entry.endAt?entry.paidSeconds-roster.paidSeconds:null;
