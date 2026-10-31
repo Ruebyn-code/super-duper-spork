@@ -369,8 +369,8 @@
  ],{notes:['Paid rest breaks remain paid. Actual unpaid meal duration is recorded. Managers remain responsible for arranging appropriate breaks.'],related:['shift-clock','timesheets','award-settings']});
  add(c,'timesheets','Submit, correct and approve timesheets','Review worked hours and preserve the reason for corrections.',[
   'Open Rostering → Timesheets and choose the location and week.',
-  'Review actual start/end times and recorded unpaid breaks. Submit a manual entry with a reason if work is missing.',
-  'An authorised reviewer can approve, reject, reopen or correct an entry. Corrections require a reason and return it to pending approval.',
+  'Each staff card shows actual clock-in/out, paid hours, unpaid breaks and its matched published roster. Wage cost appears only with the existing wage permissions. Expand checks to review missing times, pay warnings or a variance; unknown and ambiguous roster matches stay unavailable.',
+  'Use Correct or a clock-time button to review a correction, including unpaid break minutes. A reason and explicit Save correction are required; this returns the record to pending. Break details shows recorded events. Approve, Reject, Reopen and History stay on the card; blocking checks must be resolved before approval.',
   'Check rates and award warnings before approval. Pay details shows breaks first; expand Actual allowance details and reimbursements for worked kilometres, cold-work minutes, overtime meals or expenses, and enter only what actually applied. Approving eligible ordinary hours updates tracked annual-leave accrual. Use Export CSV for permitted entries.'
  ],{route:'/rostering#timesheets',permissions:['rostering.view'],notes:['Original clock events and correction history remain recorded. Approved timesheets retain their saved rate calculation after later changes.'],related:['shift-clock','labour-settings','award-settings']});
  add(c,'leave-availability','Manage availability and leave','Keep scheduling informed by when people can work.',[

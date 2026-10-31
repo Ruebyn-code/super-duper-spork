@@ -42,6 +42,7 @@ module.exports={'/employee-allowances-model.js':'employee-allowances-model.js','
   '/roster-shift-dialog.js':'roster-shift-dialog.js',
   '/roster-shift-dialog.css':'roster-shift-dialog.css',
   '/roster-drag-model.js':'roster-drag-model.js',
+  '/timesheet-card-model.js':'timesheet-card-model.js',
   '/rostering.js':'rostering.js',
   '/rostering.css':'rostering.css',
   '/rostering-model.js':'rostering-model.js',
