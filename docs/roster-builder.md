@@ -23,7 +23,7 @@ other roster sections and published readers keep their existing presentation.
 - A stable marker restores the original summary slot when leaving maker mode,
   including resize to the phone reader. No new financial endpoint is fetched.
 - Compact staff rows and shift cards reduce padding and unused row space while
-  preserving time text, staff/position pickers, cost-popup and award icons. Drag
+  preserving time text, staff/position pickers, cost-popup and scheduling-error icons. Drag
   the blank part of a card or its staff/position selector with a mouse; an
   ordinary click still opens the selector. The icon-free footer provides a broad
   touch drag surface, while quick swipes elsewhere retain scrolling. Touch Add
@@ -31,8 +31,7 @@ other roster sections and published readers keep their existing presentation.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
   Today uses the server's Melbourne date; holiday stars remain native markers.
 - Each saved shift has a green border only when it matches its own published
-  snapshot. Availability/approved-leave conflicts, current scoped award checks
-  (including configured shift-length limits), unresolved break plans and failed
+  snapshot. Availability/approved-leave conflicts, scoped configured shift-length/rest limits, unresolved break plans and failed
   saves take priority with a red border in Staff, Stacked and Day views. Other
   employees’ shift issues are excluded. Green denotes publication, not compliance.
   Unsaved/pending changes suppress stale green and saved checks until recalculated;
@@ -43,15 +42,16 @@ other roster sections and published readers keep their existing presentation.
   and closes with Escape, scrolling or context changes without moving focus or
   writing data. Click the existing red icon for a persistent review. Phone sheets
   retain published-only privacy and their existing presentation.
-- Award warnings use small red error icons beside staff names and on shift cards.
-  Open an icon for a compact, read-only review scoped to that employee or shift;
-  repeated issues are grouped with their clause and affected-shift count. Day
-  view uses the staff-name icon rather than nesting controls in timeline bars.
-  There is no large Roster award panel at the top. Checks without a visible
-  staff/shift owner retain a small Other award checks icon beside roster status.
-  Unsaved edits disable outdated icons until native recalculation finishes.
-  Escape/Close restores focus; review never saves, deletes, publishes or waives
-  a blocking issue. Native publishing review and Timesheets checks remain.
+- The builder has no award review, staff/general award icons or publication review
+  notes. Card icons and Warnings contain scheduling issues only: configured daily/
+  weekly length, minimum shift/rest limits, availability/leave, unresolved planned
+  break times and save errors. Pay/profile/source/IFA review messages never colour
+  cards or appear as builder warnings. Missing cost setup stays in the Costs tab.
+- Publishing retains current permissions, revisions, overlap and automatic-break
+  validation. It calculates and freezes the current planning estimate internally,
+  keeping unknown costs unknown; it does not require a reviewed fingerprint/note
+  or create an award attestation. Historical reviews remain untouched. Actual
+  Timesheets reviews, approval blockers and frozen approved pay are unchanged.
 - Empty cells retain keyboard-accessible + actions and full accessible labels;
   the full Add Shift text appears on hover/focus and stays visible for touch.
   Shift fields, position selectors, costs and warnings retain their native nodes.
@@ -59,7 +59,7 @@ other roster sections and published readers keep their existing presentation.
   animation frame. Edge scrolling eases with pointer distance and elapsed time,
   preserving fractional pixels across display refresh rates. The release checks
   the latest pointer target; Escape, pointer cancellation or lost capture cancels
-  without moving a shift. Fields and cost/award/Undo buttons remain clickable,
+  without moving a shift. Fields and cost/error/Undo buttons remain clickable,
   and pending edits, validation, revisions and final saves use the native paths.
 - The Day timeline uses 12-hour labels and native time formatting without changing
   the true hourly scale, overnight intervals, carryovers or drag geometry.

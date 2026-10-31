@@ -18,9 +18,9 @@ test('shift borders use each saved publication snapshot rather than a published 
  for(const [state,expected]of [['published','published'],['changed','changed'],['draft','draft']])assert.equal(shiftFeedback(check,shifts,{...shifts[0],publication:{state},availability:'available'}).state,expected);
  assert.equal(shiftFeedback(check,shifts,{...shifts[0],publishedAt:'2026-10-26T01:00:00Z'}).state,'draft');
 });
-test('all relevant award and operational issues override published green without including another staff member’s checks',()=>{
+test('scheduling limits and operational issues override green without including award reviews or another staff member’s checks',()=>{
  const maximum={...problem('a','alice','daily-hours',false),message:'Combined daily paid time exceeds the configured maximum.'},other=problem('b','bob'),check={enabled:true,issues:[maximum,other]},shift={...shifts[0],publication:{state:'published'},availability:'unavailable'},before=JSON.stringify([check,shift]);
- const result=shiftFeedback(check,shifts,shift);assert.equal(result.state,'error');assert.equal(result.issues.length,2);assert(result.issues.some(i=>i.code==='daily-hours'&&i.clause==='15'));assert(result.issues.some(i=>i.code==='availability'));assert(!result.issues.some(i=>i.userId==='bob'));assert.equal(JSON.stringify([check,shift]),before);
+ const result=shiftFeedback(check,shifts,shift);assert.equal(result.state,'error');assert.equal(result.issues.length,2);assert(result.issues.some(i=>i.code==='daily-hours'&&i.origin==='roster'&&!i.clause));assert(result.issues.some(i=>i.code==='availability'));assert(!result.issues.some(i=>i.userId==='bob'));assert.equal(JSON.stringify([check,shift]),before);
  assert.equal(shiftFeedback({enabled:false},shifts,shift).state,'error','Availability does not depend on award checks being enabled');
 });
 test('pending edits suppress stale publication and saved checks while failed saves retain a red actionable error',()=>{
@@ -28,7 +28,13 @@ test('pending edits suppress stale publication and saved checks while failed sav
  assert.deepEqual(shiftFeedback(check,shifts,shift,{pending:true}),{state:'pending',issues:[]});
  const result=shiftFeedback(check,shifts,shift,{pending:true,error:'This user already has an overlapping shift.'});assert.equal(result.state,'error');assert.equal(result.issues.length,1);assert.equal(result.issues[0].origin,'save');assert.match(result.issues[0].message,/overlapping/);
 });
-test('saved carryover pay and unresolved break plans remain visible without duplicating identical messages',()=>{
+test('unresolved planned break times remain visible while pay reviews do not colour a shift',()=>{
  const issue=problem('a','alice','pay-break-plan'),shift={...shifts[0],pay:{issues:[issue]},breakPlan:{status:'review-required',issues:[{code:'agreement',message:issue.message},{code:'space',message:'There is not enough room for the required rest.'}]}};
  const result=shiftFeedback({enabled:true,issues:[issue]},shifts,shift);assert.equal(result.state,'error');assert.equal(result.issues.length,2);assert.equal(shiftFeedback(null,[],shift).issues.length,2);
+});
+
+test('award reviews stay out of roster feedback while configured scheduling limits remain scoped and visible',()=>{
+ const award=problem('a','alice','pay-profile'),ifa=problem('a','alice','pay-ifa-hours',false),general=problem(null,null,'unreviewed-update'),shift={...shifts[0],publication:{state:'published'},pay:{issues:[award,ifa]}},check={enabled:true,issues:[award,ifa,general,problem('b','bob','daily-hours')]};
+ assert.deepEqual(shiftFeedback(check,shifts,shift),{state:'published',issues:[]});
+ for(const code of ['daily-hours','weekly-hours','minimum-rest','minimum-engagement']){const result=shiftFeedback({enabled:true,issues:[problem('a','alice',code)]},shifts,shift);assert.equal(result.state,'error');assert.equal(result.issues[0].code,code);assert(!result.issues[0].clause);assert.doesNotMatch(result.issues[0].message,/award|review/i);}
 });

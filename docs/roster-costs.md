@@ -21,13 +21,12 @@ terms, source/pay-period coverage or a location state/reviewed holiday calendar.
 without a rate show a read-only explanation and the existing award-settings
 destination when authorised. Merely opening details never saves or publishes.
 
-Small red award error icons on staff rows and shift cards open a separate,
-read-only review of the current native checks. Staff icons cover the selected
-week; shift icons cover that shift plus applicable staff/general checks. The
-compact popover replaces the large top Roster warning panel, while native Pay
-details, publishing review and Timesheets approval guards stay unchanged.
-Unknown checks without a visible owner retain a small status-row fallback icon.
-Icons with unsaved changes are disabled so they do not present stale reviews.
+Small red shift error icons and hover details cover scheduling issues only.
+Award/profile/source/pay reviews do not mark cards red or appear in the builder’s
+Warnings tab. Missing wage setup remains explained in Costs, without a review
+step. Publishing calculates the saved planning estimate but requires no award
+review note or acknowledgement. Native permissions, revisions, overlaps, planned
+break validity and actual Timesheet approval checks remain in force.
 
 Edits disable the icon with an Updating cost accessible label until the native serial save and recalculation finish.
 Staff totals update alongside saved shift costs without replacing active input
@@ -66,7 +65,7 @@ week publication. Opening, switching tabs or dismissing a clean view never write
 
 The header uses server-calculated saved costs and paid time. Unsaved edits label
 the saved assessment and replace the header amount with Save to recalculate.
-Warnings include the same native subject/staff/general checks as the red icons.
+Warnings include the same scoped scheduling checks as the red shift icons.
 Saved shift publication compares dated shift fields and recorded pay facts with
 its published snapshot; other shifts remain Published when only one changes.
 Ordinary published readers keep their original snapshot and wage privacy.
@@ -76,7 +75,7 @@ Vacant), then use the native revision/CSRF/overlap/availability-checked creator.
 They omit recorded facts and written variations. Uncertain creates freeze instead
 of offering an unsafe retry. Delete uses native Undo. Publish week is labelled
 and confirmed as a whole-week action and retains current award fingerprints and
-review notes. Leave opens existing tools and never submits another employee's
+scheduling validation, without an award review note. Leave opens existing tools and never submits another employee's
 request. Opening or using tabs cannot perform any of these actions.
 
 Close, Escape and backdrop share dirty/busy guards, parent navigation is inert

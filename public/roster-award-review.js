@@ -13,10 +13,11 @@
   const groups=new Map();for(const issue of issues){const key=JSON.stringify([issue.userId||null,issue.code,issue.message,Boolean(issue.blocking),issue.clause||null]);if(!groups.has(key))groups.set(key,{...issue,subjectIds:[]});const entry=groups.get(key);if(issue.subjectId&&!entry.subjectIds.includes(issue.subjectId))entry.subjectIds.push(issue.subjectId);}
   return[...groups.values()].sort((a,b)=>Number(Boolean(b.blocking))-Number(Boolean(a.blocking)));
  }
+ const schedulingMessages={'daily-hours':'This staff member’s combined daily hours exceed the configured limit.','weekly-hours':'This staff member’s combined weekly hours exceed the configured limit.','minimum-rest':'There is less than the configured minimum rest time between this shift and another shift.','minimum-engagement':'This shift is shorter than the configured minimum shift length.'};
+ function scheduleIssues(check,shifts,selector){return issuesFor(check,shifts,selector).filter(issue=>Object.hasOwn(schedulingMessages,issue.code)).map(({subjectId,userId,code})=>({subjectId,userId,code,message:schedulingMessages[code],origin:'roster'}));}
  function shiftFeedback(check,shifts,shift,{pending=false,error=''}={}){
-  const issues=pending?[]:issuesFor(check,shifts,{shiftId:shift.id,userId:shift.userId}).slice();
+  const issues=pending?[]:scheduleIssues(check,shifts,{shiftId:shift.id,userId:shift.userId});
   if(!pending&&shift.availability==='unavailable')issues.push({code:'availability',message:'This shift is outside the staff member’s availability or overlaps approved leave.',origin:'roster'});
-  if(!pending)for(const issue of shift.pay?.issues||[])if(!issues.some(i=>i.code===issue.code&&i.message===issue.message))issues.push(issue);
   if(!pending&&shift.breakPlan?.status==='review-required')for(const issue of shift.breakPlan.issues||[])if(!issues.some(i=>i.message===issue.message||i.message?.includes(issue.message)))issues.push({...issue,origin:'roster'});
   if(error)issues.unshift({code:'save',message:error,origin:'save',blocking:true});
   const state=issues.length?'error':pending?'pending':shift.publication?.state==='published'?'published':shift.publication?.state==='changed'?'changed':'draft';
@@ -61,7 +62,7 @@
   doc.defaultView.addEventListener('resize',position);doc.defaultView.addEventListener('scroll',position,true);
  }
  function paint(value){
-  const groups=group(value.issues),next=JSON.stringify([value.title,value.context,groups,value.allowSetup,value.heading]);if(next===signature)return;signature=next;const doc=popup.ownerDocument,heading=node(doc,'div',undefined,'roster-award-popover-heading'),title=node(doc,'h3',value.heading||'Award review'),dismiss=node(doc,'button','×','roster-award-popover-close'),person=node(doc,'p',value.title,'roster-award-popover-person'),context=node(doc,'p',value.context,'roster-award-popover-context'),list=node(doc,'ul',undefined,'roster-award-popover-list');title.id='roster-award-popover-title';person.dataset.userText=context.dataset.userText='';dismiss.type='button';dismiss.setAttribute('aria-label','Close award review');dismiss.onclick=()=>close(true);heading.append(title,dismiss);
+  const groups=group(value.issues),next=JSON.stringify([value.title,value.context,groups,value.allowSetup,value.heading]);if(next===signature)return;signature=next;const doc=popup.ownerDocument,heading=node(doc,'div',undefined,'roster-award-popover-heading'),title=node(doc,'h3',value.heading||'Award review'),dismiss=node(doc,'button','×','roster-award-popover-close'),person=node(doc,'p',value.title,'roster-award-popover-person'),context=node(doc,'p',value.context,'roster-award-popover-context'),list=node(doc,'ul',undefined,'roster-award-popover-list');title.id='roster-award-popover-title';person.dataset.userText=context.dataset.userText='';dismiss.type='button';dismiss.setAttribute('aria-label',value.heading==='Shift issues'?'Close shift issues':'Close award review');dismiss.onclick=()=>close(true);heading.append(title,dismiss);
   for(const issue of groups){const li=node(doc,'li'),label=node(doc,'strong',issue.origin==='save'?'Save failed':issue.origin==='roster'?'Needs attention':issue.blocking?'Missing pay details':'Review required'),message=node(doc,'p',issue.message),details=[];message.dataset.userText='';li.classList.toggle('is-blocking',Boolean(issue.blocking));if(issue.clause)details.push('Clause '+issue.clause);if(issue.subjectIds.length>1)details.push(issue.subjectIds.length+' shifts');li.append(label,message);if(details.length){const note=node(doc,'small',details.join(' · '));note.dataset.userText='';li.append(note);}list.append(li);}
   popup.replaceChildren(heading,person,context,list);if(value.allowSetup){const link=node(doc,'a','Review award setup','roster-award-popover-link');link.href='/settings/awards';popup.append(link);}
  }
@@ -72,9 +73,9 @@
   const value=read(),groups=group(value?.issues||[]);let trigger=[...host.children].find(e=>e.classList.contains('roster-award-trigger'));
   if(!groups.length){if(trigger===owner)close();trigger?.remove();return;}
   if(!trigger){trigger=node(host.ownerDocument,'button',undefined,'roster-award-trigger');trigger.type='button';trigger.setAttribute('aria-haspopup','dialog');trigger.setAttribute('aria-controls','roster-award-popover');trigger.setAttribute('aria-expanded','false');trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>';trigger.onclick=event=>{event.stopPropagation();open(trigger);};host.append(trigger);}
-  trigger.rosterAwardRead=read;trigger.disabled=disabled;trigger.setAttribute('aria-label',(disabled?'Review updating for ':(value.heading||'Award review')+' for ')+value.title+(disabled?'':': '+groups.length+' issue'+(groups.length===1?'':'s')));trigger.title=disabled?'Save changes to update award review':'View award review';
+  trigger.rosterAwardRead=read;trigger.disabled=disabled;trigger.setAttribute('aria-label',(disabled?'Review updating for ':(value.heading||'Award review')+' for ')+value.title+(disabled?'':': '+groups.length+' issue'+(groups.length===1?'':'s')));trigger.title=disabled?'Save changes to update shift issues':value.heading==='Shift issues'?'View shift issues':'View award review';
   if(owner===trigger){if(disabled)close();else{paint(value);position();}}
  }
  function refresh(){if(owner&&!owner.isConnected)close();if(cardOwner&&!cardOwner.isConnected)closeCard();}
- return{issuesFor,group,shiftFeedback,attachCard,attach,close,refresh};
+ return{issuesFor,group,scheduleIssues,shiftFeedback,attachCard,attach,close,refresh};
 });

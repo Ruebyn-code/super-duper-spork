@@ -17,9 +17,9 @@ Step 3: Choose Costs to see gross wages and allowances, separate super and on-co
 Step 4: Use Notes for shift instructions. All popup fields keep their draft when switching tabs. Save shift applies the changes together to the roster draft. Cancel, Escape and the close button ask before discarding unsaved changes.
 
 5
-00:00:52.292 --> 00:01:04.750
-Step 5: Choose Warnings to review the current saved shift’s award and availability checks. Review required details in staff Pay Conditions or the location employer setup. Warnings update after saving; this view does not certify legal compliance.
+00:00:52.292 --> 00:01:05.042
+Step 5: Choose Warnings to see the saved shift’s scheduling issues, including availability and configured shift/rest limits. Pay and award reviews are kept out of roster building. Missing wage setup is explained in Costs. Warnings update after saving.
 
 6
-00:01:04.750 --> 00:01:20.333
-Step 6: Choose Status for this shift’s Draft, Published or Unpublished changes status. Copy shift and Duplicate open a review before creating one draft copy. Delete shift keeps native Undo. Leave opens existing leave tools. Publish week explicitly publishes all saved shifts using the normal award review.
+00:01:05.042 --> 00:01:21.250
+Step 6: Choose Status for this shift’s Draft, Published or Unpublished changes status. Copy shift and Duplicate open a review before creating one draft copy. Delete shift keeps native Undo. Leave opens existing leave tools. Publish week explicitly publishes all saved shifts without an award review or review note.
