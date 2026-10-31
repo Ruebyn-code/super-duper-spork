@@ -602,9 +602,10 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 .roster-deletion-feedback[hidden]{display:none!important}
 
 /* Publication belongs to this saved shift. Issues override the green published border. */
-#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=published]{--shift-status-border:var(--theme-success-text,#28774e);border-color:var(--shift-status-border)}
-#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=error]{--shift-status-border:var(--theme-danger-text,#b42318);border-color:var(--shift-status-border)}
-#roster-days :is(.roster-shift,.roster-day-shift):is([data-shift-feedback=published],[data-shift-feedback=error])::after{content:"";position:absolute;inset:0;border:2px solid var(--shift-status-border);border-radius:inherit;pointer-events:none;z-index:2}
+#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=published]{--shift-status-colour:var(--theme-success-text,#28774e)}
+#roster-days :is(.roster-shift,.roster-day-shift)[data-shift-feedback=error]{--shift-status-colour:var(--theme-danger-text,#b42318)}
+#roster-days .roster-shift:is([data-shift-feedback=published],[data-shift-feedback=error]){border-color:transparent}
+#roster-days :is(.roster-shift,.roster-day-shift):is([data-shift-feedback=published],[data-shift-feedback=error])::after{content:"";position:absolute;inset:0;border:1px solid color-mix(in srgb,var(--shift-status-colour) 45%,var(--theme-line,#dce5ed));background:color-mix(in srgb,var(--shift-status-colour) 4%,transparent);border-radius:inherit;pointer-events:none;z-index:2}
 .roster-shift-issues{border-color:var(--theme-danger-text,#b42318);width:360px;max-height:min(340px,calc(100dvh - 16px));pointer-events:auto}
 .roster-shift-issues h3{color:var(--theme-danger-text,#b42318)}
 @media print{.roster-shift-issues{display:none!important}}

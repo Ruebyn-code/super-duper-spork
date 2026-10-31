@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:12.458
+Step 1: Open the roster maker with roster-management access. Select the week using the arrows, This week or the calendar. The outlook below the controls shows projected sales, labour budget, roster cost and budget remaining when permitted.
+
+2
+00:00:12.458 --> 00:00:30.208
+Step 2: Use the Staff, Stacked and Day buttons to choose a view. Press + inside a day/staff cell, then set the time, person and position in its compact shift card. At locations with the current automatic award setup, new and edited shifts receive planned breaks automatically. Today is highlighted in the week grid.
+
+3
+00:00:30.208 --> 00:00:47.667
+Step 3: Drag the blank part of a shift card to move it; a mouse can also drag its staff name or position. On a tablet, use the blank bottom area. Drag a Day-view bar to change staff or time. The highlighted row/day shows the destination; Escape cancels. Check overlap or availability warnings.
+
+4
+00:00:47.667 --> 00:01:14.792
+Step 4: Review autosave status. Open a card’s dollar icon for its tabbed shift popup. The shift popup groups Details, Breaks, Costs, Notes, Warnings and Status; Save shift applies popup edits to the draft. Expand Itemised calculation for pay lines. Staff view retains weekly totals. A soft red tint and thin border take priority for availability, configured shift-length/rest, planned-break or save issues: hover over the card’s top to read them, or click the red icon. Keyboard focus also shows the issues; Escape dismisses them.
+
+5
+00:01:14.792 --> 00:01:35.375
+Step 5: Use Copy week on an empty week to review a copy of the previous week. Check the Draft, Unpublished changes or Published status, then publish separately when ready. A soft green tint and thin border mark shifts matching their published version; editing one removes its green until republished. Red issue borders take priority and do not mean every issue blocks publication.

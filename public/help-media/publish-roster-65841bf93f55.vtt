@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:06.000
+Step 1: Check people, times, positions, breaks and the selected week.
+
+2
+00:00:06.000 --> 00:00:21.875
+Step 2: Resolve invalid or overlapping shifts and review availability, leave and cost warnings. A soft red tint and thin border take priority even on a previously published shift. Hover over the card’s top, focus the card, or click its red error icon to read the relevant issues.
+
+3
+00:00:21.875 --> 00:00:34.333
+Step 3: Wait for draft saves to finish, then choose Publish roster. A soft green tint and thin border mark unchanged published shifts when they have no current issues. A green border indicates publication, not legal compliance.
+
+4
+00:00:34.333 --> 00:00:44.917
+Step 4: Publishing needs no award review or review note. Staff see the saved published shifts; later draft edits remain private until the next publication. Automatic-break and scheduling validation still apply.
