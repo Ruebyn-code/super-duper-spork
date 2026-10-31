@@ -1,5 +1,4 @@
-/* Optional company appearance. Geometry, authored content and printed artwork
-   stay with their existing components. Only large/transient surfaces blur. */
+/* Opt-in clear glass. Surface paint changes; layout, content and saved settings do not. */
 @media screen {
   .surface-style-setting{display:grid;grid-template-columns:minmax(160px,1fr) minmax(220px,1.3fr);align-items:center;gap:18px;max-width:620px;margin:14px 0}
   .surface-style-setting>label{margin:0;min-width:0}
@@ -8,121 +7,178 @@
   .surface-style-preview-panel>strong{grid-column:1/-1;font-size:12px}
   .surface-style-preview-field,.surface-style-preview-button{padding:5px 9px;border:1px solid var(--theme-line,#dce5ed);border-radius:6px}
   .surface-style-preview-button{border-color:transparent;background:var(--primary);color:white}
-  .surface-style-preview[data-preview-style=liquid-glass]{background:radial-gradient(ellipse at 5% 0%,color-mix(in srgb,var(--primary) 28%,transparent),transparent 75%),radial-gradient(ellipse at 100% 100%,color-mix(in srgb,var(--secondary) 27%,transparent),transparent 80%),var(--theme-canvas,#f5f8fc)}
-  .surface-style-preview[data-preview-style=liquid-glass] .surface-style-preview-panel{background:linear-gradient(135deg,#ffffff80,transparent 65%),color-mix(in srgb,var(--theme-surface,#fff) 70%,transparent);border-color:color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));box-shadow:inset 0 1px 0 #ffffffb3,0 6px 20px #122d3c12;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-  .surface-style-preview[data-preview-style=liquid-glass] :is(.surface-style-preview-field,.surface-style-preview-button){background-image:linear-gradient(135deg,#ffffff38,transparent 70%);box-shadow:inset 0 1px 0 #ffffff80}
+  .surface-style-preview[data-preview-style=liquid-glass]{background:repeating-linear-gradient(135deg,transparent 0 14px,#8291a914 14px 15px),var(--theme-canvas,#f5f8fc)}
+  .surface-style-preview[data-preview-style=liquid-glass] :is(.surface-style-preview-panel,.surface-style-preview-field,.surface-style-preview-button){background:linear-gradient(135deg,#ffffff14,transparent 55%),#ffffff0f;border-color:#8491a94d;color:var(--theme-primary-text,var(--primary));box-shadow:inset 0 1px 0 #ffffff70,0 2px 8px #10273508}
   @media(max-width:550px){.surface-style-setting{grid-template-columns:minmax(0,1fr);gap:10px}.surface-style-preview{max-width:100%}}
 
   html[data-surface-style=liquid-glass]{
-    --glass-surface:color-mix(in srgb,var(--theme-surface,#fff) 84%,transparent);
-    --glass-menu:color-mix(in srgb,var(--theme-surface,#fff) 94%,transparent);
-    --glass-line:color-mix(in srgb,var(--primary) 13%,var(--theme-line,#dce5ed));
-    --glass-sheen:linear-gradient(135deg,#ffffff8c 0%,#ffffff20 36%,transparent 66%);
-    --glass-control-sheen:linear-gradient(135deg,#ffffff18 0%,transparent 30%);
-    --glass-shadow:inset 0 1px 0 #ffffffbf,inset 0 -1px 0 #ffffff30,0 6px 24px #1027350b;
-    --glass-menu-shadow:inset 0 1px 0 #ffffffbf,0 12px 38px #10273524;
-    --glass-blur:blur(18px) saturate(135%);
+    --glass-surface:rgb(255 255 255 / 6%);
+    --glass-menu:rgb(255 255 255 / 12%);
+    --glass-control:rgb(255 255 255 / 5%);
+    --glass-hover:rgb(255 255 255 / 15%);
+    --glass-structural:transparent;
+    --glass-line:rgb(100 116 139 / 26%);
+    --glass-sheen:linear-gradient(135deg,#ffffff18,transparent 45%);
+    --glass-shadow:inset 0 1px 0 #ffffff70,0 3px 14px #10273508;
+    --glass-menu-shadow:inset 0 1px 0 #ffffff80,0 8px 28px #1027351c;
+    --glass-blur:blur(5px) saturate(100%);
+    --glass-ink:var(--theme-primary-text,var(--primary));
   }
   html[data-surface-style=liquid-glass][data-theme=dark]{
-    --glass-surface:color-mix(in srgb,var(--theme-surface,#142133) 90%,transparent);
-    --glass-menu:color-mix(in srgb,var(--theme-surface,#142133) 96%,transparent);
-    --glass-line:color-mix(in srgb,var(--primary) 19%,var(--theme-line,#30445d));
-    --glass-sheen:linear-gradient(135deg,#ffffff13 0%,#ffffff05 36%,transparent 66%);
-    --glass-control-sheen:linear-gradient(135deg,#ffffff14 0%,transparent 68%);
-    --glass-shadow:inset 0 1px 0 #ffffff1f,inset 0 -1px 0 #ffffff08,0 8px 28px #00000020;
-    --glass-menu-shadow:inset 0 1px 0 #ffffff24,0 14px 42px #00000050;
-  }
-  html:root[data-surface-style=liquid-glass] body{
-    background-image:radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--primary) 9%,transparent),transparent 58%),radial-gradient(ellipse at 100% 100%,color-mix(in srgb,var(--secondary) 8%,transparent),transparent 58%);
+    --glass-surface:rgb(255 255 255 / 3%);
+    --glass-menu:rgb(9 16 27 / 16%);
+    --glass-control:rgb(255 255 255 / 4%);
+    --glass-hover:rgb(255 255 255 / 9%);
+    --glass-line:rgb(203 213 225 / 24%);
+    --glass-sheen:linear-gradient(135deg,#ffffff09,transparent 45%);
+    --glass-shadow:inset 0 1px 0 #ffffff24,0 3px 14px #00000012;
+    --glass-menu-shadow:inset 0 1px 0 #ffffff30,0 8px 28px #00000030;
   }
 
-  /* Explicit app surfaces cover static and dynamically inserted cards without
-     frosting every layout wrapper, image or block of authored text. */
+  /* Keep the company's page artwork behind every transparent content frame.
+     Clear glass temporarily replaces flat chrome fills, including App edit fills. */
+  html:root[data-surface-style=liquid-glass] body{background-image:none}
+  html:root[data-surface-style=liquid-glass].embedded-page,
+  html:root[data-surface-style=liquid-glass].embedded-page body{
+    background-color:var(--glass-structural)!important;background-image:none!important;
+  }
+  html:root[data-surface-style=liquid-glass] :is(.shell-page-frame,.shell-page-area,.app-shell,.app-page){background-color:var(--glass-structural)!important}
   html:root[data-surface-style=liquid-glass] body :is(
-    [data-app-part=panel],[data-app-part=stock-card],.management,.ordering-budget,
-    .home-section,.home-action,.home-daily-sales,.home-manager-summary,
+    main,form,fieldset,[role=tabpanel],.home-section-body,.dashboard-grid,
+    .stock-settings-panel,.stock-counting-fields,.stock-editor-footer,.stock-settings-tabs,
+    .cart-popup-heading,.cart-popup-footer,.location-settings-heading,.location-settings-body,.location-settings-footer,
+    .employee-settings-heading,.employee-settings-body,.employee-settings-actions,
+    .roster-dialog-header,.roster-dialog-body,.roster-dialog-actions,.roster-dialog-tabs,.subpages-sidebar,.catalogue-view,.users-table-shell,
+    .stock-count-content,.count-stock-content,.count-stock-heading,.library-filters,.library-views,
+    .roster-view-switch,.roster-board-corner,.roster-board-day,.roster-staff-label,.roster-cell,
+    .conversation-heading,.conversation-directory-heading,.communication-workspace,
+    .ops-run-heading,.ops-run-dialog :where(#ops-run-actions),.ops-settings-heading,.ops-settings-footer,
+    .learning-editor-heading,.learning-course-header,.learning-builder-stages,.learning-builder-topbar,
+    .learning-preview-pane-header,.learning-outline-heading,.learning-properties-heading,
+    .learning-phone-header,.learning-phone-footer,.learning-phone-reader-header,
+    .timesheet-card-header,.timesheet-card-footer,
+    .location-setup-dialog>header,.location-setup-dialog>footer,.location-setup-editor,
+    .feature-help-dialog>header,.feature-help-dialog>footer,.setup-step-actions,
+    .ai-dialog-heading,.scheduled-heading,.app-search-heading,.ai-settings>h2,
+    .rich-toolbar,.text-editor-toolbar,.pagination,thead,th
+  ):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *,[data-print-artwork] *)){
+    background-color:var(--glass-structural)!important;background-image:none!important;
+  }
+
+  html:root[data-surface-style=liquid-glass] body :is(
+    [data-app-part=panel],[data-app-part=stock-card],.product,.management,.ordering-budget,
+    .home-section,.home-action,.home-daily-sales,.home-manager-summary,.home-operations-group,.home-transfer-approvals,.home-transfer-feedback,
+    .dashboard-kpi,.dashboard-budget,.dashboard-checklists,.dashboard-quick-link,.dashboard-cogs,
     .report-panel,.report-metric,.library-card,.learning-card,.ops-task-card,
     .history-card,.settings-option,.transfer-card,.timesheet-card,.leave-request-card,
     .user-record,.account-location-group,.location-row,.permission-level-card,
-    .device-card,.award-location-card,.wastage-card,.stocktake-panel,.agreement-card,
-    .communications-sidebar,.communication-post,.conversation-panel,
-    .library-reader,.learning-reader,.ops-builder,.label-template-card,
+    .device-card,.device-location,.award-location-card,.award-card,.wastage-card,.stocktake-panel,.agreement-card,
+    .communications-sidebar,.communication-post,.conversation-panel,.message-composer,
+    .library-reader,.learning-reader,.ops-builder,.label-template-card,.labels-item-card,.labels-card-stage,.labels-library-search,
     .help-guide-card,.help-panel,.cart-page>aside,.rostering-weekbar,
-    #roster-metrics,.roster-board-scroll,.weekly-report-panel
-  ):not(.ai-settings,.ai-draft-dialog,.scheduled-dialog,[data-permission="ai.manage"],
-    .positive,.negative,.warning,.danger,.success,.completed,.ops-task-completed,
-    .is-selected,.selected,.active,.needs-signature,.has-save-error,.has-error,.is-overdue,.overdue,[data-setup-pending=true],
-    .ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,
-    .formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *){
-    background-color:var(--glass-surface);
-    background-image:var(--glass-sheen);
-    border-color:var(--glass-line);
+    :where(#roster-metrics),.roster-board-scroll,.weekly-report-panel,.product-par,.stock-order-when-setting,
+    .stock-settings-preview,.setup-par-row,.stock-count-group,.count-order-item,
+    .settings-preview,.ai-palette-choice,.ai-source-list,.ai-question-types,.ai-source-text,
+    .scheduled-card,.scheduled-choice-group,.ai-settings-usage,.ai-question-preview,.ai-planner-preview,
+    .ops-card,.ops-config,.ops-location-choice,.ops-step-editor,.ops-answer,.ops-section-editor,
+    .ops-planner-preview,.ops-schedule-breakdown,.ops-next-windows li,.ops-active-header,.ops-planning-row,
+    .ops-schedule-options,.ops-on-demand-choice,.ops-plan-consolidation,.ops-filter-menu,
+    .learning-panel,.learning-stat,.learning-lesson,.learning-question,.learning-build-card,
+    .learning-source-preview,.learning-plan-summary,.learning-library-choice,.learning-order-item,
+    .learning-outline-panel,.learning-properties-panel,.learning-block-toolbox,.learning-option-editor,
+    .learning-section-settings,.library-reading,.library-empty,.communication-empty,
+    .conversation-message,.conversation-link,.conversation-card,.reaction-chip,.communication-required-choice,
+    .roster-day,.roster-empty,.roster-settings-card,.availability-day,.roster-team-availability,
+    .budget-scope-card,.roster-money-field,.roster-metric,.annual-leave-balance,.timesheet-detail-card,
+    .timesheet-break-edit-row,.timesheet-break-preview,.timesheet-time-value,.clock-panel,.rate-person,
+    .phone-roster-card,.phone-roster-card-times>span,.roster-day-hours,.roster-day-lane,
+    .transfer-line,.transfer-metrics article,.count-item,.stock-count-group,
+    .sales-day,.users-search,.ops-active-search,.home-quarter-averages,.home-card-icon,
+    .ai-settings .settings-option-icon,.scheduled-facts,:where(.ai-question-preview>small:first-child)
+  ):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *,[data-print-artwork] *)){
+    background-color:var(--glass-surface)!important;
+    background-image:var(--glass-sheen)!important;
     box-shadow:var(--glass-shadow);
   }
-
   html:root[data-surface-style=liquid-glass] body :is(
-    #app-sidebar.top-navigation,#app-sidebar:not(.top-navigation),
-    .mobile-brand-header,.secondary-sidebar,.page-sidebar,.home-personal-panel
-  ){
-    background-color:color-mix(in srgb,var(--primary) 5%,var(--glass-surface));
-    background-image:var(--glass-sheen);
-    border-color:var(--glass-line);
-    box-shadow:var(--glass-shadow);
-  }
-  html:root[data-surface-style=liquid-glass] body :is(#app-sidebar,.mobile-brand-header){
-    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-  }
-
-  html:root[data-surface-style=liquid-glass] body :is(
-    dialog,[popover],#cart-popup,#phone-roster,#shift-clock-dialog,.location-picker-menu,.app-controls-menu,.company-logo-menu,
-    .report-location-menu,.rich-style-menu,.text-insert-menu
-  ):not(.ai-draft-dialog,.scheduled-dialog,.app-search-panel,
-    .ai-draft-dialog *,.scheduled-dialog *,.app-search-panel *){
-    background-color:var(--glass-menu);
-    background-image:var(--glass-sheen);
-    border-color:var(--glass-line);
+    :where(#app-sidebar),:where(#mobile-tabbar),.mobile-brand-header,.secondary-sidebar,.page-sidebar,.phone-subpage-navigation,.home-personal-panel,.home-personal,
+    dialog,[popover],:where(#cart-popup),:where(#phone-roster),:where(#shift-clock-dialog),.location-picker-menu,
+    .app-controls-menu,.company-logo-menu,.report-location-menu,.rich-style-menu,.text-insert-menu,
+    .app-search-panel,.ai-draft-dialog,.scheduled-dialog,.ai-settings
+  ):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *)){
+    background-color:var(--glass-menu)!important;
+    background-image:var(--glass-sheen)!important;
     box-shadow:var(--glass-menu-shadow);
-    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur)!important;backdrop-filter:var(--glass-blur)!important;
   }
 
-  /* Keep original action/validation/position colours, sizes and focus outlines. */
-  html:root[data-surface-style=liquid-glass] body :is(button,.submit,.home-action,.settings-option>a):not(
-    .ai-create-button,.ai-primary,.ai-action,.scheduled-primary,
-    .ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,.app-search-panel *,
-    .app-search-control *,#app-search-input,.app-search-toggle,
-    .formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *){
-    background-image:var(--glass-control-sheen);
-    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--theme-text,#21384a) 8%,transparent);
+  html:root[data-surface-style=liquid-glass] dialog::backdrop{
+    background:rgb(15 23 42 / 12%);-webkit-backdrop-filter:none;backdrop-filter:none;
   }
+  html:root[data-surface-style=liquid-glass][data-theme=dark] dialog::backdrop{background:rgb(0 0 0 / 20%)}
+
+  /* Every action and field gets the same clear face. Colour stays in the text,
+     focus rings and semantic/position outlines, without changing hit targets. */
   html:root[data-surface-style=liquid-glass] body :is(
-    input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=hidden]),
-    textarea,select,.location-select-trigger
-  ):not([aria-invalid=true],:invalid,
-    .ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,.app-search-panel *,
-    .app-search-control *,#app-search-input,.app-search-toggle,
-    .formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *){
-    background-color:var(--glass-menu);
-    background-image:var(--glass-control-sheen);
-    box-shadow:inset 0 1px 2px #10273505;
+    button,summary,.submit,.header-link,.home-action,.home-operations-roster,.home-personal-marker,.home-personal-count,.home-personal-item,.settings-option>a,.page-sidebar-link,
+    .app-search-result,.app-controls-menu a,.company-logo-menu a,
+    .location-picker-option,.select-menu-done,.sidebar-group-link,:where(#mobile-tabbar)>a,
+    .badge,.roster-badge,.roster-publication-badge,.roster-shift-state,.ops-badge,.learning-badge,.library-tag,.communication-tag,.transfer-badge,.home-widget-badge,.permission-badge,.dashboard-kpi-icon,:where(#cart-pill-count),
+    input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=hidden]),
+    textarea,select,.location-select-trigger,.app-search-control,.app-search-field
+  ):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *,[data-print-artwork] *)){
+    background-color:var(--glass-control)!important;
+    background-image:var(--glass-sheen)!important;
   }
-  html:root[data-surface-style=liquid-glass] body .roster-cell .roster-shift:not(.is-selected,.is-dragging,.is-pressing,.has-save-error){
-    background-color:color-mix(in srgb,var(--shift-colour,var(--secondary)) 9%,var(--glass-surface));
-    background-image:var(--glass-sheen);
-    box-shadow:var(--glass-shadow);
+  html:root[data-surface-style=liquid-glass] body :is(button,summary,.submit,.header-link,.home-action,.home-operations-roster,.page-sidebar-link,.location-select-trigger,.app-controls-menu a,.company-logo-menu a):not(
+    .ai-create-button,.ai-primary,.ai-action,.scheduled-primary,
+    .ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,.app-search-control *,.app-search-panel *,
+    .formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *
+  ){
+    color:var(--glass-ink)!important;border-color:var(--glass-line)!important;
+    box-shadow:inset 0 0 0 1px var(--glass-line),inset 0 1px 0 #ffffff30;
+  }
+  html:root[data-surface-style=liquid-glass] body :is(button,.header-link,.location-picker-option,summary):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *,[data-print-artwork] *)):not(:disabled,[aria-disabled=true]):hover{
+    background-color:var(--glass-hover)!important;
+  }
+  html:root[data-surface-style=liquid-glass] body :is([aria-selected=true],[aria-pressed=true],[aria-current=page],.is-active,.page-sidebar-link.active):not(:where(.formatted-text *,.text-editor-content *,.label-paper *,.label-designer-stage *,[data-print-artwork] *)){
+    outline-color:var(--theme-primary-text,var(--primary));border-color:var(--theme-primary-text,var(--primary))!important;
+    box-shadow:inset 0 0 0 1px var(--theme-primary-text,var(--primary));
+  }
+  html:root[data-surface-style=liquid-glass] body :is(.danger,.negative,.has-error,.has-save-error,.is-overdue,.overdue,.roster-danger,.learning-danger,.communication-danger,.library-delete,.shift-overview-delete,:where(#stock-remove)){--glass-ink:var(--theme-danger-text,#b42318)}
+  html:root[data-surface-style=liquid-glass] body :is(.positive,.success,.completed,.ops-task-completed){--glass-ink:var(--theme-success-text,#15803d)}
+  html:root[data-surface-style=liquid-glass] body :is(.warning,.needs-signature){--glass-ink:var(--theme-warning-text,#875c0a)}
+  html:root[data-surface-style=liquid-glass] body .roster-cell .roster-shift{
+    background-color:var(--glass-control)!important;background-image:var(--glass-sheen)!important;
   }
 
-  /* Intelligence keeps its own gradient borders, tint, font and shimmer. */
-  html:root[data-surface-style=liquid-glass] body :is(.app-search-panel,.ai-draft-dialog,.scheduled-dialog,.ai-settings){
-    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  /* Gradient edges, intelligence stars, shimmer and interaction glows stay visible
+     around a clear centre instead of a solid gradient underneath it. */
+  html:root[data-surface-style=liquid-glass] body :is(
+    .app-search-panel,.ai-draft-dialog,.scheduled-dialog,.ai-settings,.ai-brand-preview,
+    .settings-option[data-permission="ai.manage"],.app-search-control,.app-search-panel>.app-search-field,
+    button.ai-create-button,button.ai-primary,button.ai-action,button.scheduled-primary
+  ){
+    background-color:var(--glass-control)!important;background-image:none!important;
+    border-color:transparent!important;color:var(--ai-text)!important;
   }
+  html:root[data-surface-style=liquid-glass] body :is(.app-search-panel,.ai-draft-dialog,.scheduled-dialog,.ai-settings,.ai-brand-preview,.settings-option[data-permission="ai.manage"],.app-search-control,.app-search-panel>.app-search-field)::before,
+  html:root[data-surface-style=liquid-glass] body button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after{
+    content:"";position:absolute;inset:0;z-index:1;padding:1px;border-radius:inherit;pointer-events:none;
+    background:var(--ai-gradient);background-size:300% 100%;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;
+    transform:none;animation:ai-border-shimmer var(--ai-shimmer-duration) ease-in-out infinite;
+  }
+  html:root[data-surface-style=liquid-glass] body :is(.ai-source-list,.ai-question-types,.ai-source-text,.scheduled-card,.scheduled-choice-group,.ai-settings-usage){border-color:var(--ai-line)!important}
+  html:root[data-surface-style=liquid-glass] body :is(.ai-settings,.ai-draft-dialog,.scheduled-dialog,.app-search-panel) :is(button,input,textarea,select,summary){color:var(--ai-text)}
+  html:root[data-surface-style=liquid-glass] body button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary):disabled::after{animation:none}
+  @media(prefers-reduced-motion:reduce){html:root[data-surface-style=liquid-glass] body :is(.app-search-panel,.ai-draft-dialog,.scheduled-dialog,.ai-settings,.ai-brand-preview,.settings-option[data-permission="ai.manage"],.app-search-control,.app-search-panel>.app-search-field)::before,html:root[data-surface-style=liquid-glass] body button:is(.ai-create-button,.ai-primary,.ai-action,.scheduled-primary)::after{animation:none}}
 
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    html[data-surface-style=liquid-glass]{--glass-surface:var(--theme-surface,#fff);--glass-menu:var(--theme-surface,#fff)}
+    html:root[data-surface-style=liquid-glass]{--glass-surface:var(--theme-surface,#fff);--glass-menu:var(--theme-surface,#fff);--glass-control:var(--theme-surface,#fff);--glass-structural:var(--theme-surface,#fff);--glass-hover:var(--theme-surface-raised,#f1f5f9);--glass-blur:none;--glass-sheen:none}
   }
   @media(prefers-reduced-transparency:reduce),(forced-colors:active){
-    html[data-surface-style=liquid-glass]{--glass-surface:var(--theme-surface,#fff);--glass-menu:var(--theme-surface,#fff);--glass-sheen:none;--glass-control-sheen:none;--glass-shadow:none;--glass-menu-shadow:none;--glass-blur:none}
-    html:root[data-surface-style=liquid-glass] body{background-image:none}
+    html:root[data-surface-style=liquid-glass]{--glass-surface:var(--theme-surface,#fff);--glass-menu:var(--theme-surface,#fff);--glass-control:var(--theme-surface,#fff);--glass-structural:var(--theme-surface,#fff);--glass-hover:var(--theme-surface-raised,#f1f5f9);--glass-sheen:none;--glass-shadow:none;--glass-menu-shadow:none;--glass-blur:none}
     .surface-style-preview[data-preview-style=liquid-glass]{background-image:none}
-    .surface-style-preview[data-preview-style=liquid-glass] .surface-style-preview-panel{background:var(--theme-surface,#fff);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+    .surface-style-preview[data-preview-style=liquid-glass] :is(.surface-style-preview-panel,.surface-style-preview-field,.surface-style-preview-button){background:var(--theme-surface,#fff);box-shadow:none}
   }
 }

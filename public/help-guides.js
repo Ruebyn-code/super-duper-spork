@@ -691,10 +691,10 @@
  ],{route:'/settings#order-email',permissions:['email.manage'],notes:['Template edits do not resend past emails or change saved order quantities. Sender and recipient configuration remains separate.'],related:['location-email','order-confirmation']});
  add(c,'appearance','Change company appearance','Set company colours, logos and fonts in the correct scope.',[
   'Select the company, then open the blue account dropdown → Settings → App appearance.',
-  'In Colours, choose Standard or Liquid Glass under Interface style and review the sample. Change company colours, app/sidebar logos or available font settings as needed.',
+  'In Colours, choose Standard or Liquid Glass under Interface style and review the sample. Liquid Glass makes navigation, cards, buttons, fields and popups clear. Change company colours, app/sidebar logos or available font settings as needed.',
   'Save the section’s settings and check an ordinary app page in both themes.',
   'Use authorised shared sign-in controls only when changing the platform’s sign-in appearance.'
- ],{route:'/admin/settings#colours',permissions:['appearance.manage'],notes:['Company appearance is separate from OpStack intelligence styling and shared platform sign-in settings.'],related:['home-layout','intelligence-appearance','dark-mode']});
+ ],{route:'/admin/settings#colours',permissions:['appearance.manage'],notes:['Liquid Glass replaces flat control and panel fills with clear surfaces while keeping company text colours, page artwork and intelligence accents. Choose Standard to restore saved fills and intelligence tints. Company appearance is separate from shared platform sign-in settings.'],related:['home-layout','intelligence-appearance','dark-mode']});
  add(c,'home-layout','Edit Home sections and app appearance in place','Arrange supported surfaces with desktop App edit.',[
   'On a computer with appearance permission, open the blue dropdown and choose App edit.',
   'Configure or rearrange supported Home sections and their dimensions. Staff and Manager Home keep separate section layouts.',
