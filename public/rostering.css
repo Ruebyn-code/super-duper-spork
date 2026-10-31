@@ -623,3 +623,23 @@ button.roster-day-shift:hover{background:color-mix(in srgb,var(--shift-colour,va
 @media(max-width:1050px){.timesheet-card-body{grid-template-columns:minmax(0,1fr) 155px;gap:12px}.timesheet-card-footer{flex-wrap:wrap}.timesheet-detail-card .timesheet-actions{max-width:none}.timesheet-card-checks{flex-basis:260px}.timesheet-time-grid{gap:7px}.timesheet-time-cell>.timesheet-time-value{font-size:13px}}
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){.timesheet-card-header{padding:10px}.timesheet-avatar{width:35px;height:35px;flex-basis:35px;border-radius:8px;font-size:12px}.timesheet-identity h3{font-size:13px}.timesheet-card-body{grid-template-columns:minmax(0,1fr);padding:11px 10px;gap:12px}.timesheet-time-grid{grid-template-columns:1fr 1fr}.timesheet-time-cell.timesheet-duration{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:8px}.timesheet-time-cell.timesheet-duration>.timesheet-time-value{min-height:28px;font-size:13px}.timesheet-duration>.timesheet-break-trigger{margin-left:auto}.timesheet-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-left:0;border-top:1px solid var(--theme-line,#e1e8f0);padding:10px 0 0}.timesheet-totals>div{gap:8px}.timesheet-totals [data-total=wage]{grid-column:1/-1}.timesheet-totals [data-total=wage] dd{font-size:16px}.timesheet-totals>small{grid-column:1/-1}.timesheet-card-footer{padding:8px 10px;gap:7px}.timesheet-card-checks{flex-basis:100%}.timesheet-detail-card .timesheet-actions{margin-left:0;width:100%;justify-content:flex-end;gap:6px}.timesheet-detail-card .timesheet-actions button{min-height:34px;font-size:11px;padding:7px 10px}.timesheet-detail-card .timesheet-actions .rostering-primary{margin-right:auto}.timesheet-time-cell>.timesheet-time-value{font-size:14px;min-height:38px}}
 @media print{.timesheet-detail-card{break-inside:avoid;box-shadow:none}.timesheet-detail-card .timesheet-actions,.timesheet-break-trigger{display:none}}
+
+/* Individual timesheet tiles, with each record's details stacked inside its card. */
+#timesheet-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));align-items:start;gap:14px}
+#timesheet-list>.timesheet-detail-card{display:flex;flex-direction:column;align-items:stretch}
+.timesheet-detail-card>.timesheet-card-header{align-self:stretch;width:auto;min-width:0;margin:0;box-sizing:border-box}
+.timesheet-detail-card .timesheet-card-body{grid-template-columns:minmax(0,1fr);gap:12px;padding:12px}
+.timesheet-detail-card .timesheet-time-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.timesheet-detail-card .timesheet-duration{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px}
+.timesheet-detail-card .timesheet-duration>.timesheet-time-value{min-height:29px;font-size:14px}
+.timesheet-detail-card .timesheet-duration>.timesheet-break-trigger{margin-left:auto}
+.timesheet-detail-card .timesheet-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;border-left:0;border-top:1px solid var(--theme-line,#e1e8f0);padding:11px 0 0}
+.timesheet-detail-card .timesheet-totals>div{gap:8px}
+.timesheet-detail-card .timesheet-totals [data-total=wage],.timesheet-detail-card .timesheet-totals>small{grid-column:1/-1}
+.timesheet-detail-card .timesheet-card-footer{flex-direction:column;align-items:stretch;gap:7px;padding:9px 12px}
+.timesheet-detail-card .timesheet-card-checks{flex:0 1 auto;width:100%}
+.timesheet-detail-card .timesheet-actions{width:100%;max-width:none;margin-left:0;justify-content:flex-end;gap:6px}
+.timesheet-detail-card .timesheet-actions .rostering-primary{margin-right:auto}
+#timesheet-list>.roster-empty{grid-column:1/-1}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){#timesheet-list{grid-template-columns:minmax(0,1fr);gap:10px}}
+@media print{#timesheet-list{grid-template-columns:minmax(0,1fr)}}

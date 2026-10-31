@@ -1,6 +1,8 @@
 # Timesheet cards
 
-Rostering → Timesheets presents one compact card per work record. The header uses
+Rostering → Timesheets presents individual vertical cards in a responsive grid,
+with multiple cards beside each other on larger screens and one column on phones.
+Each card keeps its staff header, times, totals, checks and actions together. The header uses
 existing company fonts/colours, the permitted staff photo (initials if unavailable),
 date, source, saved status and published position. Actual clock-in/out, paid time
 and unpaid breaks remain recorded work; planned breaks never become actual events.
@@ -31,7 +33,7 @@ No inline edit, card opening, expansion, photo fetch or view change writes work.
 Staff retain only their own authorised entries, recorded/published times and
 history. Wage fields, approval, corrections and pay details keep existing scopes.
 Photo metadata is added only after the native location directory is filtered;
-photo bytes retain their existing protected endpoint. Phone cards stack their
-fields/actions; desktop cards place permitted totals alongside the recorded work.
+photo bytes retain their existing protected endpoint. Every card stacks its
+fields and permitted totals above its checks and actions.
 Existing filters, week/location selection, CSV export and annual-leave accrual
 continue through their original writers and approved snapshots.
