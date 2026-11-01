@@ -12,6 +12,7 @@ function content(order){
   lines.push('',supplier.supplier||'Supplier',statuses[delivery?.status]||statuses.unconfirmed);
   for(const item of supplier.items)lines.push(itemLine(item)+(Number.isSafeInteger(item.price)?' — '+money(item.price*item.quantity)+' estimated':' — price pending'));
   lines.push('Supplier estimate: '+money(supplier.total)+(supplier.pricePending?' + prices pending':''));
+  if(order.supplierNotes?.[supplier.supplierId])lines.push('Supplier notes: '+order.supplierNotes[supplier.supplierId]);
  }
  lines.push('','Estimated order total: '+money(order.total)+(order.pricePending?' + prices pending':''),'','Notes: '+(order.notes||'None'));
  return{subject,text:lines.join('\n')};

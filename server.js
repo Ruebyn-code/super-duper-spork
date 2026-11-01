@@ -32,6 +32,7 @@ const {validateDelivery,providerStatus,deliveryConfigurationIssue,dispatchOrder}
 const deliverySettings=require('./delivery-settings');
 const orderEmailTemplates=require('./order-email-templates'),orderConfirmation=require('./order-confirmation');
 const {splitBySupplier}=require('./supplier-orders');
+const supplierOrderNotes=require('./supplier-order-notes');
 const orderNumbers=require('./order-numbers');
 const orderHistory=require('./order-history'),orderPrices=require('./order-prices');
 const interfaceText=require('./interface-text');
@@ -84,7 +85,8 @@ function validateOrder(body, menu, requester = '') {
     if(!stockOrderRules.valid(product,item.quantity))throw Error(product.name+': '+stockOrderRules.describe(product)+'. Enter a quantity up to '+stockOrderRules.maximum(product)+'.');
     return {id:product.id,name:product.name,sku:product.sku||'',unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:product.supplier,quantity:item.quantity,price:product.price};
   });
-  return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
+  const supplierNotes=supplierOrderNotes.normalize(body.supplierNotes,items);
+  return {id:crypto.randomUUID(),name:requesterName.trim(),phone:typeof body.phone === 'string' ? body.phone.trim() : '',notes:typeof body.notes === 'string' ? body.notes.slice(0,500) : '',...(Object.keys(supplierNotes).length?{supplierNotes}:{}),items,total:items.reduce((sum,i)=>sum+i.price*i.quantity,0),createdAt:new Date().toISOString(),pricePending:items.some(i=>i.price===null),status:'requested',location:typeof body.location === 'string' ? body.location.slice(0,200) : ''};
 }
 function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicationsNow=Date.now,rosteringNow=Date.now,transfersNow=Date.now,salesNow=Date.now,invitationNow=Date.now,passwordNow=Date.now,signingNow=invitationNow,locationNow=Date.now,kioskNow=Date.now,publicOrigin='',migrationMode=false,platformDataDir=dataDir,platformStore,network={id:'default',name:'Existing network'}}={}) {
   publicOrigin=appOrigin(publicOrigin);

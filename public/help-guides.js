@@ -67,19 +67,19 @@
  add(c,'place-order','Place an order','Build a cart and double-check it before submitting.',[
   'Select the correct location, then open Ordering → Catalogue.',
   'Choose a supplier or search for an item. Enter quantities in the item’s displayed ordering unit and add them to the cart.',
-  'Open the floating Cart button, check the supplier groups, quantities, estimates and delivery dates, and add notes.',
+  'Open the floating Cart button and check supplier groups, quantities, estimates and delivery dates. Add separate notes under each supplier; use Notes for all suppliers for shared instructions.',
   'Press Place order to open Double check your order. Review the breakdown, then press the final Place order button.',
   'Read each supplier’s sending result and use Order history to review the saved order.'
  ],{popular:true,route:'/',permissions:['orders.view'],notes:['A saved order and a sent supplier email are separate outcomes. “Submitted” means the sending service accepted the request, rather than proof the supplier read it.'],related:['shared-cart','order-not-sent','delivery-dates','order-history'],keywords:['purchase','submit stock request','checkout','buy']});
  add(c,'shared-cart','Use the cart across Ordering pages','Keep one cart while counting, reviewing history or managing stock.',[
   'Use the floating Cart button on Catalogue, Stock count, Order history, Transfers or stock-management pages.',
-  'Adjust quantities or remove items in the popup. Stock count’s Add to cart uses the same cart.',
+  'Adjust quantities, remove items or enter notes under each supplier. Supplier notes stay with this user and location across Ordering pages. Stock count’s Add to cart uses the same cart.',
   'Check the weekly budget and supplier delivery guidance before ordering.',
   'Cancel the final review if you need to change anything; your cart and notes remain available.'
  ],{route:'/#cart',permissions:['orders.view'],notes:['Carts are separate for each user and location in this browser. Placing or editing quantities requires order-placing permission. Opening the cart does not place an order.'],related:['place-order','ordering-budget']});
  add(c,'order-history','Find, edit, add or delete past orders','Keep order history complete for the selected location.',[
   'Open Ordering → Order history. Filter by dates, supplier or order reference and choose View order.',
-  'To correct a placed order, select Edit order. Change items, quantities, unit prices, reference or notes, then select Save changes.',
+  'To correct a placed order, select Edit order. Change items, quantities, unit prices, reference, shared notes or separate supplier notes, then select Save changes.',
   'To add a missed order, choose Record past order, enter its original date and use the supplier/category cards to add items.',
   'Review quantities and historical prices, then choose Save to history. This records the order without emailing the supplier.',
   'To remove an incorrect order, open its details, select Delete order and confirm.'
