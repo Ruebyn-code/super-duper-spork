@@ -1,0 +1,7 @@
+# Stock count grouping
+
+New count has a compact **Group by → Area / Supplier** control. Area uses the existing Cool Room Stock, Freezer Stock, Packaging, Chemical and Dry Stock sections. Supplier uses the supplier saved on each item, with separate sections for distinct supplier IDs even when names match. Items without supplier details remain visible in an Unassigned supplier or Supplier removed section.
+
+Switching changes presentation only. It moves the existing count inputs so entered values, invalid partial input, counting units, recommendation state, notes and date remain intact. Search is retained; the section filter resets to All areas or All suppliers. Arrow keys and Enter follow the visible input order. Blank counts remain unknown and zero remains a counted value. Changing the grouping never saves a count, changes the cart, recalculates units or contacts a supplier. The browser remembers the choice for the current user/location separately from the count draft and retry signature.
+
+Saved count reports offer the same grouping choice. They use their original area and supplier snapshots, retaining removed/renamed supplier names, quantities and smaller-pack conversions. Viewing or regrouping a report never writes to its saved file. Existing count permissions, company/location access, save validation, request IDs and explicit cart actions remain unchanged. Weekly usage retains its existing storage-area presentation.

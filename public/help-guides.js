@@ -86,11 +86,11 @@
  ],{route:'/order-history',permissions:['orders.view'],notes:['Editing, adding and deleting require order-placing permission. Edits retain the original order date and a private audit, update order-based costs and usage, and send no supplier email or confirmation. Invoice-based weekly expenses keep their saved values. Pending prices may remain blank; zero is a known zero price.','If an order, its prices or delivery tracking changes while editing, your draft is kept. Reload latest explicitly discards that draft and opens the current order. An uncertain save freezes its details for the same-request retry.','Deleting excludes the order from order-based budgets, usage and reports; it does not cancel an order with a supplier. Orders still being sent cannot be edited or deleted. A received supplier must retain at least one item.'],related:['receiving-orders','stock-price-changes'],keywords:['edit order','amend','change quantity','pending price','missed order','manual order','past','remove','SGR-MER-0001','order number']});
  add(c,'stock-count','Enter and save a stock count','Use compact rows to record the stock physically present.',[
   'Open Ordering → Stock count and select New count. Check the count date.',
-  'Filter by storage group or search. Enter quantities next to each item; leave uncounted items blank and enter 0 for none.',
+  'Choose Group by → Area or Supplier, then filter or search. Enter quantities next to each item; leave uncounted items blank and enter 0 for none.',
   'Use Enter, Down or Right to move to the next visible count field. Up, Left or Shift+Enter moves back.',
   'Review the recommended order beside Add to cart. Adding a recommendation is a separate action from saving the count.',
   'Save the count explicitly, then use History to check its saved snapshot.'
- ],{popular:true,route:'/stock-count#new',permissions:['counts.view'],notes:['Counts support three decimal places. Browser drafts help retain unfinished work, but only the save action records a shared count.'],related:['count-sleeves','target-levels','delivery-quantities','count-history'],keywords:['stocktake','inventory','quantity','input','keyboard']});
+ ],{popular:true,route:'/stock-count#new',permissions:['counts.view'],notes:['Grouping only changes the display. Your counts, units, notes and search stay in place when switching. Your browser remembers the choice for this user and location. Counts support three decimal places; only Save stock count records a shared count.'],related:['count-sleeves','target-levels','delivery-quantities','count-history'],keywords:['stocktake','inventory','quantity','input','keyboard','group by','area','supplier']});
  add(c,'count-sleeves','Count sleeves or smaller packs','Convert a physical smaller-pack count into ordering units.',[
   'Open Ordering → Stock items, edit the item and choose Pack & counting.',
   'Keep Unit amount as the ordered pack, such as “Box of 1,000 cups”. Set Count in smaller packs to Sleeves and 20 per ordered unit.',
@@ -98,7 +98,7 @@
   'Check the conversion shown beside the count before saving.'
  ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Targets, prices, recommendations and supplier orders remain in ordered packs. A changed conversion must be reviewed before an older count draft is saved.'],related:['stock-count','stock-settings'],keywords:['selves','sleeves','cups','20 x 50','pack conversion']});
  add(c,'count-history','Review count history and usage','Understand saved stock snapshots and completed usage cycles.',[
-  'Open Stock count → History to find a saved count and review its item quantities and units.',
+  'Open Stock count → History and View count. Choose Group by → Area or Supplier to review the saved quantities and units using their original names.',
   'Open Weekly usage to inspect the Sunday–Saturday cycles and storage groups.',
   'Compare opening count, orders and confirmed transfer effects with the following Sunday’s closing count.',
   'Investigate missing counts or negative usage before relying on the automatic target.'

@@ -1,4 +1,4 @@
-// Shared storage groups keep stock counts separate from supplier order grouping.
+// Storage areas are saved with counts; grouping is a read-only display choice.
 (function(root){
  const groups=[
   {id:'cool-room',name:'Cool Room Stock'},
@@ -20,6 +20,12 @@
   if(/\b(cheese|hom+us|hummus|chicken|lamb|beef|pork|sausages?|tzatziki|tarama|tirokafteri|eggplant|saganaki|feta|onions?|lettuce|tomatoes|lemons|cucumbers?|strawberr(?:y|ies)|milk|yogh?urt|cream)\b|\b(garlic sauce|fresh (tomato|lemon))\b/.test(text))return 'cool-room';
   return 'dry';
  }
- const api={groups,valid,resolve};
+ const key=(product={},by='area')=>by==='supplier'?(product.supplierId?'supplier-'+product.supplierId:'missing-supplier'):resolve(product);
+ function sections(items=[],by='area'){
+  if(by!=='supplier')return groups.map(group=>({...group,items:items.filter(item=>resolve(item)===group.id)}));
+  const suppliers=new Map();for(const item of items){const id=key(item,by);if(!suppliers.has(id))suppliers.set(id,{id,name:item.supplier|| (item.supplierId?'Supplier removed':'Unassigned supplier'),items:[]});suppliers.get(id).items.push(item);}
+  return[...suppliers.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-AU')||a.id.localeCompare(b.id));
+ }
+ const api={groups,valid,resolve,key,sections};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.stockCountGroups=api;
 })(typeof window==='undefined'?globalThis:window);
