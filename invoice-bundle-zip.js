@@ -5,7 +5,7 @@ const maximum=0xffffffff,flags=0x0808;
 const invalid=message=>{throw Object.assign(Error(message),{status:400});};
 const extensions={'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'};
 function label(value){const letters=Array.from(String(value||'').normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_').replace(/^[. ]+|[. ]+$/g,'')).slice(0,100);while(Buffer.byteLength(letters.join(''))>160)letters.pop();return letters.join('')||'invoice';}
-function filename(record,index){const original=record.source.name.replace(/\.[^.]*$/,''),extension=extensions[record.source.mime];if(!extension)throw Error('Unsupported invoice original.');return String(index+1).padStart(4,'0')+'-'+label(original)+'.'+extension;}
+function filename(record,index){const original=record.source.name.replace(/\.[^.]*$/,''),supplier=String(record.supplier||'').trim()||'Unknown supplier',extension=extensions[record.source.mime];if(!extension)throw Error('Unsupported invoice original.');return String(index+1).padStart(4,'0')+'-'+label(supplier+'-'+original)+'.'+extension;}
 function timestamp(value){const date=new Date(value),year=date.getUTCFullYear();if(!Number.isFinite(date.getTime())||year<1980||year>2107)return{date:33,time:0};return{date:((year-1980)<<9)|((date.getUTCMonth()+1)<<5)|date.getUTCDate(),time:(date.getUTCHours()<<11)|(date.getUTCMinutes()<<5)|Math.floor(date.getUTCSeconds()/2)};}
 function plan(files){
  if(!files.length||files.length>=0xffff)invalid('This bundle has too many files for one ZIP.');

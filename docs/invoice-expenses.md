@@ -26,7 +26,11 @@ Invoice details and **Open invoice** links require `invoices.view`. Financial vi
 **Invoice scanner → Weekly bundles → Download bundle** downloads one ZIP of all
 original invoice images and PDFs saved in the expanded week. It uses the selected
 location and bundle week, rather than printed invoice dates. Original bytes are
-preserved; numbered, safe filenames keep repeated upload names separate. Readers
+preserved; each safe filename includes its saved supplier name and original upload
+name, with a number keeping repeated names separate (for example
+`0001-Oroso Poultry-invoice.pdf`). Missing supplier names use `Unknown supplier`;
+long names are shortened to fit safely. Corrected saved supplier names are used
+on the next download without renaming stored files. Readers
 with `invoices.view` can download without invoice-editing or stock permissions.
 
 The server pins the saved originals briefly under the location's existing queue,
