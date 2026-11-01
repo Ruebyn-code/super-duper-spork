@@ -23,6 +23,20 @@ responses never overwrite a typed name or an unrelated invoice/context.
 
 Invoice details and **Open invoice** links require `invoices.view`. Financial viewers without that permission receive only the aggregate cost and counts. Existing invoice editing, CSRF, file access, revision conflicts, duplicate-file protection and company/location controls remain in place.
 
+**Invoice scanner → Weekly bundles → Download bundle** downloads one ZIP of all
+original invoice images and PDFs saved in the expanded week. It uses the selected
+location and bundle week, rather than printed invoice dates. Original bytes are
+preserved; numbered, safe filenames keep repeated upload names separate. Readers
+with `invoices.view` can download without invoice-editing or stock permissions.
+
+The server pins the saved originals briefly under the location's existing queue,
+then streams the ZIP without holding invoice writes or buffering the whole week.
+Moves/deletions after that snapshot do not truncate it. All file handles close on
+completion, error or cancellation. Missing/damaged originals fail the download
+instead of silently omitting a file. Context changes cancel the browser request;
+the endpoint also checks the requested location. Downloads are private, uncached
+reads and never modify invoices, expenses, prices or orders or contact providers.
+
 Daily sales, forecast revenue, ordering budgets, legacy Home order metrics, stock counts/usage and placed orders retain their existing sources. Invoice price changes still require the existing explicit price confirmation.
 
 Explicitly confirmed stock price changes also update the effective price in the latest order containing each item at every location in that company. History, budgets and placed-order reference costs use those revised totals, while financial Cost of goods still includes saved invoices only. Original order snapshots and sent messages remain available unchanged; confirmation never resends them. See [Order history](order-history.md).

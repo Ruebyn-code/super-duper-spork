@@ -3,6 +3,7 @@ const stockOrderRules=require('./public/stock-order-rules');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {Readable}=require('node:stream'),{pipeline}=require('node:stream/promises');
 const publicFiles=require('./public-files');
 const employmentDocuments=require('./employment-documents');
 const serveHelpMedia=require('./help-media').createMediaServer(path.join(__dirname,'public/help-media'),require('./public/help-media-manifest'));
@@ -413,6 +414,12 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
       const permissionLevelRoute=req.url.match(/^\/api\/permission-levels\/([a-zA-Z0-9-]+)$/);
       if((req.url==='/api/permission-levels'&&req.method==='POST')||(permissionLevelRoute&&['PUT','DELETE'].includes(req.method))){await auth.changePermissionLevel(session,await body(req,64000),req.method,permissionLevelRoute?.[1]);return json(req.method==='POST'?201:200,await auth.permissionLevels(await auth.forCompany(session,session.companyId)));}
+      const invoiceBundle=req.url.match(/^\/api\/invoices\/bundles\/([^/]+)\/download$/);
+      if(invoiceBundle&&req.method==='GET'){
+        if(requestUrl.searchParams.get('location')!==session.locationId)fail('The selected location changed. Refresh the weekly bundles before downloading.',409);
+        const archive=await invoices.bundle(dataDir,session,invoiceBundle[1]);
+        try{if(res.destroyed)return;res.writeHead(200,{'Content-Type':'application/zip','Content-Length':archive.size,'Content-Disposition':"attachment; filename*=UTF-8''"+encodeURIComponent(archive.name).replace(/['()*]/g,char=>'%'+char.charCodeAt(0).toString(16).toUpperCase()),'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});await pipeline(Readable.from(archive.chunks(),{objectMode:false}),res);}catch(error){res.destroy();}finally{await archive.close();}return;
+      }
       if(req.url==='/api/invoices/suppliers'&&req.method==='GET'){
         if(!can(session,'invoices.edit'))fail('Invoice editing permission required.',403);
         return json(200,{companyId:session.companyId,locationId:session.locationId,suppliers:(await readCatalogue()).suppliers.map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name,'en-AU'))});

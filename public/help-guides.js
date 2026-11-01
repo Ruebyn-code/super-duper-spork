@@ -275,7 +275,7 @@
   'Expand Invoice details and check the supplier. Use Choose supplier to search your company’s saved suppliers and correct a wrong scan, or edit the name directly. Check the invoice number, date, subtotal, GST and total against the original.',
   'Check the bundle week, which can be changed independently of the invoice date.',
   'Review any proposed stock price changes, then choose Save invoice or Confirm price updates.',
-  'Reopen the saved bundle to correct details, move the invoice, download the original or delete it with confirmation.'
+  'Open Weekly bundles, expand the saved week and choose Download bundle for one ZIP of its original images and PDFs. Open an individual invoice to correct details, move it, download its original or delete it with confirmation.'
  ],{popular:true,route:'/home',permissions:['home.view'],notes:['Normal scanning reads the document locally. Saving an invoice is the step that contributes its total to weekly costs. A missing total leaves the financial result incomplete.'],related:['invoice-prices','invoice-expenses','intelligence-invoices'],keywords:['OCR','photo','PDF','scan','weekly bundle']});
  add(c,'invoice-prices','Confirm stock prices detected on invoices','Apply reviewed price differences to existing company items.',[
   'Scan or upload an invoice and check its invoice date and transcription.',

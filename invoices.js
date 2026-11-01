@@ -1,5 +1,6 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const priceModel=require('./public/invoice-price-model');
+const bundleZip=require('./invoice-bundle-zip');
 const {currentWeek}=require('./sales'),{shift}=require('./stock-usage');
 const maximumFileBytes=10000000,maximumPreviewBytes=1000000,queues=new Map();
 const validId=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
@@ -48,6 +49,19 @@ async function create(dir,session,input){
 async function update(dir,session,id,input){const values=fields(input);if(!Number.isSafeInteger(input.revision)||input.revision<1)fail('Reload the invoice before editing.');return serialized(dir,session,async()=>{const previous=await read(dir,session,id);if(previous.revision!==input.revision)fail('This invoice changed in another tab. Reopen it before saving.',409);const record={...previous,...values,...recognition(input,previous),revision:previous.revision+1,updatedBy:session.username,updatedAt:new Date().toISOString()},target=path.join(folder(dir,session),id,'record.json'),temporary=target+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temporary,JSON.stringify(record),{mode:0o600});await fs.rename(temporary,target);}finally{await fs.rm(temporary,{force:true});}return summary(record);});}
 async function remove(dir,session,id,revision){return serialized(dir,session,async()=>{const record=await read(dir,session,id);if(record.revision!==revision)fail('This invoice changed. Reopen it before deleting.',409);const target=path.join(folder(dir,session),id),temporary=target+'.deleted-'+crypto.randomUUID();await fs.rename(target,temporary);await fs.rm(temporary,{recursive:true,force:true});return {removed:true};});}
 async function asset(dir,session,id,kind){const record=await read(dir,session,id);if(kind==='preview'&&!record.hasPreview)fail('Preview not found.',404);return {data:await fs.readFile(path.join(folder(dir,session),id,kind==='preview'?'preview.jpg':'source.bin')),mime:kind==='preview'?'image/jpeg':record.source.mime,name:record.source.name};}
+async function bundle(dir,session,selectedWeek){
+ week(selectedWeek);
+ return serialized(dir,session,async()=>{
+  const saved=(await records(dir,session)).filter(row=>row.weekStart===selectedWeek).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||a.id.localeCompare(b.id));if(!saved.length)fail('No invoices are saved in this weekly bundle.',404);if(saved.length>=0xffff)fail('This bundle has too many files for one ZIP.');
+  const handles=[],files=[];let closing;const close=()=>closing||=(async()=>{await Promise.allSettled(handles.map(handle=>handle.close()));})();
+  try{
+   // Pin immutable originals while holding the native location queue. A later
+   // invoice move or deletion cannot remove a file from this download snapshot.
+   for(const record of saved){if(!validId(record.id))fail('An invoice original is unavailable. Refresh the bundle.',409);const handle=await fs.open(path.join(folder(dir,session),record.id,'source.bin'),'r');handles.push(handle);const stat=await handle.stat();if(!stat.isFile()||stat.size!==record.source.size||stat.size>maximumFileBytes)fail('An invoice original is unavailable. Refresh the bundle.',409);files.push({record,handle,size:stat.size});}
+   const archive=bundleZip.plan(files);return{name:'invoices-'+bundleZip.label(session.locationName||session.locationId)+'-'+selectedWeek+'.zip',size:archive.size,count:files.length,close,async *chunks(){try{yield* bundleZip.chunks(archive.entries);}finally{await close();}}};
+  }catch(error){await close();if(error.code==='ENOENT')fail('An invoice original is missing. Refresh the bundle and try again.',409);throw error;}
+ });
+}
 async function withRecord(dir,session,id,revision,work){return serialized(dir,session,async()=>{const record=await read(dir,session,id);if(record.revision!==revision)fail('This invoice changed. Reopen it before confirming prices.',409);return work(record);});}
 async function search(dir,session,terms){if(!require('./permissions').can(session,'invoices.view'))fail('Invoice viewing permission required.',403);return(await records(dir,session)).map(row=>({id:'invoice:'+row.id,type:'Invoices',title:[row.supplier,row.invoiceNumber].filter(Boolean).join(' · ')||row.source.name,text:[row.invoiceDate,row.weekStart,row.source.name,row.notes,row.ocrText].filter(Boolean).join(' '),url:'/home?invoice='+row.id})).filter(doc=>require('./global-search').matches(doc.title+' '+doc.text,terms));}
-module.exports={search,validId,withRecord,list,create,update,remove,read,asset,day,week,maximumFileBytes,maximumPreviewBytes};
+module.exports={search,validId,withRecord,list,create,update,remove,read,asset,bundle,day,week,maximumFileBytes,maximumPreviewBytes};
