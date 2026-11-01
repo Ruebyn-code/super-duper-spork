@@ -11,6 +11,16 @@ Weekly report cards, the quarter/YTD Overview, Reporting financial totals, expor
 
 Saving, correcting, moving or deleting an invoice changes live calculated totals on the next refresh. Reads do not copy invoice amounts into weekly entries, change report revisions or send supplier messages. Open report drafts keep their unsaved sales and other expense fields while invoice costs refresh. Invoice changes notify other open tabs; ordinary refresh/reload also reads current saved invoices.
 
+In the scanner’s **Invoice details**, **Choose supplier** offers a searchable list
+of saved suppliers for the selected company. Choosing one replaces the editable
+supplier name and refreshes the ordinary price comparison. The scanned name
+remains available for manual correction, including suppliers outside the list.
+Nothing saves or changes stock prices until the normal confirmation. The list
+is read-only, requires invoice viewing and editing, and returns only supplier
+IDs/names without granting catalogue or supplier-management access. A failed
+list request leaves manual entry available, with an explicit retry. Late
+responses never overwrite a typed name or an unrelated invoice/context.
+
 Invoice details and **Open invoice** links require `invoices.view`. Financial viewers without that permission receive only the aggregate cost and counts. Existing invoice editing, CSRF, file access, revision conflicts, duplicate-file protection and company/location controls remain in place.
 
 Daily sales, forecast revenue, ordering budgets, legacy Home order metrics, stock counts/usage and placed orders retain their existing sources. Invoice price changes still require the existing explicit price confirmation.

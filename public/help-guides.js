@@ -272,7 +272,7 @@
  c='expenses';
  add(c,'scan-invoice','Scan, review and save an invoice','Store an invoice and its GST-inclusive total in a weekly bundle.',[
   'Open Home’s Invoice scanner and choose Take photo or Upload invoice. Supported files include PDF, JPEG, PNG and WebP.',
-  'Review the detected supplier, invoice number, invoice date, subtotal, GST and total against the original.',
+  'Expand Invoice details and check the supplier. Use Choose supplier to search your company’s saved suppliers and correct a wrong scan, or edit the name directly. Check the invoice number, date, subtotal, GST and total against the original.',
   'Check the bundle week, which can be changed independently of the invoice date.',
   'Review any proposed stock price changes, then choose Save invoice or Confirm price updates.',
   'Reopen the saved bundle to correct details, move the invoice, download the original or delete it with confirmation.'
@@ -280,7 +280,7 @@
  add(c,'invoice-prices','Confirm stock prices detected on invoices','Apply reviewed price differences to existing company items.',[
   'Scan or upload an invoice and check its invoice date and transcription.',
   'Review Price updates. Matching uses a unique SKU first, then a unique item name, and shows differing current → new prices.',
-  'Correct invoice details if needed, then press Confirm price updates to save the invoice and apply the reviewed differences.',
+  'If the supplier is wrong, expand Invoice details → Choose supplier and select the correct company supplier. Review the refreshed price comparison, then press Confirm price updates to save and apply it.',
   'If another user changed a price or pack, review the refreshed comparison before confirming again.'
  ],{notes:['Applying prices requires invoice-editing and stock-management permission. Unknown items, ambiguous matches and unclear pack/tax conversions are skipped. Older invoices cannot replace newer invoice prices.'],related:['scan-invoice','stock-price-changes','stock-settings']});
  add(c,'invoice-expenses','Understand weekly Cost of goods','Use saved invoices as the week’s expense source.',[

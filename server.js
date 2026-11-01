@@ -413,6 +413,10 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(req.url==='/api/permission-levels'&&req.method==='GET')return json(200,await auth.permissionLevels(session));
       const permissionLevelRoute=req.url.match(/^\/api\/permission-levels\/([a-zA-Z0-9-]+)$/);
       if((req.url==='/api/permission-levels'&&req.method==='POST')||(permissionLevelRoute&&['PUT','DELETE'].includes(req.method))){await auth.changePermissionLevel(session,await body(req,64000),req.method,permissionLevelRoute?.[1]);return json(req.method==='POST'?201:200,await auth.permissionLevels(await auth.forCompany(session,session.companyId)));}
+      if(req.url==='/api/invoices/suppliers'&&req.method==='GET'){
+        if(!can(session,'invoices.edit'))fail('Invoice editing permission required.',403);
+        return json(200,{companyId:session.companyId,locationId:session.locationId,suppliers:(await readCatalogue()).suppliers.map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name,'en-AU'))});
+      }
       if(req.url==='/api/invoices/price-review'&&req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await invoicePrices.createStore(dataDir,catalogueStore).review(session,await body(req,2000000)));}
       const priceConfirmation=req.url.match(/^\/api\/invoices\/([a-f0-9-]{36})\/confirm-prices$/i);
       if(priceConfirmation&&req.method==='POST'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);return json(200,await invoicePrices.createStore(dataDir,catalogueStore).confirm(session,priceConfirmation[1],await body(req,160000)));}
