@@ -2,6 +2,8 @@
 
 The saved **Total** of each invoice, including GST, supplies **Sales → Weekly report → Cost of goods** for that invoice’s selected location and Monday–Sunday bundle. Invoice date and upload date do not override the selected bundle, and a Sunday invoice does not roll forward like a placed order.
 
+New uploads automatically use OpStack intelligence after local preparation when enabled, configured, permitted and within the company allowance. The review displays extraction warnings and retains manual corrections. Unique detected supplier names use the company’s canonical saved name, ignoring case, punctuation and legal suffixes; ambiguous matches stay unchanged. GST uses the printed tax amount, preserving mixed-tax amounts and known zeroes. Missing GST is unknown. Invoice numbers retain leading zeroes and punctuation; payment references are excluded. Reopening saved invoices never triggers a paid read. Failures retain local results without automatic retries. See [Intelligence](ai-assistance.md) for source limits and explicit re-reading.
+
 - Add saved invoice totals once. Placed-order amounts are reference information and are not added to financial Cost of goods.
 - A week with no saved invoices has $0 in invoice expense. An explicit zero invoice is valid.
 - An invoice with no total leaves full Cost of goods, expense percentage and profit unavailable. The known subtotal and count of missing totals remain visible; enter the missing total in the invoice to complete the figures.

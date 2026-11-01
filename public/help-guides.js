@@ -271,12 +271,12 @@
 
  c='expenses';
  add(c,'scan-invoice','Scan, review and save an invoice','Store an invoice and its GST-inclusive total in a weekly bundle.',[
-  'Open Home’s Invoice scanner and choose Take photo or Upload invoice. Supported files include PDF, JPEG, PNG and WebP.',
+  'Open Home’s Invoice scanner and choose Take photo or Upload invoice. PDF, JPEG, PNG and WebP uploads automatically use OpStack intelligence when it is enabled and permitted.',
   'Expand Invoice details and check the supplier. Use Choose supplier to search your company’s saved suppliers and correct a wrong scan, or edit the name directly. Check the invoice number, date, subtotal, GST and total against the original.',
   'Check the bundle week, which can be changed independently of the invoice date.',
   'Review any proposed stock price changes, then choose Save invoice or Confirm price updates.',
   'Open Weekly bundles, expand the saved week and choose Download bundle for one ZIP of its original images and PDFs. Open an individual invoice to correct details, move it, download its original or delete it with confirmation.'
- ],{popular:true,route:'/home',permissions:['home.view'],notes:['Normal scanning reads the document locally. Saving an invoice is the step that contributes its total to weekly costs. A missing total leaves the financial result incomplete.','Files inside a downloaded bundle include each invoice’s saved supplier name. Missing names use Unknown supplier.'],related:['invoice-prices','invoice-expenses','intelligence-invoices'],keywords:['OCR','photo','PDF','scan','weekly bundle']});
+ ],{popular:true,route:'/home',permissions:['home.view'],notes:['Automatic intelligence uses the company allowance. Local reading remains available if intelligence is disabled, unavailable or not permitted. A unique detected supplier name is matched to the company’s saved supplier; ambiguous names stay editable. Check printed GST rather than assuming every item is taxable. Saving an invoice contributes its total to weekly costs; a missing total leaves the financial result incomplete.','Files inside a downloaded bundle include each invoice’s saved supplier name. Missing names use Unknown supplier.'],related:['invoice-prices','invoice-expenses','intelligence-invoices'],keywords:['OCR','photo','PDF','scan','weekly bundle']});
  add(c,'invoice-prices','Confirm stock prices detected on invoices','Apply reviewed price differences to existing company items.',[
   'Scan or upload an invoice and check its invoice date and transcription.',
   'Review Price updates. Matching uses a unique SKU first, then a unique item name, and shows differing current → new prices.',
@@ -593,13 +593,13 @@
   'Review the result and choose Use in editor, adding below or explicitly replacing text.',
   'Use the editor’s ordinary Send, Publish or Save action when ready.'
  ],{ai:true,notes:['Only the submitted text is used, rather than the full chat history or attached media. The original audience and publishing choice remain yours.'],related:['team-chat','publish-post','publish-library']});
- add(c,'intelligence-invoices','Use intelligence to help read an invoice','Review a difficult scan before applying extracted details.',[
-  'Scan or upload the invoice normally on Home.',
-  'Open Need help reading this invoice? → OpStack intelligence.',
-  'Review the source text and up to three selected page images, then choose Read invoice.',
-  'Compare the transcription and warnings with the original. Use reviewed details to fill the open form.',
+ add(c,'intelligence-invoices','Use intelligence to help read an invoice','Automatically read uploaded invoices, then check the results.',[
+  'Upload an invoice on Home. OpStack intelligence reads it automatically when enabled and permitted, using the company allowance.',
+  'Review the extracted supplier, invoice number, invoice date, GST, total and any warnings against the original. Unique company supplier names are matched automatically.',
+  'For another read, open Read again or choose pages → OpStack intelligence. Review the text and up to three page numbers before pressing Read invoice.',
+  'Compare any new transcription with the original, then choose Use reviewed details. Correct any missing or unclear values in Invoice details.',
   'Save the invoice and explicitly confirm any price updates through the normal actions.'
- ],{route:'/home',permissions:['home.view'],ai:true,notes:['The ordinary local scanner does not require an intelligence request. This fallback uses the company allowance and applies only the source you submit.'],related:['scan-invoice','invoice-prices','intelligence-setup']});
+ ],{route:'/home',permissions:['home.view'],ai:true,notes:['Each new upload requests one automatic read. Reopening saved invoices does not generate or use the allowance. Failed reads retain local results and are not automatically retried. Longer PDFs use images of the first two and last pages plus bounded local text; check the original for omitted sections. Intelligence never saves invoices or updates prices by itself.'],related:['scan-invoice','invoice-prices','intelligence-setup']});
  add(c,'intelligence-appearance','Choose intelligence colours and tint','Give intelligence controls a separate visual identity.',[
   'Open Settings → OpStack intelligence in the selected company.',
   'Choose one of the five palettes and adjust tint depth from 100% to 160%.',

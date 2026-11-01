@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:07.125
+Step 1: Upload an invoice on Home. OpStack intelligence reads it automatically when enabled and permitted, using the company allowance.
+
+2
+00:00:07.125 --> 00:00:15.833
+Step 2: Review the extracted supplier, invoice number, invoice date, GST, total and any warnings against the original. Unique company supplier names are matched automatically.
+
+3
+00:00:15.833 --> 00:00:25.167
+Step 3: For another read, open Read again or choose pages → OpStack intelligence. Review the text and up to three page numbers before pressing Read invoice.
+
+4
+00:00:25.167 --> 00:00:33.250
+Step 4: Compare any new transcription with the original, then choose Use reviewed details. Correct any missing or unclear values in Invoice details.
+
+5
+00:00:33.250 --> 00:00:39.250
+Step 5: Save the invoice and explicitly confirm any price updates through the normal actions.
