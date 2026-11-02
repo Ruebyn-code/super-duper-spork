@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:14.958
+Step 1: Open Console → Billing as an OpStack owner. Choose Sandbox and follow Connect. Paste the Stripe secret test key, then Save &amp; connect. This saves the key and tests it before continuing. Live has a separate connection. Saved progress resumes when you return.
+
+2
+00:00:14.958 --> 00:00:33.042
+Step 2: In Notifications, copy the webhook address into Stripe’s webhook setup. Choose Your account and snapshot events; select the events listed under Events to select in Stripe. Paste the matching signing secret into OpStack, then Save &amp; continue. If the address is blank, set APP_ORIGIN to the public HTTPS app address and redeploy first.
+
+3
+00:00:33.042 --> 00:00:49.875
+Step 3: In Location, add a location and Load prices from Stripe. Choose its AUD monthly location and per-user fees. Create the paying customer here or select a saved customer, then Save &amp; continue. Other locations paid by that business can reuse it. Existing reference IDs and subscriptions remain under Advanced.
+
+4
+00:00:49.875 --> 00:01:07.958
+Step 4: In Checkout, Review checkout and check the fees, user count and tax treatment before creating a link. Open or copy the secure link for the customer to finish Stripe checkout. Choose Done, then Check checkout status. Sandbox test card details are in the expander. The linked subscription moves you to the final step.
+
+5
+00:01:07.958 --> 00:01:26.042
+Step 5: In Automatic updates, choose Review &amp; enable updates. Check the current amounts and select Approve &amp; enable updates. This approves the location quantities and turns on updates for approved plans with automatic updates selected. Changes prorate on the next invoice. Review payment results in Monthly report → Collections; select Sandbox for test data.

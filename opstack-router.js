@@ -71,6 +71,7 @@ function createPlatformServer(root,options,createNetworkServer){
     if(route.startsWith('/api/opstack/gocardless'))fail('GoCardless has been removed. Use Stripe in Console → Billing.',410);
     if(route==='/api/opstack/stripe'&&req.method==='GET')return json(200,await stripe.settings(account,url.searchParams.get('environment')||'sandbox'));
     if(route==='/api/opstack/stripe'&&req.method==='PUT'){const result=await stripe.save(account,await body(req,512000));await store.audit(account,'stripe.settings.updated',{environment:result.environment,enabled:result.enabled});return json(200,result);}
+    if(route==='/api/opstack/stripe/prices/load'&&req.method==='POST'){const input=await body(req);return json(200,await stripe.loadPrices(account,input.environment));}
     if(route==='/api/opstack/stripe/customers/review'&&req.method==='POST')return json(200,await stripe.customerReview(account,await body(req)));
     if(route==='/api/opstack/stripe/customers'&&req.method==='POST'){const input=await body(req),result=await stripe.customerCreate(account,input);await store.audit(account,'stripe.customer.'+(result.reused?'reused':'created'),{environment:input.environment,customerId:result.customerId,requestId:input.requestId});return json(200,result);}
     if(route==='/api/opstack/stripe/review'&&req.method==='POST')return json(200,await stripe.review(account,await body(req)));
