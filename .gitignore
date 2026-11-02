@@ -1,4 +1,5 @@
 data/
+rebuild/data/
 node_modules/
 .env
 .env.*

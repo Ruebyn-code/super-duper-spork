@@ -44,3 +44,48 @@ services:
       retries: 6
       start_period: 60s
     restart: on-failure
+    labels:
+      - base44.project=Opstack
+      - base44.kind=web
+      - base44.port=3000
+
+  # Phase 1 of the rebuild, running beside the current app for comparison. It
+  # has no npm dependencies of its own — it requires the repo's existing
+  # password, invitation and permission modules directly — so it never runs an
+  # installer alongside the app service.
+  rebuild:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command:
+      - node
+      - --watch
+      - rebuild/server.js
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+    environment:
+      - PORT=3001
+      - REBUILD_DATA_DIR=/app/rebuild/data
+      - NODE_ENV=development
+      # Supplied by the Base44 platform; unset outside the sandbox.
+      - BASE44_PREVIEW_MODE
+      # Same proxy arrangement as the app service: the preview proxy terminates
+      # TLS, so the https Secure cookie flag follows the public origin.
+      - REBUILD_PUBLIC_ORIGIN=${BASE44_PUBLIC_HOST_SUFFIX:+https://3001-$BASE44_PUBLIC_HOST_SUFFIX}
+    healthcheck:
+      # /healthz is part of the rebuild's own server.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: on-failure
+    labels:
+      - base44.project=Opstack rebuild
+      - base44.kind=web
+      - base44.port=3001

@@ -8,9 +8,11 @@ Artifacts: `parity-matrix.md`, `data-map.md`, and this plan. Establishes what ex
 
 ## Phase 1 — Foundations
 
-Accounts, companies, locations, permission levels (102 grants + 41 action limits), sessions, invitations, and the scope check every write path will call.
+Accounts, companies, locations, permission levels (63 grants + 41 optional action limits), sessions, invitations, and the scope check every write path will call.
 
 **Gate:** a user signs in and sees only their company and location data; a delegated limited manager cannot exceed their granted actions.
+
+**Status: built and passing** in `rebuild/` (own service, host port 3001), beside the current app. Reuses `public/permission-model.js`, `password-security.js` and `account-invitations.js` rather than re-deriving them, and adds `rebuild/access.js` as the guard every write calls. Gate covered by `rebuild/test/foundations.test.js` (10 tests) plus HTTP checks. See `phase-1.md` for evidence and the deliberate limits — no permission-level editor, no email delivery of invitations, no user removal yet.
 
 ## Phase 2 — Ordering and stock
 
