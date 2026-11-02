@@ -3,7 +3,7 @@
 // company).
 const crypto=require('node:crypto');
 const permissions=require('./permissions');
-const fail=(message,status=400)=>Object.assign(Error(message),{status});
+const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 function createLocations({store,now=Date.now}){
  async function list(actor){
   const [companies,locations]=await Promise.all([store.read('companies'),store.read('locations')]);

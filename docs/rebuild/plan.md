@@ -20,6 +20,8 @@ Catalogue, ordering rules, cart, purchase requests, order history, stock counts,
 
 **Gate:** count → recommendation → cart → order, with snapshotted prices, plus a transfer that debits and credits two locations atomically.
 
+**Status: built and passing** in `rebuild/` (host port 3001). Catalogue, ordering rules, stock ledger, counts, transfers, wastage, the order sheet, the cart review and deliveries. Reuses `public/stock-order-rules.js`, `par-levels.windowFor()` and `order-numbers.prefix()`; every two-location transfer and every order confirmation is one store transaction, and each placed order keeps its price snapshot. Gate covered by `rebuild/test/ordering.test.js` (9 tests) plus HTTP checks — see `phase-2.md` for evidence and the deliberate limits (no supplier sending, no delivery plans, no server-side cart).
+
 ## Phase 3 — Sales and reporting
 
 Daily and hourly sales, weekly Excel import, operating expenses, projections, budgets, quarter dashboards, reporting.

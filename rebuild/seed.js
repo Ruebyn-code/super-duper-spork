@@ -8,6 +8,7 @@ const crypto=require('node:crypto');
 const path=require('node:path');
 const passwordSecurity=require('../password-security');
 const permissions=require('./permissions');
+const {seedOrdering}=require('./seed-ordering');
 const {createStore}=require('./store');
 
 const demoPassword=process.env.REBUILD_DEMO_PASSWORD||'harbour-demo-passphrase';
@@ -19,7 +20,15 @@ const demoAccounts=[
 const defaultsFor=role=>[...permissions.defaults.find(item=>item.id===role).permissions];
 
 async function seed(store,{now=Date.now,password=demoPassword}={}){
- if((await store.read('companies')).length)return {seeded:false};
+ const existing=await store.read('companies');
+ if(existing.length){
+  // The catalogue and count history are seeded on their own, so a data
+  // directory created before Phase 2 gains them without losing accounts.
+  if((await store.read('products')).length)return {seeded:false};
+  const [locations,accounts]=await Promise.all([store.read('locations'),store.read('accounts')]);
+  const ordering=await seedOrdering({store,companies:existing,locations,accounts,now});
+  return {seeded:false,seededOrdering:true,companies:existing,products:ordering.products,counts:ordering.counts};
+ }
  const stamp=new Date(now()).toISOString();
  const companies=[
   {id:crypto.randomUUID(),name:'Harbour Group',createdAt:stamp},
@@ -43,7 +52,8 @@ async function seed(store,{now=Date.now,password=demoPassword}={}){
  await store.change('companies',list=>{list.push(...companies);});
  await store.change('locations',list=>{list.push(...locations);});
  await store.change('accounts',list=>{list.push(...accounts);});
- return {seeded:true,companies,locations,accounts};
+ const ordering=await seedOrdering({store,companies,locations,accounts,now});
+ return {seeded:true,companies,locations,accounts,products:ordering.products,counts:ordering.counts};
 }
 
 module.exports={seed,demoPassword,demoAccounts};

@@ -10,7 +10,7 @@ const passwordSecurity=require('../password-security');
 const invitations=require('../account-invitations');
 const permissions=require('./permissions');
 const roles=['admin','franchisee','user'];
-const fail=(message,status=400)=>Object.assign(Error(message),{status});
+const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const name=value=>{
  if(typeof value!=='string'||!value.trim()||value.trim().length>100)fail('Enter a name of 1–100 characters.');
  return value.trim();

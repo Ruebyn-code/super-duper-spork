@@ -6,6 +6,11 @@ const {createSessions}=require('./sessions');
 const {createAccounts}=require('./accounts');
 const {createLocations}=require('./locations');
 const {createAudit}=require('./audit');
+const {createCatalogue}=require('./catalogue');
+const {createOrdering}=require('./ordering');
+const {createStock}=require('./stock');
+const {createTransfers}=require('./transfers');
+const ledger=require('./ledger');
 const {seed,demoPassword,demoAccounts}=require('./seed');
 const access=require('./access');
 const permissions=require('./permissions');
@@ -26,7 +31,23 @@ const sessions=createSessions({store});
 const accounts=createAccounts({store});
 const locations=createLocations({store});
 const audit=createAudit({store});
+const catalogue=createCatalogue({store});
+const ordering=createOrdering({store});
+const stockApi=createStock({store});
+const transfersApi=createTransfers({store});
 const grantsTotal=permissions.keys.length+permissions.actionKeys.length;
+// Ordering and stock write routes redirect with one of these codes; the views
+// turn the code into a sentence, so no message is ever taken from the URL.
+const notices={
+ placed:'Order placed. Its prices are saved with it.',
+ delivery:'Delivery confirmed and added to stock.',
+ counted:'Stock count saved.',
+ wasted:'Wastage recorded.',
+ sent:'Transfer sent. Stock moves when the other location confirms.',
+ received:'Transfer received and added to stock.',
+ cancelled:'Transfer cancelled.',
+ item:'Stock item saved.'
+};
 // Setup links created in this process, shown once to the inviter. Email delivery
 // is a later phase; nothing here is persisted or logged.
 const setupLinks=new Map();
@@ -84,6 +105,36 @@ function takeSetupLinks(){
 function assertCsrf(form,session){
  if(form._csrf!==session.csrf)throw fail('This page has expired. Reload and try again.',403);
 }
+// Ordering and stock forms name each quantity field after its stock item.
+function readItems(form){
+ return Object.entries(form).filter(([key])=>key.startsWith('quantity:')).map(([key,value])=>({productId:key.slice('quantity:'.length),quantity:Number(value)}));
+}
+function melbourneToday(now=new Date()){
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).map(part=>[part.type,part.value]));
+ return `${parts.year}-${parts.month}-${parts.day}`;
+}
+async function scopeFor(actor,requestedId){
+ const list=await locations.list(actor);
+ return {locations:list,location:list.find(item=>item.id===requestedId)||list[0]||null};
+}
+async function stockPage(actor,viewer,locations,location,notice){
+ const [products,suppliers,counts,transfers,orders,wastage,movements]=await Promise.all([
+  store.read('products'),store.read('suppliers'),
+  permissions.can(actor,'counts.view')?stockApi.listCounts(actor).then(list=>list.filter(record=>record.locationId===location.id)):[],
+  permissions.can(actor,'transfers.view')?transfersApi.list(actor):[],
+  permissions.can(actor,'orders.view')?ordering.listOrders(actor):[],
+  permissions.can(actor,'wastage.view')?stockApi.listWastage(actor).then(list=>list.filter(record=>record.locationId===location.id)):[],
+  store.read('stock')
+ ]);
+ const hand=ledger.onHand(movements,location.id);
+ const items=products.filter(product=>product.companyId===location.companyId&&!product.archived).map(product=>({
+  id:product.id,name:product.name,unit:product.unit||'',
+  onHand:Math.max(0,hand.get(product.id)||0)
+ }));
+ return views.stock({account:viewer,location,locations,items,counts,transfers,orders,wastage,
+  suppliers:suppliers.filter(supplier=>supplier.companyId===location.companyId&&!supplier.archived),
+  today:melbourneToday(),notice});
+}
 
 async function handle(req,res){
  let session=null;
@@ -137,6 +188,86 @@ async function handle(req,res){
   if(url.pathname==='/home'&&req.method==='GET'){
    const scopedCompanies=permissions.accessibleCompanies(actor,companies);
    return html(res,200,views.home({account:viewer,companies:scopedCompanies,locations:await locations.list(actor),groups:grantGroups(actor),total:grantsTotal}));
+  }
+  if(url.pathname==='/ordering'&&req.method==='GET'){
+   const scope=await scopeFor(actor,url.searchParams.get('locationId'));
+   const reference=url.searchParams.get('ref')||'';
+   const notice=url.searchParams.get('notice')==='placed'&&reference?`Order ${reference} placed. Its prices are saved with it.`:(notices[url.searchParams.get('notice')]||'');
+   if(!scope.location)return html(res,200,views.ordering({account:viewer,location:null,locations:scope.locations,rows:[],window:null,countedWeeks:0,showAll:false,notice}));
+   const sheet=await ordering.recommendations(actor,{companyId:scope.location.companyId,locationId:scope.location.id});
+   return html(res,200,views.ordering({account:viewer,location:sheet.location,locations:scope.locations,rows:sheet.rows,window:sheet.window,countedWeeks:sheet.countedWeeks,showAll:url.searchParams.get('all')==='1',notice}));
+  }
+  if(url.pathname==='/ordering/cart'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   const cart=await ordering.review(actor,{companyId:form.companyId,locationId:form.locationId,items:readItems(form),note:form.note});
+   return html(res,200,views.cart({account:viewer,location:cart.location,companyId:cart.company.id,lines:cart.lines,totalCents:cart.totalCents,rounded:cart.rounded,hasUnknownPrice:cart.hasUnknownPrice,note:cart.note}));
+  }
+  if(url.pathname==='/orders'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   const result=await ordering.place(actor,{companyId:form.companyId,locationId:form.locationId,items:readItems(form),note:form.note,requestId:form.requestId});
+   return redirect(res,'/ordering?locationId='+encodeURIComponent(result.order.locationId)+'&notice=placed&ref='+encodeURIComponent(result.order.orderNumber));
+  }
+  if(url.pathname==='/orders/receive'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   const result=await ordering.receiveDelivery(actor,form.orderId);
+   return redirect(res,'/stock?locationId='+encodeURIComponent(result.order.locationId)+'&notice=delivery');
+  }
+  if(url.pathname==='/stock'&&req.method==='GET'){
+   permissions.requirePermission(actor,'counts.view');
+   const scope=await scopeFor(actor,url.searchParams.get('locationId'));
+   if(!scope.location)return html(res,200,views.stock({account:viewer,location:null,locations:scope.locations,items:[],counts:[],transfers:[],orders:[],wastage:[],suppliers:[],today:melbourneToday()}));
+   return html(res,200,await stockPage(actor,viewer,scope.locations,scope.location,notices[url.searchParams.get('notice')]||''));
+  }
+  if(url.pathname==='/stock/counts'&&req.method==='GET'){
+   permissions.requirePermission(actor,'counts.view');
+   const scope=await scopeFor(actor,url.searchParams.get('locationId'));
+   if(!scope.location)return html(res,200,views.countSheet({account:viewer,location:null,locations:scope.locations,items:[],today:melbourneToday()}));
+   const location=scope.location;
+   const [products,movements]=await Promise.all([store.read('products'),store.read('stock')]);
+   const hand=ledger.onHand(movements,location.id);
+   const items=products.filter(product=>product.companyId===location.companyId&&!product.archived).map(product=>({
+    id:product.id,name:product.name,unit:product.unit||'',supplier:'',onHand:Math.max(0,hand.get(product.id)||0)
+   }));
+   return html(res,200,views.countSheet({account:viewer,location,locations:scope.locations,items,today:melbourneToday()}));
+  }
+  if(url.pathname==='/stock/counts'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   await stockApi.saveCount(actor,{companyId:form.companyId,locationId:form.locationId,countDate:form.countDate,note:form.note,items:readItems(form)});
+   return redirect(res,'/stock?locationId='+encodeURIComponent(form.locationId)+'&notice=counted');
+  }
+  if(url.pathname==='/stock/wastage'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   await stockApi.recordWastage(actor,{companyId:form.companyId,locationId:form.locationId,productId:form.productId,quantity:Number(form.quantity),date:form.date,reason:form.reason});
+   return redirect(res,'/stock?locationId='+encodeURIComponent(form.locationId)+'&notice=wasted');
+  }
+  if(url.pathname==='/stock/items'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   await catalogue.saveProduct(actor,{companyId:form.companyId,name:form.name,supplierId:form.supplierId,unit:form.unit,unitPriceCents:Math.round(Number(form.unitPrice)*100),orderRule:form.orderRule,minimumOrder:form.minimumOrder});
+   return redirect(res,'/stock?locationId='+encodeURIComponent(form.locationId)+'&notice=item');
+  }
+  if(url.pathname==='/transfers'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   await transfersApi.send(actor,{companyId:form.companyId,fromLocationId:form.fromLocationId,toLocationId:form.toLocationId,note:form.note,items:[{productId:form.productId,quantity:Number(form.quantity)}]});
+   return redirect(res,'/stock?locationId='+encodeURIComponent(form.fromLocationId)+'&notice=sent');
+  }
+  if(url.pathname==='/transfers/receive'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   const result=await transfersApi.receive(actor,form.transferId);
+   return redirect(res,'/stock?locationId='+encodeURIComponent(result.transfer.to.id)+'&notice=received');
+  }
+  if(url.pathname==='/transfers/cancel'&&req.method==='POST'){
+   const form=await readBody(req);
+   assertCsrf(form,session);
+   const result=await transfersApi.cancel(actor,form.transferId);
+   return redirect(res,'/stock?locationId='+encodeURIComponent(result.from.id)+'&notice=cancelled');
   }
   if(url.pathname==='/users'&&req.method==='GET'){
    const scopedLocations=await locations.list(actor);
@@ -200,6 +331,7 @@ async function acceptPage(req,res,url){
 (async()=>{
  const result=await seed(store);
  if(result.seeded)console.log(`Seeded ${result.companies.length} companies, ${result.locations.length} locations and ${result.accounts.length} accounts into ${dataDir}`);
+ if(result.seededOrdering)console.log(`Seeded ${result.products.length} stock items and ${result.counts.length} counts into ${dataDir}`);
  http.createServer((req,res)=>{
   handle(req,res).catch(error=>{
    console.error('rebuild request crashed',error);
