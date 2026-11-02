@@ -1,11 +1,11 @@
 services:
+  # Existing Node app: owns every JSON endpoint, session cookie and permission
+  # check. It is only reachable through the Vite dev server on port 3000.
   app:
     image: node:24-bookworm-slim
     working_dir: /app
-    ports:
-      - "3000:3000"
     environment:
-      - PORT=3000
+      - PORT=3001
       - DATA_DIR=/data
       # Public preview origin used for CSRF origin checks, sign-in cookie
       # attributes and external links. Referenced from the platform variable so
@@ -23,13 +23,47 @@ services:
         - "CMD"
         - "node"
         - "-e"
-        - "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        - "fetch('http://127.0.0.1:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 90s
     restart: on-failure
 
+  # Rebuilt React frontend. Vite serves it on the preview origin and proxies
+  # API/asset paths to the Node app, so cookies and CSRF stay same-origin.
+  web:
+    image: node:24-bookworm-slim
+    working_dir: /app/frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_PROXY_TARGET=http://app:3001
+      - BASE44_PREVIEW_MODE
+      - BASE44_PUBLIC_HOST_SUFFIX
+      - BASE44_SANDBOX_HOST_DOMAIN
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+      - npm_config_update_notifier=false
+    volumes:
+      - ./:/app
+      - frontend_modules:/app/frontend/node_modules
+    command: ["sh", "-ec", "npm install --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 3000"]
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+    restart: on-failure
+
 volumes:
   node_modules:
+  frontend_modules:
   opstack-data:
