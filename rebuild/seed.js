@@ -35,9 +35,9 @@ async function seed(store,{now=Date.now,password=demoPassword}={}){
   {id:crypto.randomUUID(),name:'Riverside Group',createdAt:stamp}
  ];
  const locations=[
-  {id:crypto.randomUUID(),companyId:companies[0].id,name:'Harbour Street',archived:false,createdAt:stamp},
-  {id:crypto.randomUUID(),companyId:companies[0].id,name:'Harbour Central',archived:false,createdAt:stamp},
-  {id:crypto.randomUUID(),companyId:companies[1].id,name:'Riverside Store',archived:false,createdAt:stamp}
+  {id:crypto.randomUUID(),companyId:companies[0].id,name:'Harbour Street',publicHolidayState:'VIC',archived:false,createdAt:stamp},
+  {id:crypto.randomUUID(),companyId:companies[0].id,name:'Harbour Central',publicHolidayState:'VIC',archived:false,createdAt:stamp},
+  {id:crypto.randomUUID(),companyId:companies[1].id,name:'Riverside Store',publicHolidayState:'VIC',archived:false,createdAt:stamp}
  ];
  const credentials=await passwordSecurity.credentials(password);
  const account=(name,email,role,company,locationIds,actionPermissions)=>({

@@ -10,7 +10,17 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const collections=[
  'companies','locations','accounts','sessions','audit',
  // Phase 2 — ordering and stock
- 'suppliers','products','counts','orders','transfers','wastage','stock','sequences'
+ 'suppliers','products','counts','orders','transfers','wastage','stock','sequences',
+ // Phase 3 — sales and reporting
+ 'salesWeeks','hourlySales','weeklyReports','expenses','budgets',
+ // Phase 4 — invoices
+ 'invoices','invoicePriceUpdates',
+ // Phase 5 — workforce
+ 'employees','shifts','publications','clockEvents','timesheets','availability','leaveRequests','paySnapshots','employer',
+ // Phase 6 — comms, library and learning
+ 'posts','postReads','conversations','messages','articles','articleCategories','courses','assignments','attempts','checklists','checklistRuns',
+ // Phase 7 and 8 — migration and cut-over
+ 'migrationRuns','cutover'
 ];
 function createStore(dir){
  let queue=Promise.resolve();

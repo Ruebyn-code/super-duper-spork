@@ -4,21 +4,7 @@
 // browser script bundle, so Phase 1 ships a small server-rendered shell and
 // later phases add interactive surfaces on top of the same session and scope
 // model.
-const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const nav=[{path:'/home',label:'Home'},{path:'/ordering',label:'Ordering',permission:'orders.view'},{path:'/stock',label:'Stock',permission:'counts.view'},{path:'/users',label:'Users'},{path:'/locations',label:'Locations'}];
-const money=cents=>typeof cents==='number'?`$${(cents/100).toFixed(2)}`:'Not priced';
-const number=value=>typeof value==='number'?String(Math.round(value*1000)/1000):'—';
-function layout({account,title,body,active,notice,error}){
- const grants=account?.grants||[];
- const links=account?nav.filter(item=>!item.permission||grants.includes(item.permission)).map(item=>`<a class="nav-link${item.path===active?' is-active':''}" href="${item.path}">${esc(item.label)}</a>`).join(''):'';
- const bar=account?`<header class="topbar"><div class="topbar-inner"><a class="brand" href="/home"><span class="brand-mark">Opstack</span><span class="brand-tag">rebuild</span></a><nav class="nav">${links}</nav><form method="post" action="/sign-out"><input type="hidden" name="_csrf" value="${esc(account.csrf)}"><button class="button button-quiet" type="submit">Sign out</button></form></div></header>`:'';
- const banner=notice?`<p class="banner banner-ok" role="status">${esc(notice)}</p>`:'';
- const failure=error?`<p class="banner banner-error" role="alert">${esc(error)}</p>`:'';
- return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} · Opstack rebuild</title><link rel="stylesheet" href="/rebuild.css"></head>
-<body>${bar}<main class="page">${banner}${failure}${body}</main></body></html>`;
-}
+const {esc,money,number,layout,locationPicker,needsLocation}=require('./ui');
 function signIn({previewMode,demo,error,email,notice}){
  const accounts=demo||[];
  const demoBlock=previewMode&&accounts.length?`<section class="card card-muted"><h2>Demo accounts</h2><p class="muted">Seeded for this branch. Not available outside the preview.</p><ul class="plain-list">${accounts.map(item=>`<li><code>${esc(item.email)}</code><span class="muted">${esc(item.note)}</span></li>`).join('')}</ul><p class="muted">Password for every demo account: <code>${esc(accounts[0].password)}</code></p></section>`:'';
@@ -100,18 +86,6 @@ function locations({account,locations,companies}){
  return layout({account,title:'Locations',active:'/locations',body:`<section class="hero"><h1>Locations</h1><p class="muted">Scoped to the companies and locations your account can reach.</p></section>
   <section class="card"><table class="table"><thead><tr><th>Location</th><th>Company</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></section>
   ${form}`});
-}
-function locationPicker({locations,selected,action,extra}){
- if(!locations.length)return '';
- const options=locations.map(location=>`<option value="${esc(location.id)}"${location.id===selected?.id?' selected':''}>${esc(location.name)} · ${esc(location.companyName||'')}</option>`).join('');
- return `<form method="get" action="${esc(action)}" class="picker">
-   <label class="field"><span>Location</span><select name="locationId">${options}</select></label>
-   ${extra?`<label class="check"><input type="checkbox" name="all" value="1"${extra==='all'?' checked':''}> <span>Show every item</span></label>`:''}
-   <button class="button button-quiet" type="submit">View</button>
-  </form>`;
-}
-function needsLocation({account}){
- return layout({account,title:'No location',body:`<section class="hero"><h1>No location in scope</h1><p class="muted">${esc(account.name)}, your account has no location access yet. Ask a Head Office user to add one.</p></section>`});
 }
 function ordering({account,location,locations,rows,window,countedWeeks,showAll,notice}){
  if(!location)return needsLocation({account});
