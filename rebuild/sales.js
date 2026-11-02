@@ -181,7 +181,8 @@ function createSales({store,dir,now=Date.now}){
  // Weekly-report-first resolution, the current app's one source per day: the
  // report's three channels when all are recorded, otherwise Daily sales.
  function weekRecord(daily,reports,weekStart,locationId){
-  const dailyRecord=daily.find(record=>record.weekStart===weekStart),report=reports.find(record=>record.weekStart===weekStart);
+  const dailyRecord=daily.find(record=>record.locationId===locationId&&record.weekStart===weekStart);
+  const report=reports.find(record=>record.locationId===locationId&&record.weekStart===weekStart);
   const sources=[];
   const days=Array.from({length:7},(_,index)=>{
    const values=report?['tillSales','uberEats','doorDash'].map(field=>report.breakdown?.[field]?.[index])?.map(value=>cents(value)?value:null):null;

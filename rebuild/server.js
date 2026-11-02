@@ -10,6 +10,22 @@ const {createCatalogue}=require('./catalogue');
 const {createOrdering}=require('./ordering');
 const {createStock}=require('./stock');
 const {createTransfers}=require('./transfers');
+const {createSales}=require('./sales');
+const {createInvoices}=require('./invoices');
+const {createWorkforce}=require('./workforce');
+const {createComms}=require('./comms');
+const {createLibrary}=require('./library');
+const {createLearning}=require('./learning');
+const {createChecklists}=require('./checklists');
+const {createReporting}=require('./reporting');
+const {createMigration}=require('./migrate');
+const {createCutover}=require('./cutover');
+const routesSales=require('./routes-sales');
+const routesInvoices=require('./routes-invoices');
+const routesWorkforce=require('./routes-workforce');
+const routesComms=require('./routes-comms');
+const routesLearning=require('./routes-learning');
+const routesAdmin=require('./routes-admin');
 const ledger=require('./ledger');
 const {seed,demoPassword,demoAccounts}=require('./seed');
 const access=require('./access');
@@ -35,6 +51,19 @@ const catalogue=createCatalogue({store});
 const ordering=createOrdering({store});
 const stockApi=createStock({store});
 const transfersApi=createTransfers({store});
+const salesApi=createSales({store,dir:dataDir});
+const invoicesApi=createInvoices({store});
+const workforceApi=createWorkforce({store});
+const commsApi=createComms({store});
+const libraryApi=createLibrary({store});
+const learningApi=createLearning({store});
+const checklistsApi=createChecklists({store});
+const reportingApi=createReporting({store,sales:salesApi,learning:learningApi,checklists:checklistsApi});
+// Phase 7 reads the current app's data directory. It is only ever read unless
+// the migration console explicitly applies an import.
+const legacyDataDir=process.env.LEGACY_DATA_DIR||path.join(__dirname,'..','data');
+const migrationApi=createMigration({store,sourceDir:legacyDataDir});
+const cutoverApi=createCutover({store});
 const grantsTotal=permissions.keys.length+permissions.actionKeys.length;
 // Ordering and stock write routes redirect with one of these codes; the views
 // turn the code into a sentence, so no message is ever taken from the URL.
@@ -46,7 +75,39 @@ const notices={
  sent:'Transfer sent. Stock moves when the other location confirms.',
  received:'Transfer received and added to stock.',
  cancelled:'Transfer cancelled.',
- item:'Stock item saved.'
+ item:'Stock item saved.',
+ 'week-saved':'Sales week saved.',
+ 'report-imported':'Weekly report imported and reconciled.',
+ 'hourly-saved':'Hourly sales saved.',
+ 'expense-added':'Operating expense added.',
+ 'budget-saved':'Budget saved.',
+ 'invoice-saved':'Invoice saved. Check the price comparison before applying anything.',
+ 'prices-applied':'Prices applied once and recorded in the invoice history.',
+ 'shift-saved':'Shift saved as a draft.',
+ 'shift-removed':'Shift removed.',
+ 'roster-published':'Week published with frozen costs.',
+ 'roster-withdrawn':'Publication withdrawn; the week is editable again.',
+ clocked:'Clock updated.',
+ 'timesheet-approved':'Timesheets approved and their pay frozen.',
+ 'employer-saved':'Employer setup saved.',
+ 'terms-saved':'Employment terms saved.',
+ 'availability-saved':'Availability saved.',
+ 'leave-requested':'Leave requested.',
+ 'leave-decided':'Leave request decided.',
+ 'post-created':'Post published.',
+ 'post-acknowledged':'Thanks — that required post is acknowledged.',
+ 'message-sent':'Message sent.',
+ 'category-saved':'Category saved.',
+ 'article-saved':'Article saved as a draft.',
+ 'article-published':'Article published.',
+ 'course-saved':'Course saved as a draft.',
+ 'course-published':'Course published. Assignments bind to this version.',
+ assigned:'Course assigned.',
+ 'attempt-passed':'Passed. That attempt is complete.',
+ 'migration-applied':'Migration applied and reconciled.',
+ 'migration-attention':'Migration applied, but some records need attention before cut-over.',
+ 'cutover-done':'The current app is retired to read-only.',
+ 'rollback-done':'Rolled back to rehearsal. The current app is writable again.'
 };
 // Setup links created in this process, shown once to the inviter. Email delivery
 // is a later phase; nothing here is persisted or logged.
@@ -65,7 +126,8 @@ function readBody(req){
   req.on('end',()=>{
    const form={};
    for(const [key,value] of new URLSearchParams(raw)){
-    if(key==='locationIds')form.locationIds=[...(form.locationIds||[]),value];
+    // Repeated checkbox fields arrive once per ticked box.
+    if(key.endsWith('Ids'))form[key]=[...(form[key]||[]),value];
     else form[key]=typeof value==='string'?value.slice(0,2048):value;
    }
    resolve(form);
@@ -185,9 +247,34 @@ async function handle(req,res){
    if(url.pathname==='/accept'&&req.method==='GET')return acceptPage(req,res,url);
    return redirect(res,'/');
   }
+  // Every later phase's routes share one context: they resolve their own scope
+  // through the same access module and never touch the store's files directly.
+  const ctx={
+   url,req,res,method:req.method,viewer,actor,session,
+   services:{store,sales:salesApi,invoices:invoicesApi,workforce:workforceApi,comms:commsApi,library:libraryApi,
+    learning:learningApi,checklists:checklistsApi,reporting:reportingApi,migration:migrationApi,cutover:cutoverApi},
+   html:(status,body)=>html(res,status,body),
+   redirect:location=>redirect(res,location),
+   readBody:()=>readBody(req),
+   assertCsrf:form=>assertCsrf(form,session),
+   scopeFor:id=>scopeFor(actor,id),
+   notice:code=>notices[code]||''
+  };
+  // Required reading is a gate on the rest of the app, not a badge: an
+  // unacknowledged required post sends the reader to Comms first.
+  if(req.method==='GET'&&!url.pathname.startsWith('/comms')&&!url.pathname.startsWith('/migration')){
+   try{await commsApi.assertReadingClear(actor);}
+   catch(error){if(error.reading)return redirect(res,'/comms?reading=1');throw error;}
+  }
+  for(const router of [routesSales,routesInvoices,routesWorkforce,routesComms,routesLearning,routesAdmin]){
+   if(await router.route(ctx))return;
+  }
   if(url.pathname==='/home'&&req.method==='GET'){
    const scopedCompanies=permissions.accessibleCompanies(actor,companies);
-   return html(res,200,views.home({account:viewer,companies:scopedCompanies,locations:await locations.list(actor),groups:grantGroups(actor),total:grantsTotal}));
+   const work=await workforceApi.summary(actor).catch(()=>null);
+   const reading=await commsApi.outstanding(actor).catch(()=>[]);
+   return html(res,200,views.home({account:viewer,companies:scopedCompanies,locations:await locations.list(actor),groups:grantGroups(actor),total:grantsTotal,
+    work,reading:reading.map(post=>({id:post.id,title:post.title}))}));
   }
   if(url.pathname==='/ordering'&&req.method==='GET'){
    const scope=await scopeFor(actor,url.searchParams.get('locationId'));
@@ -332,6 +419,7 @@ async function acceptPage(req,res,url){
  const result=await seed(store);
  if(result.seeded)console.log(`Seeded ${result.companies.length} companies, ${result.locations.length} locations and ${result.accounts.length} accounts into ${dataDir}`);
  if(result.seededOrdering)console.log(`Seeded ${result.products.length} stock items and ${result.counts.length} counts into ${dataDir}`);
+ if(result.seededBusiness)console.log(`Seeded the demo sales, invoice, roster, comms and learning history into ${dataDir}`);
  http.createServer((req,res)=>{
   handle(req,res).catch(error=>{
    console.error('rebuild request crashed',error);

@@ -10,9 +10,9 @@ function signIn({previewMode,demo,error,email,notice}){
  const demoBlock=previewMode&&accounts.length?`<section class="card card-muted"><h2>Demo accounts</h2><p class="muted">Seeded for this branch. Not available outside the preview.</p><ul class="plain-list">${accounts.map(item=>`<li><code>${esc(item.email)}</code><span class="muted">${esc(item.note)}</span></li>`).join('')}</ul><p class="muted">Password for every demo account: <code>${esc(accounts[0].password)}</code></p></section>`:'';
  return layout({title:'Sign in',notice,error,body:`<section class="auth">
   <div class="auth-card">
-   <p class="eyebrow">Opstack rebuild · Phases 1–2</p>
+   <p class="eyebrow">Opstack rebuild · Phases 1–8</p>
    <h1>Sign in</h1>
-   <p class="muted">Foundations, ordering and stock: accounts and scopes, counts, target levels, carts, orders and transfers.</p>
+   <p class="muted">Scoped accounts, ordering and stock, sales and reporting, invoices, workforce, comms and learning — with the migration console behind Head Office.</p>
    <form method="post" action="/sign-in" class="stack">
     <label class="field"><span>Email</span><input type="email" name="email" value="${esc(email||'')}" autocomplete="username" required></label>
     <label class="field"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
@@ -22,7 +22,7 @@ function signIn({previewMode,demo,error,email,notice}){
   ${demoBlock}
  </section>`});
 }
-function home({account,companies,locations,groups,total,notice}){
+function home({account,companies,locations,groups,total,notice,work,reading}){
  const companyList=companies.length?companies.map(company=>`<li><strong>${esc(company.name)}</strong></li>`).join(''):'<li class="muted">No company access</li>';
  const locationList=locations.length?locations.map(location=>`<li><span>${esc(location.name)}</span><span class="muted">${esc(location.companyName)}</span></li>`).join(''):'<li class="muted">No locations</li>';
  const groupList=groups.map(group=>`<li><span>${esc(group.name)}</span><span class="pill">${group.count}</span></li>`).join('');
@@ -31,6 +31,15 @@ function home({account,companies,locations,groups,total,notice}){
    <h1>Hello, ${esc(account.name)}</h1>
    <p class="muted">Signed in as ${esc(account.email)}. You are viewing only your own company and location data.</p>
   </section>
+  ${(reading&&reading.length)||(work&&(work.shifts?.length||work.clock?.clockedIn||work.leave?.length))?`<section class="card card-muted">
+   <h2>Your work</h2>
+   <ul class="plain-list">
+    ${reading&&reading.length?`<li><span>Required reading</span><span><a href="/comms?reading=1">${reading.length} to acknowledge</a></span></li>`:''}
+    ${work?.clock?.clockedIn?`<li><span>Clocked in</span><span>${esc((work.clock.since||'').slice(11,16))}${work.clock.onBreak?' · on break':''}</span></li>`:''}
+    ${(work?.shifts||[]).slice(0,3).map(shift=>`<li><span>${esc(shift.date)} shift</span><span>${esc(shift.start)}–${esc(shift.end)}${shift.publicationId?' · published':' · draft'}</span></li>`).join('')}
+    ${work?.leave?.length?`<li><span>Leave</span><span>${work.leave.length} request${work.leave.length===1?'':'s'} pending</span></li>`:''}
+   </ul>
+  </section>`:''}
   <section class="grid">
    <article class="card"><h2>Company</h2><ul class="plain-list">${companyList}</ul></article>
    <article class="card"><h2>Locations in scope</h2><p class="metric">${locations.length}</p><ul class="plain-list">${locationList}</ul></article>

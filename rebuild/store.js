@@ -18,7 +18,7 @@ const collections=[
  // Phase 5 — workforce
  'employees','shifts','publications','clockEvents','timesheets','availability','leaveRequests','paySnapshots','employer',
  // Phase 6 — comms, library and learning
- 'posts','postReads','conversations','messages','articles','articleCategories','courses','assignments','attempts','checklists','checklistRuns',
+ 'posts','reads','conversations','messages','articles','articleCategories','courses','assignments','attempts','checklists','checklistRuns',
  // Phase 7 and 8 — migration and cut-over
  'migrationRuns','cutover'
 ];

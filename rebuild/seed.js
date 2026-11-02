@@ -9,6 +9,7 @@ const path=require('node:path');
 const passwordSecurity=require('../password-security');
 const permissions=require('./permissions');
 const {seedOrdering}=require('./seed-ordering');
+const {seedBusiness}=require('./seed-business');
 const {createStore}=require('./store');
 
 const demoPassword=process.env.REBUILD_DEMO_PASSWORD||'harbour-demo-passphrase';
@@ -22,12 +23,16 @@ const defaultsFor=role=>[...permissions.defaults.find(item=>item.id===role).perm
 async function seed(store,{now=Date.now,password=demoPassword}={}){
  const existing=await store.read('companies');
  if(existing.length){
-  // The catalogue and count history are seeded on their own, so a data
-  // directory created before Phase 2 gains them without losing accounts.
-  if((await store.read('products')).length)return {seeded:false};
+  // Each later phase seeds its own demo data on its own, so a data directory
+  // created by an earlier phase gains the new history without losing accounts.
   const [locations,accounts]=await Promise.all([store.read('locations'),store.read('accounts')]);
+  if((await store.read('products')).length){
+   const business=await seedBusiness({store,dir:store.dir,companies:existing,locations,accounts,now});
+   return {seeded:false,seededBusiness:business.seeded,companies:existing};
+  }
   const ordering=await seedOrdering({store,companies:existing,locations,accounts,now});
-  return {seeded:false,seededOrdering:true,companies:existing,products:ordering.products,counts:ordering.counts};
+  const business=await seedBusiness({store,dir:store.dir,companies:existing,locations,accounts:now});
+  return {seeded:false,seededOrdering:true,seededBusiness:business.seeded,companies:existing,products:ordering.products,counts:ordering.counts};
  }
  const stamp=new Date(now()).toISOString();
  const companies=[
@@ -53,7 +58,8 @@ async function seed(store,{now=Date.now,password=demoPassword}={}){
  await store.change('locations',list=>{list.push(...locations);});
  await store.change('accounts',list=>{list.push(...accounts);});
  const ordering=await seedOrdering({store,companies,locations,accounts,now});
- return {seeded:true,companies,locations,accounts,products:ordering.products,counts:ordering.counts};
+ const business=await seedBusiness({store,dir:store.dir,companies,locations,accounts,now});
+ return {seeded:true,seededBusiness:business.seeded,companies,locations,accounts,products:ordering.products,counts:ordering.counts};
 }
 
 module.exports={seed,demoPassword,demoAccounts};
