@@ -20,19 +20,22 @@ const demoAccounts=[
 ];
 const defaultsFor=role=>[...permissions.defaults.find(item=>item.id===role).permissions];
 
-async function seed(store,{now=Date.now,password=demoPassword}={}){
+// `business:false` seeds accounts, locations and the catalogue only. Tests that
+// assert on an empty sales, comms or workforce ledger use it; the preview and a
+// fresh data directory keep the full demo history.
+async function seed(store,{now=Date.now,password=demoPassword,business=true}={}){
  const existing=await store.read('companies');
  if(existing.length){
   // Each later phase seeds its own demo data on its own, so a data directory
   // created by an earlier phase gains the new history without losing accounts.
   const [locations,accounts]=await Promise.all([store.read('locations'),store.read('accounts')]);
   if((await store.read('products')).length){
-   const business=await seedBusiness({store,dir:store.dir,companies:existing,locations,accounts,now});
-   return {seeded:false,seededBusiness:business.seeded,companies:existing};
+   const seeded=await (business?seedBusiness({store,dir:store.dir,companies:existing,locations,accounts,now}):{seeded:false});
+   return {seeded:false,seededBusiness:seeded.seeded,companies:existing};
   }
   const ordering=await seedOrdering({store,companies:existing,locations,accounts,now});
-  const business=await seedBusiness({store,dir:store.dir,companies:existing,locations,accounts:now});
-  return {seeded:false,seededOrdering:true,seededBusiness:business.seeded,companies:existing,products:ordering.products,counts:ordering.counts};
+  const seeded=await (business?seedBusiness({store,dir:store.dir,companies:existing,locations,accounts,now}):{seeded:false});
+  return {seeded:false,seededOrdering:true,seededBusiness:seeded.seeded,companies:existing,products:ordering.products,counts:ordering.counts};
  }
  const stamp=new Date(now()).toISOString();
  const companies=[
@@ -58,8 +61,8 @@ async function seed(store,{now=Date.now,password=demoPassword}={}){
  await store.change('locations',list=>{list.push(...locations);});
  await store.change('accounts',list=>{list.push(...accounts);});
  const ordering=await seedOrdering({store,companies,locations,accounts,now});
- const business=await seedBusiness({store,dir:store.dir,companies,locations,accounts,now});
- return {seeded:true,seededBusiness:business.seeded,companies,locations,accounts,products:ordering.products,counts:ordering.counts};
+ const seeded=await (business?seedBusiness({store,dir:store.dir,companies,locations,accounts,now}):{seeded:false});
+ return {seeded:true,seededBusiness:seeded.seeded,companies,locations,accounts,products:ordering.products,counts:ordering.counts};
 }
 
 module.exports={seed,demoPassword,demoAccounts};

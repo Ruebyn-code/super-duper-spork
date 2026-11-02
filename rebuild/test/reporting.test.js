@@ -19,7 +19,8 @@ const week=()=>legacySales.currentWeek(new Date());
 async function fixture(){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-reporting-'));
  const store=createStore(dir);
- const data=await seed(store,{password});
+ // Reporting asserts the exact rows each test writes, so no demo history.
+ const data=await seed(store,{password,business:false});
  const sales=createSales({store,dir});
  const learning=createLearning({store});
  const checklists=createChecklists({store});

@@ -20,7 +20,8 @@ const rejects=async(promise,status,message)=>assert.rejects(promise,error=>{
 async function fixture(){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-comms-'));
  const store=createStore(dir);
- const data=await seed(store,{password});
+ // Seeded demo posts would change the audiences and unread counts asserted here.
+ const data=await seed(store,{password,business:false});
  const comms=createComms({store});
  const actor=data.accounts.find(account=>account.email==='admin@harbour.test');
  const manager=data.accounts.find(account=>account.email==='manager@harbour.test');

@@ -24,7 +24,8 @@ const dollars=cents=>(cents/100).toFixed(2);
 async function fixture(){
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-sales-'));
  const store=createStore(dir);
- const data=await seed(store,{password});
+ // Demo business history would already hold these sales weeks.
+ const data=await seed(store,{password,business:false});
  const sales=createSales({store,dir});
  const actor=data.accounts.find(account=>account.email==='admin@harbour.test');
  const company=data.companies.find(entry=>entry.name==='Harbour Group');

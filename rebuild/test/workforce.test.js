@@ -102,7 +102,9 @@ test('publishing without a reviewed calendar is refused rather than guessed',asy
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-workforce-'));
  const store=createStore(dir);
  const workforce=createWorkforce({store});
- const data=await seed(store,{password});
+ // The seeded employer setup would turn native calculations on, so this case
+ // seeds accounts only: no employer at all.
+ const data=await seed(store,{password,business:false});
  const actor=data.accounts.find(account=>account.email==='admin@harbour.test');
  const company=data.companies.find(entry=>entry.name==='Harbour Group');
  const location=data.locations.find(entry=>entry.name==='Harbour Street');

@@ -28,11 +28,15 @@ Daily and hourly sales, weekly Excel import, operating expenses, projections, bu
 
 **Gate:** imported weeks reconcile to the source workbook and drive the same forecasts as the current app.
 
+**Status: built and passing** in `rebuild/` (host port 3001). Daily and hourly sales, the weekly report import, expenses, budgets and the financial week reuse `sales.calculate()`, `hourly-sales.forecast()` and `holiday-projections`; Reporting is read-only and leaves incomplete locations unranked. Gate covered by `rebuild/test/sales.test.js` (6 tests) and `rebuild/test/reporting.test.js` (2) — see `phase-3.md` for evidence and the deliberate limits (CSV import only, no XLSX/PDF/photo readers, add-only expenses).
+
 ## Phase 4 — Invoices
 
 Upload and scan, browser OCR, extraction, weekly bundles, SKU price matching, authorised price application with audit.
 
 **Gate:** an invoice applies prices once, is blocked when stale, and shows its history on reopen.
+
+**Status: built and passing** in `rebuild/`. Automatic SKU-then-name matching, a differences-only comparison, one confirmation that writes the price and its audit in one transaction, and a live invoice-only Cost of goods. Gate covered by `rebuild/test/invoices.test.js` (5 tests) — see `phase-4.md` (no upload/OCR; the reviewed lines are supplied).
 
 ## Phase 5 — Workforce
 
@@ -40,11 +44,15 @@ Rosters and publishing, availability, clock and breaks, timesheets, award estima
 
 **Gate:** a published week costs the same in the rebuilt app as in the current one for identical inputs; approved pay snapshots stay frozen after later rate changes.
 
+**Status: built and passing** in `rebuild/`. Every cost comes from `fast-food-award.calculate()` and `award-break-plan.build()`; publication and approval freeze their output, a published week refuses edits until withdrawn, and publishing without a reviewed calendar is refused. Gate covered by `rebuild/test/workforce.test.js` (5 tests) — see `phase-5.md` (per-shift roster form, no accrual report or document signing).
+
 ## Phase 6 — Comms, library and learning
 
 Posts, chat, required-read gating, articles and categories, courses, quizzes, assignments, progress reporting, checklists.
 
 **Gate:** required reading blocks access until acknowledged; a failed quiz keeps answers and grades on the server.
+
+**Status: built and passing** in `rebuild/`. The reading gate runs before every private page but Comms and the migration console, answer keys never reach a learner, attempts are graded against the assignment's frozen version, and checklist step times are server-stamped. Gate covered by `rebuild/test/comms.test.js` (4 tests) and `rebuild/test/learning.test.js` (5) — see `phase-6.md` (plain-text content, single-choice questions).
 
 ## Phase 7 — Migration and reconciliation
 
@@ -52,9 +60,13 @@ Dry run, then the ordered import in `data-map.md`; count, referential and totals
 
 **Gate:** every store reconciles, every unresolved record is listed, and the source data is still untouched.
 
+**Status: built and passing** in `rebuild/` (`/migration`, Head Office only). The dry run writes nothing, the import is idempotent on stable natural keys, orphans block sign-off instead of being dropped, and the source directory is never written. Gate covered by `rebuild/test/migration.test.js` (4 tests) and an HTTP dry run → apply → cut over → rollback run — see `phase-7-8.md`. Still outstanding: a copy of the production data to rehearse against.
+
 ## Phase 8 — Cut-over
 
 Only after Phase 7 sign-off. The existing app is retired to read-only, not deleted.
+
+**Status: built and passing** in `rebuild/`. Retirement needs a reconciled latest run with no orphans, records who signed off and which run they relied on, and can be rolled back to rehearsal; the source data is never touched. Covered by the same migration tests and the HTTP run in `phase-7-8.md`.
 
 ## Decisions needed before Phase 1
 
