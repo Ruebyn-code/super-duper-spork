@@ -24,7 +24,7 @@
   '/settings/devices':ids('manage-kiosks kiosk-use'),
   '/settings/awards':ids('award-settings staff-allowances individual-flexibility public-holidays'),
   '/labels':ids('print-labels label-templates label-history printer-problem'),
-  '/opstack':ids('platform-console platform-settings platform-monthly gocardless-sync account-invitations'),
+  '/opstack':ids('platform-console platform-settings platform-monthly stripe-billing account-invitations'),
   '/location-setup-step':ids('location-setup manage-users target-levels manage-kiosks'),
  };
  const common=ids('navigation switch-location profile-photo dark-mode platform-search access-problem save-conflict support-request');

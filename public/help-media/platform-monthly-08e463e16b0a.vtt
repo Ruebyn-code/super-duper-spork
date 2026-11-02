@@ -1,0 +1,17 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:09.958
+Step 1: As an OpStack owner, open Console → Monthly report and select a month. Sales shows recurring estimates, Expenses records platform costs and Collections shows imported payment results.
+
+2
+00:00:09.958 --> 00:00:21.458
+Step 2: Stripe-linked locations show saved monthly location fees plus allocated user fees. Historical counts are not guessed. Unlinked locations keep manual fees; edit those to set a fee from the selected month onwards.
+
+3
+00:00:21.458 --> 00:00:28.917
+Step 3: In Expenses, enter the month’s named costs and choose Save expenses. Save or reload drafts before changing the month.
+
+4
+00:00:28.917 --> 00:00:41.375
+Step 4: Open Collections and choose Stripe Live or Sandbox. Paid invoices use their Melbourne payment month; refunds use their creation month. These are invoice results, not bank reconciliation or GST reporting. Archived GoCardless history remains read-only.
