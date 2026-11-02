@@ -7,9 +7,9 @@ signed-in role can read the generic guides, without gaining access to any
 operational feature or records.
 
 Feature pages, section headings, builders and settings also have an **ⓘ** button.
-Its company-coloured outline, rounded border and centred line icon match the
-app's date/search controls. The info symbol is 14 px inside a compact 28 px button,
-with a 32 px touch target on phones and compact landscape touchscreens.
+Its company-coloured outline and centred line icon match the
+app's date/search controls. The info symbol is 14 px inside a circular 24 px button,
+with a 28 px touch target on phones and compact landscape touchscreens.
 It opens the relevant guide in a popup over the current work, with a guide picker,
 written steps, pictures and videos. Closing restores focus to the icon and leaves
 the underlying form and any existing popup intact. Guide browsing never saves,
