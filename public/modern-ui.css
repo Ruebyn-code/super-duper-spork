@@ -200,3 +200,14 @@
     }
   }
 }
+
+/* Company-primary Quick links retain readable labels across custom palettes. */
+@media screen{
+ :root body .home-page .home-section-quick-links .home-action,:root body .home-page .home-section-quick-links .home-action:hover{background:var(--primary);border-color:var(--primary);color:var(--home-quick-link-ink,#fff)}
+ :root body .home-page .home-section-quick-links .home-action :is(.home-card-content h2,.home-card-value,.home-card-icon,.home-card-arrow){color:var(--home-quick-link-ink,#fff)}
+ :root body .home-page .home-section-quick-links .home-action .home-card-icon{background:color-mix(in srgb,var(--home-quick-link-ink,#fff) 9%,transparent)}
+ :root body .home-page .home-section-quick-links .home-action .home-card-icon :is(svg,.icon-detail){stroke:var(--home-quick-link-ink,#fff)}
+ :root body .home-page .home-section-quick-links .home-action:focus-visible{outline:2px solid var(--home-quick-link-ink,#fff);outline-offset:-4px}
+}
+
+@media screen{html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action,html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action:hover{background:var(--primary)!important;color:var(--home-quick-link-ink,#fff)!important;border-color:var(--primary)!important}}

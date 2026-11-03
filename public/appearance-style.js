@@ -33,7 +33,8 @@
  function build(settings,uploaded=library){
   const families=fontFamilies(uploaded);
   if(!hex(settings?.primary)||!hex(settings?.secondary))return '';
-  let css=':root{--primary:'+settings.primary+';--secondary:'+settings.secondary+';--primary-hover:color-mix(in srgb,'+settings.primary+' 80%,black)}';
+  const channels=settings.primary.slice(1).match(/../g).map(value=>parseInt(value,16)/255).map(value=>value<=.04045?value/12.92:((value+.055)/1.055)**2.4),luminance=channels.reduce((sum,value,index)=>sum+value*[.2126,.7152,.0722][index],0),quickLinkInk=luminance>.179?'#000000':'#ffffff';
+  let css=':root{--primary:'+settings.primary+';--secondary:'+settings.secondary+';--primary-hover:color-mix(in srgb,'+settings.primary+' 80%,black);--home-quick-link-ink:'+quickLinkInk+'}';
   for(const part of ['body','headings','appName','greeting','stockNames','buttons','labels','inputs','navigation']){
    const font=settings.fonts?.[part];if(!Object.hasOwn(families,font))continue;
    const weight=(font==='opsilon'||isUploadedFont(font))?'font-weight:400!important;':['headings','greeting','stockNames'].includes(part)?'font-weight:600!important;':'';
