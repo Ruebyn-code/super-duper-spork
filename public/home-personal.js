@@ -1,9 +1,9 @@
 // Permanent personal work stays independent of shared Home layouts and preview profiles.
 (()=>{
  const root=document.getElementById('home-personal');if(!root)return;
- const host=document.getElementById('home-personal-content'),status=document.getElementById('home-personal-status'),refreshButton=document.getElementById('home-personal-refresh'),expanded={tasks:false,comms:false};
+ const approvalHost=document.getElementById('home-personal-approvals'),host=document.getElementById('home-personal-content'),status=document.getElementById('home-personal-status'),refreshButton=document.getElementById('home-personal-refresh'),expanded={tasks:false,comms:false,approvals:false};
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;},data=(tag,text,cls)=>{const n=node(tag,text,cls);n.dataset.userText='';return n;};
- let actor=null,identity='',generation=0,loading=false,queued=false,timer=null,last=null;
+ let actor=null,identity='',generation=0,loading=false,queued=false,timer=null,last=null,switching=false;
  const key=a=>JSON.stringify([a?.id,a?.companyId,a?.locationId,a?.permissions,a?.actionPermissions]);
  const labels={agreement:'Employment agreement',checklist:'Checklist',course:'Course',practical:'Practical training',signoff:'Trainer sign-off',post:'Post',chat:'Conversation'},states={overdue:'Overdue','in-progress':'In progress','not-started':'To do','awaiting-signoff':'Awaiting sign-off',scheduled:'Scheduled'};
  const date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',...(value.includes('T')?{hour:'numeric',minute:'2-digit',hour12:true}:{}),timeZone:'Australia/Melbourne'}).format(new Date(value.includes('T')?value:value+'T01:00:00Z'));
@@ -19,15 +19,32 @@
   }
   section.append(group);
  }
+ function clearWork(){host.replaceChildren();approvalHost.replaceChildren();approvalHost.hidden=true;}
+ async function openApproval(event,row){
+  if(switching){event.preventDefault();return;}
+  if(row.locationId===actor.locationId)return;
+  event.preventDefault();const view=window.appEmbedded?parent:window,before=new view.Event('before-location-switch',{cancelable:true});if(!view.dispatchEvent(before)){status.hidden=false;status.textContent='Save or discard your current changes before switching locations.';return;}
+  const current=actor,token=generation,link=event.currentTarget;switching=true;link.setAttribute('aria-disabled','true');status.hidden=false;status.textContent='Opening timesheets…';
+  try{const response=await fetch('/api/session/location',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':current.csrf},body:JSON.stringify({locationId:row.locationId})}),result=await response.json();if(!response.ok)throw Error(result.error||'Unable to open timesheets.');if(token===generation)view.location.href=row.href;}
+  catch(error){if(token===generation){status.textContent=error.message;status.hidden=false;}}
+  finally{switching=false;link.removeAttribute('aria-disabled');}
+ }
+ function approvals(value){
+  approvalHost.replaceChildren();approvalHost.hidden=!value?.enabled;if(approvalHost.hidden)return;
+  const heading=node('div',undefined,'home-personal-group-heading'),title=node('h3','Timesheets to approve'),count=data('span',value.errors.length?'—':String(value.total),'home-personal-count'),list=node('ul',undefined,'home-personal-list');title.id='home-personal-approvals-title';approvalHost.setAttribute('aria-labelledby',title.id);heading.append(title,count);approvalHost.append(heading);
+  for(const row of value.locations.slice(0,expanded.approvals?value.locations.length:5)){const li=node('li'),link=node('a',undefined,'home-personal-item'),copy=node('span',undefined,'home-personal-copy');link.href=row.href;link.dataset.personalFocus='approval-'+row.locationId;copy.append(data('strong',row.locationName),data('small',row.count+' awaiting approval · Week of '+date(row.weekStart)));link.append(copy);link.onclick=event=>openApproval(event,row);li.append(link);list.append(li);}
+  if(!value.locations.length)list.append(node('li',value.errors.length?'Unable to load pending timesheets.':'No timesheets waiting for approval.','home-personal-empty'));approvalHost.append(list);
+  if(value.locations.length>5){const more=node('button',expanded.approvals?'Show less':'Show all locations','home-personal-more');more.type='button';more.dataset.personalFocus='more-approvals';more.onclick=()=>{expanded.approvals=!expanded.approvals;paint(last);};approvalHost.append(more);}
+ }
  function paint(value){
-  last=value;const focus=focusKey(),fragment=document.createDocumentFragment();
+  last=value;const focus=focusKey();approvals(value.approvals);const fragment=document.createDocumentFragment();
   for(const name of ['tasks','comms']){const section=node('section',undefined,'home-personal-group'),heading=node('div',undefined,'home-personal-group-heading'),title=node('h3',name==='tasks'?'Tasks':'Comms'),count=data('span',value[name].errors.length?'—':String(value[name].total),'home-personal-count'),list=node('ul',undefined,'home-personal-list'),result=value[name];title.id='home-personal-'+name+'-title';section.setAttribute('aria-labelledby',title.id);count.setAttribute('aria-label',name==='tasks'?'Outstanding tasks':'Unread posts and conversations');heading.append(title,count);section.append(heading);
    if(name==='comms'){const select=match=>result.items.filter(match).slice(0,expanded.comms?100:5);commsGroup(section,select(i=>i.kind==='chat'&&i.chatKind==='group'),'group','Groups');commsGroup(section,select(i=>i.kind==='chat'&&i.chatKind!=='group'),'direct','Direct messages');commsGroup(section,select(i=>i.kind==='post'),'post','Posts');}
    for(const item of (name==='comms'?[]:result.items.slice(0,expanded[name]?100:5))){const li=node('li'),link=node('a',undefined,'home-personal-item'),marker=node('span',undefined,'home-personal-marker'),copy=node('span',undefined,'home-personal-copy');link.href=item.href;link.dataset.personalFocus=item.id;link.dataset.kind=item.kind;link.dataset.state=item.status||'';marker.setAttribute('aria-hidden','true');marker.innerHTML=item.kind==='chat'||item.kind==='post'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 1-8 8H6l-4 2 1-6a8 8 0 1 1 17-4Z"/><path d="M7 9h8M7 13h5"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v4H9zM8 13l2 2 5-5"/></svg>';copy.append(data('strong',item.title));const detail=[item.detail||labels[item.kind],item.required?'Required reading':item.kind==='chat'?item.unread+' unread':states[item.status],item.dueAt?date(item.dueAt):item.dueDate?'Due '+date(item.dueDate):null].filter(Boolean).join(' · ');copy.append(data('small',detail));link.append(marker,copy);li.append(link);list.append(li);}
    if(!result.items.length){const li=node('li',result.errors.length?'Unable to load '+result.errors.join(', ')+'.':!result.enabled?name==='tasks'?'No assigned-work features are enabled for your account.':'Comms is not enabled for your account.':name==='tasks'?'No outstanding tasks.':'You’re up to date.','home-personal-empty');list.append(li);}if(name==='tasks'||!result.items.length)section.append(list);
    if(result.errors.length&&result.items.length)section.append(node('p','Unable to refresh '+result.errors.join(', ')+'.','home-personal-error'));
    if(name==='tasks'?result.items.length>5:['group','direct','post'].some(kind=>result.items.filter(i=>(i.kind==='post'?'post':i.chatKind==='group'?'group':'direct')===kind).length>5)){const more=node('button',expanded[name]?'Show less':'Show all ('+result.items.length+')','home-personal-more');more.type='button';more.dataset.personalFocus='more-'+name;more.setAttribute('aria-expanded',String(expanded[name]));more.onclick=()=>{expanded[name]=!expanded[name];paint(last);};section.append(more);}
-   if(result.total>result.items.length)section.append(node('p','Showing the first '+result.items.length+'. Open Checklists, Training or Comms for the full list.','home-personal-empty'));
+   if(result.total>result.items.length)section.append(node('p','Showing the first '+result.items.length+'. Open Training or Comms for the full list.','home-personal-empty'));
    fragment.append(section);
   }
   host.replaceChildren(fragment);status.textContent='';status.hidden=true;restoreFocus(focus);
@@ -35,11 +52,11 @@
  }
  async function refresh(){
   if(!actor||document.hidden)return;if(loading){queued=true;return;}loading=true;refreshButton.disabled=true;root.setAttribute('aria-busy','true');const token=generation,current=actor;
-  try{const response=await fetch('/api/home-personal',{cache:'no-store',headers:{'X-Location-Id':current.locationId}});if(token!==generation)return;if(!response.ok){if([401,403,428].includes(response.status)){host.replaceChildren();last=null;if(response.status===428)window.appRequiredReading?.check();}throw Error('Unable to load your work. Try refreshing.');}const value=await response.json();if(token!==generation||value.userId!==actor.id||value.companyId!==actor.companyId||value.locationId!==actor.locationId)return;paint(value);
-  }catch(error){if(token===generation){host.replaceChildren();last=null;status.hidden=false;status.textContent='Unable to load your work. Try refreshing.';}}
+  try{const response=await fetch('/api/home-personal',{cache:'no-store',headers:{'X-Location-Id':current.locationId}});if(token!==generation)return;if(!response.ok){if([401,403,428].includes(response.status)){clearWork();last=null;if(response.status===428)window.appRequiredReading?.check();}throw Error('Unable to load your work. Try refreshing.');}const value=await response.json();if(token!==generation||value.userId!==actor.id||value.companyId!==actor.companyId||value.locationId!==actor.locationId)return;paint(value);
+  }catch(error){if(token===generation){clearWork();last=null;status.hidden=false;status.textContent='Unable to load your work. Try refreshing.';}}
   finally{loading=false;refreshButton.disabled=false;root.removeAttribute('aria-busy');if(queued){queued=false;refresh();}}
  }
- function access(next){if(!next)return;actor=next;const nextIdentity=key(next);if(nextIdentity!==identity){identity=nextIdentity;generation++;clearTimeout(timer);last=null;expanded.tasks=expanded.comms=false;host.replaceChildren();status.hidden=false;status.textContent='Loading your work…';refresh();}}
+ function access(next){if(!next)return;actor=next;const nextIdentity=key(next);if(nextIdentity!==identity){identity=nextIdentity;generation++;clearTimeout(timer);last=null;expanded.tasks=expanded.comms=expanded.approvals=false;clearWork();status.hidden=false;status.textContent='Loading your work…';refresh();}}
  refreshButton.onclick=refresh;window.addEventListener('home-dashboard-access',event=>access(event.detail.actor));if(window.homeProfile?.actor)access(window.homeProfile.actor);
- window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});window.addEventListener('storage',event=>{if(/messages|learning|ops-|checklist/.test(event.key||''))refresh();});window.addEventListener('required-reading-changed',event=>{if(event.detail.blocked){generation++;host.replaceChildren();status.hidden=false;status.textContent='Read or snooze the required post in Comms to continue.';}else refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});setInterval(refresh,30000);
+ window.addEventListener('focus',refresh);window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});window.addEventListener('storage',event=>{if(/messages|learning|ops-|checklist/.test(event.key||''))refresh();});window.addEventListener('required-reading-changed',event=>{if(event.detail.blocked){generation++;clearWork();status.hidden=false;status.textContent='Read or snooze the required post in Comms to continue.';}else refresh();});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});setInterval(refresh,30000);
 })();

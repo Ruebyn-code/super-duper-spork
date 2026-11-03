@@ -155,7 +155,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   },now:rosteringNow});
   const weeklySalesReportStore=weeklySalesReports.createStore();
   const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
-  const homePersonal=require('./home-personal').createReader({ops:opsStore,learning:learningStore,comms:communicationStore,agreements:employmentDocumentStore,now:communicationsNow});
+  const homePersonal=require('./home-personal').createReader({learning:learningStore,comms:communicationStore,agreements:employmentDocumentStore,rostering:rosteringStore,now:communicationsNow});
   const homeInsights=require('./home-insights').createReader({dir:dataDir,locations:actor=>locationStore.accessible(actor),context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),history:()=>usageHistory(dataDir),salesStore,weekly:weeklySalesReportStore,ops:opsStore,now:communicationsNow});
   const reportStore=scheduledReports.createStore(dataDir,{sources:reportSources,ai:aiStore,auth,locations:locationStore,now:communicationsNow,fetchImpl,origin:publicOrigin,isActive:async()=>!platformStore||Boolean((await platformStore.network(network.id))?.active)});
   const manualParStore=manualPar.createStore();

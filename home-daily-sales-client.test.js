@@ -5,7 +5,7 @@ function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{reso
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 async function page(fetchImpl,actorOverrides={}){
  const nodes=new Map(),events=new Map(),requests=[];
- const document={hidden:false,activeElement:null,body:{dataset:{homeDashboard:'manager'}},addEventListener(){},getElementById(id){if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,disabled:false,textContent:'',listeners:new Map(),setCustomValidity(value){this.invalid=value;},setAttribute(){},addEventListener(type,listener){this.listeners.set(type,listener);},blur(){if(document.activeElement===this)document.activeElement=null;}});return nodes.get(id);}};
+ const document={hidden:false,activeElement:null,body:{dataset:{homeDashboard:'manager'}},addEventListener(){},getElementById(id){if(!nodes.has(id))nodes.set(id,{value:'',hidden:false,disabled:false,textContent:'',listeners:new Map(),setCustomValidity(value){this.invalid=value;},setAttribute(){},addEventListener(type,listener){this.listeners.set(type,listener);},showModal(){this.open=true;},close(){this.open=false;},focus(){document.activeElement=this;},blur(){if(document.activeElement===this)document.activeElement=null;}});return nodes.get(id);}};
  const actor={id:'user',csrf:'csrf-test',locationId:'mernda',dataScope:'location-mernda',...actorOverrides},window={appLocationId:'mernda',addEventListener(type,listener){if(!events.has(type))events.set(type,[]);events.get(type).push(listener);},dispatchEvent(event){for(const listener of events.get(event.type)||[])listener(event);return true;}};
  const fetch=async(url,options)=>{assert.equal(url,'/api/home-daily-sales');assert.equal(options.headers['X-Location-Id'],'mernda');assert.equal(options.headers['X-CSRF-Token'],actor.csrf);const request={method:options.method,body:options.body?JSON.parse(options.body):undefined};requests.push(request);return fetchImpl(request);};
  const form=document.getElementById('home-daily-sales-form'),input=document.getElementById('home-daily-sales-amount');form.reportValidity=()=>Boolean(input.value.trim())&&!input.invalid;
@@ -47,4 +47,12 @@ test('fresh background sales changes preserve a different unsaved Home amount an
 });
 test('Home history links select the displayed trading week across Sunday, Monday and year boundaries',async()=>{
  for(const[tradingDate,week]of [['2026-10-25','2026-10-19'],['2026-10-26','2026-10-26'],['2026-01-04','2025-12-29']]){const value=snapshot(123456,1);value.entry.tradingDate=tradingDate;const ui=await page(async()=>Response.json(value));assert.equal(ui.node('home-daily-sales-history').href,'/sales?week='+week+'#entry');}
+});
+
+test('side-panel daily sales opens a dialog and protects drafts when closing or pressing Escape',async()=>{
+ const ui=await page(request=>Response.json(request.method==='PUT'?snapshot(request.body.amountCents,1):snapshot())),dialog=ui.node('home-daily-sales-dialog'),button=ui.node('home-personal-sales');
+ assert.equal(button.hidden,false);assert.equal(button.disabled,false);button.onclick();assert.equal(dialog.open,true);
+ ui.enter('99');ui.node('home-daily-sales-close').onclick();assert.equal(dialog.open,true);
+ let prevented=false;dialog.listeners.get('cancel')({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(dialog.open,true);
+ await ui.submit();ui.node('home-daily-sales-close').onclick();assert.equal(dialog.open,false);assert.equal(ui.input.value,'99.00');
 });
