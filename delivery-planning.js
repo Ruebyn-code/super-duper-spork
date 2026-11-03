@@ -1,7 +1,7 @@
 const sales=require('./sales'),holiday=require('./holiday-projections'),time=require('./delivery-time'),calendar=require('./delivery-calendar'),rules=require('./public/stock-order-rules'),{belongs}=require('./location-scope');
 const q=value=>Math.round(value*1000)/1000;
 async function demandModel(dir,actor,start,end,now,zone){
- const current=sales.currentWeek(new Date(now)),previous=[1,2,3,4].map(n=>time.shift(current,-7*n)),history=await sales.projectionRecords(dir,actor,previous),base=sales.calculate(history,[],actor,{now:new Date(now)}),baseWeekly=base.projectedSalesCents,starts=new Set(previous);
+ const current=sales.currentWeek(new Date(now)),previous=[1,2,3,4].map(n=>time.shift(current,-7*n)),history=await sales.projectionRecords(dir,actor,previous),rawBase=sales.calculate(history,[],actor,{now:new Date(now)}),base=await holiday.normalForecast(dir,actor,rawBase,{anchor:current,records:history,readRevenue:weeks=>sales.projectionRecords(dir,actor,weeks)}),baseWeekly=base.projectedSalesCents,starts=new Set(previous);
  const monday=date=>time.shift(date,-(new Date(date+'T00:00:00Z').getUTCDay()+6)%7);for(let date=start;date<=end;date=time.shift(date,1))starts.add(monday(date));
  const currentOrFuture=[...starts].filter(d=>time.shift(d,6)>=time.parts(now,zone).date),changes=await holiday.adjustments(dir,actor,{weekStarts:currentOrFuture,anchor:current,asOf:base.today,readRevenue:weeks=>sales.projectionRecords(dir,actor,weeks)}),future=new Map();
  for(const weekStart of currentOrFuture){const projection={...base,weekStart,dailyProjections:base.dailyProjections.map((day,index)=>({...day,date:time.shift(weekStart,index)}))};for(const day of holiday.apply(projection,changes).dailyProjections)future.set(day.date,day.amountCents);}
