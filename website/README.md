@@ -1,6 +1,6 @@
 # OpStack marketing website
 
-Responsive public marketing site, using the app's blue/mint colours and genuine isolated-demo screenshots. No analytics, external fonts, cookies, enquiry database or third-party browser scripts are included. The Intelligence section reuses the app’s locally hosted Space Grotesk font, with its OFL licence included in assets.
+Responsive public marketing site, using the requested blue/cyan/teal gradient (`linear-gradient(90deg, #0057FF 0%, #00C8F8 50%, #00E5D4 100%)`) and genuine isolated-demo screenshots. No analytics, external fonts, cookies, enquiry database or third-party browser scripts are included. The Intelligence section reuses the app’s locally hosted Space Grotesk font, with its OFL licence included in assets.
 
 ## Open the website
 
@@ -33,3 +33,5 @@ node --test marketing-site.test.js public-assets.test.js
 Browser checks cover all tab states, arrow/Home/End keys, internal anchors, mailto destinations, phone menu/Escape, loaded images and overflow at 320, 390, 768, 1024 and 1440 pixels.
 
 Run `node tools/check-marketing-site.cjs` for native-app browser verification (requires Chromium and Playwright; override `OPSTACK_PLAYWRIGHT_MODULE` or `OPSTACK_WEBSITE_PREVIEW_DIR` for local paths).
+
+The gradient is scoped to this marketing website. Text-bearing gradient fills include a light overlay and dark text for contrast; the full-colour gradient remains on decorative edges and highlights. Tenant app colours and Intelligence palette settings are unchanged.
