@@ -28,7 +28,7 @@
 .home-dashboard-heading{min-width:0;display:grid;gap:4px}
 .dashboard-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;min-width:0}
 .dashboard-title-row .dashboard-page-title{flex:0 1 auto;display:flex;align-items:center;gap:7px;min-width:0;max-width:100%}
-.dashboard-store-info{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0;max-width:100%}
+.dashboard-store-info{display:flex;flex-basis:100%;align-items:center;flex-wrap:wrap;gap:6px 10px;min-width:0;max-width:100%}
 .dashboard-store-info :is(#home-location,#home-location-managers){margin:0;max-width:100%;font-size:11px;line-height:1.5;color:var(--theme-muted,#63778c);overflow-wrap:anywhere}
 .dashboard-store-info #home-trading-status{margin:0}
 body[data-home-dashboard=head-office] .dashboard-store-info{display:none}
