@@ -5,6 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const {Readable}=require('node:stream'),{pipeline}=require('node:stream/promises');
 const publicFiles=require('./public-files');
+const marketingSite=require('./marketing-site');
 const employmentDocuments=require('./employment-documents');
 const serveHelpMedia=require('./help-media').createMediaServer(path.join(__dirname,'public/help-media'),require('./public/help-media-manifest'));
 const globalSearch=require('./global-search');
@@ -181,7 +182,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(req.url==='/employment-documents'||req.url.startsWith('/api/employment-documents')){res.setHeader('Cache-Control','private, no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','SAMEORIGIN');res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'self'; form-action 'self'");}
       if(['GET','HEAD'].includes(req.method)&&req.url==='/healthz')return json(200,{ok:true,migrationMode});
       if(migrationMode){res.setHeader('Retry-After','60');res.writeHead(503,{'Content-Type':'text/plain; charset=utf-8'});return res.end('Opstack is moving data. Please try again shortly.');}
-      if(await serveHelpMedia(req,res,requestUrl)||await publicAssets.serve(req,res,requestUrl))return;
+      if(await marketingSite.serve(req,res,requestUrl)||await serveHelpMedia(req,res,requestUrl)||await publicAssets.serve(req,res,requestUrl))return;
       if(!defaultsMigration)defaultsMigration=newNetworkDefaults.migrate(dataDir,platformDataDir).catch(error=>{defaultsMigration=undefined;throw error;});
       await defaultsMigration;
       if(req.url==='/accept-invite'){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','DENY');}
