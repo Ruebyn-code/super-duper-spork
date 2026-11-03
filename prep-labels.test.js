@@ -70,3 +70,17 @@ test('micro-grid movement uses fine physical steps, preserves stationary axes an
  for(const widthMm of [20,50,56])for(const heightMm of [20,25,150])for(const edge of ['','n','s','e','w','ne','nw','se','sw'])for(const delta of [-200,-.1,.1,200]){const result=microGeometry(block,edge,delta,delta,{x:25/widthMm,y:25/heightMm});assert(result.x>=0&&result.y>=0&&result.width>=3&&result.height>=3&&result.x+result.width<=100.01&&result.y+result.height<=100.01);}
  assert.deepEqual(block,before);
 });
+
+test('designer can disable page magnets while retaining micro-grid and field alignment',()=>{
+ const{snapGeometry}=require('./public/label-layout-model'),block={id:'moving',x:10,y:20,width:20,height:10};
+ const edge=snapGeometry(block,'',-9.4,0,[],{x:1,y:1},null,{page:false});assert.equal(edge.box.x,.6);assert.equal(edge.guides.x,null);
+ const centre=snapGeometry(block,'',29.2,0,[],{x:1,y:1},null,{page:false});assert.equal(centre.box.x,39.2);assert.equal(centre.guides.x,null);
+ const micro=snapGeometry(block,'',29.2,0,[],{x:.2,y:.2},{x:.5,y:1},{page:false});assert.equal(micro.box.x,39);assert.equal(micro.guides.x,null);
+ const field=snapGeometry(block,'',24.4,0,[{id:'other',x:55,y:70,width:20,height:10}],{x:1,y:1},null,{page:false});assert.equal(field.box.x,35);assert.equal(field.guides.x,55);
+});
+
+test('label padding is validated, retained for older writers and frozen into batch snapshots',async()=>{
+ const a=await fixture(),model=require('./public/label-layout-model');try{const design={...model.defaultLayout(),paddingMm:1},item=await a.item({layout:design}),batch=await a.batch(item);assert.equal(batch.layout.paddingMm,1);const updated=await a.store.saveItem(a.office,{...item,layout:{...design,paddingMm:2}},item.id),legacy=structuredClone(updated);delete legacy.layout.paddingMm;const kept=await a.store.saveItem(a.office,legacy,item.id);assert.equal(kept.layout.paddingMm,2);const cleared=await a.store.saveItem(a.office,{...kept,layout:{...kept.layout,paddingMm:0}},item.id);assert.equal(cleared.layout.paddingMm,0);assert.equal((await a.store.get(a.member,batch.id)).layout.paddingMm,1);for(const paddingMm of [-1,.1,6,'1',null,Infinity])assert.throws(()=>model.normalize({...design,paddingMm}));assert.equal(model.normalize(model.defaultLayout()).paddingMm,undefined);
+ const profile={widthMm:50,heightMm:25},block={x:0,y:0,width:100,height:100};assert.deepEqual(model.fieldBox(design,profile,block),{x:2,y:4,width:96,height:92});assert.deepEqual(model.fieldBox(null,profile,block),block);
+ }finally{await a.close();}
+});

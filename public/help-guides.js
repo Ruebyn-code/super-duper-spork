@@ -772,7 +772,7 @@
  add(c,'label-templates','Design label templates and printer settings','Build company templates using the actual paper size.',[
   'In Labels, choose Add label template or edit through a template’s menu.',
   'Choose its category, name and company-approved timing rules.',
-  'Use Add a field in the toolbar. Click a field to select it, then drag its body or resize handles. Use move arrows, text-size buttons and Undo move for quick adjustments. Snap uses fine 0.25 mm steps plus alignment guides. Switch it off or hold Alt while dragging for free movement. Double-click or use Edit field for full formatting. Preview hides editing boxes. Done keeps a field edit, closing cancels it, and Save commits the template.',
+  'Use Add a field in the toolbar. Click a field to select it, then drag its body or resize handles. Use move arrows, text-size buttons and Undo move for quick adjustments. Padding (mm) reserves an inner border on the printed label. Snap uses fine 0.25 mm steps and other-field guides, without page-edge or page-centre magnets. Switch it off or hold Alt while dragging for free movement. Double-click or use Edit field for full formatting. Preview hides editing boxes. Done keeps a field edit, closing cancels it, and Save commits the template.',
   'Configure the printer/media resolution and test a preview before normal printing.'
  ],{route:'/labels',permissions:['prep.view','prep.manage'],notes:['The default Zebra media is 50 × 25 mm at 203 dpi. Explicitly configure other media/resolutions. Template edits do not rewrite old print batches.'],related:['print-labels','label-history']});
  add(c,'label-history','Review printed label batches','Find the recorded template and values used for a batch.',[
