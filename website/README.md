@@ -35,3 +35,7 @@ Browser checks cover all tab states, arrow/Home/End keys, internal anchors, mail
 Run `node tools/check-marketing-site.cjs` for native-app browser verification (requires Chromium and Playwright; override `OPSTACK_PLAYWRIGHT_MODULE` or `OPSTACK_WEBSITE_PREVIEW_DIR` for local paths).
 
 The gradient is scoped to this marketing website. Text-bearing gradient fills include a light overlay and dark text for contrast; the full-colour gradient remains on decorative edges and highlights. Tenant app colours and Intelligence palette settings are unchanged.
+
+## Interactive exploration
+
+The header, footer and product tour reuse the real bundled OpStack symbol (`assets/opstack-icon.png`) instead of a CSS-built substitute. The workflow chooser recommends Ordering, Rosters, Training or Reporting and moves keyboard focus to the corresponding feature tab. The hero and full-screen links open a seven-screen product tour with Previous/Next buttons, arrow keys, screenshot zoom, native Escape dismissal and restored trigger focus. Zoom scrolling stays within the screenshot viewer. The navigation highlights the visible section, and a back-to-top link appears further down the page. No tour interactions call app APIs or change customer data.
