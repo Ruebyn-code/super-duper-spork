@@ -19,3 +19,7 @@
 }
 @media(prefers-reduced-motion:reduce){.subpages-sidebar .page-sidebar-link{transition:none}}
 @media print{.subpages-sidebar,.phone-subpage-navigation{display:none!important}.subpages-workspace.page-sidebar-layout{display:block;min-height:0}}
+
+/* Outer breathing room is taken from the existing sidebar track, not the page. */
+@media screen and (min-width:721px){.subpages-sidebar{width:calc(var(--subpage-width) - 12px);margin:12px 0 12px 12px;top:12px;max-height:calc(100dvh - 24px);border:1px solid var(--theme-line,#dce5ed);border-radius:12px}}
+@media screen and (max-width:720px){.subpages-sidebar{width:calc(var(--subpage-width) - 6px);margin:8px 0 8px 6px;top:8px;max-height:calc(100dvh - 16px);border:1px solid var(--theme-line,#dce5ed);border-radius:9px;padding:8px 0}.subpages-sidebar .page-sidebar-link{padding-left:8px;padding-right:8px}}

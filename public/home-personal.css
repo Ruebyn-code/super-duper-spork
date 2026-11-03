@@ -56,3 +56,6 @@ html.embedded-page .home-dashboard-content{height:100%;min-height:0;align-conten
 }
 @media print{.home-personal{display:none}.home-dashboard-layout,.home-dashboard-content{display:block}}
 .home-personal-sales{width:100%;margin:2px 0 12px;border:0;background:transparent;font:inherit;text-align:left}.home-personal-approvals{margin:0 0 14px;padding:0 0 14px;border-bottom:1px solid var(--theme-line,#dce5ed)}.home-personal-approvals[hidden]{display:none}.home-personal-approvals .home-personal-item[aria-disabled=true]{pointer-events:none;opacity:.6}
+
+/* Inset the panel inside its existing grid track; the dashboard does not move. */
+@media screen{.home-personal{box-sizing:border-box;width:calc(100% - 12px);margin-left:12px}}
