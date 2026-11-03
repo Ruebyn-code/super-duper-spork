@@ -68,6 +68,7 @@ function createPlatformServer(root,options,createNetworkServer){
      if(req.method==='POST'&&networkRoute[2]==='open'){if(!network.active)fail('Activate this network before opening it.',409);const input=await body(req);addCookie(res,cookie(req,'opstack_support',network.id));await store.audit(account,'network.opened',{networkId:network.id});return json(200,{url:input.appearance&&owner?'/admin/settings?platform=1#colours':'/home'});}
     }
     if(!owner)fail('Opstack owner access required.',403);
+    if(await require('./reference-pack').route({req,res,url:route,base:'/api/opstack/reference-pack'}))return;
     if(route.startsWith('/api/opstack/gocardless'))fail('GoCardless has been removed. Use Stripe in Console → Billing.',410);
     if(route==='/api/opstack/stripe'&&req.method==='GET')return json(200,await stripe.settings(account,url.searchParams.get('environment')||'sandbox'));
     if(route==='/api/opstack/stripe'&&req.method==='PUT'){const result=await stripe.save(account,await body(req,512000));await store.audit(account,'stripe.settings.updated',{environment:result.environment,enabled:result.enabled});return json(200,result);}

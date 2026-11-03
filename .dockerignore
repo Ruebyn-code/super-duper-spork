@@ -8,6 +8,7 @@ node_modules
 **/.env
 **/.env.*
 **/*.zip
+!public/reference-pack/OpStack-reference-pack.zip
 **/*.tar
 **/*.tar.gz
 **/*.tgz

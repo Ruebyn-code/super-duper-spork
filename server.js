@@ -360,6 +360,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(management&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
       if(req.method==='POST'&&req.url==='/api/logout'){if(!session)fail('Sign-in required.',401);if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token.',403);auth.logout(session.token);res.setHeader('Set-Cookie',`admin_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secureCookie(req)?'; Secure':''}`);return json(200,{signedOut:true});}
       if(req.url.startsWith('/api/')&&!session)fail('Sign-in required.',401);
+      if(await require('./reference-pack').route({req,res,url:req.url}))return;
       if(['/api/search','/api/search/intelligence'].includes(req.url)){
         const intelligent=req.url==='/api/search/intelligence';
         if(req.method!==(intelligent?'POST':'GET'))fail('Unsupported search action.',405);

@@ -1,0 +1,74 @@
+{
+  "demo": true,
+  "screenshots": 287,
+  "size": 26938544,
+  "createdAt": "2026-11-03T04:29:27.090Z",
+  "sha256": "233f502da7ce57f25d065ffdf74e8ba95ef1ab680b60503a2c90f63bbba43ea8",
+  "sourceRevision": "3df6094f130ccc754bafa878044bb287d94aaefc",
+  "categories": [
+    {
+      "title": "Checklists & planners",
+      "screenshots": 14
+    },
+    {
+      "title": "Comms",
+      "screenshots": 10
+    },
+    {
+      "title": "Getting started",
+      "screenshots": 29
+    },
+    {
+      "title": "Invoices & expenses",
+      "screenshots": 8
+    },
+    {
+      "title": "Knowledge Library",
+      "screenshots": 5
+    },
+    {
+      "title": "Labels",
+      "screenshots": 8
+    },
+    {
+      "title": "Locations & settings",
+      "screenshots": 56
+    },
+    {
+      "title": "OpStack intelligence",
+      "screenshots": 6
+    },
+    {
+      "title": "OpStack owner console",
+      "screenshots": 21
+    },
+    {
+      "title": "Ordering & stock",
+      "screenshots": 47
+    },
+    {
+      "title": "Reporting",
+      "screenshots": 8
+    },
+    {
+      "title": "Rosters & time",
+      "screenshots": 39
+    },
+    {
+      "title": "Sales & projections",
+      "screenshots": 15
+    },
+    {
+      "title": "Supplier deliveries",
+      "screenshots": 5
+    },
+    {
+      "title": "Training",
+      "screenshots": 15
+    },
+    {
+      "title": "Troubleshooting & support",
+      "screenshots": 1
+    }
+  ]
+}

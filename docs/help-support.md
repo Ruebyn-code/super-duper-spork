@@ -119,3 +119,41 @@ transition, pointer movement, and the final hold. Check every video's native
 metadata, playback and captions after generation; browser and test servers must
 start after the final manifest/assets are written so they cannot cache obsolete
 asset names during a rebuild.
+
+## Downloadable screenshot reference pack
+
+Help & support includes **Screenshots & platform reference → Download reference
+pack (ZIP)**. Console owners also have **Console → Reference pack**. The archive
+contains only isolated demo screenshots, desktop/phone/theme examples, an offline
+searchable gallery, a screen index, generic feature workflows, styling references
+and a Base44 rebuild brief. It is not a live data export or operational backup.
+Saved production company customisations and provider credentials are not included.
+
+The tenant metadata/download routes are `/api/help/reference-pack` and
+`/api/help/reference-pack/download`, behind normal sign-in, kiosk and required
+reading checks. The console uses the corresponding owner-only
+`/api/opstack/reference-pack` paths. Downloads stream the fixed committed archive
+with attachment/no-store headers; the archive is not in the public route registry
+or shared asset Buffer cache. `reference-pack-manifest.json` records its size,
+digest, capture date, source revision and screenshot coverage. Keep the explicit
+ZIP exception in `.dockerignore` so the production image includes it.
+
+Regenerate using developer tools, never a production account or data directory:
+
+1. `OPSTACK_HELP_BUILD_DIR=/tmp/opstack-reference-build node tools/capture-help-media.cjs --refresh`
+2. `node tools/capture-reference-extras.cjs`
+3. Resolve every capture error, then `node tools/build-reference-pack.cjs`.
+4. Review representative screens and the offline gallery, validate every ZIP entry
+   and screenshot digest, test authenticated downloads/required-reading boundaries
+   and browser downloads on desktop/phone, and run the normal tests.
+5. Commit the regenerated archive and manifest together. Start test/deployment
+   servers after generation so metadata and ZIP bytes match.
+
+Capture contexts use Melbourne time and the fixture's fixed demonstration date;
+Secure demo cookies are explicitly forwarded only to their loopback test server
+for native API setup. This does not change production authentication or clocks.
+
+`node tools/check-reference-pack.cjs` checks native browser downloads, phone/theme
+layouts and the offline gallery. Its independent archive/JPEG checks use Python 3
+with Pillow, in addition to the existing Playwright and Chromium authoring tools;
+these are developer-only dependencies, never deployed app dependencies.
