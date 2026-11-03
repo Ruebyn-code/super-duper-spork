@@ -32,12 +32,12 @@ function allocate(total,weights){
  const denominator=BigInt(sum),amount=BigInt(total),parts=weights.map((value,hour)=>({hour,value:Number(amount*BigInt(value)/denominator),remainder:amount*BigInt(value)%denominator}));let remaining=total-parts.reduce((sum,item)=>sum+item.value,0);for(const item of [...parts].sort((a,b)=>a.remainder===b.remainder?a.hour-b.hour:a.remainder>b.remainder?-1:1).slice(0,remaining))parts[item.hour].value++;return parts.map(item=>item.value);
 }
 function forecast(state,date,projection){
- const index=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,daily=projection.daily.find(day=>day.date===date),complete=date=>state.days[date]?.hours?.length===24&&state.days[date].hours.every(model.amount),normalDates=projection.history.map(week=>shift(week.weekStart,index));let sourceDates=normalDates,method='four-weeks',reason=null;
+ const index=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,daily=projection.daily.find(day=>day.date===date),complete=date=>state.days[date]?.hours?.length===24&&state.days[date].hours.every(model.amount),normalDates=daily?.normalSourceDates||projection.history.map(week=>shift(week.weekStart,index));let sourceDates=normalDates,method='four-weeks',reason=null;
  if(daily?.holiday?.status==='adjusted'&&complete(daily.holiday.previousDate)){sourceDates=[daily.holiday.previousDate];method='holiday';}
  else if(daily?.holiday?.status==='adjusted')reason='Last year’s matching holiday has no complete hourly report; using the four-week hourly pattern if available.';
  let amounts=null,unavailable=null;
  if(!Number.isSafeInteger(daily?.salesCents)||daily.salesCents<0)unavailable='Complete the daily sales history required by the existing forecast rules.';
- else if(!sourceDates.length||!sourceDates.every(complete))unavailable='Upload complete hourly reports for all four matching weekdays in the last four completed weeks.';
+ else if(!sourceDates.length||!sourceDates.every(complete))unavailable='Upload complete hourly reports for all four matching normal weekdays used by the daily forecast.';
  else{const weights=Array.from({length:24},(_,hour)=>sourceDates.reduce((sum,date)=>sum+state.days[date].hours[hour],0));amounts=allocate(daily.salesCents,weights);if(!amounts)unavailable='The historical hourly reports have no sales pattern to allocate this positive daily forecast.';}
  return{date,dailySalesCents:daily?.salesCents??null,projectedSalesCents:amounts?amounts.reduce((sum,value)=>sum+value,0):null,hours:amounts,method,sourceDates,reason:unavailable||reason,holiday:daily?.holiday||null};
 }

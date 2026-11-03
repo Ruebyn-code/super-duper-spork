@@ -13,7 +13,7 @@ async function fixture(t,{current=11000,previous=10000,holiday=200000}={}){
 }
 test('movable holiday uses last year’s matching holiday and the unrounded growth ratio, while normal days and source data stay unchanged',async t=>{
  const f=await fixture(t);await f.day('2026-04-03',230000);const source=await fs.readFile(path.join(f.dir,'location-sales/shop/2025-04-14.json'),'utf8'),report=await f.report(),day=report.projection.dailyProjections[4];
- assert.equal(day.amountCents,220000);assert.equal(day.holiday.previousDate,'2025-04-18');assert.equal(day.holiday.growthPercent,10);assert.equal(day.holiday.comparisonDays,349);assert.equal(report.projection.projectedSalesCents,286000);assert.equal(report.projection.budgetCents,80080);assert.equal(report.projection.performance.expectedCents,264000);assert.equal(report.projection.performance.differenceCents,10000);
+ assert.equal(day.amountCents,220000);assert.equal(day.holiday.previousDate,'2025-04-18');assert.equal(day.holiday.growthPercent,10);assert.equal(day.holiday.comparisonDays,348);assert.equal(report.projection.projectedSalesCents,286000);assert.equal(report.projection.budgetCents,80080);assert.equal(report.projection.performance.expectedCents,264000);assert.equal(report.projection.performance.differenceCents,10000);
  assert.deepEqual(report.projection.dailyProjections.filter((_,i)=>i!==4).map(day=>day.amountCents),Array(6).fill(11000));assert.equal(await fs.readFile(path.join(f.dir,'location-sales/shop/2025-04-14.json'),'utf8'),source);assert.ok(!JSON.stringify(report).includes('privatePayrollValue'));assert.ok(!JSON.stringify(report).includes('never expose'));
 });
 test('negative growth and zero holiday revenue remain valid projections',async t=>{
@@ -31,7 +31,7 @@ test('unrounded year-on-year ratios round the final holiday amount to cents',asy
  const f=await fixture(t,{current:10001,previous:30000,holiday:123456});const day=(await f.report()).projection.dailyProjections[4];assert.equal(day.amountCents,41156);assert.equal(day.holiday.growthPercent,-66.66);
 });
 test('growth uses total sales since the previous holiday, including dates before January and outside the recent four weeks',async t=>{
- const f=await fixture(t);await f.day('2025-06-15',20000);f.state.companies[0].holidayCalendars[1].dates.push({date:'2025-06-15',name:'Regional holiday'});await f.calendars();const day=(await f.report()).projection.dailyProjections[4];assert.equal(day.amountCents,Math.round(200000*(349*11000+300000-11000+9000)/(349*10000+Math.round(300000/1.1)-10000)));assert.equal(day.holiday.comparisonDays,349);assert.equal(day.holiday.comparison.fromDate,'2025-04-19');assert.equal(day.holiday.comparison.throughDate,'2026-04-02');
+ const f=await fixture(t);await f.day('2025-06-15',20000);f.state.companies[0].holidayCalendars[1].dates.push({date:'2025-06-15',name:'Regional holiday'});await f.calendars();const day=(await f.report()).projection.dailyProjections[4];assert.equal(day.amountCents,220000);assert.equal(day.holiday.comparisonDays,347);assert.equal(day.holiday.comparison.fromDate,'2025-04-19');assert.equal(day.holiday.comparison.throughDate,'2026-04-02');
 });
 test('missing history, unreviewed or ambiguous matches, and a zero comparison denominator use explicit four-week fallbacks',async t=>{
  for(const scenario of ['missing-holiday','missing-comparison','unreviewed','ambiguous','zero-denominator'])await t.test(scenario,async t=>{
@@ -78,4 +78,16 @@ test('Sales and roster APIs share the holiday forecast while projection viewers 
  const levels=(await request(office,'/api/permission-levels')).data,roles=(await request(office,'/api/permission-levels','POST',{revision:levels.revision,scope:'company',name:'Holiday projection reader',level:10,permissions:['home.view','sales.view']})).data,role=roles.levels.find(item=>item.name==='Holiday projection reader');
  assert.equal((await request(office,'/api/accounts','POST',{username:'Viewer',password:'holiday-api-test-password',companyId:office.session.companyId,roleScope:'company',role:role.id,locationId,locationIds:[locationId]})).status,201);const viewer=await login('Viewer'),visible=await request(viewer,'/api/sales');assert.equal(visible.status,200);assert.equal(visible.data.projection.dailyProjections[4].amountCents,240000);assert.equal((await request(viewer,'/api/awards')).status,403);assert.equal((await request(viewer,'/api/weekly-sales-reports')).status,403);assert.ok(!JSON.stringify(visible.data).includes('never expose'));
  const other=(await request(office,'/api/locations','POST',{name:'Other shop'})).data;assert.equal((await request(viewer,'/api/sales','GET',undefined,{'X-Location-Id':other.id})).status,403);assert.equal((await request(office,'/api/sales','GET',undefined,{'X-Location-Id':other.id})).data.projection.projectedSalesCents,null);
+});
+
+test('normal weekdays replace holiday samples with distinct older normal weekdays without changing actual history or adding a surcharge',async t=>{
+ const f=await fixture(t);f.state.companies[0].holidayCalendars[0].dates.push({date:'2026-03-16',name:'Local holiday'},{date:'2026-03-02',name:'Another local holiday'});await f.calendars();await f.day('2026-03-16',990000);await f.day('2026-03-02',880000);await f.day('2026-02-23',15000);
+ const report=await f.report(),monday=report.projection.dailyProjections[0];assert.equal(monday.amountCents,12000);assert.deepEqual(monday.normalSourceDates,['2026-03-23','2026-03-09','2026-02-23','2026-02-16']);assert.equal(report.projection.history[1].days[0],990000);assert.equal(report.projection.projectedSalesCents,12000+55000+Math.round(200000*(346*11000+4000)/(346*10000)));
+ const roster=await sales.rosterProjection(f.dir,actor,anchor,{now});assert.equal(roster.daily[0].salesCents,12000);assert.equal(roster.projectedSalesCents,report.projection.projectedSalesCents);
+ const sunday=await f.report(new Date('2026-04-04T14:00:00Z'));assert.equal(sunday.orderingProjection.dailyProjections[0].holiday.status,'adjusted');assert.equal(sunday.orderingProjection.dailyProjections[0].holiday.previousDate,'2025-04-21');assert.equal(sunday.orderingProjection.dailyProjections[2].amountCents,11000);assert.deepEqual(sunday.orderingProjection.dailyProjections[0].normalSourceDates,monday.normalSourceDates);
+ await f.day('2026-02-23',null);assert.equal((await f.report()).projection.dailyProjections[0].amountCents,null,'missing selected non-holiday sales stay unknown');
+});
+
+test('hourly profiles use the same replacement weekdays as the daily forecast',()=>{
+ const {forecast}=require('./hourly-sales'),dates=['2026-03-23','2026-03-09','2026-02-23','2026-02-16'],state={days:Object.fromEntries(dates.map(date=>[date,{hours:[100,...Array(23).fill(0)]}]))},projection={history:[],daily:[{date:anchor,salesCents:12000,normalSourceDates:dates}]};const result=forecast(state,anchor,projection);assert.equal(result.hours[0],12000);assert.equal(result.hours.reduce((a,b)=>a+b,0),12000);
 });

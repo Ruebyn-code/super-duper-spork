@@ -90,7 +90,7 @@ function orderingProjection(projection,orders,session,{transfers=[]}={}){
  return {...forecast,...committed,weekStart,weekEnd:shift(weekStart,6),isUpcoming,dailyProjections:projection.dailyProjections.map((day,index)=>({...day,date:shift(weekStart,index)})),remainingCents:projection.budgetCents===null||committed.pricePending?null:projection.budgetCents-committed.spentCents};
 }
 async function rosterProjection(dir,session,weekStart,{now=new Date()}={}){
- const current=currentWeek(now),anchor=weekStart<current?weekStart:current,records=await projectionRecords(dir,session,[1,2,3,4].map(index=>shift(anchor,-7*index))),projection=require('./public/rostering-model').project(records,weekStart,now.valueOf());
+ const current=currentWeek(now),anchor=weekStart<current?weekStart:current,records=await projectionRecords(dir,session,[1,2,3,4].map(index=>shift(anchor,-7*index))),base=require('./public/rostering-model').project(records,weekStart,now.valueOf()),projection=await holidayProjections.normalForecast(dir,session,base,{anchor,records,readRevenue:starts=>projectionRecords(dir,session,starts),dailyKey:'daily',amountKey:'salesCents'});
  const changes=await holidayProjections.adjustments(dir,session,{weekStarts:[weekStart],anchor,asOf:weekStart<current?weekStart:dateLabel(dayNumber(now,calendar(defaultTimeZone))),readRevenue:starts=>projectionRecords(dir,session,starts)});
  return holidayProjections.apply(projection,changes,{dailyKey:'daily',amountKey:'salesCents'});
 }
@@ -159,7 +159,8 @@ function createStore(){
   const current=currentWeek(now);if(selectedWeek)week(selectedWeek);
   const starts=[...new Set([selectedWeek||current,current,...[1,2,3,4].map(index=>shift(current,-7*index))])];
   const records=await Promise.all(starts.map(start=>read(dir,session,start)));
-  const previousStarts=[1,2,3,4].map(index=>shift(current,-7*index)),forecast=await projectionRecords(dir,session,previousStarts,records),projection=calculate([...forecast,...records.filter(record=>!previousStarts.includes(record.weekStart))],orders,session,{now,transfers});
+  const previousStarts=[1,2,3,4].map(index=>shift(current,-7*index)),forecast=await projectionRecords(dir,session,previousStarts,records),baseProjection=calculate([...forecast,...records.filter(record=>!previousStarts.includes(record.weekStart))],orders,session,{now,transfers}),projection=await holidayProjections.normalForecast(dir,session,baseProjection,{anchor:current,records:forecast,readRevenue:starts=>projectionRecords(dir,session,starts)});
+  if(projection!==baseProjection)projection.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:projection.dailyProjections,today:projection.today});
   const ordering=orderingProjection(projection,orders,session,{transfers}),changes=await holidayProjections.adjustments(dir,session,{weekStarts:[...new Set([current,ordering.weekStart])],anchor:current,asOf:projection.today,readRevenue:starts=>projectionRecords(dir,session,starts)}),adjusted=holidayProjections.apply(projection,changes);
   if(adjusted!==projection)adjusted.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:adjusted.dailyProjections,today:adjusted.today});
   const [revenue]=await projectionRecords(dir,session,[current],records),orderingAdjusted=holidayProjections.apply(ordering,changes);

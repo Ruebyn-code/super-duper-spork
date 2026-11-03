@@ -7,7 +7,7 @@ const valid=value=>Number.isSafeInteger(value)&&value>=0;
 // Only location-scoped holiday dates and revenue aggregates enter forecasts.
 async function adjustments(dir,session,{weekStarts,anchor,asOf=anchor,readRevenue}){
  if(!session.locationId||!session.companyId)return {};
- const years=weekStarts.flatMap(start=>[Number(start.slice(0,4)),Number(shift(start,6).slice(0,4))]).flatMap(year=>[year-1,year]),calendars=await publicHolidays.locationCalendars(dir,session,years);
+ const years=weekStarts.flatMap(start=>[Number(start.slice(0,4)),Number(shift(start,6).slice(0,4))]).flatMap(year=>[year-2,year-1,year]),calendars=await publicHolidays.locationCalendars(dir,session,years);
  const holidays=[];for(const calendar of calendars)for(const item of calendar.dates||[]){if(typeof item.date==='string'&&Number(item.date.slice(0,4))===calendar.year&&nameKey(item.name)&&!holidays.some(day=>day.date===item.date&&nameKey(day.name)===nameKey(item.name)))holidays.push({date:item.date,name:item.name});}
  const dates=new Set(weekStarts.flatMap(start=>Array.from({length:7},(_,index)=>shift(start,index)))),targets=holidays.filter(day=>dates.has(day.date));if(!targets.length)return {};
  const plans=targets.map(target=>{
@@ -36,6 +36,7 @@ async function adjustments(dir,session,{weekStarts,anchor,asOf=anchor,readRevenu
    let currentTotal=0,previousTotal=0,comparisonDays=0;
    if(!revenue.has(meta.previousDate))meta.reason='Sales for last year’s matching holiday are missing.';
    for(const {date,previous}of pairs){
+    if(holidays.some(day=>day.date===date||day.date===previous))continue;
     if(!revenue.has(date)||!revenue.has(previous)){meta.reason||='Sales are missing from the comparison since last year’s holiday.';continue;}
     currentTotal+=revenue.get(date);previousTotal+=revenue.get(previous);comparisonDays++;
    }
@@ -51,6 +52,24 @@ async function adjustments(dir,session,{weekStarts,anchor,asOf=anchor,readRevenu
  return result;
 }
 
+
+// Retain actual source history; only replace the derived forecast's holiday samples.
+async function normalForecast(dir,session,projection,{anchor,records,readRevenue,dailyKey='dailyProjections',amountKey='amountCents'}){
+ if(!session.locationId||!session.companyId)return projection;
+ const oldest=shift(anchor,-364),years=[];for(let year=Number(oldest.slice(0,4));year<=Number(anchor.slice(0,4));year++)years.push(year);
+ const calendars=await publicHolidays.locationCalendars(dir,session,years),holidays=new Set(calendars.flatMap(c=>(c.dates||[]).map(d=>d.date)));
+ const base=Array.from({length:7},(_,day)=>[1,2,3,4].map(n=>shift(anchor,day-7*n)));
+ if(!base.flat().some(date=>holidays.has(date)))return projection;
+ const samples=base.map((dates,day)=>{const selected=[];for(let n=1;n<=52&&selected.length<4;n++){const date=shift(anchor,day-7*n);if(!holidays.has(date))selected.push(date);}return selected;});
+ const known=new Map(records.map(r=>[r.weekStart,r])),needed=[...new Set(samples.flat().map(monday))].filter(start=>!known.has(start));
+ for(const record of await readRevenue(needed))known.set(record.weekStart,record);
+ const values=samples.map(dates=>dates.length===4?dates.map(date=>known.get(monday(date))?.days[(new Date(date+'T00:00:00Z').getUTCDay()+6)%7]):[]),complete=values.every(days=>days.length===4&&days.every(valid));
+ const daily=projection[dailyKey].map((day,index)=>({...day,[amountKey]:values[index].length===4&&values[index].every(valid)?Math.round(values[index].reduce((a,b)=>a+b,0)/4):null,normalSourceDates:samples[index]}));
+ const total=complete?Math.round(values.flat().reduce((a,b)=>a+b,0)/4):null,result={...projection,[dailyKey]:daily,projectedSalesCents:total,normalHolidayExclusion:true};
+ if(Object.hasOwn(result,'budgetCents')){result.budgetCents=total===null?null:Math.round(total*result.budgetPercent/100);result.remainingCents=result.budgetCents===null||result.pricePending?null:result.budgetCents-result.spentCents;}
+ return result;
+}
+
 function apply(projection,changes,{dailyKey='dailyProjections',amountKey='amountCents'}={}){
  const original=projection[dailyKey];if(!original.some(day=>changes[day.date]))return projection;
  let adjusted=false;const daily=original.map(day=>{const holiday=changes[day.date];if(!holiday)return day;adjusted||=holiday.status==='adjusted';return {...day,[amountKey]:holiday.status==='adjusted'?holiday.amountCents:day[amountKey],holiday};});
@@ -59,4 +78,4 @@ function apply(projection,changes,{dailyKey='dailyProjections',amountKey='amount
  if(Object.hasOwn(projection,'budgetCents')){result.budgetCents=projectedSalesCents===null?null:Math.round(projectedSalesCents*projection.budgetPercent/100);result.remainingCents=result.budgetCents===null||projection.pricePending?null:result.budgetCents-projection.spentCents;}
  return result;
 }
-module.exports={adjustments,apply};
+module.exports={adjustments,apply,normalForecast};

@@ -49,3 +49,12 @@ imports reports or calls intelligence; native draft guards and phone salary
 privacy remain unchanged.
 
 Hourly times display in 12-hour format with AM/PM in the chart, table and scanned-hour editor. Printed ranges are read as interval totals: **11:01–12:00 → 11:00 AM–12:00 PM**, **12:01 PM–1:00 PM → 12:00 PM–1:00 PM**, and **11:01 PM–12:00 AM → 11:00 PM–12:00 AM**. The app maps copied source labels deterministically; it never moves an amount to the range’s ending hour. Unsupported half-hour, multi-hour or ambiguous ranges are omitted with a warning, rather than combined or split. Conflicting duplicate rows leave the hour unrecorded; matching duplicates count once. Internal clock-hour buckets remain 00:00–23:00. Overnight display keeps after-midnight hours with their opening trading date and marks them **+1 day**. A daylight-saving repeated clock hour belongs to the same bucket; review the export’s combined hourly amount. This is a sales distribution, not a timestamped transaction or payroll ledger. Location and company access is enforced on every read and import, and payroll/calendar review records and provider keys never appear in hourly responses.
+
+Normal weekday forecasts exclude public holidays from the four completed source
+weeks. Each affected weekday uses its latest four distinct non-holiday dates,
+looking back at most 52 completed weeks. Missing selected sales remain unknown;
+zero remains recorded. Weekly-report-first source selection is unchanged, and
+saved actuals/history are never rewritten. Hourly profiles use these same source
+dates. The prior-year matching-holiday method remains in place, but its growth
+comparison excludes pairs where either date is a public holiday. No surcharge is
+added, removed or inferred from saved revenue.

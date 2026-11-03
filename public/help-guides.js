@@ -227,7 +227,7 @@
  ],{route:'/sales#report',permissions:['finances.view'],notes:['PDFs and photos require enabled company OpStack intelligence and use its request limit and budget. Excel does not use intelligence. Only reviewed sales and platform fees are imported; Daily sales, labour, operating expenses, R&O and invoices remain separate. Blank fields stay unrecorded; enter zero only when known. Recalculate and save Excel formulas before uploading if their saved values are missing.'],related:['weekly-report','sales-projections','intelligence-setup'],keywords:['Excel','XLSX','PDF','JPEG','JPG','PNG','WebP','image','photo','scan','upload workbook']});
  add(c,'sales-projections','Understand daily and weekly projected sales','See which saved sales determine the forecast.',[
   'Open Sales → Projection & budget to view the source weeks and any missing-history explanation.',
-  'Normal forecasts use four completed Monday–Sunday weeks, averaging corresponding weekdays.',
+  'Normal forecasts average corresponding weekdays from four completed weeks; public holidays are replaced by earlier normal weekdays.',
   'For each past day, a complete Weekly report Till + Uber Eats + DoorDash total takes priority; otherwise the saved Daily sales amount is used.',
   'Correct missing historical sales and save. Forecasts refresh from the saved inputs.'
  ],{route:'/sales#projection',permissions:['sales.view'],notes:['At midnight Sunday in Melbourne, Home, Ordering and Sales weekly forecasts switch to the upcoming Monday–Sunday week. Actual current-week comparisons retain their dates. Holidays can use the prior-year method instead.'],related:['holiday-forecasts','ordering-budget','hourly-projections'],keywords:['four weeks','projection','next week','Sunday']});
@@ -240,7 +240,7 @@
  add(c,'holiday-forecasts','Understand holiday forecasts and yearly growth','Adjust the same named holiday’s prior-year sales for growth.',[
   'Choose the location’s state and ensure its historical sales are complete.',
   'For a holiday, the app looks for the same uniquely named holiday in the previous year, even when its date moves.',
-  'It adjusts that day’s revenue by comparable total sales growth or decline since the previous holiday.',
+  'It adjusts that day’s revenue by comparable total sales growth or decline since the previous holiday, excluding holiday dates on both sides.',
   'Review the holiday, previous date, growth percentage or fallback explanation in the projection.'
  ],{notes:['Last year’s $2,000 holiday becomes $2,400 when the comparable sales increase is 20%. Missing or ambiguous history keeps the normal forecast with an explanation. Normal days keep the four-week method.'],related:['public-holidays','sales-projections','hourly-projections']});
  add(c,'hourly-import','Scan and submit hourly sales reports','Import reviewed hourly amounts from spreadsheets, PDFs or images.',[
@@ -252,7 +252,7 @@
  ],{popular:true,route:'/sales#hourly',permissions:['sales.view'],ai:true,notes:['11:01–12:00 means sales in the hour starting at 11, not the hour starting at 12. Times display in AM/PM. Calendar-day conversion needs all seven trading-hour entries. Scanning alone does not save hourly sales or the Daily sales total.'],related:['hourly-projections','trading-hours','intelligence-setup','hourly-not-imported'],keywords:['submit','hourly scan','report upload','PDF','CSV','XLSX','photo']});
  add(c,'hourly-projections','Understand hourly sales projections','Distribute the daily forecast using complete hourly history.',[
   'Open Sales → Hourly sales, select a trading date and compare the chart and hourly table.',
-  'Normal days use complete same-weekday hourly profiles from the same four completed weeks as the daily forecast.',
+  'Normal days use complete hourly profiles from the same four normal weekdays as the daily forecast, replacing public holidays with earlier normal days.',
   'A matching prior holiday can supply its own hourly profile for a holiday forecast.',
   'Open Rostering’s Hourly sales projections panel to use the same forecast while planning staff.'
  ],{route:'/sales#hourly',permissions:['sales.view'],notes:['Projected hours add up to the shared daily forecast. Missing profiles show an explanation. After-midnight hours are marked +1 day and remain with the opening trading date. Forecast calculations do not make intelligence requests.'],related:['hourly-import','sales-projections','roster-forecasts']});

@@ -5,13 +5,13 @@ WEBVTT
 Step 1: Open Sales → Hourly sales, select a trading date and compare the chart and hourly table.
 
 2
-00:00:06.500 --> 00:00:13.333
-Step 2: Normal days use complete same-weekday hourly profiles from the same four completed weeks as the daily forecast.
+00:00:06.500 --> 00:00:15.208
+Step 2: Normal days use complete hourly profiles from the same four normal weekdays as the daily forecast, replacing public holidays with earlier normal days.
 
 3
-00:00:13.333 --> 00:00:19.333
+00:00:15.208 --> 00:00:21.208
 Step 3: A matching prior holiday can supply its own hourly profile for a holiday forecast.
 
 4
-00:00:19.333 --> 00:00:25.333
+00:00:21.208 --> 00:00:27.208
 Step 4: Open Rostering’s Hourly sales projections panel to use the same forecast while planning staff.

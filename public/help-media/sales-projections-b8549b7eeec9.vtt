@@ -5,13 +5,13 @@ WEBVTT
 Step 1: Open Sales → Projection &amp; budget to view the source weeks and any missing-history explanation.
 
 2
-00:00:06.208 --> 00:00:12.208
-Step 2: Normal forecasts use four completed Monday–Sunday weeks, averaging corresponding weekdays.
+00:00:06.208 --> 00:00:13.042
+Step 2: Normal forecasts average corresponding weekdays from four completed weeks; public holidays are replaced by earlier normal weekdays.
 
 3
-00:00:12.208 --> 00:00:21.542
+00:00:13.042 --> 00:00:22.375
 Step 3: For each past day, a complete Weekly report Till + Uber Eats + DoorDash total takes priority; otherwise the saved Daily sales amount is used.
 
 4
-00:00:21.542 --> 00:00:27.542
+00:00:22.375 --> 00:00:28.375
 Step 4: Correct missing historical sales and save. Forecasts refresh from the saved inputs.
