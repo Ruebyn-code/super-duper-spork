@@ -60,3 +60,13 @@ test('Labels serves as its own authenticated shell page with a registered layout
   const content=await fetch(base+'/labels?__opstack_content=1',{headers});assert.equal(content.status,200);const html=await content.text();for(const asset of ['prep-labels.js','prep-label-model.js','prep-label-renderer.js','label-layout-model.js','label-template-designer.js','label-field-editor.css','prep-labels.css']){assert.ok(html.includes('/'+asset+'?v='));assert.equal((await fetch(base+'/'+asset,{headers})).status,200);}assert.match(html,/<h1[^>]*>Labels<\/h1>/);assert.match(html,/src="\/page-bridge.js\?v=/);assert.doesNotMatch(html,/src="\/ops-management.js/);assert.equal((await fetch(base+'/layouts?page=labels',{headers})).status,200);assert.equal((await fetch(base+'/api/prep-labels/items',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:'{}'})).status,403);
  }finally{if(server)await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('micro-grid movement uses fine physical steps, preserves stationary axes and allows existing alignment guides',()=>{
+ const{microGeometry,snapGeometry}=require('./public/label-layout-model'),block={id:'moving',x:10.13,y:20.17,width:20,height:10},before=structuredClone(block);
+ assert.deepEqual(microGeometry(block,'',.56,0,{x:.5,y:1}),{x:10.5,y:20.17,width:20,height:10});
+ assert.deepEqual(microGeometry(block,'',0,.96,{x:.5,y:1}),{x:10.13,y:21,width:20,height:10});
+ const resized=microGeometry(block,'e',2.31,0,{x:.5,y:1});assert.equal(resized.x,block.x);assert.equal(resized.x+resized.width,32.5);
+ const result=snapGeometry(block,'',24.91,0,[{id:'other',x:55.13,y:70,width:20,height:10}],{x:.3,y:.3},{x:.5,y:1});assert.equal(result.guides.x,55.13);assert.equal(result.box.x,35.13);
+ for(const widthMm of [20,50,56])for(const heightMm of [20,25,150])for(const edge of ['','n','s','e','w','ne','nw','se','sw'])for(const delta of [-200,-.1,.1,200]){const result=microGeometry(block,edge,delta,delta,{x:25/widthMm,y:25/heightMm});assert(result.x>=0&&result.y>=0&&result.width>=3&&result.height>=3&&result.x+result.width<=100.01&&result.y+result.height<=100.01);}
+ assert.deepEqual(block,before);
+});
