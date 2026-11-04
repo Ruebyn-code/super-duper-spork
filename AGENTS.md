@@ -101,6 +101,7 @@
 
 - Test every change before committing or pushing, including follow-up fixes and small adjustments. Run relevant checks for the affected behavior and run `npm test` before delivering code changes.
 - Before pushing an update for deployment, build the Docker image and verify that it starts and serves its healthcheck. Report test results separately from the hosted deployment outcome.
+- Deploy every finished change automatically: after `npm test` passes and the Docker image builds, starts and serves `/healthz`, push the commits to the working branch and fast-forward `main` (Railway deploys `main`). If `main` has moved, rebase onto it and re-run the checks first; never force-push `main`. Pushing `main` starts the deployment but does not confirm it succeeded, so report the hosted outcome only once it is known.
 - For interface or navigation changes, also check the affected interactions in desktop and phone browsers, including relevant permission levels.
 - Use isolated temporary data for tests so existing accounts, settings and orders are preserved.
 
