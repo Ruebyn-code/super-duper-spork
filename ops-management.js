@@ -116,7 +116,9 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  const levelOptions=async actor=>(await roleLevels(actor)).map(role=>({id:role.id,name:role.name,canView:(role.permissions||[]).includes('ops.view')}));
  const assignments=(state,template)=>[...new Set(state.planners.filter(plan=>!plan.retired&&plan.templateId===template.id&&plan.companyId===template.companyId).flatMap(plan=>plan.locationIds))];
  const editable=(template,actor,stores,state)=>can(actor,'ops.manage')&&company(template,actor)&&assignments(state,template).every(id=>stores.some(item=>item.id===id));
- const visibleTemplate=(state,item,actor,stores)=>company(item,actor)&&(can(actor,'ops.manage')&&(!assignments(state,item).length||assignments(state,item).some(id=>stores.some(store=>store.id===id)))||state.planners.some(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&audience(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))));
+ // Deleted checklists keep their tombstone for history; inactive ones stay editable but create no new work.
+ const templateLive=item=>!item?.status||item.status==='active';
+ const visibleTemplate=(state,item,actor,stores)=>item.status!=='deleted'&&company(item,actor)&&(can(actor,'ops.manage')&&(!assignments(state,item).length||assignments(state,item).some(id=>stores.some(store=>store.id===id)))||state.planners.some(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&audience(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))));
  const editablePlan=(plan,actor,stores)=>can(actor,'ops.manage')&&company(plan,actor)&&plan.locationIds.every(id=>stores.some(store=>store.id===id));
  const runPlanner=run=>run.plannerId||run.templateId;
  function findRun(state,actor,stores,id){const run=state.runs.find(item=>item.id===id&&allowed(item,actor,stores,state));if(!run)fail('Checklist record not found.',404);return run;}
@@ -143,13 +145,14 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
-  const planners=state.planners.filter(plan=>!plan.retired&&company(plan,actor)&&(can(actor,'ops.manage')||audience(plan,actor))&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).map(plan=>({...plan,templateTitle:state.templates.find(item=>item.id===plan.templateId&&company(item,actor))?.title||'',locationCount:plan.locationIds.length,locationIds:plan.locationIds.filter(id=>stores.some(store=>store.id===id)),canManage:editablePlan(plan,actor,stores)&&state.planners.filter(other=>!other.retired&&other.templateId===plan.templateId&&company(other,actor)).every(other=>editablePlan(other,actor,stores))}));
+  const planners=state.planners.filter(plan=>!plan.retired&&company(plan,actor)&&state.templates.find(item=>item.id===plan.templateId)?.status!=='deleted'&&(can(actor,'ops.manage')||audience(plan,actor))&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).map(plan=>({...plan,templateTitle:state.templates.find(item=>item.id===plan.templateId&&company(item,actor))?.title||'',locationCount:plan.locationIds.length,locationIds:plan.locationIds.filter(id=>stores.some(store=>store.id===id)),canManage:editablePlan(plan,actor,stores)&&state.planners.filter(other=>!other.retired&&other.templateId===plan.templateId&&company(other,actor)).every(other=>editablePlan(other,actor,stores))}));
   const tasks=[];let nextChangeAt=plannerModel.deadline(shift(today(),1),'00:00');
   for(const plan of planners){
-   const template=state.templates.find(item=>item.id===plan.templateId&&company(item,actor));if(!template||!audience(plan,actor)||query&&!(template.title+' '+plan.title).toLowerCase().includes(query))continue;
+   const template=state.templates.find(item=>item.id===plan.templateId&&company(item,actor));if(!template||template.status==='deleted'||!audience(plan,actor)||query&&!(template.title+' '+plan.title).toLowerCase().includes(query))continue;
+   const schedulePlan=templateLive(template)?plan:{...plan,active:false};
    for(const store of selected.filter(store=>plan.locationIds.includes(store.id))){
-    const boundary=plannerModel.nextChange(plan,today(),now(),store.tradingHours);if(boundary&&boundary<nextChangeAt)nextChangeAt=boundary;
-    let slot=plannerModel.occurrence(plan,day,now(),store.tradingHours);
+    const boundary=plannerModel.nextChange(schedulePlan,today(),now(),store.tradingHours);if(boundary&&boundary<nextChangeAt)nextChangeAt=boundary;
+    let slot=plannerModel.occurrence(schedulePlan,day,now(),store.tradingHours);
     if(!slot&&plan.active){const saved=state.runs.findLast(run=>runPlanner(run)===plan.id&&run.locationId===store.id&&(day===today()||run.workDate===day)&&plannerModel.visible(run.activeWindow,now()));if(saved)slot={key:saved.periodKey,startDate:saved.workDate||day,endDate:saved.workDate||day,dueDate:saved.dueDate};}
     if(!slot)continue;
     const run=state.runs.findLast(run=>runPlanner(run)===plan.id&&run.locationId===store.id&&(slot.key===null?run.status==='draft':run.periodKey===slot.key)),storedPlan=run?.snapshot.planner?{...run.snapshot.planner,active:true,schedule:run.snapshot.planner.schedule||run.snapshot.schedule}:plan,storedSlot=run?plannerModel.period(storedPlan,run.workDate||slot.startDate)||slot:slot,activeWindow=run?.activeWindow||plannerModel.activeWindow(storedPlan,storedSlot,store.tradingHours);
@@ -181,7 +184,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
  async function saveTemplate(actor,input,id){
   need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
-   const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)):null;if(id&&!previous)fail('Checklist not found.',404);
+   const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)&&item.status!=='deleted'):null;if(id&&!previous)fail('Checklist not found.',404);
    if(previous&&!editable(previous,actor,stores,state))fail('You need access to every assigned location to edit this checklist.',403);
    if(previous&&input?.revision!==previous.revision)fail('This checklist changed. Reload before saving.',409);
    const contentOnly=input?.contentOnly===true,value=contentOnly?normalizeContent(input):normalize(input||{});
@@ -194,6 +197,18 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    // Compatibility for older clients. The builder itself never edits location or scheduling data.
    if(!contentOnly){if(!can(actor,'ops.planners'))fail('Checklist planner permission required.',403);if(state.planners.some(plan=>!plan.retired&&plan.templateId===saved.id&&plan.id!==saved.id))fail('This checklist already has a planner. Edit it through Plans.',409);const old=state.planners.find(plan=>plan.id===saved.id&&plan.legacy);const plan={...old,id:saved.id,legacy:true,templateId:saved.id,companyId:saved.companyId,title:old?.title||saved.title,locationIds:value.locationIds,active:value.active,schedule:value.schedule,dueTime:old?.dueTime||null,reminderMinutes:old?.reminderMinutes||0,priority:old?.priority||'normal',instructions:old?.instructions||'',revision:(old?.revision||0)+1,requestId:old?.requestId||'migrated:'+saved.id,createdAt:old?.createdAt||saved.createdAt,createdById:old?.createdById||saved.createdById,createdBy:old?.createdBy||saved.createdBy,updatedAt:stamp(),updatedBy:actor.username};if(old)state.planners.splice(state.planners.indexOf(old),1,plan);else state.planners.push(plan);}
    return templateResult(state,saved,actor,stores);
+  });
+ }
+ async function setTemplateStatus(actor,id,input){
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
+   const template=state.templates.find(item=>item.id===id&&company(item,actor)&&item.status!=='deleted');if(!template)fail('Checklist not found.',404);
+   if(!editable(template,actor,stores,state))fail('You need access to every assigned location to change this checklist.',403);
+   if(!input||typeof input!=='object'||!['active','inactive','deleted'].includes(input.status))fail('Choose active, inactive or delete.');
+   if(input.revision!==template.revision)fail('This checklist changed. Reload before changing it.',409);
+   const from=template.status||'active';if(from===input.status)return templateResult(state,template,actor,stores);
+   const at=stamp();Object.assign(template,{status:input.status,revision:template.revision+1,updatedAt:at,updatedBy:actor.username,statusHistory:[...(template.statusHistory||[]),{from,to:input.status,at,by:actor.username,userId:actor.id}]});
+   if(input.status==='deleted')Object.assign(template,{deletedAt:at,deletedBy:actor.username,deletedById:actor.id});
+   return input.status==='deleted'?{id:template.id,status:'deleted',revision:template.revision}:templateResult(state,template,actor,stores);
   });
  }
  async function savePlanner(actor,input,id){
@@ -224,13 +239,14 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const available=state.planners.filter(plan=>!plan.retired&&plan.templateId===input?.templateId&&company(plan,actor)&&plan.locationIds.includes(input.locationId));
   const plan=input?.plannerId?state.planners.find(plan=>plan.id===input.plannerId&&company(plan,actor)):available.find(plan=>plan.legacy)||available.length===1&&available[0];
   const template=plan&&state.templates.find(item=>item.id===plan.templateId&&company(item,actor));
-  if(!plan||!template||!audience(plan,actor)||input.templateId&&input.templateId!==template.id||!plan.locationIds.includes(input.locationId)||!stores.some(item=>item.id===input.locationId))fail('Checklist not found for this location.',404);
+  if(!plan||!template||template.status==='deleted'&&!state.runs.some(item=>runPlanner(item)===plan.id&&item.locationId===input.locationId&&item.status!=='completed')||!audience(plan,actor)||input.templateId&&input.templateId!==template.id||!plan.locationIds.includes(input.locationId)||!stores.some(item=>item.id===input.locationId))fail('Checklist not found for this location.',404);
   const day=date(input.date||today());if(day>today())fail('Future checklists cannot be started yet.');const store=stores.find(item=>item.id===input.locationId);if(!uuid(input.requestId))fail('Invalid request reference.');
   const duplicate=state.runs.find(item=>item.requestId===input.requestId);if(duplicate){if(!allowed(duplicate,actor,stores,state)||runPlanner(duplicate)!==plan.id||duplicate.templateId!==template.id||duplicate.locationId!==input.locationId||input.periodKey!==undefined&&input.periodKey!==duplicate.periodKey)fail('This request reference was already used.',409);return presentRun(state,actor,stores,duplicate);}
   if(plan.retired)fail('This planner was replaced. Refresh Active to use the current plan.',409);
   const slot=plannerModel.occurrence(plan,day,now(),store.tradingHours)||(plan.tradingHours&&plan.schedule.kind!=='hourly'?period(plan,day):null);if(!slot)fail('This checklist is not scheduled for this date.');
   if(input.periodKey!==undefined&&input.periodKey!==slot.key)fail('This checklist occurrence has ended. Refresh Active and open its current occurrence.',409);
   const existing=slot.key!==null&&state.runs.find(item=>runPlanner(item)===plan.id&&item.locationId===input.locationId&&item.periodKey===slot.key);if(existing)return presentRun(state,actor,stores,existing);
+  if(!templateLive(template))fail(template.status==='deleted'?'This checklist was deleted.':'This checklist is inactive. Make it active in Checklist builder to start it.',409);
   const availability=plannerModel.availability(plan,slot,now(),store.tradingHours);if(!availability.allowed)fail(availability.reason);
   const plannerSnapshot={id:plan.id,title:plan.title,schedule:structuredClone(plan.schedule),dueTime:plan.dueTime,reminderMinutes:plan.reminderMinutes,priority:plan.priority,instructions:plan.instructions,type:plannerModel.type(plan),startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,roleIds:plan.roleIds||null,dueAfterDays:plan.dueAfterDays??null,tradingHours:structuredClone(plan.tradingHours||null)};
   const due=plannerModel.due(plan,slot,store.tradingHours);
@@ -324,12 +340,13 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,report,saveTemplate,savePlanner,keepPlanner,start,get,saveRun,upload,download};
+ return{list,report,saveTemplate,setTemplateStatus,savePlanner,keepPlanner,start,get,saveRun,upload,download};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  if(url==='/api/ops-management'&&req.method==='GET'){json(200,await store.list(session,Object.fromEntries(params)));return true;}
  if(url==='/api/ops-management/templates'&&req.method==='POST'){json(201,await store.saveTemplate(session,await body(req,250000)));return true;}
+ const templateStatus=url.match(/^\/api\/ops-management\/templates\/([a-f0-9-]{36})\/status$/i);if(templateStatus&&req.method==='PUT'){json(200,await store.setTemplateStatus(session,templateStatus[1],await body(req,10000)));return true;}
  const template=url.match(/^\/api\/ops-management\/templates\/([a-f0-9-]{36})$/i);if(template&&req.method==='PUT'){json(200,await store.saveTemplate(session,await body(req,250000),template[1]));return true;}
  if(url==='/api/ops-management/planners'&&req.method==='POST'){json(201,await store.savePlanner(session,await body(req,30000)));return true;}
  const keep=url.match(/^\/api\/ops-management\/planners\/([a-f0-9-]{36})\/keep$/i);if(keep&&req.method==='POST'){json(200,await store.keepPlanner(session,keep[1],await body(req,30000)));return true;}

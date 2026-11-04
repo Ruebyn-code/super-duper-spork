@@ -130,3 +130,23 @@ Each checklist supports one current planner for its recurrence, locations and as
 Older checklists with multiple planners stay read-only in settings until an authorised manager explicitly chooses Keep this planner. The selector is available only for that legacy choice. The server checks every existing planner’s revision and every assigned location before retaining the chosen planner and retiring the others. The retained planner has no end date. Retirement stops new work but preserves original configurations, completed and unfinished run snapshots, audiences and History access; unfinished records can still be completed. Reads do not choose a planner or retire anything. Selection retries are actor/context-bound and do not increment revisions again.
 
 OpStack intelligence produces at most one paused planner. Applying a reviewed draft updates an existing planner in place while preserving its locations and audience, or creates the first planner. The preview explains that applying replacement settings pauses the planner for review. Slow/conflicting changes require reopening the current Plans; stable, actor-bound update tokens coalesce uncertain retries without overwriting later edits. Draft generation creates no work and cannot add hidden end dates.
+
+## Checklist library, inactive and deleted checklists
+
+Checklist builder shows each checklist as a card with its plan status (schedule
+type, Plan paused, No plan yet or Inactive), step and location counts and the last
+update, filtered by All, Active and Inactive tabs and the search field. Card
+actions are Edit/Open and a ⋯ menu for authorised editors.
+
+- **Make inactive / Make active** (`PUT /api/ops-management/templates/:id/status`
+  with `status` and the current `revision`) requires `ops.manage`, CSRF and access to
+  every location used by the checklist's plans. Inactive checklists stay editable,
+  but their plans are treated as paused: no new scheduled cards appear and new
+  on-demand starts are refused. Already-started runs remain openable and can be
+  finished. Making it active again restores scheduling without editing its plans.
+- **Delete** (`status: 'deleted'`) keeps a tombstone (`deletedAt`, `deletedBy`) and
+  a `statusHistory` audit. Deleted checklists disappear from the builder, Plans and
+  Active, cannot be edited or reactivated through the API, and their run records,
+  snapshots, media access and History stay unchanged.
+- The builder shows an Inactive banner with Make active, and **Add step** opens a
+  picker of every step type with the same defaults the step editor applies.
