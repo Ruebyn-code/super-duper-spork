@@ -101,3 +101,12 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 #home-side-quick-links .home-card-content{flex:0 1 auto}
 #home-side-quick-links .home-card-content>p{display:none!important}
 #home-side-quick-links .home-quick-add-tile .home-quick-add-symbol.home-card-icon{width:24px;height:24px;flex-basis:24px;font-size:18px}}
+.home-personal-item .home-personal-marker.home-personal-ring{background:none;border-radius:50%;position:relative;display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px}
+.home-personal-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.home-personal-ring circle{fill:none;stroke-width:3.5}
+.home-personal-ring-track{stroke:color-mix(in srgb,var(--primary) 16%,var(--theme-surface,#fff))}
+.home-personal-ring-bar{stroke:var(--primary);stroke-linecap:round;transition:stroke-dasharray .4s ease}
+.home-personal-ring[data-complete=true] .home-personal-ring-bar{stroke:var(--theme-success,#16a34a)}
+.home-personal-ring-value{position:relative;font-size:10px;font-weight:700;line-height:1;color:var(--theme-primary-text,var(--primary));font-variant-numeric:tabular-nums}
+.home-personal-ring-value::after{content:'%';font-size:7px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.home-personal-ring-bar{transition:none}}
