@@ -11,3 +11,13 @@ Only explicit Create session, Save assessment or Cancel session actions write re
 The shared left navigation reuses the new `#in-store` Learning centre view. Scheduling and assessment use bounded native dialogs with explicit saves, disabled pending controls, stable retry references after uncertain responses, unsaved-change guards and restored opener focus. The shared Help icon opens written, picture and video instructions. No operational email, message, AI call or automatic roster entry is created.
 
 Run `node --test in-store-training.test.js detailed-permissions.test.js learning-centre.test.js`, then the full suite. Check desktop/phone session creation, partial progress, reopening, final sign-off, staff privacy, trainer action limits, conflicts, DST, company/location/kiosk scope, draft guards and lost-response retries. Capture only isolated demo data for guide media and build/start the production image before pushing.
+
+## Training checklists and embedded courses
+
+Training managers (`learning.assign`) build reusable **training checklists** under In-store training → Training checklists. The builder reuses the Ops checklist step editor (`public/ops-step-editor.js` with its `kinds`, `selectionSources` and `extraDetails` options) limited to Checkbox, Short/Long text, Number entry, custom-item Selection, Section, Instruction and **Course** steps. Saves are explicit, revision-checked and use actor-bound request references; archiving keeps scheduled sessions intact. Checklists live in the same private `in-store-training.json` (`templates`), scoped to the company.
+
+A Course step links a published Learning centre course. It is always required and cannot be ticked by hand: it counts as complete when the staff member has a completed Learning centre progress record for that course (any version). Course status is read live from the Learning centre store; reads never enrol, assign or complete anything.
+
+New sessions choose a training checklist; the session stores an immutable copy of its steps, so later checklist edits or archiving never change scheduled sessions. Assessments save typed answers per step (validated on the server against the frozen step types, options and number limits) plus notes. Saving signs a staff member off automatically once every required step is answered and every course step is passed; the course pass times are frozen with the completed record. Completed records stay permanent. Sessions created before training checklists keep their original practical-skills list and assessment screen.
+
+Tests: `node --test in-store-training-checklists.test.js in-store-training.test.js`.
