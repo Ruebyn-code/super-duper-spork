@@ -105,3 +105,21 @@
 .weekly-total td output .sales-vs-projection{display:flex;width:max-content;margin:2px 0 0 auto}
 .sales-vs-projection-arrow{margin-right:0}
 #weekly-total-total{font-size:15px;line-height:1.1;letter-spacing:-.01em}#weekly-total-total .sales-vs-projection{display:flex;width:max-content;margin:2px 0 0 auto}
+/* Weekly overview sales chart */
+.weekly-overview-page .overview-chart{position:relative;max-width:860px;margin:0 0 12px;padding:10px 12px 8px;border:1px solid var(--theme-line,#e2e8f0);border-radius:12px;background:var(--theme-surface,#fff);box-sizing:border-box}
+.weekly-overview-page .overview-chart[hidden]{display:none}
+.overview-chart-title{margin:0 0 4px;font-size:12px;font-weight:700;color:var(--theme-text,#182b3a)}
+.overview-chart-plot{width:100%;overflow:hidden}.overview-chart-plot svg{display:block;max-width:100%;height:auto}
+.overview-chart-grid{stroke:var(--theme-line,#e2e8f0);stroke-width:1}.overview-chart-baseline{stroke:color-mix(in srgb,var(--theme-muted,#64748b) 55%,transparent);stroke-width:1}
+.overview-chart-axis{fill:var(--theme-muted,#64748b);font-size:10px;font-variant-numeric:tabular-nums}
+.overview-chart-mark{fill:url(#overview-bar-gradient)}.overview-chart-stop-start{stop-color:var(--primary,#008cff)}.overview-chart-stop-end{stop-color:var(--secondary,#45efc3)}.overview-chart-bar.partial .overview-chart-mark{fill:url(#overview-partial-hatch);stroke:var(--primary,#008cff);stroke-width:1}
+.overview-chart-partial-fill{fill:color-mix(in srgb,var(--primary,#008cff) 22%,var(--theme-surface,#fff))}.overview-chart-partial-line{stroke:var(--primary,#008cff);stroke-width:2}
+.overview-chart-empty{stroke:var(--theme-muted,#64748b);stroke-width:2;stroke-dasharray:2 2}
+.overview-chart-hit{fill:transparent}.overview-chart-bar{outline:none}.overview-chart-bar:hover .overview-chart-hit,.overview-chart-bar:focus-visible .overview-chart-hit{fill:color-mix(in srgb,var(--primary,#008cff) 8%,transparent)}
+.overview-chart-bar:focus-visible .overview-chart-hit{stroke:var(--theme-primary-text,var(--primary,#008cff));stroke-width:2}
+.overview-chart-average{stroke:var(--theme-text,#182b3a);stroke-width:1.5;stroke-dasharray:5 4;opacity:.7;pointer-events:none}
+.overview-chart-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px;font-size:11px;color:var(--theme-muted,#64748b)}.overview-chart-key[hidden]{display:none}
+.overview-chart-key-item{display:inline-flex;align-items:center;gap:6px}
+.overview-chart-swatch{display:inline-block;flex:none}.overview-chart-swatch.average{width:18px;border-top:2px dashed var(--theme-text,#182b3a);opacity:.7}.overview-chart-swatch.partial{width:11px;height:11px;border:1px solid var(--primary,#008cff);border-radius:3px;background:repeating-linear-gradient(45deg,var(--primary,#008cff) 0 2px,color-mix(in srgb,var(--primary,#008cff) 22%,var(--theme-surface,#fff)) 2px 5px)}
+.overview-chart-tip{position:absolute;z-index:3;display:flex;flex-direction:column;gap:1px;padding:6px 9px;border:1px solid var(--theme-line,#e2e8f0);border-radius:8px;background:var(--theme-surface,#fff);box-shadow:0 4px 14px #0002;font-size:11px;color:var(--theme-muted,#64748b);pointer-events:none;white-space:nowrap}.overview-chart-tip strong{color:var(--theme-text,#182b3a);font-size:11px}.overview-chart-tip[hidden]{display:none}
+@media(max-width:600px){.weekly-overview-page .overview-chart{padding:8px}}

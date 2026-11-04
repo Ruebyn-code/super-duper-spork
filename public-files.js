@@ -129,6 +129,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/reporting-export.js':'reporting-export.js',
   '/sales-performance.js':'sales-performance.js',
   '/sales-vs-projection.js':'sales-vs-projection.js',
+  '/weekly-sales-chart.js':'weekly-sales-chart.js',
   '/sales-performance-view.js':'sales-performance-view.js',
   '/sales-budget.js':'sales-budget.js',
   '/stock-count.js':'stock-count.js',
