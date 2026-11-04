@@ -150,6 +150,8 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
   const wastageStore=wastage.createStore(dataDir,{catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:salesNow});
   const salesStore=sales.createStore(),hourlySalesStore=hourlySales.createStore(dataDir,{now:salesNow});
+  // Per-day projected sales for one week, using the same historical forecast as rosters (aggregates only).
+  const dailyProjection=async(actor,weekStart)=>{const projection=await sales.rosterProjection(dataDir,actor,weekStart,{now:new Date(salesNow())});return{weekStart,days:projection.daily.map(day=>Number.isSafeInteger(day?.salesCents)?day.salesCents:null)};};
   const rosteringStore=rostering.createStore(dataDir,{decoratePeople:values=>photoStore.decorate(values),unlockClockPin:(actor,input)=>auth.unlockClock(actor,input),authorizeClock:(actor,input)=>auth.authorizeClock(actor,input),clockIdentity:actor=>auth.clockIdentity(actor),verifyClockPin:(actor,input,manager)=>auth.verifyClockPin(actor,input,manager),locations:async actor=>(await locationStore.accessible(actor)).filter(shop=>!actor.kiosk||shop.id===actor.locationId),awards:awardStore,people:()=>auth.directory(),forecast:async(actor,weekStart)=>{
     const [projection,hourly,location]=await Promise.all([sales.rosterProjection(dataDir,actor,weekStart,{now:new Date(rosteringNow())}),hourlySalesStore.read(actor),locationStore.status(actor.locationId,rosteringNow())]);
     return{...projection,hourly:{days:projection.daily.map(day=>hourlySales.forecast(hourly,day.date,projection)),tradingHours:location.tradingHours}};
@@ -610,7 +612,8 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       }
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
-        return json(200,await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers,now:new Date(salesNow())}));
+        const result=await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers,now:new Date(salesNow())});
+        return json(200,{...result,dailyProjection:await dailyProjection(session,requestUrl.searchParams.get('week')||sales.currentWeek(new Date(salesNow())))});
       }
       if(req.url==='/api/operating-expense-schedule'){
         if(req.method==='GET')return json(200,await operatingExpenseSchedule.read(dataDir,session));
@@ -650,7 +653,8 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       }
       if(req.url==='/api/weekly-sales-reports'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
-        return json(200,await weeklySalesReportStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers}));
+        const result=await weeklySalesReportStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers});
+        return json(200,{...result,dailyProjection:await dailyProjection(session,result.record.weekStart)});
       }
       if(req.url==='/api/weekly-sales-reports'&&req.method==='PUT'){
         if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);

@@ -11,20 +11,21 @@
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  function el(tag,text,cls){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;}
  let session,report,selectedWeek='',revision=0,busy=true,dirty=false,generation=0;
- const inputs=[];
+ const inputs=[],indicators=[];
  for(let index=0;index<7;index++){
   const row=el('div',undefined,'sales-day'),label=el('label'),name=el('span',weekdays[index]),date=el('span',undefined,'small'),input=el('input');
   row.dataset.editId='sales-day-'+index;label.htmlFor='sales-day-'+index;name.dataset.editId='sales-day-'+index+'-label';date.id='sales-date-'+index;date.dataset.userText='';
   input.id='sales-day-'+index;input.dataset.editId='sales-day-'+index+'-input';input.type='number';input.min=0;input.max=10000000;input.step='0.01';input.inputMode='decimal';input.placeholder='Not recorded';input.disabled=true;
   const field=el('div',undefined,'sales-currency-input'),currency=el('span','$','sales-currency-symbol');
   currency.setAttribute('aria-hidden','true');currency.dataset.userText='';currency.dataset.editId='sales-day-'+index+'-currency';
-  field.append(currency,input);label.append(name,date);row.append(label,field);$('sales-days').append(row);inputs.push(input);
+  const indicator=el('span',undefined,'sales-day-projection');field.append(currency,input);label.append(name,date);row.append(label,field,indicator);$('sales-days').append(row);inputs.push(input);indicators.push(indicator);
   input.oninput=()=>{dirty=true;saveDraft();renderProgress();};
  }
  async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
  const draftKey=()=>session&&selectedWeek?'souvlaki-sales-draft-'+session.id+(session.locationId?'-'+session.locationId:'')+'-'+selectedWeek:'';
  function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({revision,days:inputs.map(input=>input.value)}));$('sales-draft-status').textContent=wording('Unsaved sales are kept in this browser.');}catch{$('sales-draft-status').textContent=wording('Browser storage is unavailable. Save sales before leaving this page.');}}
- function renderProgress(){let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});renderPerformance();}
+ function renderIndicators(){const days=report?.dailyProjection?.weekStart===selectedWeek?report.dailyProjection.days:null;for(const [index,input] of inputs.entries()){const actual=input.value!==''&&input.validity.valid?Math.round(Number(input.value)*100):null,badge=window.salesVsProjection?.badge(actual,days?.[index]);indicators[index].replaceChildren(...(badge?[badge]:[]));indicators[index].hidden=!badge;}}
+ function renderProgress(){renderIndicators();let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});renderPerformance();}
  function renderPerformance(){
   if(!report)return;const projection=report.projection,currentEntry=selectedWeek===projection.weekStart;
   const performance=currentEntry?salesPerformance.compare(inputs.map(input=>input.value!==''&&input.validity.valid?Math.round(Number(input.value)*100):null),projection):projection.performance;
@@ -32,7 +33,7 @@
  }
  function setBusy(value){busy=value;form.setAttribute('aria-busy',String(value));for(const control of form.elements)control.disabled=value;for(const button of document.querySelectorAll('[data-entry-week]'))button.disabled=value;}
  function showView(){const view=location.hash==='#hourly'?'hourly':location.hash==='#overview'?'overview':location.hash==='#projection'?'projection':(location.hash==='#report'||location.hash.startsWith('#expense-'))?'report':'entry';document.querySelectorAll('.sales-overview,.sales-performance,[data-edit-id="sales-intro"],[data-edit-id="sales-title"]').forEach(panel=>panel.hidden=['report','overview','hourly'].includes(view));$('sales-message').hidden=['report','overview','hourly'].includes(view);document.querySelector('.sales-page').classList.toggle('report-active',['report','overview'].includes(view));document.querySelector('.sales-page').classList.toggle('daily-sales-compact',view==='entry');document.querySelectorAll('[data-sales-view]').forEach(panel=>panel.hidden=panel.dataset.salesView!==(['report','overview'].includes(view)?'weekly':view));document.querySelectorAll('.sales-nav a').forEach(link=>{if(link.hash==='#'+(view==='overview'?'report':view))link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});}
- function renderProjection(){
+ function renderProjection(){renderIndicators();
   if(!report)return;renderPerformance();const projection=report.orderingProjection||report.projection;
   const heading=document.querySelector('.sales-overview .eyebrow');if(heading)template(heading,projection.isUpcoming?'Next week’s projection':'This week’s projection');
   $('sales-current-period').textContent=(projection.isUpcoming?wording('Upcoming week')+' · ':'')+dateLabel(projection.weekStart)+' – '+dateLabel(projection.weekEnd)+' · Melbourne';

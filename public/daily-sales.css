@@ -74,3 +74,4 @@
  .daily-sales-compact .sales-entry-total{padding-top:7px}
  .daily-sales-compact .count-actions button{flex:1;min-width:0;width:auto;min-height:40px;padding:8px 10px;font-size:12px}
 }
+@media screen and (max-width:720px){.daily-sales-compact .sales-day{row-gap:2px}.daily-sales-compact .sales-day>label{grid-column:1;grid-row:1}.daily-sales-compact .sales-day:has(>.sales-day-projection:not([hidden]))>.sales-currency-input{grid-column:2;grid-row:1/span 2;align-self:center}.daily-sales-compact .sales-day>.sales-day-projection{grid-column:1;grid-row:2;justify-content:flex-start}}
