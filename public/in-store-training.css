@@ -72,3 +72,6 @@
 #learning-main .instore-builder-top h2{flex:1;text-align:left;margin:0;padding:0;border:0;font-size:18px}
 #learning-main .instore-builder-top h2::after{display:none}
 @media(max-width:600px){#learning-main .instore-builder .instore-fields{grid-template-columns:minmax(0,1fr)}#learning-main .instore-builder-top h2{font-size:16px}}
+#learning-main label.instore-auto-assign,#learning-main .instore-dialog label.instore-auto-assign{flex-direction:row;align-items:flex-start;gap:8px;line-height:1.45;font-weight:500;font-size:12px}
+#learning-main label.instore-auto-assign[hidden]{display:none}
+#learning-main label.instore-auto-assign>input{flex:none;width:16px;height:16px;margin:1px 0 0}
