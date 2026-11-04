@@ -39,8 +39,8 @@
  function linkCard(id,sectionId,reuse=false){const item=M.links[id];if(!M.allowedLink(homeActor(),id,{phone:phone.matches}))return null;let a=reuse&&item.legacy?originalLinks.get(item.legacy):null;if(!a){a=node('a',undefined,'home-action product');a.href=item.href;a.append(icon(item.icon));const text=node('div',undefined,'home-card-content');text.append(ui('h2',item.title));a.append(text);a.dataset.editId='home-link-'+sectionId+'-'+id;}else a.href=item.href;a.dataset.layoutKey=reuse&&item.legacy?item.legacy:'home-link:'+sectionId+':'+id;return a;}
  async function addQuickLink(id){
   if(phone.matches||!appAccess.can('appearance.manage',actor))return;
-  await window.appEditor?.setEnabled(true);
-  if(!editing||!draft.some(s=>s.id===id&&s.type==='quick-links'))return;
+  // Adding a shortcut saves through the normal Home writer; it does not need App edit.
+  if(failure?.status===409||!draft.some(s=>s.id===id&&s.type==='quick-links'))return;
   quickDialog?.close();const popup=node('dialog',undefined,'home-quick-link-dialog');quickDialog=popup;popup.dataset.layoutUi='';popup.dataset.copyEditor='';popup.setAttribute('aria-labelledby','home-add-quick-link-title');
   const head=node('header',undefined,'home-picker-heading'),title=ui('h2','Add quick link'),close=ui('button','Close');title.id='home-add-quick-link-title';close.type='button';close.onclick=()=>popup.close();head.append(title,close);
   const filter=node('input'),list=node('div',undefined,'home-quick-link-choices'),message=node('p',undefined,'home-board-save-status');filter.type='search';filter.placeholder=typeof interfaceLabel==='function'?interfaceLabel('Search quick links'):'Search quick links';filter.setAttribute('aria-label','Search quick links');message.dataset.quickLinkStatus='';message.setAttribute('role','status');message.setAttribute('aria-live','polite');popup.append(head,filter,list,message);
