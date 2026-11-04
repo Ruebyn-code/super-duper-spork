@@ -59,6 +59,13 @@ function normalize(input){
   }
   if(step.type==='datetime'){result.dateMode=step.dateMode||'datetime';if(!['date','time','datetime'].includes(result.dateMode))fail('Choose a date and time format.');}
   if(step.type==='signature'&&step.signatureMode!==undefined){result.signatureMode=step.signatureMode;if(!['typed','drawn','either'].includes(result.signatureMode))fail('Choose a signature format.');}
+  // Optional step audiences: only these locations / permission levels see the step; omitted means everyone.
+  for(const [key,max,label] of [['locationIds',500,'locations'],['roleIds',100,'permission levels']]){
+   const value=step[key];if(value===undefined||value===null)continue;
+   if(stepModel.isSection(step))fail('Sections cannot be limited. Limit the steps inside them instead.');
+   if(!Array.isArray(value)||!value.length||value.length>max||value.some(id=>typeof id!=='string'||!id||id.length>80)||new Set(value).size!==value.length)fail('Choose at least one of the '+label+' for “'+result.title+'”, or show it to everyone.');
+   result[key]=[...value];
+  }
   return result;
  });
  return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps};
@@ -114,6 +121,9 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  const audience=(plan,actor)=>!Array.isArray(plan?.roleIds)||plan.roleIds.includes(actor.role);
  const allowed=(run,actor,stores,state)=>company(run,actor)&&(!actor.kiosk||run.locationId===actor.locationId)&&stores.some(item=>item.id===run.locationId)&&audience(state.planners.find(plan=>plan.id===(run.plannerId||run.templateId)&&company(plan,actor))||run.snapshot.planner,actor);
  const levelOptions=async actor=>(await roleLevels(actor)).map(role=>({id:role.id,name:role.name,canView:(role.permissions||[]).includes('ops.view')}));
+ // A step limited to locations or permission levels is hidden from, and not required for, everyone else.
+ const stepApplies=(step,locationId,actor)=>(!Array.isArray(step.locationIds)||step.locationIds.includes(locationId))&&(!Array.isArray(step.roleIds)||step.roleIds.includes(actor.role));
+ const visibleSteps=(steps,locationId,actor)=>steps.filter(step=>stepApplies(step,locationId,actor));
  const assignments=(state,template)=>[...new Set(state.planners.filter(plan=>!plan.retired&&plan.templateId===template.id&&plan.companyId===template.companyId).flatMap(plan=>plan.locationIds))];
  const editable=(template,actor,stores,state)=>can(actor,'ops.manage')&&company(template,actor)&&assignments(state,template).every(id=>stores.some(item=>item.id===id));
  // Deleted checklists keep their tombstone for history; inactive ones stay editable but create no new work.
@@ -139,9 +149,12 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const record=asset.name?asset:await media.info(asset.id);
    resources[asset.id]={id:asset.id,name:record.name,mime:record.mime,size:record.size,url:'/api/ops-management/media/'+asset.id};
   }
-  return{...structuredClone(run),selectionOptions:await selectionOptions(actor,stores,run),resources};
+  const view=structuredClone(run),hidden=new Set(run.snapshot.steps.filter(step=>!stepApplies(step,run.locationId,actor)).map(step=>step.id));
+  if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
+  const options=await selectionOptions(actor,stores,run);for(const id of hidden)delete options[id];
+  return{...view,selectionOptions:options,resources};
  }
- const summary=run=>{const{answers,snapshot,stepActivity,requestId,...result}=run;return{...result,title:snapshot.title,stepCount:snapshot.steps.filter(stepModel.responseStep).length,answered:snapshot.steps.filter(step=>stepModel.responseStep(step)&&stepModel.answered(step,answers[step.id])).length};};
+ const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps;return{...result,title:snapshot.title,stepCount:steps.filter(stepModel.responseStep).length,answered:steps.filter(step=>stepModel.responseStep(step)&&stepModel.answered(step,answers[step.id])).length};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
@@ -158,12 +171,12 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
     const run=state.runs.findLast(run=>runPlanner(run)===plan.id&&run.locationId===store.id&&(slot.key===null?run.status==='draft':run.periodKey===slot.key)),storedPlan=run?.snapshot.planner?{...run.snapshot.planner,active:true,schedule:run.snapshot.planner.schedule||run.snapshot.schedule}:plan,storedSlot=run?plannerModel.period(storedPlan,run.workDate||slot.startDate)||slot:slot,activeWindow=run?.activeWindow||plannerModel.activeWindow(storedPlan,storedSlot,store.tradingHours);
     if(!plannerModel.visible(activeWindow,now()))continue;if(activeWindow.closesAt<nextChangeAt)nextChangeAt=activeWindow.closesAt;
     const currentDue=plannerModel.due(plan,slot,store.tradingHours),dueDate=run?run.dueDate:currentDue.dueDate,dueAt=run?(run.dueAt!==undefined?run.dueAt:plannerModel.deadline(dueDate,run.snapshot.planner?.dueTime)):currentDue.dueAt,reminderMinutes=run?(run.snapshot.planner?.reminderMinutes||0):plan.reminderMinutes,dueTime=run?((run.snapshot.planner?.tradingHours||run.snapshot.schedule.kind==='hourly')&&dueAt?plannerModel.local(Date.parse(dueAt)).slice(11,16):run.snapshot.planner?.dueTime||null):currentDue.dueTime;
-    tasks.push({plannerId:plan.id,plannerName:run?.plannerName||plan.title,templateId:template.id,title:run?.snapshot.title||template.title,locationId:store.id,locationName:store.name,type:plannerModel.type(plan),schedule:plan.schedule.kind,periodKey:slot.key,activeWindow,workDate:run?.workDate||slot.tradingDate||day,dueDate,dueAt,availability:{...activeWindow,allowed:true},startWindow:{plan:{schedule:{endDate:plan.schedule.endDate||null},startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,tradingHours:plan.tradingHours||null},slot,...(plan.tradingHours?{hours:store.tradingHours||[]}: {})},dueTime,reminderMinutes,priority:run?(run.snapshot.planner?.priority||'normal'):plan.priority,timing:run?.status==='completed'?null:plannerModel.timing(dueAt,reminderMinutes,now()),quickStep:(()=>{const steps=(run?run.snapshot.steps:template.steps).filter(stepModel.responseStep);return steps.length===1&&steps[0].type==='check'?{id:steps[0].id,title:steps[0].title}:null;})(),stepCount:(run?run.snapshot.steps:template.steps).filter(stepModel.responseStep).length,run:run?summary(run):null});
+    tasks.push({plannerId:plan.id,plannerName:run?.plannerName||plan.title,templateId:template.id,title:run?.snapshot.title||template.title,locationId:store.id,locationName:store.name,type:plannerModel.type(plan),schedule:plan.schedule.kind,periodKey:slot.key,activeWindow,workDate:run?.workDate||slot.tradingDate||day,dueDate,dueAt,availability:{...activeWindow,allowed:true},startWindow:{plan:{schedule:{endDate:plan.schedule.endDate||null},startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,tradingHours:plan.tradingHours||null},slot,...(plan.tradingHours?{hours:store.tradingHours||[]}: {})},dueTime,reminderMinutes,priority:run?(run.snapshot.planner?.priority||'normal'):plan.priority,timing:run?.status==='completed'?null:plannerModel.timing(dueAt,reminderMinutes,now()),quickStep:(()=>{const steps=visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor).filter(stepModel.responseStep);return steps.length===1&&steps[0].type==='check'?{id:steps[0].id,title:steps[0].title}:null;})(),stepCount:visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor).filter(stepModel.responseStep).length,run:run?summary(run,actor):null});
    }
   }
   const priority={urgent:0,high:1,normal:2};tasks.sort((a,b)=>(priority[a.priority]-priority[b.priority])||(a.dueAt||'z').localeCompare(b.dueAt||'z')||a.title.localeCompare(b.title));
   const history=state.runs.filter(run=>allowed(run,actor,selected,state)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
-  return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(summary),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
+  return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(item=>summary(item,actor)),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
  async function report(actor,{start,end,locationId}){
   const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
@@ -183,12 +196,14 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
  async function saveTemplate(actor,input,id){
-  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(async state=>{
    const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)&&item.status!=='deleted'):null;if(id&&!previous)fail('Checklist not found.',404);
    if(previous&&!editable(previous,actor,stores,state))fail('You need access to every assigned location to edit this checklist.',403);
    if(previous&&input?.revision!==previous.revision)fail('This checklist changed. Reload before saving.',409);
    const contentOnly=input?.contentOnly===true,value=contentOnly?normalizeContent(input):normalize(input||{});
    if(!contentOnly&&value.locationIds.some(id=>!stores.some(store=>store.id===id)))fail('Choose locations you can access in this company.',403);
+   if(value.steps.some(step=>step.roleIds)){const levels=await levelOptions(actor);for(const step of value.steps)if(step.roleIds?.some(id=>!levels.some(level=>level.id===id)&&!previous?.steps?.find(old=>old.id===step.id)?.roleIds?.includes(id)))fail('Choose permission levels in this company for “'+step.title+'”.',403);}
+   for(const step of value.steps)if(step.locationIds?.some(id=>!stores.some(store=>store.id===id)&&!previous?.steps?.find(old=>old.id===step.id)?.locationIds?.includes(id)))fail('Choose locations you can access for “'+step.title+'”.',403);
    if(!previous&&!uuid(input.requestId))fail('Invalid request reference.');
    const duplicate=!previous&&state.templates.find(item=>item.requestId===input.requestId);
    if(duplicate){if(!company(duplicate,actor)||duplicate.createdById!==actor.id||JSON.stringify(contentOnly?normalizeContent(duplicate):normalize(duplicate))!==JSON.stringify(value))fail('This request reference was already used.',409);return templateResult(state,duplicate,actor,stores);}
@@ -254,10 +269,11 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  });}
  async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){
-  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!run.snapshot.steps.some(step=>step.id===key&&stepModel.responseStep(step))))fail('Choose valid checklist answers.');
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!run.snapshot.steps.some(step=>step.id===key&&stepModel.responseStep(step)&&stepApplies(step,run.locationId,actor))))fail('Choose valid checklist answers.');
   const result={},labels={},choices=await selectionOptions(actor,stores,run);
   for(const step of run.snapshot.steps){
    if(!stepModel.responseStep(step))continue;
+   if(!stepApplies(step,run.locationId,actor)){if(run.answers[step.id]!==undefined)result[step.id]=run.answers[step.id];if(run.selectionLabels?.[step.id])labels[step.id]=run.selectionLabels[step.id];continue;}
    let value=input[step.id];const missing=value===undefined||value===null||value===''||Array.isArray(value)&&!value.length;
    if(complete&&step.required&&(missing||step.type==='check'&&value!==true))fail('Complete the required step: '+step.title);
    if(missing)continue;
@@ -325,7 +341,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const run=findRun(state,actor,stores,id);
    if(run.status!=='draft')fail('Completed checklists cannot be changed.',409);
    if(typeof input?.name!=='string')fail('Choose a supported file.');
-   const step=run.snapshot.steps.find(step=>step.id===input?.stepId),mime=files.formats[path.extname(input?.name||'').toLowerCase()],category=mime?files.category(mime):null;
+   const step=run.snapshot.steps.find(step=>step.id===input?.stepId&&stepApplies(step,run.locationId,actor)),mime=files.formats[path.extname(input?.name||'').toLowerCase()],category=mime?files.category(mime):null;
    if(!step||!['photo','media','file','signature'].includes(step.type))fail('Choose a file submission step.');
    if(step.type==='photo'&&category!=='image'||step.type==='media'&&(!['image','video'].includes(category)||step.mediaKind==='photo'&&category!=='image'||step.mediaKind==='video'&&category!=='video'))fail('Choose a photo or video matching this step.');
    if(step.type==='signature'&&(!['drawn','either'].includes(step.signatureMode)||mime!=='image/png'))fail('Choose a drawn signature step.');
@@ -336,7 +352,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  async function download(actor,id){
   const stores=await access(actor),state=await read(),asset=state.assets.find(item=>item.id===id);
   if(!asset)fail('File not found.',404);
-  const run=findRun(state,actor,stores,asset.runId),attached=run.snapshot.steps.some(step=>stepModel.assetIds(step,run.answers[step.id]).includes(id));
+  const run=findRun(state,actor,stores,asset.runId),assetStep=run.snapshot.steps.find(step=>step.id===asset.stepId);if(assetStep&&!stepApplies(assetStep,run.locationId,actor))fail('File not found.',404);const attached=run.snapshot.steps.some(step=>stepModel.assetIds(step,run.answers[step.id]).includes(id));
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }

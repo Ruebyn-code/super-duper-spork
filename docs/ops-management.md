@@ -150,3 +150,24 @@ actions are Edit/Open and a ⋯ menu for authorised editors.
   snapshots, media access and History stay unchanged.
 - The builder shows an Inactive banner with Make active, and **Add step** opens a
   picker of every step type with the same defaults the step editor applies.
+
+## Step audiences (locations and permission levels)
+
+Each response or instruction step (not sections) may carry optional `locationIds`
+and/or `roleIds`. Omitted means every location / everyone. In the expanded step,
+**Who sees this step** shows All locations / Everyone chips plus the checklist's
+accessible locations and the editor's assignable permission levels; a badge in the
+step header summarises a limit. The basics row puts Step type beside a Required
+switch, with full-width instructions underneath.
+
+- Saves validate ids against the editor's accessible locations and assignable levels
+  (ids already saved on that step are kept); sections cannot be limited and changing
+  a step into a section clears its limits.
+- **Hide and skip:** a step applies only when the run's location and the viewer's
+  permission level both match. Non-matching viewers never see the step in run
+  readers, task progress, quick checkbox ticks, History summaries or media, and it
+  is not required for them to complete the run. Their answer saves cannot write
+  those steps and keep answers others recorded, so people who can see the step
+  (for example managers) can still answer it in the same run.
+- Limits are part of the template snapshot, so started runs keep the audience they
+  started with.

@@ -266,3 +266,18 @@ test('checklists can be made inactive, reactivated and deleted without losing hi
  const daily=(await app.template({title:'Daily lifecycle',schedule:{kind:'daily',startDate:'2026-10-01'}})).data,tasks=async()=>(await app.api(app.member,'?location='+app.first)).data.tasks.filter(task=>task.templateId===daily.id).length;
  assert.equal(await tasks(),1,'scheduled work appears while active');const off=await app.api(app.office,'/templates/'+daily.id+'/status','PUT',{status:'inactive',revision:daily.revision});assert.equal(await tasks(),0,'inactive checklists create no scheduled work');await app.api(app.office,'/templates/'+daily.id+'/status','PUT',{status:'active',revision:off.data.revision});assert.equal(await tasks(),1);
 }finally{await app.close();}});
+
+test('steps limited to locations or permission levels are hidden and skipped for others without losing their answers',async()=>{const app=await fixture();try{
+ const everyone=app.step('check',{title:'Everyone checks the door'}),managers=app.step('text',{title:'Manager sign-off note',roleIds:['franchisee']}),secondOnly=app.step('check',{title:'Second store only',locationIds:[app.second]});
+ for(const bad of [{...app.step(),roleIds:[]},{...app.step(),locationIds:'all'},{...app.step('section'),roleIds:['user']},{...app.step(),roleIds:['no-such-level']}])assert.notEqual((await app.template({title:'Bad audience',steps:[bad]})).status,201,JSON.stringify(bad));
+ const created=await app.template({title:'Audience checklist',locationIds:[app.first,app.second],steps:[everyone,managers,secondOnly]});assert.equal(created.status,201,JSON.stringify(created.data));const template=created.data;
+ assert.deepEqual(template.steps.find(step=>step.id===managers.id).roleIds,['franchisee']);
+ const run=(await app.start(template.id,app.first,app.franchisee)).data;assert.deepEqual(run.snapshot.steps.map(step=>step.title),['Everyone checks the door','Manager sign-off note'],'location-limited steps are hidden at other locations');
+ const managerSave=await app.api(app.franchisee,'/runs/'+run.id,'PUT',{revision:run.revision,complete:false,answers:{[managers.id]:'Till counted'}});assert.equal(managerSave.status,200,JSON.stringify(managerSave.data));
+ const staffView=(await app.api(app.member,'/runs/'+run.id)).data;assert.deepEqual(staffView.snapshot.steps.map(step=>step.title),['Everyone checks the door']);assert.equal(staffView.answers[managers.id],undefined,'staff never receive a hidden step answer');
+ assert.equal((await app.api(app.member,'/runs/'+run.id,'PUT',{revision:staffView.revision,complete:false,answers:{[managers.id]:'Override'}})).status,400,'staff cannot answer a hidden step');
+ const done=await app.api(app.member,'/runs/'+run.id,'PUT',{revision:staffView.revision,complete:true,answers:{[everyone.id]:true}});assert.equal(done.status,200,'hidden required steps do not block staff completion');assert.equal(done.data.status,'completed');
+ const managerView=(await app.api(app.franchisee,'/runs/'+run.id)).data;assert.equal(managerView.answers[managers.id],'Till counted','a staff save keeps hidden answers');
+ const second=await app.start(template.id,app.second,app.office);assert.equal(second.status,201,JSON.stringify(second.data));assert.deepEqual(second.data.snapshot.steps.map(step=>step.title),['Everyone checks the door','Second store only'],'the second store adds its own step; other permission levels stay hidden');
+ const again=(await app.start(template.id,app.first,app.franchisee,{requestId:crypto.randomUUID()})).data;assert.equal((await app.api(app.franchisee,'/runs/'+again.id,'PUT',{revision:again.revision,complete:true,answers:{[everyone.id]:true}})).status,400,'the manager still needs their own required step');
+}finally{await app.close();}});
