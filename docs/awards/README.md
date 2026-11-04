@@ -22,8 +22,9 @@ JSON check imports remain available, but do not alter this engine's pay tables.
    pay period beginning on or after 1 July 2026. Earlier periods need an earlier
    edition; these rates are never silently backdated. A review cutoff of
    1 July 2027 is an application guard, **not a statutory expiry date**.
-3. Public holidays: review each location/year, including regional, part-day and
-   substitute days. Only enter the day/period to which the holiday penalty
+3. Public holidays: apply automatically from the state chosen in each location's
+   setup. Save a reviewed location/year calendar only for regional, part-day or
+   substitute exceptions; it replaces the automatic dates for that year. Only enter the day/period to which the holiday penalty
    applies under clause 27.3; do not double-enter original and substitute days.
 4. Users → edit user → Employment & award: enter dated employment details,
    classification, DOB, pay arrangement and applicable conditions. These are
@@ -252,9 +253,14 @@ withholds costs. The calculator uses the same selected calendar at validation,
 holiday/part-day rate boundaries and travelling-time calculations. Broken Hill is
 never inferred from NSW.
 
-This fallback is exclusively for `mode: roster`. Actual timesheet calculations,
-calendar confirmations, employer setup and frozen approvals retain their existing
-guards. Planning provenance appears as a nonblocking notice in Pay details.
+The same fallback now applies to every native calculation mode, including actual
+timesheet checks and approvals: public holidays follow the state chosen in each
+location's setup without an annual review. A confirmed location/year calendar still
+replaces the automatic dates (use it for regional, part-day or Broken Hill
+exceptions); unconfirmed drafts never do. The automatic-calendar notice appears in
+Pay details and is kept in approved pay snapshots as provenance. Automatic
+calendars are never saved or marked reviewed. Award Overview counts a location with
+a saved state as having public holidays ready.
 
 The scoped saved/preview rate DTO includes `rosterSetup` readiness, combining all
 ordinary rate issues, complete employment requirements and holiday availability.

@@ -83,7 +83,9 @@ Changes return the record to pending and retain original clock events, before/
 after intervals, actor, reason, time and the previous frozen approved calculation
 in its audit. History shows the correction evidence. A new approval still requires
 fresh native checks and a current fingerprint/review. Missing source, employment
-or reviewed holiday calendars cannot be waived by a review note. Paid rests,
+or holiday calendars (no location state and no confirmed calendar) cannot be
+waived by a review note. Public holidays otherwise follow the location's state
+automatically, with confirmed location calendars taking priority. Paid rests,
 minimum engagements, overtime, penalties and actual recorded time remain inputs
 to the existing engine; a work-times IFA does not waive breaks.
 

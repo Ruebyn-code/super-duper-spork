@@ -1,5 +1,5 @@
 'use strict';
-// Planning-only calendars are ephemeral. They never review payroll calendars.
+// Automatic state calendars are ephemeral and never marked reviewed; confirmed location calendars always take priority.
 const holidays=require('./australian-public-holidays');
 const M=require('./public/rostering-model');
 function calendarFor(config,location,year){
@@ -24,7 +24,7 @@ function configFor(config,locations,items){
 function readiness(config,location,date,issues){
  const year=Number(date.slice(0,4)),calendar=calendarFor(config,location,year),unique=new Map(issues.map(i=>[i.code,i]));
  if(typeof config.employerName!=='string'||!config.employerName.trim())unique.set('employer-name',{code:'employer-name',message:'Add the legal employer name in this location’s Employer setup.'});
- if(!calendar)unique.set('holiday-state',{code:'holiday-state',message:'Choose this location’s state or territory in Location settings, or review its public holiday calendar.'});
+ if(!calendar)unique.set('holiday-state',{code:'holiday-state',message:'Choose this location’s state or territory in Location settings so public holidays apply automatically.'});
  return{ready:unique.size===0,issues:[...unique.values()],calendar:calendar?{year,automatic:calendar.automatic===true,reviewed:calendar.confirmed===true,state:calendar.state||location.publicHolidayState||null}:null};
 }
 module.exports={configFor,readiness};
