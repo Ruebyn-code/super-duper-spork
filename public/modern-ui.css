@@ -211,3 +211,4 @@
 }
 
 @media screen{html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action,html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action:hover{background:var(--primary)!important;color:var(--home-quick-link-ink,#fff)!important;border-color:var(--primary)!important}}
+@media screen{:root body .home-page .home-section-quick-links .home-action>.home-section-icon{color:var(--home-quick-link-ink,#fff)}:root body .home-page .home-section-quick-links .home-action>.home-section-icon svg{stroke:currentColor}}

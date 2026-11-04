@@ -116,3 +116,5 @@ body[data-home-dashboard="head-office"] .dashboard-reference #home-today::before
 @media(max-width:720px){.dashboard-leaderboard-controls input{font-size:16px;width:154px}.dashboard-leaderboard-row{gap:9px}.dashboard-leaderboard-location strong{font-size:12px}.dashboard-leaderboard-value{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.dashboard-chart-bar{transition:none}}
 }
+/* The default Store sales card fills the space vacated by docked shortcuts. */
+@media screen and (min-width:721px){.dashboard-reference:not(.home-building) .home-board[data-default-dashboard="manager"]>.home-section-sales-today{grid-column:span 12}}

@@ -59,3 +59,19 @@ html.embedded-page .home-dashboard-content{height:100%;min-height:0;align-conten
 
 /* Home owns its outer gutter; avoid adding a second inset inside the sidebar track. */
 @media screen{.home-personal{box-sizing:border-box;width:100%;margin-left:0}}
+/* Saved Quick links dock below the greeting without duplicating their native links. */
+@media screen{
+ .home-side-quick-links{min-width:0;margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed))}.home-side-quick-links[hidden]{display:none!important}
+ #home-side-quick-links>.home-section{min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+ #home-side-quick-links>.home-section+.home-section{margin-top:12px}
+ #home-side-quick-links .home-section-heading{gap:5px;margin:0 0 7px;min-height:28px}#home-side-quick-links .home-section-heading h2{font-size:12px;min-width:0}#home-side-quick-links .home-section-heading>.home-section-icon{display:none}
+ #home-side-quick-links .home-section-body{min-width:0;max-width:100%}
+ #home-side-quick-links .home-actions{display:flex!important;flex-direction:row;flex-wrap:nowrap;gap:8px;width:100%;min-width:0;max-width:100%;margin:0;padding:2px 0 8px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin}
+ #home-side-quick-links .home-actions .home-action{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 108px;min-width:108px;max-width:108px;min-height:82px;height:auto;gap:5px;padding:8px;border-radius:9px}
+ #home-side-quick-links .home-action :is(.home-card-icon,.home-section-icon){display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;margin:0;border-radius:6px}
+ #home-side-quick-links .home-action svg{width:17px;height:17px}#home-side-quick-links .home-card-content{width:100%;min-width:0;text-align:center}#home-side-quick-links .home-card-content h2{font-size:10px;line-height:1.35;margin:0;overflow-wrap:anywhere}#home-side-quick-links .home-card-value{font-size:9px;line-height:1.35;margin-top:3px}#home-side-quick-links .home-card-arrow{display:none}
+ .home-quick-scroll-controls{display:flex;align-items:center;gap:3px;margin-left:auto}.home-quick-scroll-controls[hidden]{display:none!important}#home-side-quick-links .home-quick-scroll-controls button{display:grid;place-items:center;width:26px;height:26px;min-height:26px;margin:0;padding:3px;border:1px solid var(--theme-line,#dce5ed);border-radius:7px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));font:14px Arial,sans-serif}#home-side-quick-links .home-quick-scroll-controls button:disabled{opacity:.35;cursor:default}
+}
+
+@media screen{#home-side-quick-links .home-section-heading h2{overflow-wrap:anywhere}#home-side-quick-links .home-section-note{font-size:10px;line-height:1.5;overflow-wrap:anywhere;margin:0 0 8px}}
+@media(max-width:540px){#home-side-quick-links .home-quick-scroll-controls button{width:32px;height:32px;min-height:32px}}
