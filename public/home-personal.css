@@ -85,3 +85,11 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 html:root body .home-page .home-section-quick-links .home-action.home-quick-add-tile.home-quick-add-tile:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 #home-side-quick-links .home-quick-add-tile .home-quick-add-symbol.home-card-icon{width:22px;height:22px;flex-basis:22px;border-radius:50%;background:color-mix(in srgb,var(--primary) 14%,transparent)!important;color:var(--theme-primary-text,var(--primary));font:600 17px/1 Arial,sans-serif}}
 @media(prefers-reduced-motion:reduce){html:root body .home-page .home-section-quick-links .home-action.home-quick-add-tile.home-quick-add-tile{transition:none}}
+/* Compact Quick link tiles; long article titles clamp to two lines. */
+@media screen{#home-side-quick-links .home-actions{gap:6px}
+#home-side-quick-links .home-actions .home-action{flex:0 0 68px;min-width:68px;max-width:68px;min-height:52px;gap:2px;padding:4px 3px;border-radius:7px}
+#home-side-quick-links .home-actions .home-action[hidden]{display:none}
+#home-side-quick-links .home-action :is(.home-card-icon,.home-section-icon){width:16px;height:16px;flex-basis:16px;border-radius:4px}
+#home-side-quick-links .home-action svg{width:13px;height:13px}
+#home-side-quick-links .home-card-content h2,#home-side-quick-links .home-quick-add-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:9px;line-height:1.2}
+#home-side-quick-links .home-quick-add-tile .home-quick-add-symbol.home-card-icon{width:18px;height:18px;flex-basis:18px;font-size:14px}}

@@ -73,3 +73,13 @@ test('Home section geometry preserves preset compatibility and rejects unsafe cu
  for(const patch of [{span:2},{span:13},{span:3.5},{column:0},{column:13},{height:-1},{height:1601},{height:'200'}])assert.throws(()=>model.validate([{...section,...patch}]));
  const legacy={id:'old',type:'heading',size:'full'};assert.deepEqual(model.validate([legacy]),[legacy]);
 });
+
+test('Quick links accept Knowledge Library article IDs only, and show them only with Library access',()=>{
+ const id='0f8fad5b-d9cb-469f-a165-70867728950e',link='library-article:'+id,section={id:'links',type:'quick-links',size:'full',links:['ordering',link]};
+ assert.deepEqual(model.validate([section])[0].links,['ordering',link]);assert.equal(model.articleId(link),id);assert.equal(model.articleLink(id.toUpperCase()),link);
+ assert.deepEqual(model.validate([{...section,links:[link]}],'staff')[0].links,[link]);
+ for(const bad of ['library-article:','library-article:../escape','library-article:'+id+'/x','library-article:'+id.toUpperCase(),'library-article: '+id,'https://example.com'])assert.throws(()=>model.validate([{...section,links:[bad]}]),bad);
+ assert.throws(()=>model.validate([{...section,links:[link,link]}]));
+ assert.equal(model.allowedLink({permissions:['knowledge.view']},link),true);assert.equal(model.allowedLink({permissions:['orders.view']},link),false);assert.equal(model.allowedLink(null,link),false);
+ assert.equal(model.visible({permissions:['orders.view']},{...section,links:[link]}),false);assert.equal(model.visible({permissions:['knowledge.view']},{...section,links:[link]}),true);
+});

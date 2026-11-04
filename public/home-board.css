@@ -92,3 +92,16 @@
 .home-greeting-dialog{width:min(460px,calc(100vw - 32px));padding:20px;border:1px solid var(--theme-line,#dde6ef);border-radius:16px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a)}
 .home-greeting-dialog::backdrop{background:#10253666}.home-greeting-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.home-greeting-dialog-heading h2{font-size:18px;margin:0}.home-greeting-dialog button{min-height:34px;padding:7px 10px;font:600 12px Arial,sans-serif}.home-greeting-dialog input{margin-top:6px;min-height:40px;width:100%;font:15px Arial,sans-serif}.home-greeting-dialog .small{font-size:11px;line-height:1.5;margin:8px 0}.home-greeting-preview{padding:14px;border-radius:10px;background:color-mix(in srgb,var(--primary) 8%,var(--theme-surface,#fff));font-size:20px;font-weight:600;overflow-wrap:anywhere}.home-greeting-message{min-height:18px;font-size:12px;color:var(--theme-danger-text,#b42318)}.home-greeting-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}.home-greeting-actions button:first-child{margin-right:auto}.home-greeting-actions button[type=submit]{background:var(--primary);color:var(--primary-contrast,#fff)}
 body.app-edit-mode #user-greeting{cursor:text}.home-greeting-dialog [hidden]{display:none!important}
+/* Add quick link popup: current links with remove chips, then pages and Library articles. */
+.home-quick-link-current{margin:0 0 10px}.home-quick-link-current:empty{display:none}
+.home-quick-link-current h3{font-size:11px;margin:0 0 6px;color:var(--theme-muted,#64748b)}
+.home-quick-link-chips{display:flex;flex-wrap:wrap;gap:5px;max-height:96px;overflow:auto;padding:1px}
+.home-quick-link-chip{display:inline-flex;align-items:center;gap:2px;max-width:100%;min-height:28px;padding:0 2px 0 9px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));color:var(--theme-text,#182b3a);font-size:11px}
+.home-quick-link-chip>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.home-quick-link-chip button{display:grid;place-items:center;width:22px;height:22px;min-height:22px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--theme-muted,#64748b);font:16px/1 Arial,sans-serif;cursor:pointer}
+.home-quick-link-chip button:hover{background:color-mix(in srgb,var(--theme-danger-text,#b42318) 12%,transparent);color:var(--theme-danger-text,#b42318)}
+.home-quick-link-chip button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.home-quick-link-article-results{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.home-quick-link-article-results>.home-widget-empty{grid-column:1/-1;margin:2px 0;font-size:11px}
+.home-quick-link-article{overflow-wrap:anywhere}
+@media(max-width:520px){.home-quick-link-choices,.home-quick-link-article-results{grid-template-columns:minmax(0,1fr)}}
