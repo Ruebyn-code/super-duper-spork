@@ -33,3 +33,17 @@
 #learning-main .instore-step>label{font-size:13px;font-weight:600}
 #learning-main .instore-step>label.instore-step-check{flex-direction:row;align-items:center;gap:8px}
 #learning-main .instore-options label{flex-direction:row;align-items:center;gap:6px;font-weight:400}
+/* Training-only step controls */
+.instore-choice-row{display:flex;flex-wrap:wrap;gap:6px}
+#learning-main .instore-choice-row label.instore-choice{flex-direction:row;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--theme-line,#dce5ed);border-radius:99px;font-weight:500;cursor:pointer}
+#learning-main .instore-choice-row label.instore-choice:has(input:checked){border-color:var(--primary,#008cff);background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff))}
+.instore-counter{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.instore-counter input{width:76px;text-align:center}
+.instore-counter-button{min-width:34px;min-height:34px;border:1px solid var(--theme-line,#dce5ed);border-radius:8px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-size:16px;font-weight:700;cursor:pointer}
+.instore-expected{display:flex;flex-direction:column;gap:2px;padding:6px 9px;border-radius:8px;background:color-mix(in srgb,var(--secondary,#45efc3) 14%,var(--theme-surface,#fff));font-size:12px}
+.instore-expected-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--theme-muted,#64748b)}
+@media(max-width:600px){#learning-main .instore-choice-row label.instore-choice{min-height:40px}.instore-counter-button{min-width:40px;min-height:40px}}
+#learning-main .instore-choice-row input[type=radio]{order:-1;flex:none;width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:var(--primary,#008cff)}
+#learning-main .instore-choice-row label.instore-choice{white-space:nowrap;font-size:12px}
+#learning-main .instore-counter{flex-wrap:nowrap}#learning-main .instore-counter input{flex:none;width:72px;min-width:0;text-align:center}
+#learning-main .instore-counter .instore-unit{white-space:normal;font-size:12px}
+#learning-main .instore-step-timed .instore-counter{flex-wrap:wrap}

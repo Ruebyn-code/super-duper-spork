@@ -44,3 +44,18 @@ test('checklist sessions freeze their steps, save typed answers and complete onl
  assert.equal((await save(2,{[check.id]:true})).status,409,'completed sign-offs are permanent');
  const staffView=await a.api(a.staff,base+'/'+session.id);assert.deepEqual(staffView.participants.map(p=>p.userId),[a.staff.session.id]);
 });
+test('training-only steps validate their settings and only sign off when each step passes',async t=>{
+ const trainingSteps=()=>[{id:id(),type:'competency',title:'Grill safety',required:true},{id:id(),type:'attempts',title:'Assemble a burger',required:true,target:3},{id:id(),type:'question',title:'What temperature must chicken reach?',required:true,expectedAnswer:'75°C or above'},{id:id(),type:'timed',title:'Close the grill',required:true,targetSeconds:300},{id:id(),type:'acknowledgement',title:'I was shown the grill procedure',required:true}];
+ assert.equal(training.normalizeSteps(trainingSteps(),courses).find(s=>s.type==='attempts').target,3);
+ for(const change of [s=>s[1].target=0,s=>s[1].target=21,s=>s[2].expectedAnswer='',s=>s[3].targetSeconds=2,s=>s[3].targetSeconds=1.5]){const list=trainingSteps();change(list);assert.throws(()=>training.normalizeSteps(list,courses),JSON.stringify(list));}
+ const a=await setup(t),template=await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Grill competency',description:'',steps:trainingSteps()});
+ const session=await a.api(a.office,base,'POST',{requestId:id(),title:'Grill competency',description:'',locationId:a.location,trainerId:a.trainer.session.id,userIds:[a.staff.session.id],date:'2026-10-21',time:'09:00',minutes:30,templateId:template.id});
+ const [competency,attempts,question,timed,confirm]=session.steps,url=base+'/'+session.id+'/assess/'+a.staff.session.id,name=a.staff.session.username,save=(revision,answers)=>a.request(a.trainer,url,'POST',{revision,requestId:id(),answers});
+ assert.equal(question.expectedAnswer,'75°C or above','trainers see the expected answer');assert.equal((await a.api(a.staff,base+'/'+session.id)).steps.find(s=>s.type==='question').expectedAnswer,undefined,'staff never receive the expected answer');
+ for(const bad of [{[competency.id]:'expert'},{[attempts.id]:-1},{[attempts.id]:2.5},{[question.id]:'maybe'},{[timed.id]:'2:00'},{[confirm.id]:5}])assert.equal((await save(0,bad)).status,400,JSON.stringify(bad));
+ // Every step answered but not yet passing keeps the sign-off open.
+ let result=(await save(0,{[competency.id]:'developing',[attempts.id]:2,[question.id]:'incorrect',[timed.id]:301,[confirm.id]:'Someone else'})).data.participants[0].progress;
+ assert.equal(result.completedAt,null);assert.equal(result.done,0);assert.equal(result.total,5);
+ result=(await save(1,{[competency.id]:'competent',[attempts.id]:3,[question.id]:'correct',[timed.id]:300,[confirm.id]:'  '+name.toUpperCase()+' '})).data.participants[0].progress;
+ assert(result.completedAt,'all training steps passing signs the staff member off');assert.equal(result.done,5);assert.equal(result.answers[confirm.id],name.toUpperCase(),'the typed confirmation is kept as entered (trimmed)');
+});
