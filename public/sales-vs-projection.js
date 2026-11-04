@@ -23,5 +23,14 @@
   for(let index=0;index<7;index++){if(!Number.isSafeInteger(actualDays[index]))continue;if(!Number.isSafeInteger(projectedDays[index]))return null;actual+=actualDays[index];projected+=projectedDays[index];count++;}
   return count?badge(actual,projected,{scope:count===7?'':{text:'{count} recorded days',values:{count}}}):null;
  }
- window.salesVsProjection={compare,badge,weekBadge};
+ // Keep each badge on one line inside its existing cell by easing the text size down when space is tight.
+ function fit(node){
+  const host=node?.isConnected&&node.closest('td,.sales-day,.sales-entry-total');if(!host)return;node.style.fontSize='';
+  const style=getComputedStyle(host),room=host.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);if(!(room>0))return;
+  let size=parseFloat(getComputedStyle(node).fontSize);while(node.getBoundingClientRect().width>room&&size>7){size-=.5;node.style.fontSize=size+'px';}
+ }
+ function fitAll(root=document){for(const node of root.querySelectorAll('.sales-vs-projection'))fit(node);}
+ let pending=0;if(typeof addEventListener==='function')addEventListener('resize',()=>{cancelAnimationFrame(pending);pending=requestAnimationFrame(()=>fitAll());});
+ const placed=node=>{if(node)requestAnimationFrame(()=>fit(node));return node;};
+ window.salesVsProjection={compare,badge:(...args)=>placed(badge(...args)),weekBadge:(...args)=>placed(weekBadge(...args)),fit,fitAll};
 })();

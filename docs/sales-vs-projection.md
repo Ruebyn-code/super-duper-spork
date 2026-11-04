@@ -13,8 +13,9 @@ weekly sales**) shows the same badge, comparing the recorded days with the sum o
 those same days' projections. Part-recorded weeks say how many days are included
 in the hover text; if any recorded day has no projection, the week badge is hidden.
 
-The arrow is always kept beside the dollar amount; in narrow columns only the
-percentage wraps to a second line.
+Badges stay on one line inside the existing cell: when a column is narrow the
+badge text eases down in size (re-fitted on resize) instead of wrapping or widening
+the column. The Weekly report week total uses the same larger figure as day totals.
 
 Days without a recorded total, or without a known projection, show no badge.
 A zero projection shows only the dollar difference. Badges update live while

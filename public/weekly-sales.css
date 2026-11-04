@@ -100,3 +100,8 @@
 .sales-entry-projection{display:inline-flex;align-items:center}.sales-entry-projection[hidden]{display:none}
 .daily-sales-compact .sales-entry-total .sales-vs-projection span{font-size:inherit}
 .sales-entry-total .sales-vs-projection{font-size:.72rem}
+/* One line, sized to the existing cell. */
+.sales-vs-projection,.weekly-total td output .sales-vs-projection{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:none;padding:1px 5px;font-size:.68rem;line-height:1.3}
+.weekly-total td output .sales-vs-projection{display:flex;width:max-content;margin:2px 0 0 auto}
+.sales-vs-projection-arrow{margin-right:0}
+#weekly-total-total{font-size:15px;line-height:1.1;letter-spacing:-.01em}#weekly-total-total .sales-vs-projection{display:flex;width:max-content;margin:2px 0 0 auto}
