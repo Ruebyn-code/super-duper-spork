@@ -261,3 +261,9 @@ ordinary rate issues, complete employment requirements and holiday availability.
 No private profile, agreement reference or calendar audit is added to this DTO.
 Readiness is setup completeness for a date/location, not certification of legal
 compliance or a substitute for actual-work facts and future award reviews.
+
+### Faster award admin
+
+- **Approve all clear** (Timesheets) sends the listed pending entries with their revisions to `POST /api/rostering/timesheets/approve-clear`. Inside one serial write, each entry is checked exactly as a single approval: current revision, pending, completed, no overlap, native award check with `reviewRequired` false, complete price or hourly rate. Only passing entries are approved, with an audit marked `bulk` and the award check snapshot (empty review note). Everything else stays pending and is returned with a reason; checks run before an entry changes, so a skipped entry is never half-approved. Warnings still need individual review with a note.
+- **Confirm all locations at once** (Review public holidays) reads `GET /api/awards/calendars/:year` and confirms with `POST /api/awards/calendars/confirm`, which requires `confirmAll: true`, the current settings revision and, per location, the SHA-256 key of the exact automatic dates shown. Only locations with a valid state and no saved calendar are confirmed (`bulkConfirmed: true`, `brokenHill: false`, audited). Confirmed calendars, unconfirmed drafts, missing states and changed dates are skipped with reasons, so manual edits and regional/Broken Hill reviews stay individual.
+- The Overview **fix-it list** is built from the existing read-only overview: newer edition, employer setup, public holidays, locations without employees and each employee's first missing employment detail, each with a button to the existing editor. It never writes.

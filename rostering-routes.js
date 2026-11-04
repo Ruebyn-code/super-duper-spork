@@ -18,6 +18,7 @@ async function route({req,url,params,session,store,body,json,fail}){
  if(url==='/api/rostering/positions'&&req.method==='PUT'){json(200,await store.savePositions(session,await input()));return true;}
  if(url==='/api/rostering/rates'&&req.method==='PUT'){json(200,await store.saveRates(session,await input()));return true;}
  if(url==='/api/rostering/budget'&&['PUT','DELETE'].includes(req.method)){json(200,await store.saveBudget(session,await input(),req.method==='DELETE'));return true;}
+ if(url==='/api/rostering/timesheets/approve-clear'&&req.method==='POST'){json(200,await store.approveClear(session,await input()));return true;}
  const time=url.match(/^\/api\/rostering\/timesheets\/([a-f0-9-]{36})$/i);if(time&&req.method==='PUT'){json(200,await store.reviewTime(session,time[1],await input()));return true;}
  fail('Rostering action not found.',404);
 }

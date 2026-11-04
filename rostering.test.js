@@ -324,3 +324,20 @@ test('shift overview publication follows each saved shift, keeping draft edits p
  const before=await fs.readFile(path.join(app.dir,'rostering.json'),'utf8');await roster(app,app.office);assert.equal(await fs.readFile(path.join(app.dir,'rostering.json'),'utf8'),before);
  assert.equal((await roster(app,app.office,'publish','POST',{weekStart:'2026-10-19',revision:board.roster.revision})).status,200);assert.equal((await roster(app,app.office)).data.roster.shifts.find(s=>s.id===original.id).publication.state,'published');
  }finally{await app.close();}});
+
+test('bulk approval approves only clear pending timesheets and leaves everything else pending with a reason',async()=>{const app=await fixture();try{
+ const manual=(actor,startAt,endAt)=>roster(app,actor,'manual-time','POST',{requestId:crypto.randomUUID(),startAt,endAt,breakMinutes:30,reason:'Forgot to clock in'});
+ const otherRecord=await app.user('Unrated'),other=await app.login('Unrated');
+ const first=await manual(app.member,'2026-10-18T23:00:00Z','2026-10-19T05:00:00Z'),second=await manual(app.member,'2026-10-19T05:30:00Z','2026-10-19T08:30:00Z'),unrated=await manual(other,'2026-10-18T23:00:00Z','2026-10-19T03:00:00Z');for(const created of [first,second,unrated])assert.equal(created.status,200,JSON.stringify(created.data));
+ await roster(app,app.office,'rates','PUT',{effectiveDate:'2026-10-01',revision:0,rates:[{userId:app.memberRecord.id,rateCents:3000}]});
+ const entries=[{id:first.data.id,revision:first.data.revision},{id:second.data.id,revision:second.data.revision+7},{id:unrated.data.id,revision:unrated.data.revision}];
+ assert.equal((await roster(app,app.member,'timesheets/approve-clear','POST',{entries})).status,403);
+ for(const bad of [{entries:[]},{entries:[{id:'x',revision:1}]},{entries:[entries[0],entries[0]]},{entries:'all'}])assert.equal((await roster(app,app.office,'timesheets/approve-clear','POST',bad)).status,400,JSON.stringify(bad));
+ const result=await roster(app,app.office,'timesheets/approve-clear','POST',{entries});assert.equal(result.status,200,JSON.stringify(result.data));
+ assert.deepEqual(result.data.approved.map(item=>item.id),[first.data.id]);assert.equal(result.data.approved[0].status,'approved');assert.equal(result.data.approved[0].costCents,16500);
+ assert.deepEqual(Object.fromEntries(result.data.skipped.map(item=>[item.id,item.reason])),{[second.data.id]:'Changed after the list loaded. Reload and review it.',[unrated.data.id]:'Set an hourly rate first.'});
+ const dashboard=(await roster(app,app.office)).data.timesheets,find=id=>dashboard.find(item=>item.id===id);assert.equal(find(second.data.id).status,'pending');assert.equal(find(unrated.data.id).status,'pending');
+ const audit=find(first.data.id).audit.at(-1);assert.equal(audit.action,'approve');assert.equal(audit.bulk,true);assert.equal(audit.by,'Office');
+ const again=await roster(app,app.office,'timesheets/approve-clear','POST',{entries:[entries[0]]});assert.deepEqual(again.data.approved,[]);assert.equal(again.data.skipped[0].reason,'Changed after the list loaded. Reload and review it.');
+ void otherRecord;
+}finally{await app.close();}});
