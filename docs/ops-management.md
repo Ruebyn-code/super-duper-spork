@@ -155,8 +155,9 @@ actions are Edit/Open and a ⋯ menu for authorised editors.
 
 Each response or instruction step (not sections) may carry optional `locationIds`
 and/or `roleIds`. Omitted means every location / everyone. In the expanded step,
-**Who sees this step** shows All locations / Everyone chips plus the checklist's
-accessible locations and the editor's assignable permission levels; a badge in the
+**Who sees this step** has Locations and Permission levels multi-select dropdowns
+(the shared app selector) listing the checklist's accessible locations and the
+editor's assignable levels; leaving one blank shows All locations / Everyone, and a badge in the
 step header summarises a limit. The basics row puts Step type beside a Required
 switch, with full-width instructions underneath.
 

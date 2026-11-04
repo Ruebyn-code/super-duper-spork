@@ -59,16 +59,15 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
  function audienceSummary(step){if(model.isSection(step))return '';const parts=[];for(const group of audienceGroups(step)){const ids=step[group.key];if(!Array.isArray(ids))continue;parts.push(ids.length===1?(group.items.find(([id])=>id===ids[0])?.[1]||'1 selected'):ids.length+(group.key==='locationIds'?' locations':' permission levels'));}return parts.join(' · ');}
  function refreshBadge(step,node){const top=node?.querySelector('.ops-step-top');if(!top)return;let badge=top.querySelector('.ops-step-audience-badge');const text=audienceSummary(step);if(!text){badge?.remove();return;}if(!badge){badge=el('span','ops-step-audience-badge');top.querySelector('.ops-step-kind')?.before(badge);}badge.textContent=text;badge.title='Only shown to: '+text;badge.dataset.userText='';}
  function audienceSection(step){
-  const wrap=el('div','ops-step-audience ops-wide'),heading=ui('span','Who sees this step','ops-step-audience-title');wrap.append(heading);
+  const wrap=el('div','ops-step-audience ops-wide'),fields=el('div','ops-audience-fields');wrap.append(ui('span','Who sees this step','ops-step-audience-title'),fields);
   for(const group of audienceGroups(step)){
-   const row=el('div','ops-audience-row'),chips=el('div','ops-audience-chips');chips.setAttribute('role','group');chips.setAttribute('aria-label',group.label);row.append(ui('span',group.label,'ops-audience-label'),chips);
-   const sync=()=>{for(const chip of chips.children)chip.setAttribute('aria-pressed',String(chip.dataset.id==='__all'?!Array.isArray(step[group.key]):Boolean(step[group.key]?.includes(chip.dataset.id))));refreshBadge(step,wrap.closest('.ops-step-editor'));};
-   const chip=(name,id,action,user)=>{const button=user?data('button',name,'ops-audience-chip'):ui('button',name,'ops-audience-chip');button.type='button';button.dataset.id=id;button.onclick=()=>{action();sync();changed();};return button;};
-   chips.append(chip(group.allLabel,'__all',()=>{delete step[group.key];}));
-   for(const [id,name] of group.items)chips.append(chip(name,id,()=>{const next=new Set(step[group.key]||[]);if(next.has(id))next.delete(id);else next.add(id);if(next.size)step[group.key]=[...next];else delete step[group.key];},true));
-   wrap.append(row);sync();
+   const select=el('select');select.multiple=true;select.setAttribute('aria-label',group.label);
+   for(const [id,name] of group.items){const option=document.createElement('option');option.value=id;option.textContent=name;option.selected=Boolean(step[group.key]?.includes(id));select.append(option);}
+   select.onchange=()=>{const chosen=[...select.selectedOptions].map(option=>option.value);if(chosen.length)step[group.key]=chosen;else delete step[group.key];refreshBadge(step,wrap.closest('.ops-step-editor'));changed();};
+   const label=field(group.label,select);label.classList.add('ops-audience-field');fields.append(label);
+   window.appSelects?.enhance(select,{label:group.label,placeholder:group.allLabel,searchLabel:'Search '+group.label.toLowerCase()});
   }
-  wrap.append(ui('p','People who can’t see a step don’t need to complete it.','ops-audience-help'));return wrap;
+  wrap.append(ui('p','Leave blank for everyone. People who can’t see a step don’t need to complete it.','ops-audience-help'));return wrap;
  }
  function render(next,openId){endDrag(true);items=next;if(openId)opened.add(openId);host.replaceChildren();for(const[ index,step]of items.entries()){
    const node=el('section','ops-step-editor'+(model.isSection(step)?' ops-section-editor':'')),top=el('div','ops-step-top'),type=el('select'),title=input('text',step.title),body=el('div','ops-step-details'),config=el('div','ops-step-config'),kind=ui('span',model.kinds[step.type],'ops-step-kind');node.dataset.stepId=step.id;node.dataset.stepType=step.type;
