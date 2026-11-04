@@ -482,13 +482,13 @@
   'Choose its title, Policies/Information type, category and company or authorised network audience.',
   'Use the formatting editor to add text, tables, media, accordions or callouts.',
   'Review the article and save/publish through its ordinary editor action. Refresh if another editor changed its revision.'
- ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['OpStack intelligence can prepare reviewed text inside the editor. It does not publish the article for you.'],related:['rich-content','intelligence-writing','library-categories']});
+ ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['OpStack intelligence can prepare reviewed text inside the editor. It does not publish the article for you.','Use Who can read to limit an article to selected permission levels. Others cannot find it in lists, search, Home shortcuts or training pickers, and people who can publish in that audience always keep access. Limited articles show a Limited access tag to publishers.'],related:['rich-content','intelligence-writing','library-categories']});
  add(c,'library-categories','Organise Knowledge centre categories and views','Help staff browse related information.',[
   'Use the Categories sidebar to choose All categories, Uncategorised or a saved category.',
   'With publishing authority, choose Manage categories to add, rename or remove one.',
   'Select the appropriate category while editing an article.',
   'Use the sidebar arrow to collapse it and choose Cards, List or Grid for the results.'
- ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['Removing a category keeps its articles as Uncategorised. The sidebar and view choices are remembered for your user and company in this browser.'],related:['read-library','publish-library']});
+ ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['A category can also be limited to selected permission levels through Who can read; its articles then follow both the category and their own limits.','Removing a category keeps its articles as Uncategorised. The sidebar and view choices are remembered for your user and company in this browser.'],related:['read-library','publish-library']});
 
  c='comms';
  add(c,'team-chat','Send direct messages and create group chats','Talk to the people you share access with.',[

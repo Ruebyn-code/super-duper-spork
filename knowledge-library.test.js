@@ -75,3 +75,22 @@ test('deleting a shared category preserves articles, moves them to Uncategorised
 test('existing libraries without category fields load safely and keep article content',async()=>{const app=await fixture();try{
  const first=(await app.article()).data,file=path.join(app.dir,'knowledge-library.json'),state=JSON.parse(await fs.readFile(file,'utf8'));delete state.categories;delete state.articles[0].categoryId;await fs.writeFile(file,JSON.stringify(state));const detail=(await app.library(app.member,'/'+first.id)).data;assert.equal(detail.categoryId,null);assert.equal(detail.body,first.body);assert.equal((await app.library(app.member,'?category=uncategorised')).data.total,1);assert.deepEqual((await app.library(app.member,'/categories')).data.categories,[]);assert.equal((await app.library(app.office,'/categories','POST',{name:'New category',scope:'company'})).status,201);assert.equal((await app.library(app.member,'/'+first.id)).data.body,first.body);
  }finally{await app.close();}});
+
+test('permission-level audiences limit articles and categories while authors keep access',async()=>{const app=await fixture();try{
+ const levels=(await app.library(app.office,'/levels')).data.levels;assert.ok(levels.some(level=>level.id==='user')&&levels.some(level=>level.id==='franchisee'),JSON.stringify(levels));assert.deepEqual(Object.keys(levels[0]).sort(),['id','name']);
+ assert.equal((await app.library(app.member,'/levels')).status,403);
+ const limited=await app.article({title:'Managers only',roleIds:['franchisee']}),open=await app.article({title:'Everyone'});assert.equal(limited.status,201,JSON.stringify(limited.data));assert.equal(open.status,201);
+ assert.deepEqual((await app.library(app.member)).data.articles.map(item=>item.title),['Everyone']);assert.equal((await app.library(app.member,'/'+limited.data.id)).status,404);
+ assert.ok((await app.library(app.franchisee)).data.articles.some(item=>item.title==='Managers only'));
+ const own=(await app.library(app.office,'/'+limited.data.id)).data;assert.deepEqual(own.roleIds,['franchisee']);assert.equal(own.restricted,true);assert.equal((await app.library(app.office)).data.articles.find(item=>item.id===limited.data.id).restricted,true);
+ const seen=(await app.library(app.member,'/'+open.data.id)).data;assert.equal('roleIds' in seen,false);assert.equal('restricted' in seen,false);
+ const kept=await app.library(app.office,'/'+limited.data.id,'PUT',{title:'Managers only v2',type:'policy',scope:'company',body:'Updated.',revision:own.revision});assert.equal(kept.status,200,JSON.stringify(kept.data));assert.deepEqual(kept.data.roleIds,['franchisee']);assert.equal((await app.library(app.member,'/'+limited.data.id)).status,404);
+ for(const bad of [[],['not-a-level'],['user','user'],'user'])assert.notEqual((await app.article({title:'Bad '+JSON.stringify(bad),roleIds:bad})).status,201,JSON.stringify(bad));
+ const category=await app.library(app.office,'/categories','POST',{name:'Managers',scope:'company',roleIds:['franchisee']});assert.equal(category.status,201,JSON.stringify(category.data));
+ const inside=await app.article({title:'Category limited',categoryId:category.data.id});assert.equal(inside.status,201);
+ assert.equal((await app.library(app.member,'/'+inside.data.id)).status,404);assert.equal((await app.library(app.member,'/categories')).data.categories.some(item=>item.id===category.data.id),false);assert.equal((await app.library(app.member)).data.articles.some(item=>item.id===inside.data.id),false);
+ assert.equal((await app.library(app.franchisee,'/'+inside.data.id)).status,200);assert.equal((await app.library(app.office,'/'+inside.data.id)).data.restricted,true);
+ const renamed=await app.library(app.office,'/categories/'+category.data.id,'PUT',{name:'Leaders',revision:category.data.revision});assert.equal(renamed.status,200,JSON.stringify(renamed.data));assert.deepEqual(renamed.data.roleIds,['franchisee']);
+ const opened=await app.library(app.office,'/categories/'+category.data.id,'PUT',{name:'Leaders',roleIds:null,revision:renamed.data.revision});assert.equal(opened.status,200);assert.equal((await app.library(app.member,'/'+inside.data.id)).status,200);
+ const cleared=await app.library(app.office,'/'+limited.data.id,'PUT',{title:'Now open',type:'policy',scope:'company',body:'Open.',roleIds:null,revision:kept.data.revision});assert.equal(cleared.status,200);assert.equal((await app.library(app.member,'/'+limited.data.id)).status,200);
+}finally{await app.close();}});

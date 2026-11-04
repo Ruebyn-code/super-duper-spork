@@ -140,6 +140,8 @@ Head Office can publish, edit and delete articles by default. The article editor
 
 **Settings → Permission levels → Knowledge centre** has separate controls for reading, company publishing and network publishing. Default Ordering manager and Franchisee levels can read; network publishing requires a network permission level. Existing customised roles retain their grants. Attachments stay private to their uploader and authorised article/message/post audiences. Keep **data/knowledge-library.json** and **data/communication-media/** with the rest of your data when updating the app.
 
+**Who can read** in the article editor and **Manage categories** limits an article or category to selected permission levels (default: everyone with Knowledge centre reading). An article inside a limited category follows both limits. Hidden articles are excluded from lists, article pages, search, Home article shortcuts, training/intelligence source pickers and article media. People who can publish in that article's audience always keep access and see a **Limited access** tag; ordinary readers are never told which levels an item is limited to. Older clients that omit the setting keep the saved limit, and `null` clears it.
+
 ## Learning centre
 
 Open **Learning centre** from the main bar, or **More** on phones. Courses belong to the selected company. **My learning** shows assigned and self-started courses, due dates, progress and completed results. **Course library** contains published courses that staff can start themselves.
