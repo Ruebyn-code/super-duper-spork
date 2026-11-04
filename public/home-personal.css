@@ -75,3 +75,5 @@ html.embedded-page .home-dashboard-content{height:100%;min-height:0;align-conten
 
 @media screen{#home-side-quick-links .home-section-heading h2{overflow-wrap:anywhere}#home-side-quick-links .home-section-note{font-size:10px;line-height:1.5;overflow-wrap:anywhere;margin:0 0 8px}}
 @media(max-width:540px){#home-side-quick-links .home-quick-scroll-controls button{width:32px;height:32px;min-height:32px}}
+
+@media screen{#home-side-quick-links .home-quick-add-label{font-size:9px;font-weight:600;line-height:1.25;text-align:center;color:inherit;max-width:100%;overflow-wrap:anywhere}#home-side-quick-links .home-quick-add-symbol{font:20px/1 Arial,sans-serif;color:inherit}}
