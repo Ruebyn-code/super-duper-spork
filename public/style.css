@@ -1236,3 +1236,31 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 .ordering-budget-metrics .ordering-cogs-estimate>span{display:block;font-size:10px;line-height:1.4;color:var(--theme-muted,#637287)}
 .home-page .ordering-budget-metrics>.ordering-budget-cogs{display:block}
 @media(max-width:900px){.ordering-budget-metrics>.ordering-budget-cogs{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;border-left:0;padding-left:0;padding-top:8px;border-top:1px solid var(--theme-line,var(--line))}.ordering-budget-metrics>.ordering-budget-cogs strong{margin-top:0}}
+
+/* App edit: floating edit bar, hover name tags and an inspector docked beside the selection. */
+.app-edit-indicator>span.app-edit-indicator-bar{top:max(8px,env(safe-area-inset-top,0px));gap:12px;max-width:calc(100% - 24px);padding:6px 6px 6px 16px;border:1px solid color-mix(in srgb,#ee8b36 40%,var(--theme-line,#dce5ed));background:color-mix(in srgb,var(--theme-surface,#fff) 88%,transparent)!important;box-shadow:0 12px 32px #182b3a26,0 2px 6px #182b3a14;backdrop-filter:blur(16px) saturate(1.4);pointer-events:none!important}
+.app-edit-indicator-title{font:700 12px/1.4 Arial,Helvetica,sans-serif!important;white-space:nowrap}
+.app-edit-indicator-hint{min-width:0;overflow:hidden;text-overflow:ellipsis;padding-left:12px;border-left:1px solid var(--theme-line,#dce5ed);color:var(--theme-muted,#526574)!important;font:400 12px/1.4 Arial,Helvetica,sans-serif!important}
+.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish{position:static;display:inline-flex;align-items:center;gap:6px;min-width:0;min-height:32px;padding:0 14px 0 11px;border:0;border-radius:999px;background:#ee8b36!important;color:#fff!important;box-shadow:0 2px 8px #ee8b3655;font:700 12px/1 Arial,Helvetica,sans-serif!important;cursor:pointer;transition:background-color .15s ease,transform .15s ease}
+.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish svg{color:#fff!important;stroke:#fff!important}
+.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish:hover{background:#d9761f!important;transform:translateY(-1px)}
+.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish:focus-visible{outline:2px solid #ee8b36;outline-offset:3px}
+@media(max-width:900px){.app-edit-indicator-hint{display:none}}
+@media(pointer:coarse){.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish{min-height:40px}}
+.app-edit-hover-tag{position:fixed;inset:auto;margin:0;padding:4px 9px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;border-radius:7px;background:var(--primary)!important;color:#fff!important;box-shadow:0 4px 12px #182b3a33;font:600 11px/1.4 Arial,Helvetica,sans-serif!important;letter-spacing:.01em;pointer-events:none!important}
+.app-edit-hover-tag::after{content:' · Click to edit';font-weight:400;opacity:.82}
+.app-edit-hover-tag::backdrop{background:transparent;pointer-events:none}
+.app-edit-mode .app-hovered-part{outline:2px solid var(--primary);outline-offset:2px;box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 14%,transparent)!important;transition:outline-offset .12s ease,box-shadow .12s ease}
+.app-edit-mode .app-selected-part{box-shadow:0 0 0 7px color-mix(in srgb,var(--secondary) 22%,transparent)!important}
+@media(min-width:721px){
+ .unified-app-editor[data-dock]{position:fixed;inset:12px 12px 12px auto;width:min(400px,calc(100vw - 24px));height:auto;max-height:none;margin:0;border-radius:20px;box-shadow:0 24px 64px #182b3a33,0 2px 8px #182b3a14}
+ .unified-app-editor[data-dock=left]{inset:12px auto 12px 12px}
+ .unified-app-editor[data-dock] .app-editor-form{height:100%;max-height:none}
+ .unified-app-editor[data-dock] .app-editor-body{flex:1}
+ .unified-app-editor[data-dock]::backdrop{background:#122b4214;backdrop-filter:none}
+ .unified-app-editor[data-dock][open]{animation:app-editor-dock-right .2s cubic-bezier(.2,.8,.2,1)}
+ .unified-app-editor[data-dock=left][open]{animation-name:app-editor-dock-left}
+}
+@keyframes app-editor-dock-right{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes app-editor-dock-left{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.unified-app-editor[data-dock][open]{animation:none}.app-edit-mode .app-hovered-part,.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish{transition:none}}
