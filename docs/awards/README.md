@@ -273,3 +273,40 @@ compliance or a substitute for actual-work facts and future award reviews.
 - **Approve all clear** (Timesheets) sends the listed pending entries with their revisions to `POST /api/rostering/timesheets/approve-clear`. Inside one serial write, each entry is checked exactly as a single approval: current revision, pending, completed, no overlap, native award check with `reviewRequired` false, complete price or hourly rate. Only passing entries are approved, with an audit marked `bulk` and the award check snapshot (empty review note). Everything else stays pending and is returned with a reason; checks run before an entry changes, so a skipped entry is never half-approved. Warnings still need individual review with a note.
 - **Confirm all locations at once** (Review public holidays) reads `GET /api/awards/calendars/:year` and confirms with `POST /api/awards/calendars/confirm`, which requires `confirmAll: true`, the current settings revision and, per location, the SHA-256 key of the exact automatic dates shown. Only locations with a valid state and no saved calendar are confirmed (`bulkConfirmed: true`, `brokenHill: false`, audited). Confirmed calendars, unconfirmed drafts, missing states and changed dates are skipped with reasons, so manual edits and regional/Broken Hill reviews stay individual.
 - The Overview **fix-it list** is built from the existing read-only overview: newer edition, employer setup, public holidays, locations without employees and each employee's first missing employment detail, each with a button to the existing editor. It never writes.
+
+## Yearly award rate updates
+
+Rates are stored as reviewed edition files in `award-editions/`, one per Fair Work
+edition (normally from 1 July). The newest file is the calculator's `source`; older
+files keep costing earlier pay periods, so adding a year never reprices past work.
+
+- **Switch-over:** an edition applies from the first full pay period starting on or
+  after its `effectiveFrom` date, using each location employer's pay-period start and
+  frequency. A shift dated before that period keeps the previous rates.
+- **Activation:** each location employer records the edition it has reviewed
+  (`sourceId`). When a newer file is added, earlier dates keep calculating, but dates
+  in the new edition's periods are withheld with "Activate the … award rates" until
+  someone ticks **Activate the … award rates** in that location's Employer setup and
+  saves. Saving never moves a location back to an earlier edition, and saving other
+  settings keeps the current edition unless activation is ticked.
+- **Expiry:** only the newest edition expires, at its `reviewBy` date. From 60 days
+  before, Award Overview's fix-it list warns that the rates expire soon; after it,
+  new costs are withheld until the next edition is added and activated.
+
+### Adding next year's rates
+
+1. When Fair Work publishes the new consolidated award, download the PDF and record
+   its SHA-256.
+2. Copy the latest file in `award-editions/` to `ma000003-YYYY-07.json` and update
+   `id` (`MA000003-YYYY-07-v1`), `label`, `effectiveFrom`, `reviewBy` (next 1 July),
+   `amendments`, `sha256`, Schedule A weekly rates, the adult hourly rates and every
+   clause 17 allowance amount. Loading fails if an adult hourly rate is not the weekly
+   rate ÷ 38 rounded to the cent, or if any amount is missing.
+3. Add the new Schedule A table (`docs/awards/ma000003-YYYY-07-rates.json`) and a
+   matching entry-by-entry verification test alongside the July 2026 one.
+4. Run `npm test`, then deploy. Each location then shows the activation item in the
+   fix-it list.
+
+`award-editions.test.js` uses a synthetic later edition from a temporary folder
+(`OPSTACK_TEST_AWARD_EDITIONS`) to check the switch-over, activation, preserved
+earlier rates and expiry. Production reads only the files in `award-editions/`.

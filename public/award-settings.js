@@ -33,8 +33,11 @@
  function renderFixList(host){
   let box=$('award-fix-list');if(!box){box=node('section',undefined,'award-card award-fix-list');box.id='award-fix-list';box.setAttribute('aria-labelledby','award-fix-title');host.before(box);}box.replaceChildren();
   const items=[],add=(group,title,detail,label,action)=>items.push({group,title,detail,label,action});
-  if(data.overview.sourceReviewRequired)add('Award','Award edition','Review the newer award edition before relying on estimates.','Open rules',()=>{location.hash='rules';});
+  const edition=data.overview.edition||{};
+  if(data.overview.sourceReviewRequired)add('Award','Award rates expired','The '+(edition.label||'current')+' rates stopped applying on '+edition.reviewBy+'. New costs are withheld until the next award edition is loaded and activated.','Open rules',()=>{location.hash='rules';});
+  else if(edition.dueSoon)add('Award','Award rates expire soon','The '+(edition.label||'current')+' rates apply until '+edition.reviewBy+'. Fair Work normally publishes new rates from 1 July; the next edition must be loaded and activated before then.','',null);
   for(const place of data.overview.locations){
+   if(place.employer.activationNeeded)add(place.name,'New award rates','Activate the '+(edition.label||'new')+' award rates in this location’s Employer setup. Earlier pay periods keep their original rates.','Open setup',()=>{location.href='/admin/accounts?location='+encodeURIComponent(place.id)+'&setupTab=employer#locations';});
    if(!place.employer.ready)add(place.name,'Employer setup',place.employer.messages[0]||'Complete this location’s employer setup.','Open setup',()=>{location.href='/admin/accounts?location='+encodeURIComponent(place.id)+'&setupTab=employer#locations';});
    if(!place.holidays.ready)add(place.name,'Public holidays',place.holidays.state?'Review '+place.holidays.year+' dates for '+place.holidays.state+'.':'Choose this location’s state first.',place.holidays.state?'Review dates':'Set state',()=>{if(place.holidays.state){location.hash='calendars';renderCalendars(place.id);}else location.href='/admin/accounts?location='+encodeURIComponent(place.id)+'#locations';});
    if(!place.team.total)add(place.name,'Employees','No employees have access to this location yet.',appAccess.can('users.manage')?'Open users':'',()=>{location.href='/admin/accounts?location='+encodeURIComponent(place.id)+'#accounts';});

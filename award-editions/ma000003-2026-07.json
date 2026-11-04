@@ -1,0 +1,14 @@
+{
+  "id": "MA000003-2026-07-v1",
+  "code": "MA000003",
+  "title": "Fast Food Industry Award 2020",
+  "label": "July 2026",
+  "effectiveFrom": "2026-07-01",
+  "reviewBy": "2027-07-01",
+  "amendments": ["PR799280", "PR799284", "PR799442"],
+  "sha256": "fae4ca2b8dc7b5e902daf80ef91e63f2104637affd28be074aa79a1ce0478583",
+  "url": "https://awards.fairwork.gov.au/MA000003.html",
+  "weeklyRates": {"1": 105680, "2": 111910, "3-one": 113640, "3-many": 115040},
+  "adultRates": {"1": 2781, "2": 2945, "3-one": 2991, "3-many": 3027},
+  "allowances": {"brokenHill": 4790, "cold": 38, "freezer": 97, "meal": 1733, "furtherMeal": 1566, "laundryFullTime": 642, "laundryShift": 128, "deliveryKm": 53, "otherKm": 100}
+}

@@ -6,37 +6,55 @@ const {age, profile: validateProfile, calendarDate, activeFlexibilityAgreement, 
 const crypto = require('node:crypto');
 const breakPlanner=require('./award-break-plan');
 const benefits=require('./employee-benefits');
-const source = Object.freeze({
-  id: 'MA000003-2026-07-v1', code: 'MA000003', title: 'Fast Food Industry Award 2020',
-  effectiveFrom: '2026-07-01', reviewBy: '2027-07-01',
-  amendments: ['PR799280', 'PR799284', 'PR799442'],
-  sha256: 'fae4ca2b8dc7b5e902daf80ef91e63f2104637affd28be074aa79a1ce0478583',
-  url: 'https://awards.fairwork.gov.au/MA000003.html',
-  weeklyRates: {'1':105680,'2':111910,'3-one':113640,'3-many':115040},
-  adultRates: {'1': 2781, '2': 2945, '3-one': 2991, '3-many': 3027},
-  allowances: {brokenHill: 4790, cold: 38, freezer: 97, meal: 1733, furtherMeal: 1566, laundryFullTime: 642, laundryShift: 128, deliveryKm: 53, otherKm: 100}
-});
+// Rates live in reviewed edition files (award-editions/). The newest edition is `source`; older ones keep
+// costing earlier pay periods, so adding a new year never reprices past work.
+const {editions} = require('./award-editions');
+const source = editions[editions.length - 1];
+const editionRank = id => editions.findIndex(edition => edition.id === id);
 const coverage = ['Adult and junior minimum rates', 'Casual loading', 'Evening, weekend and configured public holiday penalties', 'Daily and weekly/cycle overtime', 'Part-time agreed pattern, optional variations and recorded roster-hours IFAs', 'Full-time work outside the published roster', 'Minimum engagements and isolated Sunday overtime', 'Recorded break entitlements and timing', 'Configured clothing, cold work, vehicle, meal and travel allowances', 'Itemised wage estimates and approval snapshots'];
 const exclusions = ['Award coverage and classification decisions', 'Six-day/four-day arrangements (five ordinary days used)', 'IFA pay variations, TOIL, supported wages and traineeships', 'Actual leave pay/loading, accident pay, termination, redundancy and deductions', 'NES, state child-employment laws, tax, payslips and payroll lodgement', 'Non-standard super eligibility, contribution caps, payments and unsupported OTE adjustments (estimates only)', 'Future award changes after this uploaded edition'];
 const invalid=message=>Object.assign(Error(message),{status:400});
 const roundRate = (cents, percent) => Math.floor((cents * percent + 50) / 100);
-function baseRate(profile, date) {
+// Without an explicit edition, use the newest one in force on that calendar date (pay-period timing is applied by callers).
+const editionOnDate = date => [...editions].reverse().find(edition => edition.effectiveFrom <= date) || editions[0];
+function baseRate(profile, date, edition = editionOnDate(date)) {
   const key = profile.classification === '3' ? (profile.level3Band === 'two-or-more' ? '3-many' : profile.level3Band === 'one-or-none' ? '3-one' : null) : profile.classification;
-  if (!key || !source.adultRates[key]) return null;
+  if (!key || !edition.adultRates[key]) return null;
   const years = age(profile.dateOfBirth, date), percent = years < 16 ? 40 : years < 21 ? (years - 11) * 10 : 100;
   // Clauses 15.1 note 1 and 15.2: apply the junior percentage to the
   // unrounded weekly rate / 38, then round the junior hourly base to cents.
-  return Math.floor((source.weeklyRates[key]*percent+1900)/3800);
+  return Math.floor((edition.weeklyRates[key]*percent+1900)/3800);
 }
 function periodStart(date, anchor, weeks = 1) {
   const days = Math.floor((Date.parse(date+'T00:00:00Z') - Date.parse(anchor+'T00:00:00Z')) / 86400000);
   return M.shiftDate(anchor, Math.floor(days / (7 * weeks)) * 7 * weeks);
 }
-function rateEffective(config) {
-  let date = periodStart(source.effectiveFrom, config.payPeriodAnchor, config.payPeriodWeeks);
-  if (date < source.effectiveFrom) date = M.shiftDate(date, 7 * config.payPeriodWeeks);
+// An edition applies from the first full pay period starting on or after its effective date.
+function editionStart(edition, config) {
+  let date = periodStart(edition.effectiveFrom, config.payPeriodAnchor, config.payPeriodWeeks);
+  if (date < edition.effectiveFrom) date = M.shiftDate(date, 7 * config.payPeriodWeeks);
   return date;
 }
+function rateEffective(config) { return editionStart(editions[0], config); }
+function validPeriod(config) { try { M.date(config.payPeriodAnchor); return [1, 2].includes(config.payPeriodWeeks); } catch { return false; } }
+// The edition for a work date, plus whether the employer still needs to activate it. A missing saved edition
+// (older setups) accepts every included edition; only the newest edition can expire.
+function editionFor(config, date) {
+  const starts = editions.map(edition => validPeriod(config) ? editionStart(edition, config) : edition.effectiveFrom);
+  let index = -1;
+  for (let i = editions.length - 1; i >= 0; i--) if (starts[i] <= date) { index = i; break; }
+  if (index < 0) return {edition: null, activationNeeded: false, expired: false};
+  const activated = config.sourceId ? editionRank(config.sourceId) : editions.length - 1, edition = editions[index];
+  return {edition, activationNeeded: activated >= 0 && index > activated, expired: index === editions.length - 1 && date >= edition.reviewBy};
+}
+// True when every date from..to is costed by an included, activated, unexpired edition.
+function editionReady(config, from, to = from) {
+  if (config.sourceId && editionRank(config.sourceId) < 0) return false;
+  if (from < (validPeriod(config) ? rateEffective(config) : editions[0].effectiveFrom)) return false;
+  for (const date of [from, to]) { const chosen = editionFor(config, date); if (!chosen.edition || chosen.activationNeeded || chosen.expired) return false; }
+  return true;
+}
+const activationMessage = edition => 'Activate the '+edition.label+' award rates in this location’s Employer setup before costing these dates.';
 function ordinaryPercent(type, classification, day, minute, holiday) {
   let percent = holiday ? 225 : day === 6 ? 125 : day === 0 ? (classification === '1' ? 125 : 150) : minute < 360 ? 115 : minute >= 1320 ? 110 : 100;
   return percent + (type === 'casual' ? 25 : 0);
@@ -81,21 +99,24 @@ function hourlyRates({config, profile, date, preview=false, locationId=config.lo
   const issues=[],add=(code,message)=>issues.push({code,message});
   const enabled=config.enabled===true&&config.localPayEnabled===true;
   if(!enabled||config.coverageConfirmed!==true)add('employer-setup','Complete Employer setup in this location’s settings and enable automatic award calculations.');
-  if(config.sourceId&&config.sourceId!==source.id)add('award-source','Review and activate the included award edition.');
+  if(config.sourceId&&editionRank(config.sourceId)<0)add('award-source','Review and activate the included award edition.');
   try{M.date(config.payPeriodAnchor);if(![1,2].includes(config.payPeriodWeeks))throw Error();if(date<rateEffective(config))add('award-date','The included award rates do not cover this pay period.');}
   catch{add('pay-period','Set the employer’s weekly or fortnightly pay-period start in this location’s Employer setup.');}
-  if(date>=source.reviewBy)add('award-review','Review a newer award edition before calculating rates for this date.');
+  const chosen=editionFor(config,date),edition=chosen.edition||source;
+  if(chosen.activationNeeded)add('award-source',activationMessage(edition));
+  if(chosen.expired)add('award-review','Load and review the next award edition before calculating rates for this date.');
   const setupIssues=employmentIssues(profile,date,locationId,config.employerName);
   issues.push(...(preview?hourlyInputIssues(profile,date,locationId,config.employerName):setupIssues.filter(i=>i.code!=='employment-pattern')));
-  const result={date,enabled,ready:false,source:{id:source.id,code:source.code,title:source.title,effectiveFrom:source.effectiveFrom,reviewBy:source.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,setupIssues:preview?setupIssues:setupIssues.filter(i=>i.code==='employment-pattern'),...(preview?{preview:true}:{})};
+  const result={date,enabled,ready:false,source:{id:edition.id,code:edition.code,title:edition.title,label:edition.label,effectiveFrom:edition.effectiveFrom,reviewBy:edition.reviewBy},profileEffectiveFrom:profile?.effectiveFrom||null,payBasis:profile?.payBasis||null,issues,rates:null,setupIssues:preview?setupIssues:setupIssues.filter(i=>i.code==='employment-pattern'),...(preview?{preview:true}:{})};
   if(issues.length)return result;
-  const minimumBaseCents=baseRate(profile,date),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
+  const minimumBaseCents=baseRate(profile,date,edition),baseCents=profile.payBasis==='base-plus-penalties'?profile.baseRateCents:minimumBaseCents;
   if(!Number.isSafeInteger(minimumBaseCents)||!Number.isSafeInteger(baseCents)||baseCents<minimumBaseCents){add('agreed-base','The agreed base rate is missing or below the employee’s award minimum.');return result;}
   const ordinary=(day,minute=720,holiday=false)=>roundRate(baseCents,ordinaryPercent(profile.employmentType,profile.classification,day,minute,holiday));
-  const allowanceEstimates=profile.laundersUniform===true?[{label:'Uniform laundry',amountCents:profile.employmentType==='full-time'?source.allowances.laundryFullTime:source.allowances.laundryShift,unit:profile.employmentType==='full-time'?'week':'shift'}]:[];
+  const allowanceEstimates=profile.laundersUniform===true?[{label:'Uniform laundry',amountCents:profile.employmentType==='full-time'?edition.allowances.laundryFullTime:edition.allowances.laundryShift,unit:profile.employmentType==='full-time'?'week':'shift'}]:[];
   return{...result,ready:true,allowanceEstimates,conditionalAllowances:require('./public/employee-allowances-model').selected(profile).filter(c=>!c.automatic).map(({id,label})=>({id,label})),rates:{minimumBaseCents,baseCents,weekdayCents:ordinary(1),saturdayCents:ordinary(6),sundayCents:ordinary(0),publicHolidayCents:ordinary(1,720,true),eveningCents:ordinary(1,1320),overnightCents:ordinary(1,0)}};
 }
 function calculate({config, profiles, items, mode = 'roster'}) {
+  const editionCache = new Map(), editionAt = date => { if (!editionCache.has(date)) editionCache.set(date, editionFor(config, date)); return editionCache.get(date); };
   if (!config.localPayEnabled || !config.enabled) return {enabled: false, results: [], coverage: [], exclusions};
   // A confirmed location calendar wins; otherwise the location's automatic state calendar applies to rosters and actual pay.
   const calendarFor=(locationId,date)=>(config.holidayCalendars||[]).find(c=>c.locationId===locationId&&c.year===Number(date.slice(0,4))&&c.confirmed)||(config.planningCalendars||[]).find(c=>c.locationId===locationId&&c.year===Number(date.slice(0,4))&&c.automatic===true)||null;
@@ -121,10 +142,10 @@ function calculate({config, profiles, items, mode = 'roster'}) {
   const getCounter = key => {if (!counters.has(key)) counters.set(key, {ordinary: 0, overtime: 0, dates: new Set()}); return counters.get(key);};
   const selectedProfile = (id, date) => profiles.filter(p => p.userId === id && p.effectiveFrom <= date).sort((a,b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
   for (const item of [...items].sort((a,b) => a.startAt.localeCompare(b.startAt) || a.id.localeCompare(b.id))) {
-    const start = Date.parse(item.startAt), end = Date.parse(item.endAt), firstDate = getParts(start).date;
-    const result = {benefitSegments:[],subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: source.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], notices: [], complete: true, estimated: mode === 'roster'};
+    const start = Date.parse(item.startAt), end = Date.parse(item.endAt), firstDate = getParts(start).date, itemEdition = editionAt(firstDate).edition || source;
+    const result = {benefitSegments:[],subjectId: item.id, userId: item.userId, locationId: item.locationId, versionId: itemEdition.id, costCents: null, wageCents: 0, allowanceCents: 0, superEstimateCents: null, oncostEstimateCents: 0, employerEstimateCents: null, paidSeconds: 0, ordinarySeconds: 0, overtimeSeconds: 0, minimumPaymentSeconds: 0, lines: [], issues: [], notices: [], complete: true, estimated: mode === 'roster'};
     const issue = (code, message, clause, blocking = false) => {
-      if (!result.issues.some(i => i.code === code)) result.issues.push({subjectId: item.id, userId: item.userId, code, message, clause, versionId: source.id, blocking});
+      if (!result.issues.some(i => i.code === code)) result.issues.push({subjectId: item.id, userId: item.userId, code, message, clause, versionId: result.versionId, blocking});
       if (blocking) result.complete = false;
     };
     const planningNotice=calendar=>{if(calendar?.automatic&&!result.notices.some(n=>n.code==='automatic-holidays'))result.notices.push({code:'automatic-holidays',message:'Uses the automatic '+calendar.state+' public holidays from this location’s setup. Save a reviewed calendar only for regional, part-day or Broken Hill exceptions.'});};
@@ -137,7 +158,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     if(mode==='roster'&&engagements.get(item.id)?.items.length>1&&engagements.get(item.id).items.some(i=>i.breakPlan))issue('pay-break-engagement','Adjacent cards form one continuous engagement. Combine them before automatically planning breaks.','14',true);
     const firstIFA=activeFlexibilityAgreement(p,firstDate,item.locationId);
     if(firstIFA){if(rosteredHoursAgreement(p,firstDate,item.locationId,config.employerName))issue('pay-ifa-hours','The recorded signed IFA permits roster-based hours. Standard award rates, daily/weekly limits, penalties and overtime still apply.','5; 13; 20');else issue('pay-ifa-terms','Review this IFA separately. Its employer, working-hours confirmation or varied pay terms are not supported by the standard calculator.','5',true);}
-    if(config.sourceId&&config.sourceId!==source.id)issue('pay-source-activation','Review and activate the included award edition before calculating new costs.','15; Schedule A',true);
+    if(config.sourceId&&editionRank(config.sourceId)<0)issue('pay-source-activation','Review and activate the included award edition before calculating new costs.','15; Schedule A',true);
     if (!p || !item.userId) issue('pay-profile', 'Complete employment details in Users for this shift date.', '12, 15', true);
     if(p?.arrangement==='needs-review')issue('pay-special-arrangement','This employee has a special arrangement. Obtain a separately reviewed calculation; the standard calculator does not interpret it.','7, 15.3–15.4, 20.7',true);
     if(p?.employmentType==='part-time'&&![1,4].includes(p.cycleWeeks||1))issue('pay-part-time-cycle','Review part-time averaging outside a weekly or four-week arrangement.','20.3',true);
@@ -145,7 +166,8 @@ function calculate({config, profiles, items, mode = 'roster'}) {
     if (p && (firstDate < p.employmentStart || firstDate < p.dateOfBirth)) issue('pay-profile-date', 'Work predates the recorded employment or birth date.', '8, 15', true);
     if (!config.payPeriodAnchor || ![1,2].includes(config.payPeriodWeeks)) issue('pay-period', 'Set the employer’s weekly or fortnightly pay-period anchor.', '16.1', true);
     else if (firstDate < rateEffective(config)) issue('pay-source-date', 'The uploaded rates do not cover this pay period. Load the earlier award edition.', '15; Schedule A', true);
-    if (firstDate >= source.reviewBy) issue('pay-source-review', 'Load and review a newer award edition before costing this date.', '15; Schedule A', true);
+    const sourceCheck = date => { const chosen = editionAt(date); if (chosen.activationNeeded) issue('pay-source-activation', activationMessage(chosen.edition), '15; Schedule A', true); if (chosen.expired) issue('pay-source-review', 'Load and review the next award edition before costing this date.', '15; Schedule A', true); };
+    sourceCheck(firstDate);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) issue('pay-period-invalid', 'Complete the shift’s start and finish times.', '13', true);
     const facts = item.awardFacts || {}, recorded = item.breaks || [];
     let breaks = recorded.filter(b => b.endAt).map(b => ({start: Date.parse(b.startAt), end: Date.parse(b.endAt), paid: b.paid === true}));
@@ -186,7 +208,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       if (date !== previousDate) {
         previousDate = date;
         if(date!==firstDate)for(const problem of employmentIssues(effectiveProfile,date,item.locationId,config.employerName))issue(({'employment':'pay-profile','employment-date':'pay-profile-date','arrangement':'pay-special-arrangement','averaging':'pay-part-time-cycle','employment-pattern':'pay-pattern','ifa':'pay-ifa-terms','agreed-base':'pay-contract-rate'})[problem.code]||'pay-'+problem.code,'Employment terms for '+date+': '+problem.message,'5; 10–15; 20',true);
-        if (date >= source.reviewBy) issue('pay-source-review', 'Load and review a newer award edition before costing this date.', '15; Schedule A', true);
+        sourceCheck(date);
         const calendar = calendarFor(item.locationId,date);planningNotice(calendar);
         if (!calendar) issue('pay-calendar', 'Choose this location’s state or territory in Location setup so public holidays apply automatically.', '21, 27', true);
         windows = [];
@@ -216,7 +238,7 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         }
       }
       const profile = effectiveProfile, calendar = calendarFor(item.locationId,date), holiday = calendar?.dates.some(h => h.date === date && minute >= M.minutes(h.start) && minute < (h.end === '24:00' ? 1440 : M.minutes(h.end))) || false;
-      const base = baseRate(profile, date);
+      const base = baseRate(profile, date, editionAt(date).edition || source);
       if (base === null || !profile.payBasis) {issue('pay-profile', 'Complete employment details in Users for all dates worked.', '12, 15', true); break;}
       const contractBase = profile.payBasis === 'base-plus-penalties' ? profile.baseRateCents : base;
       if (!Number.isInteger(contractBase) || contractBase < base) issue('pay-contract-rate', 'The agreed base rate is missing or below this employee’s award minimum.', '15', true);
@@ -288,15 +310,15 @@ function calculate({config, profiles, items, mode = 'roster'}) {
       const allowance = (label,cents,clause,date=firstDate) => {if(cents>0) result.lines.push({label,amountCents:Math.round(cents),clause,kind:'allowance',date});};
       const once = (key,action) => {if(!weeklyAllowances.has(key)){weeklyAllowances.add(key);action();}};
       const week = M.monday(firstDate), calendar = (config.holidayCalendars||[]).find(c=>c.locationId===item.locationId&&c.year===Number(firstDate.slice(0,4)));
-      if (calendar?.brokenHill) once(item.userId+':broken:'+week,()=>allowance('Broken Hill weekly allowance',4790,'17.2'));
+      if (calendar?.brokenHill) once(item.userId+':broken:'+week,()=>allowance('Broken Hill weekly allowance',itemEdition.allowances.brokenHill,'17.2'));
       if (p.laundersUniform) {
-        if (p.employmentType==='full-time') once(item.userId+':laundry:'+week,()=>allowance('Uniform laundry — weekly',642,'17.5(b)(i)'));
-        else once(item.userId+':laundry-shift:'+engagement.items[0].id,()=>allowance('Uniform laundry — shift',128,'17.5(b)(ii)'));
+        if (p.employmentType==='full-time') once(item.userId+':laundry:'+week,()=>allowance('Uniform laundry — weekly',itemEdition.allowances.laundryFullTime,'17.5(b)(i)'));
+        else once(item.userId+':laundry-shift:'+engagement.items[0].id,()=>allowance('Uniform laundry — shift',itemEdition.allowances.laundryShift,'17.5(b)(ii)'));
       }
-      allowance('Cold work',(facts.coldMinutes||0)*38/60,'17.3(a)');
-      allowance('Cold work below 0°C',(facts.freezerMinutes||0)*97/60,'17.3(b)');
-      allowance('Own vehicle — delivery',(facts.deliveryKm||0)*53,'17.8(a)');
-      allowance('Own vehicle — other duties',(facts.otherKm||0)*100,'17.8(b)');
+      allowance('Cold work',(facts.coldMinutes||0)*itemEdition.allowances.cold/60,'17.3(a)');
+      allowance('Cold work below 0°C',(facts.freezerMinutes||0)*itemEdition.allowances.freezer/60,'17.3(b)');
+      allowance('Own vehicle — delivery',(facts.deliveryKm||0)*itemEdition.allowances.deliveryKm,'17.8(a)');
+      allowance('Own vehicle — other duties',(facts.otherKm||0)*itemEdition.allowances.otherKm,'17.8(b)');
       if ((facts.mealOvertimeMinutes||0)>result.overtimeSeconds/60) issue('pay-meal-duration','Eligible overtime meal minutes cannot exceed overtime worked.','17.4',true);
       result.mealMinutesByDate=facts.mealEligible?(facts.mealOvertimeMinutes?{[firstDate]:facts.mealOvertimeMinutes}:afterFinishByDate):{};
       if(engagement.items.at(-1).id===item.id){
@@ -305,15 +327,15 @@ function calculate({config, profiles, items, mode = 'roster'}) {
         for(const row of rows)for(const [date,minutes]of Object.entries(row.mealMinutesByDate||{}))dailyMeals[date]=(dailyMeals[date]||0)+minutes;
         for(const [date,minutes]of Object.entries(dailyMeals))if(minutes>60){
           const supplied=engagement.items.some(i=>i.awardFacts?.mealSupplied);
-          if(!supplied)allowance('Overtime meal',1733,'17.4(a)',date);
-          if(minutes>240)allowance('Further overtime meal',1566,'17.4(b)',date);
+          if(!supplied)allowance('Overtime meal',(editionAt(date).edition||itemEdition).allowances.meal,'17.4(a)',date);
+          if(minutes>240)allowance('Further overtime meal',(editionAt(date).edition||itemEdition).allowances.furtherMeal,'17.4(b)',date);
         }
       }
       for(const leg of [{minutes:facts.travelMinutes,startAt:facts.travelStartAt},{minutes:facts.returnTravelMinutes,startAt:facts.returnTravelStartAt}])if(leg.minutes){
         const travelStart=Date.parse(leg.startAt),finish=travelStart+leg.minutes*60000;
         if(!Number.isFinite(travelStart)){issue('pay-travel-time','Record when extra travel occurred so Sunday and public holiday rates can be applied.','17.6',true);continue;}
         let numerator=0;
-        for(let cursor=travelStart;cursor<finish;){const part=getParts(cursor),day=new Date(part.date+'T12:00:00Z').getUTCDay(),minute=M.minutes(part.time),calendar=calendarFor(item.locationId,part.date),holiday=calendar?.dates.some(h=>h.date===part.date&&minute>=M.minutes(h.start)&&minute<(h.end==='24:00'?1440:M.minutes(h.end)));planningNotice(calendar);if(!calendar)issue('pay-calendar','Choose this location’s state or territory in Location setup so public holidays apply to all extra travelling dates.','17.6, 27',true);const next=Math.min(finish,(Math.floor(cursor/60000)+1)*60000);numerator+=(next-cursor)*roundRate(baseRate(selectedProfile(item.userId,part.date)||p,part.date),day===0||holiday?150:100);cursor=next;}
+        for(let cursor=travelStart;cursor<finish;){const part=getParts(cursor),day=new Date(part.date+'T12:00:00Z').getUTCDay(),minute=M.minutes(part.time),calendar=calendarFor(item.locationId,part.date),holiday=calendar?.dates.some(h=>h.date===part.date&&minute>=M.minutes(h.start)&&minute<(h.end==='24:00'?1440:M.minutes(h.end)));planningNotice(calendar);if(!calendar)issue('pay-calendar','Choose this location’s state or territory in Location setup so public holidays apply to all extra travelling dates.','17.6, 27',true);const next=Math.min(finish,(Math.floor(cursor/60000)+1)*60000);numerator+=(next-cursor)*roundRate(baseRate(selectedProfile(item.userId,part.date)||p,part.date,editionAt(part.date).edition||source),day===0||holiday?150:100);cursor=next;}
         allowance('Extra travelling time',Math.floor((numerator+1800000)/3600000),'17.6(c)');
       }
       allowance('Reimbursement · '+(facts.reimbursementReason||''),facts.reimbursementCents||0,'17.5–17.10');
@@ -366,4 +388,4 @@ function facts(input = {}) {
   }
   return result;
 }
-module.exports = {source, coverage, exclusions, calculate, hourlyRates, employmentIssues, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};
+module.exports = {source, editions, editionFor, editionReady, editionRank, coverage, exclusions, calculate, hourlyRates, employmentIssues, baseRate, roundRate, periodStart, rateEffective, ordinaryPercent, overtimePercent, facts};
