@@ -155,11 +155,12 @@ actions are Edit/Open and a ⋯ menu for authorised editors.
 
 Each response or instruction step (not sections) may carry optional `locationIds`
 and/or `roleIds`. Omitted means every location / everyone. In the expanded step,
-**Who sees this step** has Locations and Permission levels multi-select dropdowns
-(the shared app selector) listing the checklist's accessible locations and the
-editor's assignable levels; leaving one blank shows All locations / Everyone, and a badge in the
-step header summarises a limit. The basics row puts Step type beside a Required
-switch, with full-width instructions underneath.
+The expanded step keeps one compact row of controls with a single 10 px rhythm:
+Step type, **Visible at** (locations) and **Visible to** (permission levels)
+multi-select dropdowns using the shared app selector, and a Required switch. A
+one-line hint and full-width instructions follow. Blank dropdowns show All
+locations / Everyone; a badge in the step header summarises a limit. Phones
+stack the row (Visible at/to side by side) with touch-sized controls.
 
 - Saves validate ids against the editor's accessible locations and assignable levels
   (ids already saved on that step are kept); sections cannot be limited and changing

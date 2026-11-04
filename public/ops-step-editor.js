@@ -51,23 +51,23 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   if(['media','file'].includes(step.type)){numericField('maxFiles','Maximum files',step.maxFiles??1,1,10);if(step.type==='media')selectField('mediaKind','Allowed media',[['both','Photos and videos'],['photo','Photos only'],['video','Videos only']],step.mediaKind||'both');grid.append(ui('p',step.type==='media'?'Photos up to 10 MB; videos up to 25 MB.':'PDF, Office documents, text, CSV, ZIP, images and audio up to 10 MB; videos up to 25 MB.','small ops-wide'));}
   if(step.type==='datetime')selectField('dateMode','Date and time format',[['datetime','Date and time'],['date','Date only'],['time','Time only']],step.dateMode||'datetime');
   if(step.type==='signature')selectField('signatureMode','Signature method',[['either','Type or draw'],['drawn','Draw signature'],['typed','Type name']],step.signatureMode||'either');
-  if(!model.isSection(step)&&audienceOptions)grid.append(audienceSection(step));
+  basics?.querySelector(':scope>.ops-audience-fields')?.remove();if(!model.isSection(step)&&audienceOptions){const audience=audienceSection(step);if(basics)(basics.querySelector(':scope>.ops-toggle')?basics.querySelector(':scope>.ops-toggle').before(audience):basics.append(audience));else grid.append(audience);grid.prepend(ui('p','Visible at / to: leave blank for everyone. People who can’t see a step don’t need to complete it.','ops-audience-help ops-wide'));}
   host.append(grid);
  }
  // Who sees this step: omitted lists mean everyone; chips add specific locations or permission levels.
- function audienceGroups(step){const options=audienceOptions?.()||{};return[['locationIds','Locations','All locations',(options.locations||[]).map(item=>[item.id,item.name])],['roleIds','Permission levels','Everyone',(options.levels||[]).map(item=>[item.id,item.name])]].map(([key,label,allLabel,items])=>{const all=[...items];for(const id of step[key]||[])if(!all.some(([known])=>known===id))all.push([id,'Unavailable']);return{key,label,allLabel,items:all};});}
+ function audienceGroups(step){const options=audienceOptions?.()||{};return[['locationIds','Locations','All locations',(options.locations||[]).map(item=>[item.id,item.name])],['roleIds','Permission levels','Everyone',(options.levels||[]).map(item=>[item.id,item.name])]].map(([key,label,allLabel,items])=>{const all=[...items];for(const id of step[key]||[])if(!all.some(([known])=>known===id))all.push([id,'Unavailable']);return{key,label,allLabel,title:key==='locationIds'?'Visible at':'Visible to',items:all};});}
  function audienceSummary(step){if(model.isSection(step))return '';const parts=[];for(const group of audienceGroups(step)){const ids=step[group.key];if(!Array.isArray(ids))continue;parts.push(ids.length===1?(group.items.find(([id])=>id===ids[0])?.[1]||'1 selected'):ids.length+(group.key==='locationIds'?' locations':' permission levels'));}return parts.join(' · ');}
  function refreshBadge(step,node){const top=node?.querySelector('.ops-step-top');if(!top)return;let badge=top.querySelector('.ops-step-audience-badge');const text=audienceSummary(step);if(!text){badge?.remove();return;}if(!badge){badge=el('span','ops-step-audience-badge');top.querySelector('.ops-step-kind')?.before(badge);}badge.textContent=text;badge.title='Only shown to: '+text;badge.dataset.userText='';}
  function audienceSection(step){
-  const wrap=el('div','ops-step-audience ops-wide'),fields=el('div','ops-audience-fields');wrap.append(ui('span','Who sees this step','ops-step-audience-title'),fields);
+  const fields=el('div','ops-audience-fields');
   for(const group of audienceGroups(step)){
    const select=el('select');select.multiple=true;select.setAttribute('aria-label',group.label);
    for(const [id,name] of group.items){const option=document.createElement('option');option.value=id;option.textContent=name;option.selected=Boolean(step[group.key]?.includes(id));select.append(option);}
-   select.onchange=()=>{const chosen=[...select.selectedOptions].map(option=>option.value);if(chosen.length)step[group.key]=chosen;else delete step[group.key];refreshBadge(step,wrap.closest('.ops-step-editor'));changed();};
-   const label=field(group.label,select);label.classList.add('ops-audience-field');fields.append(label);
+   select.onchange=()=>{const chosen=[...select.selectedOptions].map(option=>option.value);if(chosen.length)step[group.key]=chosen;else delete step[group.key];refreshBadge(step,fields.closest('.ops-step-editor'));changed();};
+   const label=field(group.title,select);label.classList.add('ops-audience-field');fields.append(label);
    window.appSelects?.enhance(select,{label:group.label,placeholder:group.allLabel,searchLabel:'Search '+group.label.toLowerCase()});
   }
-  wrap.append(ui('p','Leave blank for everyone. People who can’t see a step don’t need to complete it.','ops-audience-help'));return wrap;
+  return fields;
  }
  function render(next,openId){endDrag(true);items=next;if(openId)opened.add(openId);host.replaceChildren();for(const[ index,step]of items.entries()){
    const node=el('section','ops-step-editor'+(model.isSection(step)?' ops-section-editor':'')),top=el('div','ops-step-top'),type=el('select'),title=input('text',step.title),body=el('div','ops-step-details'),config=el('div','ops-step-config'),kind=ui('span',model.kinds[step.type],'ops-step-kind');node.dataset.stepId=step.id;node.dataset.stepType=step.type;

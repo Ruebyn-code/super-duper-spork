@@ -407,3 +407,22 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-page .ops-step-details .ops-required-switch input[type=checkbox]{width:30px;height:18px;min-height:0;max-height:18px;padding:0;margin:0;border:0}.ops-step-details>.ops-step-config>.ops-step-fields>.ops-step-help,.ops-step-details .ops-step-help{grid-column:1/-1}.ops-step-details .ops-step-help textarea{width:100%}
 .ops-audience-fields{display:grid;grid-template-columns:repeat(2,minmax(0,260px));gap:10px}.ops-audience-field{min-width:0}.ops-audience-field .location-picker{width:100%;min-width:0;max-width:none}.ops-audience-field .location-select-trigger.is-placeholder .location-picker-value{color:var(--theme-muted,#64748b)}
 @media(max-width:580px){.ops-audience-fields{grid-template-columns:1fr}.ops-audience-field .location-select-trigger{min-height:40px;font-size:16px}}
+/* Compact step options: one row of controls, one 10px rhythm. */
+.ops-step-editor .ops-step-details{gap:10px;padding:10px 4px 8px}
+.ops-step-details>.ops-step-basics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end}
+.ops-step-basics>.ops-step-type-field{width:auto}
+.ops-step-basics .ops-audience-fields{display:contents}
+.ops-step-details .ops-step-basics label,.ops-step-details .ops-step-help{gap:4px;font-size:.72rem}
+.ops-step-details .ops-step-basics .location-select-trigger{height:32px;min-height:32px;padding:5px 8px;font-size:.8rem}
+.ops-step-details .ops-step-basics .ops-required-switch{height:32px;min-height:32px;box-sizing:border-box;padding:0 10px;white-space:nowrap;font-size:.72rem}
+.ops-step-details .ops-step-help textarea{height:44px;min-height:44px}
+.ops-step-details .ops-audience-help{margin:-4px 0 0;font-size:.66rem;line-height:1.35;color:var(--theme-muted,#64748b)}
+@media(max-width:800px){.ops-step-details>.ops-step-basics{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-step-basics>.ops-step-type-field{grid-column:1/-1}.ops-step-basics>.ops-required-switch{grid-column:1/-1;justify-self:start}}
+@media(max-width:580px){.ops-step-details>.ops-step-basics{grid-template-columns:1fr}.ops-step-details .ops-step-basics .location-select-trigger{height:40px;min-height:40px;font-size:16px}.ops-step-details .ops-step-basics .ops-required-switch{height:40px;min-height:40px}}
+.ops-step-details .location-select-trigger{margin:0}
+.ops-step-details label{gap:4px;font-size:.72rem}
+.ops-step-details input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),.ops-step-details .location-select-trigger{height:32px;min-height:32px;box-sizing:border-box}
+.ops-step-details .ops-audience-help{margin:-6px 0 0}
+@media(max-width:580px){.ops-step-details input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]),.ops-step-details .location-select-trigger,.ops-step-details .ops-step-basics .location-select-trigger{height:40px;min-height:40px;font-size:16px}}
+.ops-step-editor .ops-step-details label{margin:0}.ops-step-details .ops-audience-help{margin:-4px 0 0}
+@media(max-width:580px){.ops-step-details>.ops-step-basics{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-step-basics>.ops-step-type-field,.ops-step-basics>.ops-required-switch{grid-column:1/-1}}
