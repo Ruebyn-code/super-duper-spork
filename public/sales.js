@@ -68,7 +68,7 @@
    notice=!dirty?notice:conflicts.length?'Newer saved sales were loaded. Check {days}: your unsaved amount differs from the saved one.':'Newer saved sales were added to your unsaved changes.';
   }
   for(let index=0;index<7;index++){if(inputs[index].value!==values[index])inputs[index].value=values[index];$('sales-date-'+index).textContent=dateLabel(shift(selectedWeek,index));window.publicHolidayMarkers?.mark($('sales-date-'+index),shift(selectedWeek,index));}
-  $('sales-week').value=selectedWeek;$('sales-entry-period').textContent=dateLabel(selectedWeek)+' – '+dateLabel(shift(selectedWeek,6));
+  $('sales-week').value=selectedWeek;$('sales-entry-period').textContent=dateLabel(selectedWeek)+' – '+dateLabel(shift(selectedWeek,6));window.salesWeek?.tag($('sales-entry-period'),selectedWeek,wording);
   if(draft&&draft.revision!==record.revision){try{if(dirty)localStorage.setItem(draftKey(),JSON.stringify({revision,days:values,base:baseDays}));else localStorage.removeItem(draftKey());}catch{}}
   $('sales-draft-status').textContent=notice?wording(notice,{days:conflicts.map(index=>wording(weekdays[index])).join(', ')}):'';
   renderProgress();
