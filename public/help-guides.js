@@ -234,7 +234,7 @@
  add(c,'public-holidays','Set automatic public holidays','Use the right Australian holiday calendar at each location.',[
   'Open Admin → Locations → Edit location → General.',
   'Choose State or territory and press Save settings.',
-  'Look for a solid blue star on holiday dates in Home, Daily sales, Weekly report and Rostering.',
+  'Look for the tilted blue calendar icon on holiday dates in Home, Daily sales, Weekly report and Rostering.',
   'For regional or special exceptions, an authorised manager can review the location calendar in Settings → Award compliance → Public holidays.'
  ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['In Award compliance → Review public holidays, Confirm all locations at once lists every location’s automatic dates for a year. Tick the declaration to confirm the ticked locations together; locations with a draft, no state or regional/part-day days stay for individual review.','State holidays fill automatically, including Easter and substitute dates. Reviewed calendars override automatic dates for that year. Roster estimates use state holidays automatically; actual pay approval still requires a reviewed calendar.'],related:['holiday-forecasts','delivery-exceptions','award-settings'],keywords:['blue star','state','territory','calendar','Easter','public holiday']});
  add(c,'holiday-forecasts','Understand holiday forecasts and yearly growth','Adjust the same named holiday’s prior-year sales for growth.',[

@@ -29,7 +29,7 @@ other roster sections and published readers keep their existing presentation.
   touch drag surface, while quick swipes elsewhere retain scrolling. Touch Add
   Shift targets, inline validation/Undo and phone readers stay native.
 - Staff rows have decorative initials, paid hours and existing full-week costs.
-  Today uses the server's Melbourne date; holiday stars remain native markers.
+  Today uses the server's Melbourne date; holiday calendar icons remain native markers.
 - Status uses a single 1 px tinted edge with a subtle matching fill, preserving
   position colours, glass surfaces and native focus/selection.
   Each saved shift has a green tint only when it matches its own published
