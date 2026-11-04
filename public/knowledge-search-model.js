@@ -44,7 +44,7 @@
  function document(article,query,expansions=[]){
   const found=match(article,query,expansions);if(!found)return null;
   const params=new URLSearchParams({search:query,block:String(found.blockIndex),revision:String(article.revision)});
-  return{id:'article:'+article.id,type:'Knowledge Library',title:article.title,text:found.text,url:'/knowledge-library?'+params+'#article-'+article.id,searchMatch:{score:found.score,coverage:found.coverage,clear:found.clear},preview:{section:found.section,text:found.text,media:found.media},target:{blockIndex:found.blockIndex,revision:article.revision}};
+  return{id:'article:'+article.id,type:'Knowledge centre',title:article.title,text:found.text,url:'/knowledge-library?'+params+'#article-'+article.id,searchMatch:{score:found.score,coverage:found.coverage,clear:found.clear},preview:{section:found.section,text:found.text,media:found.media},target:{blockIndex:found.blockIndex,revision:article.revision}};
  }
  const api={words,sections,match,document};if(typeof module==='object'&&module.exports)module.exports=api;else root.knowledgeSearch=api;
 })(globalThis);

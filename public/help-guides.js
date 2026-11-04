@@ -8,7 +8,7 @@
   ['rosters','Rosters & time','Plan shifts, clock work and review timesheets.','calendar'],
   ['checklists','Checklists & planners','Build procedures and schedule the right work.','check'],
   ['training','Training','Build courses, assign learning and track completion.','cap'],
-  ['knowledge','Knowledge Library','Find and publish your company’s information.','book'],
+  ['knowledge','Knowledge centre','Find and publish your company’s information.','book'],
   ['comms','Comms','Message your team and share important updates.','chat'],
   ['reporting','Reporting','Understand performance and compare locations.','bars'],
   ['intelligence','OpStack intelligence','Set up intelligence and review its suggestions.','sparkles'],
@@ -37,7 +37,7 @@
   'Your greeting sits at the top of the company-tinted Your work panel. Configured Quick links sit directly underneath it in a horizontal row; swipe, scroll or use the arrows to reach more shortcuts. On desktop, authorised layout editors can scroll to the end of the row and choose Add quick link. App edit keeps Quick links in the side panel too. Use Edit section there to change its title or shortcuts; the existing save and undo controls still apply. The Home guide sits beside the dashboard name, with the selected store’s details directly beneath it. On a wide screen, scroll Your work and the dashboard separately. Phones keep their normal scrolling. Review training, agreements and trainer sign-offs. Timesheets to approve shows pending completed timesheets across your accessible locations; choose a location to open its oldest pending week. Daily sales opens the existing entry popup when you have Store sales-entry access. Checklist tasks no longer appear in this side panel. Unread Comms is grouped into Groups, Direct messages and Posts, with avatars and unread badges. Choose an item to open its normal screen. Use Show all for more items; completing work or marking posts read removes them after refresh.',
   'On a store dashboard, use Today and This hour for projected sales and labour budget. With roster wage access, Today also shows the full published roster cost for that trading day, including overnight shifts dated to it. Draft changes are excluded; missing wage estimates show unavailable, while no published shifts shows zero. Compare saved hourly sales and review ordering, checklists, published staff shifts and quick links.',
   'Use Edit Home on a computer to customise the company layout. Head Office, Store and Staff layouts are independent; existing custom sections and the company’s colours, fonts and logos are retained.'
- ],{route:'/home',permissions:['home.view'],notes:['Add quick link opens its picker without turning on App edit. Search it to add app pages or Knowledge Library articles you can read, and use × under On Home to remove a link. Article links open the article in a pop-up over Home (Ctrl/⌘-click opens the Library in a new tab) and show only to people who can read that article; deleted or hidden articles disappear from the row.','The Sales leaderboard uses saved revenue: complete Weekly report channels first, otherwise Daily sales. Weekly ranks completed days through yesterday in Melbourne; past weeks include all seven days. Missing days leave a location unranked and show its coverage. Real zeroes can rank, and tied totals share a place. Custom Head Office layouts can add Sales leaderboard through Edit Home. Staff Home does not change permission to open Sales elsewhere. Head Office filters are read-only and never switch the operational location. Sales use complete saved weekly revenue channels where available, otherwise Daily sales; future days are excluded. Financial percentages use saved weekly costs divided by recorded sales, so a partial week may show a high percentage. Food cost uses saved invoices plus confirmed cost transfers, never order totals. Ordering projections keep their normal Sunday rollover and original/updated COGS rules; the Head Office budget excludes carts. Staff on now means published shifts scheduled at this time. Checklist summaries retain the existing audience and date rules. Assigned location managers still see eligible transfer approvals, and the Store daily-sales reminder retains its selected trading location. New administrative Head Office locations need no setup and are excluded from store forecasts. Head Office has no daily-sales entry panel; use Sales → Daily sales with the usual permission.'],related:['permissions','daily-sales','hourly-import','transfer-approvals','home-layout']});
+ ],{route:'/home',permissions:['home.view'],notes:['Add quick link opens its picker without turning on App edit. Search it to add app pages or Knowledge centre articles you can read, and use × under On Home to remove a link. Article links open the article in a pop-up over Home (Ctrl/⌘-click opens the Knowledge centre in a new tab) and show only to people who can read that article; deleted or hidden articles disappear from the row.','The Sales leaderboard uses saved revenue: complete Weekly report channels first, otherwise Daily sales. Weekly ranks completed days through yesterday in Melbourne; past weeks include all seven days. Missing days leave a location unranked and show its coverage. Real zeroes can rank, and tied totals share a place. Custom Head Office layouts can add Sales leaderboard through Edit Home. Staff Home does not change permission to open Sales elsewhere. Head Office filters are read-only and never switch the operational location. Sales use complete saved weekly revenue channels where available, otherwise Daily sales; future days are excluded. Financial percentages use saved weekly costs divided by recorded sales, so a partial week may show a high percentage. Food cost uses saved invoices plus confirmed cost transfers, never order totals. Ordering projections keep their normal Sunday rollover and original/updated COGS rules; the Head Office budget excludes carts. Staff on now means published shifts scheduled at this time. Checklist summaries retain the existing audience and date rules. Assigned location managers still see eligible transfer approvals, and the Store daily-sales reminder retains its selected trading location. New administrative Head Office locations need no setup and are excluded from store forecasts. Head Office has no daily-sales entry panel; use Sales → Daily sales with the usual permission.'],related:['permissions','daily-sales','hourly-import','transfer-approvals','home-layout']});
 
  add(c,'profile-photo','Add or change your profile photo','Give your account a recognisable photo.',[
   'Open the blue account dropdown and choose User profile.',
@@ -446,10 +446,10 @@
  add(c,'course-builder','Build and preview a training course','Create lessons and questions with a live learner preview.',[
   'Open Learning centre → Course builder and create or edit a draft.',
   'Add sections and blocks from the outline or canvas insertion controls. Edit their properties in the left panel.',
-  'Write lessons, insert supported media or select a Knowledge Library article, and configure section formatting, transitions and reading time.',
+  'Write lessons, insert supported media or select a Knowledge centre article, and configure section formatting, transitions and reading time.',
   'Use Test course to walk through the learner flow without recording training.',
   'Check autosave, then publish a reviewed version separately.'
- ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],notes:['Refreshing Library content explicitly updates a draft; later article edits do not rewrite assigned course content.'],related:['course-questions','assign-training','intelligence-questions']});
+ ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],notes:['Refreshing Knowledge centre content explicitly updates a draft; later article edits do not rewrite assigned course content.'],related:['course-questions','assign-training','intelligence-questions']});
  add(c,'course-questions','Use all training question types','Configure answers, marking and answer shuffling.',[
   'In Course builder, add a Knowledge check block.',
   'Choose Multiple choice, Multiple answers, True / false, Dropdown, Short answer, Fill in the blanks, Number, Matching or Put in order.',
@@ -471,19 +471,19 @@
  ],{route:'/learning-centre#progress',permissions:['learning.view','learning.report'],related:['operational-reports','take-course']});
 
  c='knowledge';
- add(c,'read-library','Find and read Knowledge Library articles','Browse policies, information and embedded media.',[
-  'Open Knowledge Library and search a title or words inside an article.',
+ add(c,'read-library','Find and read Knowledge centre articles','Browse policies, information and embedded media.',[
+  'Open Knowledge centre and search a title or words inside an article.',
   'Filter by Policies or Information, audience and category.',
   'Choose Cards, List or Grid and open the article.',
   'Follow headings, expand accordions and open the permitted images, documents or videos you need.'
  ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['Company articles follow the selected company; permitted network articles appear across companies. The shared platform search can also open matching article sections.'],related:['platform-search','publish-library','library-categories']});
- add(c,'publish-library','Write and publish a Library article','Share reviewed information with the correct audience.',[
-  'Open Knowledge Library with publishing permission and create or edit an article.',
+ add(c,'publish-library','Write and publish a Knowledge centre article','Share reviewed information with the correct audience.',[
+  'Open Knowledge centre with publishing permission and create or edit an article.',
   'Choose its title, Policies/Information type, category and company or authorised network audience.',
   'Use the formatting editor to add text, tables, media, accordions or callouts.',
   'Review the article and save/publish through its ordinary editor action. Refresh if another editor changed its revision.'
  ],{route:'/knowledge-library',permissions:['knowledge.view'],notes:['OpStack intelligence can prepare reviewed text inside the editor. It does not publish the article for you.'],related:['rich-content','intelligence-writing','library-categories']});
- add(c,'library-categories','Organise Library categories and views','Help staff browse related information.',[
+ add(c,'library-categories','Organise Knowledge centre categories and views','Help staff browse related information.',[
   'Use the Categories sidebar to choose All categories, Uncategorised or a saved category.',
   'With publishing authority, choose Manage categories to add, rename or remove one.',
   'Select the appropriate category while editing an article.',
@@ -582,11 +582,11 @@
  ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Hourly recurrence creates its own hourly occurrences; a separate planner per clock hour is unnecessary. Suggestions contain one paused planner and never add an end date.'],related:['hourly-checklists','checklist-audiences','trading-hours']});
  add(c,'intelligence-questions','Generate training questions from content','Create any of the nine question types from approved written sources.',[
   'Open OpStack intelligence questions in Course builder or Add a block → Knowledge checks.',
-  'Choose written course content, accessible Knowledge Library articles or pasted text, then inspect the selected source.',
+  'Choose written course content, accessible Knowledge centre articles or pasted text, then inspect the selected source.',
   'Choose question types and a count large enough for each selected type. Generate and review questions and answers.',
   'Choose Add questions to course to insert editable draft questions, then verify and publish through the normal course workflow.'
- ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],ai:true,notes:['Generate up to 20 questions at a time within the course limit. Source selection excludes existing answer keys and media. Changed Library articles may need refreshing.'],related:['course-questions','course-builder','read-library']});
- add(c,'intelligence-writing','Draft Comms and Library content','Write, improve or summarise submitted text inside the editor.',[
+ ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],ai:true,notes:['Generate up to 20 questions at a time within the course limit. Source selection excludes existing answer keys and media. Changed Knowledge centre articles may need refreshing.'],related:['course-questions','course-builder','read-library']});
+ add(c,'intelligence-writing','Draft Comms and Knowledge centre content','Write, improve or summarise submitted text inside the editor.',[
   'Open a permitted chat, post or article editor and choose OpStack intelligence.',
   'Choose Draft new content, Improve existing text or Summarise source text.',
   'Check the visible source field and instructions before generating.',
@@ -811,7 +811,7 @@
   'Check your current company and location in the header.',
   'Open User profile to review your current role and accessible locations.',
   'Ask an authorised user manager to review the matching view/edit/manage permission and your location memberships.',
-  'For courses, checklists or Library content, also check the assignment or audience. Sign in again after account changes.'
+  'For courses, checklists or Knowledge centre content, also check the assignment or audience. Sign in again after account changes.'
  ],{notes:['Choosing Manager Home does not grant sales or management access. Help guides describe all features; their screen links are offered only when your current permissions allow them.'],related:['permissions','switch-location','support-request']});
  add(c,'clock-problem','Your PIN or clock action is unavailable','Check the saved phone ending, published shift and current stage.',[
   'Ask a user manager to open your Personal settings and verify your phone number. Time & Attendance shows the clock PIN from its unique last four digits.',

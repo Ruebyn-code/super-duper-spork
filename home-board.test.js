@@ -74,7 +74,7 @@ test('Home section geometry preserves preset compatibility and rejects unsafe cu
  const legacy={id:'old',type:'heading',size:'full'};assert.deepEqual(model.validate([legacy]),[legacy]);
 });
 
-test('Quick links accept Knowledge Library article IDs only, and show them only with Library access',()=>{
+test('Quick links accept Knowledge centre article IDs only, and show them only with Library access',()=>{
  const id='0f8fad5b-d9cb-469f-a165-70867728950e',link='library-article:'+id,section={id:'links',type:'quick-links',size:'full',links:['ordering',link]};
  assert.deepEqual(model.validate([section])[0].links,['ordering',link]);assert.equal(model.articleId(link),id);assert.equal(model.articleLink(id.toUpperCase()),link);
  assert.deepEqual(model.validate([{...section,links:[link]}],'staff')[0].links,[link]);

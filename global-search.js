@@ -23,7 +23,7 @@ const pages=[
  ['leave','Leave','Request annual personal leave','/rostering#leave',['rostering.leave']],
  ['timesheets','Timesheets','Hours clock breaks approval','/rostering#timesheets',['rostering.view']],
  ['comms','Comms','Communications posts announcements messages chats','/communications',['comms.view']],
- ['library','Knowledge Library','Policies company information articles categories','/knowledge-library',['knowledge.view']],
+ ['library','Knowledge centre','Policies company information articles categories','/knowledge-library',['knowledge.view']],
  ['learning','Learning centre','Training courses assignments knowledge checks','/learning-centre',['learning.view']],
  ['ops','Ops management','Active checklists jobs tasks','/ops-management#checklists',['ops.view']],
  ['builder','Checklist builder','Templates planners schedules','/ops-management#templates',['ops.manage']],

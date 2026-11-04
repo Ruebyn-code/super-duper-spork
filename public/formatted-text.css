@@ -15,7 +15,7 @@
 }
 @media print{.text-inline-toolbar{display:none!important}}
 
-/* Rich writing only: Comms, Library articles, course content and required posts.
+/* Rich writing only: Comms, Knowledge centre articles, course content and required posts.
    Company fonts and authored course font/colour/size settings retain priority. */
 @media screen {
  body .formatted-text{--content-leading:1.7;line-height:var(--content-leading);font-kerning:normal;letter-spacing:normal}

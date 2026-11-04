@@ -6,7 +6,7 @@
  };
  const shortcuts={
   'home-ordering-card':'Ordering','home-cart-card':'Cart','home-stock-card':'Stock count','home-sales-card':'Sales',
-  'home-roster-card':'Rostering','home-comms-card':'Comms','home-library-card':'Knowledge Library','home-reporting-card':'Reporting'
+  'home-roster-card':'Rostering','home-comms-card':'Comms','home-library-card':'Knowledge centre','home-reporting-card':'Reporting'
  };
  const metrics={
   'home-total-sales':'Quarter sales','home-total-orders':'Placed orders','home-total-expense':'Quarter expense %',

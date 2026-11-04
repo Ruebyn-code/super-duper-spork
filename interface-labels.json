@@ -5732,7 +5732,7 @@
     ]
   },
   {
-    "text": "Knowledge Library",
+    "text": "Knowledge centre",
     "locations": [
       "knowledge-library",
       "Home"
@@ -5781,7 +5781,7 @@
     ]
   },
   {
-    "text": "Search library",
+    "text": "Search Knowledge centre",
     "locations": [
       "knowledge-library"
     ]
@@ -5829,7 +5829,7 @@
     ]
   },
   {
-    "text": "‹ Back to library",
+    "text": "‹ Back to Knowledge centre",
     "locations": [
       "knowledge-library"
     ]
@@ -5865,7 +5865,7 @@
     ]
   },
   {
-    "text": "Library view",
+    "text": "Knowledge centre view",
     "locations": [
       "knowledge-library"
     ]
@@ -5943,7 +5943,7 @@
     ]
   },
   {
-    "text": "Articles will stay in the library without a category.",
+    "text": "Articles will stay in the Knowledge centre without a category.",
     "locations": [
       "knowledge-library"
     ]
@@ -5955,7 +5955,7 @@
     ]
   },
   {
-    "text": "Library categories",
+    "text": "Knowledge centre categories",
     "locations": [
       "knowledge-library"
     ]
@@ -11470,7 +11470,7 @@
     ]
   },
   {
-    "text": "No library articles yet.",
+    "text": "No Knowledge centre articles yet.",
     "locations": [
       "Home"
     ]

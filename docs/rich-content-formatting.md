@@ -1,6 +1,6 @@
 # Rich content formatting
 
-Comms posts and messages, Knowledge Library articles and Training lessons use the
+Comms posts and messages, Knowledge centre articles and Training lessons use the
 same structured rich-content renderer. Screen styles in `public/formatted-text.css`
 provide consistent heading levels, paragraph/list spacing, quotes, tables, callouts,
 accordions and media captions. Saved company fonts and explicit course section
