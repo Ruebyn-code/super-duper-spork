@@ -112,7 +112,7 @@
 .overview-chart-plot{width:100%;overflow:hidden}.overview-chart-plot svg{display:block;max-width:100%;height:auto}
 .overview-chart-grid{stroke:var(--theme-line,#e2e8f0);stroke-width:1}.overview-chart-baseline{stroke:color-mix(in srgb,var(--theme-muted,#64748b) 55%,transparent);stroke-width:1}
 .overview-chart-axis{fill:var(--theme-muted,#64748b);font-size:10px;font-variant-numeric:tabular-nums}
-.overview-chart-mark{fill:url(#overview-bar-gradient)}.overview-chart-stop-start{stop-color:var(--primary,#008cff)}.overview-chart-stop-end{stop-color:var(--secondary,#45efc3)}.overview-chart-bar.partial .overview-chart-mark{fill:url(#overview-partial-hatch);stroke:var(--primary,#008cff);stroke-width:1}
+.overview-chart-mark{fill:url(#overview-bar-gradient)}.overview-chart-stop-start{stop-color:var(--primary,#008cff)}.overview-chart-stop-end{stop-color:color-mix(in srgb,var(--primary,#008cff) 45%,var(--theme-surface,#fff))}.overview-chart-bar.partial .overview-chart-mark{fill:url(#overview-partial-hatch);stroke:var(--primary,#008cff);stroke-width:1}
 .overview-chart-partial-fill{fill:color-mix(in srgb,var(--primary,#008cff) 22%,var(--theme-surface,#fff))}.overview-chart-partial-line{stroke:var(--primary,#008cff);stroke-width:2}
 .overview-chart-empty{stroke:var(--theme-muted,#64748b);stroke-width:2;stroke-dasharray:2 2}
 .overview-chart-hit{fill:transparent}.overview-chart-bar{outline:none}.overview-chart-bar:hover .overview-chart-hit,.overview-chart-bar:focus-visible .overview-chart-hit{fill:color-mix(in srgb,var(--primary,#008cff) 8%,transparent)}

@@ -4,8 +4,8 @@ Sales → Weekly overview shows a **Weekly sales** bar chart above the overview 
 for the selected quarter or year to date. It is drawn by `public/weekly-sales-chart.js`
 from the same rows the overview already loads, so it adds no reads or writes.
 
-- One bar per week (Monday–Sunday), filled with a vertical gradient from the company
-  primary colour (bottom) to the secondary colour (top), with 4 px rounded tops, a
+- One bar per week (Monday–Sunday), filled with a vertical gradient of the company
+  primary colour only (full primary at the bottom fading to a lighter primary tint at the top), with 4 px rounded tops, a
   recessive grid and a compact dollar axis.
 - Part-recorded weeks (1–6 days) are hatched and named in the key; weeks with no
   sales show a dotted baseline marker.
