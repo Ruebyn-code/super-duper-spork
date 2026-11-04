@@ -31,3 +31,7 @@ Training checklists also offer step types that only exist for in-store training.
 - **Knowledge question** — the title is the question and a saved expected answer guides the trainer; marked Correct or Not yet, passing when Correct. Staff DTOs never include the expected answer.
 - **Timed task** — the trainer records minutes and seconds against a saved target (5 seconds–2 hours); passes at the target or faster.
 - **Staff confirmation** — the staff member types their own name in the trainer's presence; passes when it matches their account name (case and spacing insensitive). This is a recorded confirmation, not an electronic signature.
+
+### Builder page and phone preview
+
+The training checklist builder opens as a full page inside In-store training (not a dialog), with a sticky header holding ← In-store training, Cancel and Save checklist. On desktop a 340 px phone preview sits beside the editor, using the shared phone frame and `.ops-preview-*` styles from the Checklist builder. It renders the steps with the same `stepList` renderer the assessment screen uses, so staff-facing layout matches real sessions; its answers are throwaway and never saved, and its controls are out of the tab order. The preview hides below 1100 px. Unsaved builder changes are guarded on leave, and background reloads never replace an open builder.
