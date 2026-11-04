@@ -117,4 +117,4 @@ body[data-home-dashboard="head-office"] .dashboard-reference #home-today::before
 @media(prefers-reduced-motion:reduce){.dashboard-chart-bar{transition:none}}
 }
 /* The default Store sales card fills the space vacated by docked shortcuts. */
-@media screen and (min-width:721px){.dashboard-reference:not(.home-building) .home-board[data-default-dashboard="manager"]>.home-section-sales-today{grid-column:span 12}}
+@media screen and (min-width:721px){.home-page.dashboard-reference .home-board[data-default-dashboard="manager"]>.home-section-sales-today{grid-column:span 12}}
