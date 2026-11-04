@@ -92,3 +92,11 @@
 .sales-day-projection{display:flex;justify-content:flex-end;min-height:0}.sales-day-projection[hidden]{display:none}
 .weekly-total td output{font-size:15px;line-height:1.1;letter-spacing:-.01em}.weekly-total td .sales-vs-projection{margin-top:2px;padding:1px 6px}.weekly-total td{padding-top:4px;padding-bottom:4px}
 .weekly-total td output .sales-vs-projection{max-width:100%;box-sizing:border-box;white-space:normal;flex-wrap:wrap;justify-content:flex-end;text-align:right}
+/* Arrow and amount never separate; only the percentage may wrap. */
+.sales-vs-projection,.weekly-total td output .sales-vs-projection{display:inline-block;width:auto;max-width:100%;box-sizing:border-box;white-space:normal;text-align:right;line-height:1.25}
+.sales-vs-projection-lead,.sales-vs-projection-percent{white-space:nowrap}
+.sales-vs-projection-arrow{margin-right:3px}
+.weekly-total td output .sales-vs-projection{display:block;width:fit-content;margin:2px 0 0 auto}
+.sales-entry-projection{display:inline-flex;align-items:center}.sales-entry-projection[hidden]{display:none}
+.daily-sales-compact .sales-entry-total .sales-vs-projection span{font-size:inherit}
+.sales-entry-total .sales-vs-projection{font-size:.72rem}

@@ -8,6 +8,14 @@ recorded day's total:
 - **▼ red**: below projection, in the same format.
 - **● grey**: exactly on projection.
 
+The weekly total (Weekly report **Totals** column and Daily sales **Recorded
+weekly sales**) shows the same badge, comparing the recorded days with the sum of
+those same days' projections. Part-recorded weeks say how many days are included
+in the hover text; if any recorded day has no projection, the week badge is hidden.
+
+The arrow is always kept beside the dollar amount; in narrow columns only the
+percentage wraps to a second line.
+
 Days without a recorded total, or without a known projection, show no badge.
 A zero projection shows only the dollar difference. Badges update live while
 typing and use the existing success/danger theme colours in light and dark mode.
