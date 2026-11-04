@@ -11,6 +11,9 @@
  function template(element,text,values={}){element.dataset.appTemplate=text;element.dataset.appValues=JSON.stringify(values);element.textContent=wording(text,values);}
  function el(tag,text,cls){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;}
  let session,report,selectedWeek='',revision=0,busy=true,dirty=false,generation=0;
+ // Saved values the current draft started from, so newer saves (for example from Home) can fill untouched days.
+ let baseDays=null;
+ const sameAmount=(a,b)=>String(a??'').trim()===''?String(b??'').trim()==='':String(b??'').trim()!==''&&Number(a)===Number(b);
  const inputs=[],indicators=[];
  for(let index=0;index<7;index++){
   const row=el('div',undefined,'sales-day'),label=el('label'),name=el('span',weekdays[index]),date=el('span',undefined,'small'),input=el('input');
@@ -23,7 +26,7 @@
  }
  async function api(url,method='GET',body){const response=await fetch(url,{method,headers:{...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{}),'Content-Type':'application/json','X-CSRF-Token':session?.csrf||''},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href=companyLoginUrl();throw Error('Please sign in again.');}const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to load sales.');return result;}
  const draftKey=()=>session&&selectedWeek?'souvlaki-sales-draft-'+session.id+(session.locationId?'-'+session.locationId:'')+'-'+selectedWeek:'';
- function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({revision,days:inputs.map(input=>input.value)}));$('sales-draft-status').textContent=wording('Unsaved sales are kept in this browser.');}catch{$('sales-draft-status').textContent=wording('Browser storage is unavailable. Save sales before leaving this page.');}}
+ function saveDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({revision,days:inputs.map(input=>input.value),base:baseDays}));$('sales-draft-status').textContent=wording('Unsaved sales are kept in this browser.');}catch{$('sales-draft-status').textContent=wording('Browser storage is unavailable. Save sales before leaving this page.');}}
  function renderIndicators(){const days=report?.dailyProjection?.weekStart===selectedWeek?report.dailyProjection.days:null;for(const [index,input] of inputs.entries()){const actual=input.value!==''&&input.validity.valid?Math.round(Number(input.value)*100):null,badge=window.salesVsProjection?.badge(actual,days?.[index]);indicators[index].replaceChildren(...(badge?[badge]:[]));indicators[index].hidden=!badge;}const week=$('sales-entry-projection');if(week){const badge=window.salesVsProjection?.weekBadge(inputs.map(input=>input.value!==''&&input.validity.valid?Math.round(Number(input.value)*100):null),days);week.replaceChildren(...(badge?[badge]:[]));week.hidden=!badge;}}
  function renderProgress(){renderIndicators();let total=0,count=0;for(const input of inputs)if(input.value!==''&&input.validity.valid){total+=Math.round(Number(input.value)*100);count++;}$('sales-entry-total').textContent=money(total);template($('sales-progress'),'{count} of 7 days recorded',{count});renderPerformance();}
  function renderPerformance(){
@@ -53,11 +56,21 @@
  function setRecord(record,useDraft=true){
   selectedWeek=record.weekStart;revision=record.revision;dirty=false;let draft;
   if(useDraft)try{const legacyKey='souvlaki-sales-draft-'+session.id+'-'+selectedWeek;if(session.canMigrateBrowserData&&!localStorage.getItem(draftKey()+'-migrated')){if(localStorage.getItem(draftKey())===null&&localStorage.getItem(legacyKey)!==null)localStorage.setItem(draftKey(),localStorage.getItem(legacyKey));localStorage.setItem(draftKey()+'-migrated','true');}draft=JSON.parse(localStorage.getItem(draftKey())||'null');}catch{}
-  if(draft&&Number.isSafeInteger(draft.revision)&&Array.isArray(draft.days)&&draft.days.length===7&&draft.days.every(value=>typeof value==='string')){dirty=true;revision=draft.revision;}
-  else draft=null;
-  for(let index=0;index<7;index++){inputs[index].value=draft?draft.days[index]:record.days[index]===null?'':(record.days[index]/100).toFixed(2);$('sales-date-'+index).textContent=dateLabel(shift(selectedWeek,index));window.publicHolidayMarkers?.mark($('sales-date-'+index),shift(selectedWeek,index));}
+  const strings=list=>Array.isArray(list)&&list.length===7&&list.every(value=>typeof value==='string');
+  if(!(draft&&Number.isSafeInteger(draft.revision)&&strings(draft.days)))draft=null;
+  const saved=record.days.map(value=>value===null?'':(value/100).toFixed(2));let values=saved,notice=record.updatedAt?'Saved sales loaded. You can edit and save this week again.':'',conflicts=[];baseDays=saved;
+  if(draft&&draft.revision===record.revision){values=draft.days;baseDays=strings(draft.base)?draft.base:saved;dirty=true;notice='Unsaved sales restored from this browser.';}
+  else if(draft){
+   // Newer sales were saved after this draft (for example from Home): keep only the days changed in the draft.
+   const base=strings(draft.base)?draft.base:null;
+   values=draft.days.map((value,index)=>{const edited=base?!sameAmount(value,base[index]):value.trim()!=='';if(!edited)return saved[index];if(!sameAmount(saved[index],value)&&(base?!sameAmount(saved[index],base[index]):saved[index]!==''))conflicts.push(index);return value;});
+   dirty=values.some((value,index)=>!sameAmount(value,saved[index]));
+   notice=!dirty?notice:conflicts.length?'Newer saved sales were loaded. Check {days}: your unsaved amount differs from the saved one.':'Newer saved sales were added to your unsaved changes.';
+  }
+  for(let index=0;index<7;index++){if(inputs[index].value!==values[index])inputs[index].value=values[index];$('sales-date-'+index).textContent=dateLabel(shift(selectedWeek,index));window.publicHolidayMarkers?.mark($('sales-date-'+index),shift(selectedWeek,index));}
   $('sales-week').value=selectedWeek;$('sales-entry-period').textContent=dateLabel(selectedWeek)+' – '+dateLabel(shift(selectedWeek,6));
-  $('sales-draft-status').textContent=draft?wording(draft.revision===record.revision?'Unsaved sales restored from this browser.':'Your draft uses older saved sales. Reload the saved week before saving.'):record.updatedAt?wording('Saved sales loaded. You can edit and save this week again.') : '';
+  if(draft&&draft.revision!==record.revision){try{if(dirty)localStorage.setItem(draftKey(),JSON.stringify({revision,days:values,base:baseDays}));else localStorage.removeItem(draftKey());}catch{}}
+  $('sales-draft-status').textContent=notice?wording(notice,{days:conflicts.map(index=>wording(weekdays[index])).join(', ')}):'';
   renderProgress();
  }
  async function loadWeek(week='',useDraft=true){const version=++generation;setBusy(true);$('sales-message').textContent=wording('Loading sales…');try{const data=await api('/api/sales'+(week?'?week='+encodeURIComponent(week):''));if(version!==generation)return;report=data;setRecord(data.record,useDraft);renderProjection();$('sales-message').textContent='';}catch(error){if(version===generation){$('sales-message').textContent=error.message;$('sales-week').value=selectedWeek;}}finally{if(version===generation)setBusy(false);}}
@@ -69,7 +82,7 @@
  $('sales-week').onchange=()=>{if($('sales-week').value)loadWeek(monday($('sales-week').value));};$('sales-previous').onclick=()=>loadWeek(shift(selectedWeek,-7));$('sales-next').onclick=()=>loadWeek(shift(selectedWeek,7));$('sales-current').onclick=()=>loadWeek(report.projection.weekStart);
  $('sales-reload').onclick=()=>{if(dirty&&!confirm(wording('Discard unsaved sales for this week and reload saved values?')))return;try{localStorage.removeItem(draftKey());}catch{}loadWeek(selectedWeek,false);};
  $('logout').onclick=async()=>{try{await api('/api/logout','POST');location.href=companyLoginUrl();}catch(error){$('sales-message').textContent=error.message;}};
- async function refreshProjection(){if(!session||busy||document.hidden)return;const version=generation,week=selectedWeek;try{const data=await api('/api/sales?week='+encodeURIComponent(week));if(busy||version!==generation||week!==selectedWeek)return;report=data;if(!dirty)setRecord(data.record);renderProjection();}catch(error){if(version===generation)$('sales-message').textContent=error.message;}}
+ async function refreshProjection(){if(!session||busy||document.hidden)return;const version=generation,week=selectedWeek;try{const data=await api('/api/sales?week='+encodeURIComponent(week));if(busy||version!==generation||week!==selectedWeek)return;report=data;if(!dirty||data.record.revision!==revision)setRecord(data.record);renderProjection();}catch(error){if(version===generation)$('sales-message').textContent=error.message;}}
  window.addEventListener('hashchange',showView);window.addEventListener('interface-text-updated',()=>{renderProjection();renderProgress();});window.addEventListener('focus',refreshProjection);window.addEventListener('sales-budget-updated',refreshProjection);window.addEventListener('weekly-sales-imported',refreshProjection);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshProjection();});window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-usage-updated-'+(session?.dataScope||session?.id)||event.key==='souvlaki-weekly-report-updated-'+session?.dataScope)refreshProjection();});setInterval(refreshProjection,60000);
  setBusy(true);showView();(async()=>{try{session=await api('/api/session');if(!session.csrf){location.href=companyLoginUrl();return;}await loadWeek(new URLSearchParams(location.search).get('week')||'');}catch(error){$('sales-message').textContent=error.message;}})();
 })();
