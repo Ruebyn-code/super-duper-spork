@@ -118,3 +118,27 @@ body[data-home-dashboard="head-office"] .dashboard-reference #home-today::before
 }
 /* The default Store sales card fills the space vacated by docked shortcuts. */
 @media screen and (min-width:721px){.home-page.dashboard-reference .home-board[data-default-dashboard="manager"]>.home-section-sales-today{grid-column:span 12}}
+/* All stores daily/weekly sales vs outlook: dense but scannable. */
+.dashboard-outlook-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.dashboard-outlook-controls label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--theme-muted,#63778c)}
+.dashboard-outlook-controls input{min-height:30px;padding:3px 7px;font-size:12px}
+.dashboard-outlook-period{display:block;font-size:12px;font-weight:600;margin:0 0 8px;color:var(--theme-text,#21384a)}
+.dashboard-outlook-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:0 0 8px}
+.dashboard-outlook-strip>div{display:grid;gap:1px;padding:7px 9px;border-radius:9px;background:var(--dash-tint,color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff)));min-width:0}
+.dashboard-outlook-strip small{font-size:10px;color:var(--theme-muted,#63778c);line-height:1.35}
+.dashboard-outlook-strip strong{font-size:16px;line-height:1.25;font-variant-numeric:tabular-nums;color:var(--theme-text,#21384a)}
+.dashboard-outlook-strip .dashboard-variance{font-size:14px;font-weight:700}
+.dashboard-outlook-strip .dashboard-outlook-detail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dashboard-outlook-table.dashboard-table-wrap{max-height:none}
+.dashboard-outlook-table .dashboard-table td,.dashboard-outlook-table .dashboard-table th{padding:6px 7px;white-space:nowrap}
+.dashboard-outlook-table .dashboard-table td:not(:first-child),.dashboard-outlook-table .dashboard-table th:not(:first-child){text-align:right}
+.dashboard-outlook-table tfoot td{font-weight:700;border-top:2px solid var(--dash-line,#dce5ed);background:var(--dash-tint,transparent)}
+.dashboard-outlook-store{display:grid;line-height:1.3}.dashboard-outlook-store small{font-size:10px;color:var(--theme-muted,#63778c)}
+.dashboard-variance{display:inline-flex;align-items:center;gap:3px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dashboard-variance-arrow{font-size:.8em}
+.dashboard-variance[data-state=up]{color:var(--theme-success,#087b48)}
+.dashboard-variance[data-state=down]{color:var(--theme-danger,#b42318)}
+.dashboard-variance[data-state=flat],.dashboard-variance[data-state=none]{color:var(--theme-muted,#63778c)}
+.home-section .dashboard-outlook-controls>label{flex-direction:row;margin:0}
+.dashboard-outlook-controls .dashboard-outlook-period{margin:0}
+.dashboard-outlook-total{display:inline-grid;justify-items:end;line-height:1.25}.dashboard-outlook-total small{font-size:9px;font-weight:500;color:var(--theme-muted,#63778c)}
