@@ -1264,3 +1264,28 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 @keyframes app-editor-dock-right{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
 @keyframes app-editor-dock-left{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.unified-app-editor[data-dock][open]{animation:none}.app-edit-mode .app-hovered-part,.app-edit-indicator .app-edit-indicator-bar .app-edit-indicator-finish{transition:none}}
+/* Opstack support session: a floating glass pill, bottom centre, clear of Cart/clock and phone navigation. */
+.opstack-support-banner{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10020;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);box-sizing:border-box;padding:6px 6px 6px 6px;border-radius:999px;color:#f8fafc;background:rgba(15,23,42,.82);border:1px solid rgba(148,163,184,.28);box-shadow:0 10px 30px rgba(15,23,42,.28),0 1px 0 rgba(255,255,255,.08) inset;-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);font:500 12px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;animation:opstack-support-in .35s cubic-bezier(.2,.8,.2,1)}
+.opstack-support-banner[data-collapsed=true]{padding:5px;gap:0}
+.opstack-support-badge{position:relative;display:grid;place-items:center;flex:none;width:34px;height:34px;min-height:34px;margin:0;padding:0;border:0;border-radius:50%;color:#fff;background:linear-gradient(135deg,#0E7490 0%,#4F46E5 50%,#7C3AED 100%);box-shadow:0 0 0 2px rgba(255,255,255,.12);cursor:default}
+.opstack-support-banner[data-collapsed=true] .opstack-support-badge{cursor:pointer}
+.opstack-support-badge svg{width:17px;height:17px}
+.opstack-support-live{position:absolute;right:-1px;top:-1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #0f172a;animation:opstack-support-pulse 2.4s ease-in-out infinite}
+.opstack-support-copy{display:grid;min-width:0;padding-right:2px}
+.opstack-support-title{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#a5b4fc}
+.opstack-support-network{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw;color:#f8fafc}
+.opstack-support-console{flex:none;display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:999px;background:#f8fafc;color:#0f172a!important;font-weight:600;font-size:12px;text-decoration:none!important;transition:background .15s ease,transform .15s ease}
+.opstack-support-console:hover{background:#e0e7ff}.opstack-support-console:active{transform:scale(.97)}
+.opstack-support-hide{flex:none;display:grid;place-items:center;width:30px;height:30px;min-height:30px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:#cbd5e1;cursor:pointer}
+.opstack-support-hide:hover{background:rgba(255,255,255,.1);color:#fff}.opstack-support-hide svg{width:16px;height:16px}
+.opstack-support-banner :focus-visible{outline:2px solid #a5b4fc;outline-offset:2px}
+.opstack-support-banner [hidden]{display:none!important}
+@keyframes opstack-support-in{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes opstack-support-pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+@media (max-width:760px){.opstack-support-banner{bottom:calc(82px + env(safe-area-inset-bottom,0px))}.opstack-support-network{max-width:34vw}.opstack-support-console{padding:0 11px}}
+@media (prefers-reduced-motion:reduce){.opstack-support-banner,.opstack-support-live{animation:none}}
+@media (prefers-reduced-transparency:reduce),(forced-colors:active){.opstack-support-banner{background:#0f172a;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media print{.opstack-support-banner{display:none}}
+.opstack-support-copy{flex:1 1 auto}.opstack-support-title,.opstack-support-network{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opstack-support-short{display:none}
+@media (max-width:760px){.opstack-support-banner{width:min(360px,calc(100vw - 32px))}.opstack-support-network{max-width:none}.opstack-support-long{display:none}.opstack-support-short{display:inline}}
