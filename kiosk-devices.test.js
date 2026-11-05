@@ -122,3 +122,22 @@ test('a locked kiosk can load only its company logo before anyone signs in',asyn
   assert.equal((await app.request(kiosk,'/appearance')).status,303);assert.equal((await app.request(kiosk,'/home')).status,303);assert.equal((await app.request(kiosk,'/api/settings')).status,401);
  }finally{await app.close();}
 });
+test('a locked kiosk can read a recent company post in full without media or marking it read',async()=>{
+ const app=await fixture();try{
+  const posted=(await app.request(app.office,'/api/communications/posts','POST',{title:'Roster changes',body:'Line one.\nLine two with more detail for the whole team.',scope:'company',requireRead:true,requestId:crypto.randomUUID()})).data;
+  const file=path.join(app.dir,'communications.json'),state=JSON.parse(await fs.readFile(file,'utf8')),stored=state.posts.find(p=>p.id===posted.id);
+  stored.richText={version:1,blocks:[{type:'paragraph',spans:[{text:'Line one.'}]},{type:'image',asset:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},{type:'embed',url:'https://www.youtube.com/watch?v=abcdefghijk'}]};
+  const receiptsBefore=JSON.stringify(stored.receipts);await fs.writeFile(file,JSON.stringify(state));
+  assert.equal((await app.request(null,'/api/kiosk/posts/'+posted.id)).status,401);
+  const kiosk=await app.pair(await app.create()),read=await app.request(kiosk,'/api/kiosk/posts/'+posted.id);assert.equal(read.status,200,JSON.stringify(read.data));
+  const post=read.data.post;assert.equal(post.title,'Roster changes');assert.ok(post.body.includes('Line two'));assert.equal(post.required,true);assert.equal(post.hiddenItems,2);
+  assert.deepEqual(post.richText.blocks.map(b=>b.type),['paragraph']);assert.ok(!JSON.stringify(read.data).includes('receipts'));assert.ok(!JSON.stringify(read.data).includes('aaaaaaaa-aaaa'));
+  assert.equal(JSON.stringify(JSON.parse(await fs.readFile(file,'utf8')).posts.find(p=>p.id===posted.id).receipts),receiptsBefore,'reading on the kiosk never records a receipt');
+  assert.equal((await app.request(kiosk,'/api/kiosk/posts/'+crypto.randomUUID())).status,404);
+  const old=JSON.parse(await fs.readFile(file,'utf8')),originalCreatedAt=old.posts.find(p=>p.id===posted.id).createdAt;old.posts.find(p=>p.id===posted.id).createdAt='2026-01-01T00:00:00.000Z';await fs.writeFile(file,JSON.stringify(old));
+  assert.equal((await app.request(kiosk,'/api/kiosk/posts/'+posted.id)).status,404,'posts older than the feed window stay hidden');
+  old.posts.find(p=>p.id===posted.id).createdAt=originalCreatedAt;await fs.writeFile(file,JSON.stringify(old));const back=await app.request(kiosk,'/api/kiosk/posts/'+posted.id);assert.equal(back.status,200,JSON.stringify(back.data)+' '+originalCreatedAt);
+  await fs.writeFile(path.join(app.dir,'network-features.json'),JSON.stringify({revision:1,disabled:['comms']}));
+  assert.equal((await app.request(kiosk,'/api/kiosk/posts/'+posted.id)).status,404);
+ }finally{await app.close();}
+});
