@@ -32,7 +32,7 @@ Each network card shows its sign-in URL. All URLs use the same Opstack sign-in b
 
 **Open network** enters using the Opstack account's own support identity, without signing in as a customer or creating an employee account. The orange support indicator identifies the network and links back to the console. Support can manage network records, companies, users and permissions using that identity. Active Opstack operators appear in Comms with an Opstack label and can chat using their own identity. Personal features such as another employee's clock PIN and private chat membership are not impersonated; support sees private conversations only when it is a participant. Company/location switching continues to work. Opstack owners can rename or suspend networks; a suspended network cannot be opened until reactivated.
 
-**Billing** on a network card (owners only) opens that network's own billing settings: its automatic user-count updates switch, default payer, location/user fees and Stripe Tax for new location plans, and its locations' plan status, with optional draft plans for unbilled locations. All networks share the one platform Stripe account. See [Stripe billing](stripe-billing.md#per-network-billing-settings).
+**Billing** on a network card (owners only) opens that network's own billing settings: its automatic user-count updates switch, default payer, location/user fees and Stripe Tax for new location plans, and each location's own billing plan (add, edit or remove its payer, fees and Stripe Tax, then **Checkout & updates** to finish it in Billing). All networks share the one platform Stripe account. See [Stripe billing](stripe-billing.md#per-network-billing-settings).
 
 ## Monthly report
 

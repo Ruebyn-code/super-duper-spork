@@ -33,3 +33,27 @@ test('switching a network off pauses automatic quantity updates until it is swit
  settings=await f.api(f.owner,route());assert.equal(settings.locations.find(l=>l.id===p.locationId).plan.userQuantity,2);
  assert.equal((await put(f,base(settings,{automaticUpdates:true}))).status,200);await f.server.runStripeSync();assert.equal(f.data.subscriptions.sub_demo.items.data[1].quantity,2);
  }finally{await f.close();}});
+
+test('location plans can be added, edited and removed from network billing with the main Billing safeguards',async()=>{const f=await fixture();try{
+ const location=f.tenant.session.locationId,edit=(extra={})=>({locationId:location,customerId:'cus_demo',basePriceId:'price_base',userPriceId:'price_user',automaticTax:false,...extra});
+ let settings=await f.api(f.owner,route());
+ for(const bad of [[edit({customerId:''})],[edit({basePriceId:'price_user'})],[edit({locationId:'elsewhere'})],[edit(),edit()],[edit({remove:'yes'})],[edit({extra:1})]])assert.equal((await put(f,base(settings,{plans:bad}))).status,400,JSON.stringify(bad));
+ let result=(await put(f,base(settings,{plans:[edit()]}))).data;assert.equal(result.changedPlans,1);let plan=result.locations.find(l=>l.id===location).plan;assert.equal(plan.approved,false);assert.equal(plan.customerId,'cus_demo');
+ result=(await put(f,base(result,{plans:[edit()]}))).data;assert.equal(result.changedPlans,0);
+ result=(await put(f,base(result,{plans:[edit({automaticTax:true})]}))).data;assert.equal(result.changedPlans,1);assert.equal(result.locations.find(l=>l.id===location).plan.automaticTax,true);assert.equal(result.locations.find(l=>l.id===location).plan.id,plan.id);
+ result=(await put(f,base(result,{plans:[{locationId:location,remove:true}]}))).data;assert.equal(result.locations.find(l=>l.id===location).plan,null);assert.equal((await f.settings()).plans.length,0);
+ assert.equal(f.calls.length,0);
+ // A connected subscription keeps its payer and cannot be removed here; an approved plan needs a fresh review after a fee change.
+ f.subscription();const p=f.plan({subscriptionId:'sub_demo',autoSync:true});await f.save({plans:[p]});await f.request(f.owner,'/api/opstack/stripe/sync','POST',{environment:'sandbox'});await f.action(p);
+ settings=await f.api(f.owner,route());assert.equal(settings.locations.find(l=>l.id===location).plan.approved,true);
+ assert.equal((await put(f,base(settings,{plans:[{locationId:location,remove:true}]}))).status,409);
+ assert.equal((await put(f,base(settings,{plans:[edit({customerId:'cus_other'})]}))).status,409);
+ result=(await put(f,base(settings,{plans:[edit({automaticTax:true})]}))).data;plan=result.locations.find(l=>l.id===location).plan;assert.equal(plan.approved,false);assert.equal(plan.subscriptionId,'sub_demo');assert.equal(plan.autoSync,true);
+ }finally{await f.close();}});
+
+test('a pending checkout freezes its location plan in network billing',async()=>{const f=await fixture();try{
+ const p=f.plan();await f.save({plans:[p]});await f.action(p,'checkout');const location=p.locationId,settings=await f.api(f.owner,route());assert.equal(settings.locations.find(l=>l.id===location).plan.checkoutPending,true);
+ assert.equal((await put(f,base(settings,{plans:[{locationId:location,customerId:'cus_demo',basePriceId:'price_base',userPriceId:'price_user',automaticTax:true}]}))).status,409);
+ assert.equal((await put(f,base(settings,{plans:[{locationId:location,remove:true}]}))).status,409);
+ assert.equal((await put(f,base(settings,{plans:[{locationId:location,customerId:'cus_demo',basePriceId:'price_base',userPriceId:'price_user',automaticTax:false}]}))).status,200);
+ }finally{await f.close();}});
