@@ -46,6 +46,8 @@
  for(const key of defaultFields)$('network-default-'+key).addEventListener('input',previewDefaults);
  $('new-network-defaults-form').onsubmit=event=>{event.preventDefault();run(event.target.querySelector('[type=submit]'),async()=>{const saved=await api('new-network-defaults','PUT',{...defaultValues(),revision:defaultsRevision});defaultsRevision=saved.revision;$('network-default-message').textContent='Saved. Future networks will use these colours, font and welcome text. Existing networks keep their own settings.';},$('network-default-message'));};
  $('console-appearance-open').onclick=event=>run(event.target,()=>openNetwork('default',true));
+ function themeButton(id){const button=document.createElement('button');button.type='button';button.id=id;button.className='console-theme-toggle';button.setAttribute('aria-label','Dark mode');button.innerHTML='<svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>';window.appTheme?.bind(button);return button;}
+ $('console-logout').before(themeButton('console-theme-toggle'));document.querySelector('.console-auth-card')?.prepend(themeButton('console-auth-theme-toggle'));
  $('console-logout').onclick=event=>run(event.target,async()=>{await api('logout','POST',{});location.href='/opstack';});
  $('console-login').onsubmit=event=>{event.preventDefault();const form=event.target;run(form.querySelector('[type=submit]'),async()=>{await api('login','POST',Object.fromEntries(new FormData(form)));form.reset();location.href='/opstack';},$('console-auth-message'));};
  let token='';
