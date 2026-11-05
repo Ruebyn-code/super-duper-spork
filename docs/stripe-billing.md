@@ -16,6 +16,16 @@ Use the location picker to work on another plan without redrawing its unsaved fi
 
 Create and manage prices, payment methods, receipts, dunning, customer terms, tax registrations, refunds and cancellations in Stripe. Customer portal actions remain explicitly reviewed; disable customer quantity/price changes there if OpStack manages those quantities. Unsupported fractional-cent, tiered/usage-based/transformed or non-monthly/non-AUD prices are excluded from the picker. Historical/unknown fees and existing linked references are retained, never silently changed to a suggested price. Repeat setup in Live with its separate objects after testing.
 
+## Per-network billing settings
+
+Each network card in Console → Networks has a **Billing** button (owners only). It opens that network's billing settings for the chosen environment (Live by default, or Sandbox). Everything still uses the one platform Stripe account.
+
+- **Automatic user-count updates.** This switch belongs to the network. Off pauses the app's quantity changes for every location in the network; Stripe keeps invoicing existing subscriptions. On (the default for networks never saved here) lets approved plans with automatic updates follow user counts as before. The global setting in Billing still has to be on, so it works as a master switch. The background check rereads the switch before every update.
+- **Defaults for new location plans.** Choose a default payer (a saved Stripe customer), monthly location fee, fee per user (from the loaded price list) and Stripe Tax default. Billing → Location prefills new plans for that network's locations with them, and they can still be changed per plan.
+- **Locations.** The network's locations are listed with their plan status, payer, rates, counted users and whether updates are automatic. Tick **Create draft plan** for active locations without a plan to create unapproved drafts from the defaults. Drafts never contact Stripe; finish checkout and automatic updates in Billing as usual.
+
+Saving is revision-checked, uses a retry reference, records a console audit entry, and is blocked while a Stripe action is waiting for a retry. Opening or saving this dialog never calls Stripe. Sandbox and Live keep separate network settings.
+
 ## Customer records and retries
 
 Customer creation is owner-only and separate from subscription/checkout approval. It requires a saved, tested Stripe connection, but can be used while location plans are still drafts. New customer details are sent only after review; neither page reads nor review creates a provider record. Creating a customer does not send an invitation, create a subscription or start charging. Company and staff records are never used as a guessed legal payer or billing contact.

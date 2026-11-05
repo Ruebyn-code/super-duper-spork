@@ -179,3 +179,14 @@ body.opstack-console .console-theme-toggle svg{width:18px;height:18px}
 body.opstack-console .console-auth-card{position:relative}
 body.opstack-console #console-auth-theme-toggle{position:absolute;top:14px;right:14px}
 @media (forced-colors:active){body.opstack-console .console-theme-toggle{border:1px solid ButtonText;background:ButtonFace;color:ButtonText}}
+
+/* Per-network billing dialog */
+body.opstack-console .console-billing-network-dialog form{max-width:560px}
+body.opstack-console .console-billing-network-dialog h3{margin:14px 0 2px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cx-muted)}
+body.opstack-console .console-billing-network-dialog small{display:block;color:var(--cx-muted);font-size:12px;line-height:1.45}
+body.opstack-console .console-billing-network-locations{display:grid;gap:8px}
+body.opstack-console .console-billing-network-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--cx-border);border-radius:12px;background:var(--cx-raised,var(--cx-surface))}
+body.opstack-console .console-billing-network-row>div{display:grid;gap:2px;min-width:0}
+body.opstack-console .console-billing-network-row strong{font-size:14px;color:var(--cx-text)}
+body.opstack-console .console-billing-network-row .console-checkbox{flex:none;white-space:nowrap;font-size:13px}
+@media (max-width:560px){body.opstack-console .console-billing-network-row{flex-direction:column;align-items:flex-start}}
