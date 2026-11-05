@@ -1,6 +1,6 @@
 // Read-only Head Office aggregates; every location is resolved through native access checks.
 const {can}=require('./permissions'),time=require('./public/rostering-model'),sales=require('./sales'),{belongs}=require('./location-scope'),orderDates=require('./order-cost-period'),par=require('./par-levels'),budgetModel=require('./public/sales-budget');
-const topics=['kpis','sales','stores','budget','stock','checklists','activity','leaderboard','daily-outlook','weekly-outlook'];
+const topics=['kpis','sales','stores','budget','stock','checklists','activity','leaderboard','sales-outlook','daily-outlook','weekly-outlook'];
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const eligible=require('./public/home-board-model').headOffice;
 const total=values=>values.length&&values.every(Number.isFinite)?values.reduce((n,v)=>n+v,0):null;
@@ -25,7 +25,7 @@ function createReader({dir,locations,context,history,salesStore,weekly,ops,now=D
   if(!selected.length&&(available.length||input.location&&input.location!=='all'))fail('Choose an accessible active location in this company.',403);
   const contexts=await Promise.all(selected.map(s=>context(actor,s.id)));if(contexts.some(c=>c.companyId!==actor.companyId||c.homeDashboard==='staff'||!can(c,'home.view')||!can(c,'reporting.view')))fail('Dashboard access is required in every selected location.',403);
   if(wanted.includes('checklists')&&contexts.some(c=>!can(c,'ops.view')))fail('Checklist viewing permission is required.',403);
-  const stored=await history(),formatter=par.calendar(par.defaultTimeZone),through=time.shiftDate(week,6)<today?time.shiftDate(week,6):today,days=Math.round((Date.parse(through)-Date.parse(week))/86400000)+1,previous=time.shiftDate(week,-7),financial=wanted.some(t=>['kpis','sales','stores'].includes(t)),wantsLeaderboard=wanted.includes('leaderboard'),wantsDaily=wanted.includes('daily-outlook'),wantsWeekly=wanted.includes('weekly-outlook'),activities=[],rows=[];
+  const stored=await history(),formatter=par.calendar(par.defaultTimeZone),through=time.shiftDate(week,6)<today?time.shiftDate(week,6):today,days=Math.round((Date.parse(through)-Date.parse(week))/86400000)+1,previous=time.shiftDate(week,-7),financial=wanted.some(t=>['kpis','sales','stores'].includes(t)),wantsLeaderboard=wanted.includes('leaderboard'),wantsDaily=wanted.some(t=>['sales-outlook','daily-outlook'].includes(t)),wantsWeekly=wanted.some(t=>['sales-outlook','weekly-outlook'].includes(t)),activities=[],rows=[];
   const revenueWeeks=[...new Set([week,...(financial?[previous]:[]),...(wantsLeaderboard||wantsDaily?[dailyWeek]:[])])],forecastWeeks=[...new Set([...(wantsWeekly?[week]:[]),...(wantsDaily?[dailyWeek]:[])])];
   for(let offset=0;offset<contexts.length;offset+=6)rows.push(...await Promise.all(contexts.slice(offset,offset+6).map(async ctx=>{
    const salesAccess=can(ctx,'sales.view')||can(ctx,'finances.view'),financeAccess=can(ctx,'finances.view'),orderAccess=can(ctx,'orders.view'),countAccess=can(ctx,'counts.view'),shop=selected.find(s=>s.id===ctx.locationId),revenue=(financial||wantsLeaderboard||wantsDaily||wantsWeekly)&&salesAccess?await sales.projectionRecords(dir,ctx,revenueWeeks):null;

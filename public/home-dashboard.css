@@ -142,3 +142,7 @@ body[data-home-dashboard="head-office"] .dashboard-reference #home-today::before
 .home-section .dashboard-outlook-controls>label{flex-direction:row;margin:0}
 .dashboard-outlook-controls .dashboard-outlook-period{margin:0}
 .dashboard-outlook-total{display:inline-grid;justify-items:end;line-height:1.25}.dashboard-outlook-total small{font-size:9px;font-weight:500;color:var(--theme-muted,#63778c)}
+.dashboard-outlook-controls{flex-wrap:wrap}.dashboard-outlook-controls .dashboard-outlook-period{flex:1;min-width:0;font-size:11px;color:var(--theme-muted,#63778c);font-weight:600}
+.dashboard-outlook-table .dashboard-table th.dashboard-outlook-sticky{position:sticky;left:0;z-index:1;text-align:left;font-weight:inherit;background:var(--theme-surface,#fff);box-shadow:1px 0 0 var(--dash-line,#dce5ed)}
+.dashboard-outlook-table .dashboard-table thead th.dashboard-outlook-sticky,.dashboard-outlook-table .dashboard-table tfoot th.dashboard-outlook-sticky{background:var(--dash-tint,var(--theme-surface,#fff))}
+.dashboard-outlook-table tfoot th{border-top:2px solid var(--dash-line,#dce5ed)}

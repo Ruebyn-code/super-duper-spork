@@ -1,7 +1,7 @@
 // Head Office all-stores daily/weekly sales against the shared projection outlook.
 const{test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const{fixture}=require('./test-support/roster-hourly-fixture.cjs'),M=require('./public/home-board-model'),boards=require('./home-board');
-async function setup(t){const a=await fixture({seed:false});t.after(()=>a.close());await a.api(a.office,'/api/locations/'+a.location,'PUT',{name:'Delta'});a.hq=await a.api(a.office,'/api/locations/head-office','POST',{});a.headers={'X-Location-Id':a.hq.id};a.read=(query='')=>a.api(a.office,'/api/home-insights?topics=daily-outlook,weekly-outlook'+query,'GET',undefined,a.headers);a.save=(id,days,weekStart='2026-10-19')=>a.api(a.office,'/api/sales','PUT',{weekStart,revision:0,days},{'X-Location-Id':id});a.shop=name=>a.api(a.office,'/api/locations','POST',{name,companyId:a.office.session.companyId});return a;}
+async function setup(t){const a=await fixture({seed:false});t.after(()=>a.close());await a.api(a.office,'/api/locations/'+a.location,'PUT',{name:'Delta'});a.hq=await a.api(a.office,'/api/locations/head-office','POST',{});a.headers={'X-Location-Id':a.hq.id};a.read=(query='')=>a.api(a.office,'/api/home-insights?topics=sales-outlook'+query,'GET',undefined,a.headers);a.save=(id,days,weekStart='2026-10-19')=>a.api(a.office,'/api/sales','PUT',{weekStart,revision:0,days},{'X-Location-Id':id});a.shop=name=>a.api(a.office,'/api/locations','POST',{name,companyId:a.office.session.companyId});return a;}
 test('daily and weekly outlooks compare saved sales with each store’s projection and total all stores',async t=>{
  const a=await setup(t),alpha=await a.shop('Alpha'),fresh=await a.shop('Fresh');
  for(const id of [a.location,alpha.id])for(const week of ['2026-09-21','2026-09-28','2026-10-05','2026-10-12'])await a.save(id,[1000,1000,1000,1000,1000,2000,2000],week);
@@ -18,9 +18,9 @@ test('daily and weekly outlooks compare saved sales with each store’s projecti
  assert.equal((await a.read('&location='+alpha.id)).outlook.weekly.entries.length,1);
  assert.equal((await a.read('&leaderboardDate=2026-10-19')).outlook.daily.entries.find(e=>e.name==='Delta').salesCents,1100,'the date picker chooses the daily outlook day');
 });
-test('the previous Head Office default upgrades to include the outlook sections without writing, while custom layouts stay',async t=>{
- const a=await setup(t),file=path.join(a.dir,'home-dashboard-head-office.json'),saved=JSON.stringify({revision:4,sections:M.previousHeadOfficeDefaults()});await fs.writeFile(file,saved);
- const read=await boards.read(a.dir,'head-office');assert.deepEqual(read.sections.map(s=>s.type).slice(0,4),['business-kpis','business-daily-outlook','business-leaderboard','business-weekly-outlook']);assert.equal(read.revision,4);assert.equal(await fs.readFile(file,'utf8'),saved);
- const custom=M.previousHeadOfficeDefaults().slice(1);await fs.writeFile(file,JSON.stringify({revision:5,sections:custom}));assert(!(await boards.read(a.dir,'head-office')).sections.some(s=>s.type==='business-daily-outlook'));
- assert.equal(M.types['business-weekly-outlook'].group,'Head Office');assert.equal(M.allowedType('manager','business-daily-outlook'),false);
+test('older Head Office defaults upgrade to the combined outlook section without writing; separate saved sections fold into one',async t=>{
+ const a=await setup(t),file=path.join(a.dir,'home-dashboard-head-office.json');
+ for(const previous of M.previousHeadOfficeDefaults()){const saved=JSON.stringify({revision:4,sections:previous});await fs.writeFile(file,saved);const read=await boards.read(a.dir,'head-office');assert.deepEqual(read.sections.map(s=>s.type).slice(0,3),['business-kpis','business-sales-outlook','business-leaderboard']);assert.equal(read.revision,4);assert.equal(await fs.readFile(file,'utf8'),saved);}
+ const custom=[{id:'mine',type:'business-weekly-outlook',size:'half'},{id:'other',type:'business-daily-outlook',size:'half'},{id:'kpis',type:'business-kpis',size:'full'}];await fs.writeFile(file,JSON.stringify({revision:5,sections:custom}));assert.deepEqual((await boards.read(a.dir,'head-office')).sections,[{id:'mine',type:'business-sales-outlook',size:'half'},{id:'kpis',type:'business-kpis',size:'full'}],'custom layouts keep their place with one combined section');
+ assert.equal(M.types['business-sales-outlook'].group,'Head Office');assert(!M.types['business-daily-outlook']);assert.equal(M.allowedType('manager','business-sales-outlook'),false);
 });
