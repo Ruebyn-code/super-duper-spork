@@ -61,6 +61,8 @@ function createStore(dir,{people,now=Date.now,extraMediaAccess=async()=>false}){
   if(had!==input.active){if(input.active&&!members.length&&Object.keys(reactions).length>=32)fail('This item already has 32 different reactions.');if(input.active)reactions[input.emoji]=[...members,actor.id];else{reactions[input.emoji]=members.filter(id=>id!==actor.id);if(!reactions[input.emoji].length)delete reactions[input.emoji];}target.reactions=reactions;if(messageId){thread.reactionRevision=(thread.reactionRevision||0)+1;target.reactionRevision=thread.reactionRevision;}}
   return{reactions:reactionView(target,actor,directory)};
  });}
- return{search,required,directory,unread,homeInbox,posts,savePost,removePost,receipt,readers,threads,createThread,messages,send,readThread,pinThread,react,uploadMedia,getMedia};
+ // Locked kiosk news: the latest company/network posts for the device's company. Titles and a short plain excerpt only; posts already reach every member of that company.
+ async function kioskFeed(companyId,{limit=4,days=60}={}){const state=await read(),since=now()-days*86400000;return state.posts.filter(post=>(post.scope==='network'||post.companyId===companyId)&&Date.parse(post.createdAt)>=since).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)).slice(0,limit).map(post=>{const excerpt=String(post.body||'').replace(/\s+/g,' ').trim();return{id:post.id,title:post.title,excerpt:excerpt.length>160?excerpt.slice(0,157).trimEnd()+'…':excerpt,authorName:post.authorName,createdAt:post.createdAt,scope:post.scope==='network'?'network':'company',required:Boolean(post.requireRead)};});}
+ return{kioskFeed,search,required,directory,unread,homeInbox,posts,savePost,removePost,receipt,readers,threads,createThread,messages,send,readThread,pinThread,react,uploadMedia,getMedia};
 }
 module.exports={createStore};

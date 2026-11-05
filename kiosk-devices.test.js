@@ -105,3 +105,13 @@ test('paired kiosks list location staff by name only and can tie a PIN to the ch
   assert.equal((await app.request(kiosk,'/api/session')).data.username,'Member');
  }finally{await app.close();}
 });
+test('locked kiosks show trading status and short company news without full post content, and hide news when Comms is off',async()=>{
+ const app=await fixture();try{
+  const long='Line one of the update. '.repeat(20),posted=await app.request(app.office,'/api/communications/posts','POST',{title:'Winter menu',body:long,scope:'company',requireRead:true,requestId:crypto.randomUUID()});assert.equal(posted.status,201,JSON.stringify(posted.data));
+  const kiosk=await app.pair(await app.create()),board=(await app.request(kiosk,'/api/kiosk/staff')).data;
+  assert.ok(board.trading&&typeof board.trading.state==='string');assert.equal(board.news.length,1);const item=board.news[0];
+  assert.deepEqual(Object.keys(item).sort(),['authorName','createdAt','excerpt','id','required','scope','title']);assert.equal(item.title,'Winter menu');assert.equal(item.required,true);assert.ok(item.excerpt.length<=160&&item.excerpt.endsWith('…'));assert.ok(!JSON.stringify(board).includes('receipts'));
+  await fs.writeFile(path.join(app.dir,'network-features.json'),JSON.stringify({revision:1,disabled:['comms']}));
+  assert.deepEqual((await app.request(kiosk,'/api/kiosk/staff')).data.news,[]);
+ }finally{await app.close();}
+});
