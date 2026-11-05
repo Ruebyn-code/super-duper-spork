@@ -67,7 +67,15 @@ const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){
  week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart],par.defaultTimeZone,history.transfers)[0],window:par.windowFor(now)};
 }
-function orderingSuggestions(counts,products,session,levels,transfers=[]){
+// Units already ordered for the current ordering week (Monday–Sunday; Sunday orders fund the next week) and not yet marked received.
+function orderedThisWeek(orders,products,session,now=new Date()){
+ const dates=require('./order-cost-period').dates,week=dates({createdAt:new Date(now).toISOString()})?.costWeekStart,byId=new Map(products.map(p=>[p.id,p])),totals=new Map(),seen=new Set();if(!week)return{weekStart:null,totals};
+ for(const order of orders||[]){if(!order||seen.has(order.id)||order.status!=='requested'||(order.companyId||'default')!==(session.companyId||'default')||!belongs(order,session,'requestOwnerId')||dates(order)?.costWeekStart!==week||!Array.isArray(order.items))continue;seen.add(order.id);
+  const received=new Set((order.fulfilment?.suppliers||[]).filter(s=>s?.receivedAt).map(s=>s.supplierId));
+  for(const item of order.items){const product=byId.get(item?.id);if(!product||!Number.isFinite(item.quantity)||item.quantity<=0||received.has(item.supplierId)||item.unitAmount&&product.unitAmount&&item.unitAmount!==product.unitAmount)continue;totals.set(item.id,Math.round(((totals.get(item.id)||0)+item.quantity)*1000)/1000);}}
+ return{weekStart:week,totals};
+}
+function orderingSuggestions(counts,products,session,levels,transfers=[],ordered={totals:new Map()}){
  // A new stock take is a snapshot. Omitted items remain unknown in that take.
  const latest=counts.filter(record=>belongs(record,session)&&typeof record.createdAt==='string'&&Number.isFinite(Date.parse(record.createdAt))&&Array.isArray(record.items)).sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(b.id).localeCompare(String(a.id)))[0];
  const adjustments=new Map();for(const movement of transferEffects.movements(transfers,session)){if(!latest||movement.createdAt<=latest.createdAt)continue;adjustments.set(movement.product.id,(adjustments.get(movement.product.id)||0)+movement.quantity);}
@@ -75,8 +83,8 @@ function orderingSuggestions(counts,products,session,levels,transfers=[]){
  return {stockTake:latest?{id:latest.id,countDate:latest.countDate,savedAt:latest.createdAt}:null,items:Object.fromEntries(products.map(product=>{
   const counted=quantities.has(product.id)?quantities.get(product.id):null,level=levels[product.id]?.level??null;
   const adjustment=Math.round((adjustments.get(product.id)||0)*1000)/1000,available=counted===null?null:Math.max(0,Math.round((counted+adjustment)*1000)/1000);
-  const recommendation=stockOrderRules.recommendation({...product,par:levels[product.id]},level,available);
-  return [product.id,{stockCount:counted,recommended:recommendation,...(adjustment?{transferAdjustment:adjustment,availableStock:available}:{})}];
+  const pending=ordered.totals.get(product.id)||0,recommendation=stockOrderRules.recommendation({...product,par:levels[product.id]},level,available,pending);
+  return [product.id,{stockCount:counted,recommended:recommendation,...(pending?{alreadyOrdered:pending,orderingWeekStart:ordered.weekStart}:{}),...(adjustment?{transferAdjustment:adjustment,availableStock:available}:{})}];
  }))};
 }
 async function parLevels(dir,session,products,{reader=readHistory,now=new Date(),manualLevels={}}={}){
@@ -84,7 +92,7 @@ async function parLevels(dir,session,products,{reader=readHistory,now=new Date()
  const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)),par.defaultTimeZone,history.transfers);
  const result=par.calculate(records,products,session,{now,manualLevels}),calculations=require('./target-calculations'),settings=await calculations.resolve(dir,session,products);
  if(Object.values(settings).some(value=>value.mode==='sales')){const projection=(await require('./sales').createStore().report(dir,session,undefined,{now})).orderingProjection;result.levels=calculations.apply(result.levels,settings,projection);}
- const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers);
+ const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers,orderedThisWeek(history.orders,products,session,now));
  return {...result,calculationSettings:settings,stockTake:suggestions.stockTake,suggestions:suggestions.items};
 }
-module.exports={week,shift,derive,createReader,report,parLevels,orderingSuggestions};
+module.exports={week,shift,derive,createReader,report,parLevels,orderingSuggestions,orderedThisWeek};

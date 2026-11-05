@@ -367,7 +367,7 @@ test('automatic Sunday usage is account-scoped, recalculates counts/orders, and 
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });
 
-test('catalogue stock counts and recommendations use the newest own stock take without changing par history or subtracting orders',async()=>{
+test('catalogue stock counts and recommendations use the newest own stock take without changing par history, and subtract this ordering week’s unreceived orders',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'souvlaki-recommendations-'));await saveAdmin(dir,'admin','test-password-for-admin');await saveUser(dir,'staff','test-password-for-staff');const server=createServer(dir);await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port;
  try{
  const headers=await login(url,'staff','test-password-for-staff'),admin=await login(url);const session=await(await fetch(url+'/api/session',{headers})).json();const window=require('./par-levels').windowFor(),shift=require('./stock-usage').shift;
@@ -376,7 +376,7 @@ test('catalogue stock counts and recommendations use the newest own stock take w
  const today=shift(window.currentWeekStart,3);
  const countResponse=await fetch(url+'/api/stock-counts',{method:'POST',headers,body:JSON.stringify({countDate:today,items:[{id:'paper',quantity:2.625}]})});assert.equal(countResponse.status,201);const stockTake=await countResponse.json();
  let result=await(await fetch(url+'/api/catalogue',{headers})).json();assert.equal(result.stockTake.id,stockTake.id);assert.equal(result.stockTake.countDate,today);assert.equal(result.products.find(item=>item.id==='paper').par.level,7);assert.deepEqual(result.products.find(item=>item.id==='paper').ordering,{stockCount:2.625,recommended:5});assert.deepEqual(result.products.find(item=>item.id==='pens').ordering,{stockCount:null,recommended:null});
- assert.equal((await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify({items:[{id:'paper',quantity:3}]})})).status,201);result=await(await fetch(url+'/api/catalogue',{headers})).json();assert.equal(result.products.find(item=>item.id==='paper').ordering.recommended,5);
+ assert.equal((await fetch(url+'/api/orders',{method:'POST',headers,body:JSON.stringify({items:[{id:'paper',quantity:3}]})})).status,201);result=await(await fetch(url+'/api/catalogue',{headers})).json();assert.equal(result.products.find(item=>item.id==='paper').ordering.recommended,2);assert.equal(result.products.find(item=>item.id==='paper').ordering.alreadyOrdered,3);assert.equal(result.products.find(item=>item.id==='paper').par.level,7,'target levels are unchanged');
  const other=await(await fetch(url+'/api/catalogue',{headers:admin})).json();assert.equal(other.stockTake,null);assert.equal(other.products.find(item=>item.id==='paper').ordering.stockCount,null);
  }finally{await new Promise(r=>server.close(r));await fs.rm(dir,{recursive:true,force:true});}
 });

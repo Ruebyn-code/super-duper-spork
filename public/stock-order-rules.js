@@ -27,11 +27,13 @@
  function decrease(product,quantity){if(product?.orderRule==='separate'){for(let next=Math.min(limit,Math.ceil(quantity)-1);next>=1;next--)if(valid(product,next))return next;return 0;}const min=minimum(product);return quantity<=min?0:Math.max(min,quantity-(multiples(product)?min:1));}
  function describe(product){const min=minimum(product);if(product?.orderRule==='separate'){const {down,up}=thresholds(product);return 'Order units: '+min+' · Round down: '+(down===null?'Off':'≤ '+down)+' · Round up: '+(up===null?'Off':'≥ '+up);}return min===1?'':product?.orderRule==='cutoff'?'Order units: '+min+' · Rounding cutoff: '+cutoff(product):multiples(product)?'Order in multiples of '+min:'Minimum order: '+min;}
  function orderWhen(product){const value=product?.ordering?.deliveryPlan?.enabled?product.ordering.deliveryPlan.orderWhenLevel:product?.par?.orderWhenLevel;return typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;}
- function recommendation(product,level,counted){
+ // ordered: units already ordered for this ordering week that are not yet marked received (not used by delivery plans, which count incoming stock themselves).
+ function recommendation(product,level,counted,ordered=0){
   if(typeof level!=='number'||!Number.isFinite(level)||level<0||typeof counted!=='number'||!Number.isFinite(counted)||counted<0)return null;
   const delivery=product?.ordering?.deliveryPlan;if(delivery?.enabled&&typeof delivery.requiredUnits==='number')return round(product,Math.max(0,Math.round((delivery.requiredUnits-counted-(delivery.incomingUnits||0))*1000)/1000));
-  const threshold=orderWhen(product);if(threshold!==null&&counted>threshold)return 0;
-  return round(product,Math.max(0,(level*1000-Math.round(counted*1000))/1000));
+  const pending=typeof ordered==='number'&&Number.isFinite(ordered)&&ordered>0?ordered:0,stock=Math.round((counted+pending)*1000)/1000;
+  const threshold=orderWhen(product);if(threshold!==null&&stock>threshold)return 0;
+  return round(product,Math.max(0,(level*1000-Math.round(stock*1000))/1000));
  }
  function deliveryShortage(product,counted){const plan=product?.ordering?.deliveryPlan;return plan?.enabled&&typeof counted==='number'&&Number.isFinite(counted)?(plan.checkpoints||[]).some(point=>counted+(point.incomingUnits||0)+.0005<point.requiredUnits):null;}
  return {limit,minimum,multiples,cutoff,thresholds,round,maximum,valid,decrease,describe,orderWhen,recommendation,deliveryShortage};
