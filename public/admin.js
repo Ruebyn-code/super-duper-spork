@@ -128,7 +128,7 @@ function returnAccountForm(){
  const home=$('account-form-home');if(!home)return;home.append($('account-form'));home.hidden=true;$('create-user').setAttribute('aria-expanded','false');
  document.querySelectorAll('.user-edit-panel,.user-editor-row').forEach(panel=>panel.hidden=true);document.querySelectorAll('.user-edit-toggle').forEach(button=>button.setAttribute('aria-expanded','false'));
 }
-function updatePhonePinPreview(){const digits=$('account-phone')?.value.replace(/\D/g,'')||'';$('account-clock-pin-preview').textContent=digits.length>=7?userWording('Clock PIN: {pin}',{pin:digits.slice(-4)}):'';}
+function updatePhonePinPreview(){const pinOff=!appAccess.featureOn('rostering');for(const id of ['account-clock-pin-help','account-clock-pin-preview'])if($(id))$(id).hidden=pinOff;const digits=$('account-phone')?.value.replace(/\D/g,'')||'';$('account-clock-pin-preview').textContent=digits.length>=7?userWording('Clock PIN: {pin}',{pin:digits.slice(-4)}):'';}
 if($('account-phone'))$('account-phone').oninput=updatePhonePinPreview;
 let accountPhotoEditor;
 function resetAccountForm(force=false){

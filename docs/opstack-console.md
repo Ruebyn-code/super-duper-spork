@@ -62,3 +62,13 @@ The switchable features are defined in `public/network-features-model.js`: Order
 - `permission-levels.js` reads it alongside the permission levels and `decorate()` removes the feature's permissions (and switches off parentless detailed actions such as OpStack intelligence search) from every resolved account, including support sessions, kiosk staff and per-location contexts. All existing API checks, page redirects, menus, Home widgets and scheduled reports therefore follow the switch immediately, with no per-page changes.
 - Saved permission levels and all data are left untouched. Switched-off keys stay in roles and never block editing or assigning them (`canAssign` ignores them), so switching a feature back on restores everyone's access exactly as before.
 - Other networks are unaffected.
+
+### Everything for a switched-off feature is hidden
+
+Besides removing permissions, the app hides settings and options that belong to a switched-off feature even when the person could otherwise see the screen. The session and page bootstrap carry `disabledFeatures` and `disabledFeatureKeys`, and `appAccess.featureOn(id)` / `appAccess.featureOff(key)` expose them to pages.
+
+- **Permission levels editor:** switched-off permissions, their detailed actions and empty groups are hidden and left out of the counts. Saving keeps them in the role exactly as stored.
+- **Users:** with Rostering & timesheets off, the user settings popup shows only Personal (no Pay Conditions, Time & Attendance or Leave & Availability), the clock PIN hint is hidden, the User setup popup has no Roster details step and its phone step is called Phone. The Employment agreements account-menu link and Home agreement tasks are hidden.
+- **Locations:** with Ordering off, the Supplier delivery days tab and the Target level system choice (location settings and Add location) are hidden. Sending, Employer setup and Devices tabs already follow their permissions.
+- **Location setup:** tasks for switched-off features are removed and not required (Employer setup for Rostering; Ordering sending email and Target level system for Ordering; Kiosk device for Kiosk devices).
+- **Help:** guides and whole categories for switched-off features are hidden, including related-guide links and direct links (which fall back to browsing).

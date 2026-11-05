@@ -14,7 +14,7 @@ function createReader({learning,comms,agreements,rostering,now=Date.now}){
    if(can(actor,'learning.signoff')&&session.trainerId===actor.id&&waiting)inStore.push({id:'signoff:'+session.id,kind:'signoff',title:session.title,detail:session.locationName+' · You are training '+waiting+(waiting===1?' person':' people'),dueAt:Date.parse(session.startsAt)<=instant?session.endsAt:session.startsAt,status:Date.parse(session.startsAt)<=instant?'awaiting-signoff':'scheduled',percent:Math.min(100,Math.max(0,average)),href});}
    return [];}]);
   const approvalEnabled=Boolean(rostering)&&can(actor,'rostering.view')&&can(actor,'rostering.approve');let approvals={total:null,locations:[]};if(approvalEnabled)sources.push(['Timesheets',async()=>{approvals=await rostering.pendingApprovals(actor);return [];}]);
-  if(agreements&&!actor.kiosk)sources.push(['Employment agreements',()=>agreements.tasks(actor)]);
+  if(agreements&&!actor.kiosk&&!(actor.disabledFeatures||[]).includes('rostering'))sources.push(['Employment agreements',()=>agreements.tasks(actor)]);
   if(can(actor,'comms.view'))sources.push(['Comms',async()=>{inbox=await comms.homeInbox(actor);return [];}]);
   const settled=await Promise.allSettled(sources.map(([,read])=>read()));settled.forEach((result,index)=>{if(result.status==='fulfilled')tasks.push(...result.value);else errors.push(sources[index][0]);});
   const order=(a,b)=>Number(b.status==='overdue')-Number(a.status==='overdue')||(a.dueAt||a.dueDate||'9999').localeCompare(b.dueAt||b.dueDate||'9999')||a.title.localeCompare(b.title)||a.id.localeCompare(b.id);inStore.sort(order);

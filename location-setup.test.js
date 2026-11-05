@@ -100,3 +100,11 @@ test('popup editors use the requested location without switching the main sessio
   assert.equal((await app.page(app.office,good.replace('__opstack_content=1&',''))).status,400);
  }finally{await app.close();}
 });
+test('setup tasks for features switched off by the console are not required',async()=>{
+ const app=await fixture();try{
+  await app.api(app.office,'/api/locations','POST',{name:'New shop',setupRequired:false,setupCreatorId:app.staff.session.id});
+  const path=require('node:path');await fs.writeFile(path.join(app.dir,'network-features.json'),JSON.stringify({revision:1,disabled:['ordering','kiosks','rostering']}));
+  const ids=(await app.api(app.office,'/api/location-setup')).locations[0].steps.map(step=>step.id);assert.deepEqual(ids,['details','state','hours','manager','team']);
+  await fs.writeFile(path.join(app.dir,'network-features.json'),JSON.stringify({revision:2,disabled:[]}));assert.equal((await app.api(app.office,'/api/location-setup')).locations[0].steps.length,9,'turning features back on restores the tasks');
+ }finally{await app.close();}
+});

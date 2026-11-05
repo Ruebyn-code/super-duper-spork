@@ -10,13 +10,15 @@
  const back=button('Back to checklist','user-setup-back'),next=button('Continue','user-setup-next'),skip=button('Skip for now','user-setup-skip'),finish=button('Review invitation','user-setup-review-button'),discard=button('Discard draft','user-setup-discard'),complete=button('Finish user setup','user-setup-finish'),rosterHost=node('div',undefined,'user-setup-roster');rosterHost.id='user-setup-roster';
  let active=false,busy=false,stage='overview',context=null,original=[],originalNoValidate=false,changed=false,created=null,savedSummaries=[],roster=null,rosterState={dirty:false,saved:false},rosterDone=false;
  const confirmed=new Map();
+ // Roster details and the clock PIN belong to Rostering & timesheets, which the console can switch off per network.
+ const rosterOn=appAccess.featureOn('rostering');
  const steps=[
   {id:'details',title:'Name & email',controls:()=>[field('username'),field('email')],summary:()=>[field('username').value.trim(),field('email').value.trim()].filter(Boolean).join(' · ')},
-  {id:'phone',title:'Phone & clock PIN',optional:true,controls:()=>[field('phoneNumber')],summary:()=>field('phoneNumber').value.trim()?'Phone added · PIN ending '+field('phoneNumber').value.replace(/\D/g,'').slice(-4):'Skipped for now'},
+  {id:'phone',title:rosterOn?'Phone & clock PIN':'Phone',optional:true,controls:()=>[field('phoneNumber')],summary:()=>field('phoneNumber').value.trim()?(rosterOn?'Phone added · PIN ending '+field('phoneNumber').value.replace(/\D/g,'').slice(-4):'Phone added'):'Skipped for now'},
   {id:'permissions',title:'Permissions',controls:()=>[field('role'),field('roleScope')].filter(Boolean),summary:()=>[field('role')?.selectedOptions[0]?.label,field('roleScope')?.selectedOptions[0]?.label].filter(Boolean).join(' · ')},
   {id:'locations',title:'Locations',controls:()=>[field('locationId'),...form.querySelectorAll('#account-locations input')],summary:()=>{const count=form.querySelectorAll('#account-locations input:checked').length;return count+' location'+(count===1?'':'s')+' · Default: '+(field('locationId').selectedOptions[0]?.label||'Not selected');}},
   {id:'roster',title:'Roster details',optional:true,controls:()=>[],summary:()=>rosterState.ready?'Roster setup ready':rosterDone?'Finish later from Users or Labour settings':'Available after the user is created'}
- ];
+ ].filter(step=>step.id!=='roster'||rosterOn);
  const signature=step=>JSON.stringify(step.controls().map(control=>[control.name,control.type==='checkbox'?control.checked:control.value]));
  const done=step=>step.id==='roster'?rosterDone:created?true:confirmed.get(step.id)===signature(step);
  const summary=step=>created&&step.id!=='roster'?savedSummaries[steps.indexOf(step)]:step.summary();
@@ -89,7 +91,7 @@
   try{roster=await window.userSetupRoster.open(rosterHost,{account:created,locations:context.locations,companyId:context.companyId,onState:state=>{if(!active||created?.id!==identity)return;if(state.discard){loadRoster();return;}rosterState=state;setBusy(state.busy);refresh();}});}catch(error){setBusy(false);setStatus('The user is created. '+error.message+' You can finish roster details later.');}
  }
  async function invited(account,message){
-  savedSummaries=steps.slice(0,4).map(step=>step.summary());created=account;setBusy(false);showStage('roster');setStatus(message);await loadRoster();
+  savedSummaries=steps.slice(0,4).map(step=>step.summary());created=account;setBusy(false);if(!rosterOn){rosterDone=true;showStage('overview');setStatus(message);}else{showStage('roster');setStatus(message);await loadRoster();}
  }
  window.userSetup={open,reset,close:closeDialog,setBusy,setStatus,invited,get active(){return active;},get busy(){return busy;},get created(){return created;},get context(){return context;}};
 })();

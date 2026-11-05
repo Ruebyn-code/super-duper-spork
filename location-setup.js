@@ -29,7 +29,7 @@ function createStore(dir,{locations,auth,catalogues,awards,now=Date.now}){
    {id:'sending',title:'Ordering sending email',description:'Save the sender email and API key, then enable automatic supplier emails.',done:providerStatus(env).email,permission:'email.manage',url:link('sending')},
    {id:'par',title:'Target level system',description:'Choose one calculation for all stock items at this location, then enter initial targets or quantities per sales amount.',value:parCount+' of '+products.length+' stock items ready',done:products.length>0&&parCount===products.length,permission:'stock.targets',url:stepPage},
    {id:'devices',title:'Kiosk device',description:'Add a new kiosk for this location and pair it using its setup code.',done:kioskReady,permission:'devices.pair',url:stepPage}
-  ].map(({permission,...step})=>({...step,canEdit:can(context,permission)&&(step.id!=='manager'||can(context,'locations.manage'))}));
+  ].filter(step=>!(context.disabledFeatures||[]).includes({employer:'rostering',sending:'ordering',par:'ordering',devices:'kiosks'}[step.id])).map(({permission,...step})=>({...step,canEdit:can(context,permission)&&(step.id!=='manager'||can(context,'locations.manage'))}));
   const revision=crypto.createHash('sha256').update(JSON.stringify({id:record.id,steps,updated:data.locations[record.id]||null})).digest('hex');
   return{id:record.id,name:record.name,firstUserId:first?.id||null,canComplete:can(context,'locations.manage'),steps,revision};
  }

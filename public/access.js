@@ -37,7 +37,7 @@
  }
  document.addEventListener('submit',event=>{if(event.target.dataset.accessReadonly){event.preventDefault();event.stopImmediatePropagation();}},true);
  let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;readonly();});}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled']});
- window.appAccess={can,any,apply,policy,admin,initialSession:loadInitialSession,roleName:session=>session?.roleName||permissionModel.defaults.find(role=>role.id===(session?.role||account.role))?.name||account.roleName||account.role};
+ window.appAccess={can,any,apply,policy,admin,featureOff:(key,session=account)=>Boolean(session?.disabledFeatureKeys?.includes(key)),featureOn:(id,session=account)=>!session?.disabledFeatures?.includes(id),initialSession:loadInitialSession,roleName:session=>session?.roleName||permissionModel.defaults.find(role=>role.id===(session?.role||account.role))?.name||account.roleName||account.role};
  if(location.pathname==='/sales'){if(!can('sales.view')&&can('finances.view')&&!location.hash)location.hash='report';else if(!can('finances.view')&&can('sales.view')&&(location.hash==='#report'||location.hash==='#overview'||location.hash.startsWith('#expense-')))location.hash='entry';}
  apply();document.addEventListener('DOMContentLoaded',()=>apply());window.addEventListener('hashchange',()=>apply());
 })();
