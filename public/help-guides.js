@@ -61,7 +61,7 @@
   'Open the feature you need. The app uses your account’s permissions and the device’s assigned location.',
   'Use the left navigation rail, expanded search and blue account dropdown to move around.',
   'Choose Lock kiosk when finished. The kiosk also locks after two minutes without interaction.'
- ],{notes:['Clock actions require a fresh PIN check even after unlocking the kiosk. Ask a user manager to correct a missing phone number or duplicate phone ending.'],related:['manage-kiosks','shift-clock','manage-users'],keywords:['device','tablet','PIN','lock']});
+ ],{notes:['On the sign-in screen, tap your name (recent people appear first, or search), then enter your PIN; it signs in on the fourth digit. Not listed? Choose Sign in with your PIN only.','Clock actions require a fresh PIN check even after unlocking the kiosk. Ask a user manager to correct a missing phone number or duplicate phone ending.'],related:['manage-kiosks','shift-clock','manage-users'],keywords:['device','tablet','PIN','lock']});
 
  c='ordering';
  add(c,'place-order','Place an order','Build a cart and double-check it before submitting.',[

@@ -3,7 +3,7 @@ const {can,canAccessLocation}=require('./permissions'),policy=require('./kiosk-p
 const queues=new Map(),fail=(message,status=400)=>{throw Object.assign(Error(message),{status});},hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const cookie=req=>(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('opstack_kiosk='))?.slice(14);
 const summary=record=>{const {credential,pairingHash,pairingUntil,createRequestId,createFingerprint,...safe}=record;return{...safe,features:['app']};};
-function createStore(dir,{networkId='default',now=Date.now,location,context,openStaff,staffSession,closeStaff}={}){
+function createStore(dir,{networkId='default',now=Date.now,location,context,openStaff,staffSession,closeStaff,staffList=async()=>[]}={}){
  const file=path.join(dir,'kiosk-devices.json'),grants=new Map(),attempts=new Map(),stamp=()=>new Date(now()).toISOString();
  async function read(){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;return{devices:[]};}}
  async function change(update){const operation=(queues.get(file)||Promise.resolve()).then(async()=>{const data=await read(),result=await update(data);await fs.mkdir(dir,{recursive:true});const temp=file+'.'+crypto.randomUUID()+'.tmp';try{await fs.writeFile(temp,JSON.stringify(data,null,2),{mode:0o600});await fs.rename(temp,file);}finally{await fs.rm(temp,{force:true});}return result;});queues.set(file,operation.catch(()=>{}));return operation;}
@@ -30,9 +30,10 @@ function createStore(dir,{networkId='default',now=Date.now,location,context,open
  async function device(req){const token=cookie(req);if(!token||!token.startsWith(networkId+'.')||!/^[-a-zA-Z0-9]+\.[a-f0-9]{64}$/.test(token))return null;const record=(await read()).devices.find(d=>d.credential===hash(token)&&d.status==='paired');if(!record)return null;let shop;try{shop=await location(record.locationId);}catch(error){if(error.status===404)return null;throw error;}if(shop.archived||shop.companyId!==record.companyId)return null;return{...record,locationName:shop.name};}
  function lock(id){const grant=grants.get(id);if(grant)closeStaff(grant.token);grants.delete(id);}
  async function worker(record){if(!record)return null;const grant=grants.get(record.id);if(!grant)return null;if(grant.until<=now()||grant.revision!==record.revision){lock(record.id);return null;}let actor;try{actor=await staffSession(grant.token,record.locationId);}catch(error){if(![400,401,403,404].includes(error.status))throw error;lock(record.id);return null;}if(!actor||actor.locationId!==record.locationId||actor.companyId!==record.companyId){lock(record.id);return null;}return{actor:policy.restrict(actor),feature:'app',sessionId:grant.sessionId,expiresAt:new Date(grant.until).toISOString()};}
- async function unlock(req,value){const record=await device(req);if(!record)fail('Pair this device before entering a staff PIN.',401);const attempt=rate('pin:'+record.id);let opened;try{opened=await openStaff(value?.pin,record.locationId);}catch(error){attempt.count++;throw error;}
+ async function unlock(req,value){const record=await device(req);if(!record)fail('Pair this device before entering a staff PIN.',401);const attempt=rate('pin:'+record.id);const userId=value?.userId;if(userId!==undefined&&(typeof userId!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(userId)))fail('Choose your name again.');let opened;try{opened=await openStaff(value?.pin,record.locationId,userId);}catch(error){attempt.count++;throw error;}
   lock(record.id);grants.set(record.id,{token:opened.token,sessionId:crypto.randomUUID(),revision:record.revision,until:now()+2*60000});attempts.delete('pin:'+record.id);return{record,actor:policy.restrict(opened)};}
  async function touch(record,csrf){const staff=await worker(record);if(!staff||staff.actor.csrf!==csrf)fail('Enter your PIN again.',401);grants.get(record.id).until=now()+2*60000;return{now:stamp(),expiresAt:new Date(grants.get(record.id).until).toISOString()};}
- return{cookie,device,worker,lock,touch,pair,unlock,list,create,update};
+ async function staff(record){return(await staffList(record.locationId)).map(person=>({id:person.id,name:person.name}));}
+ return{cookie,device,worker,lock,touch,pair,unlock,staff,list,create,update};
 }
 module.exports={createStore,cookie};

@@ -91,3 +91,17 @@ test('paired devices select their own network, reject foreign codes and headers,
   const first=(await req(main,'/api/kiosk-devices','POST',{name:'Main kiosk',locationId:main.session.locationId,features:['library']})).data,second=(await req(other,'/api/kiosk-devices','POST',{name:'Other kiosk',locationId:empty.id,features:['library']})).data,device={cookies:new Map()};assert.equal((await req(device,'/kiosk?network=other-network')).status,200);assert.equal((await req(device,'/api/kiosk/pair','POST',{code:first.code})).status,401);assert.equal((await req(device,'/api/kiosk/pair','POST',{code:second.code})).status,200);assert.equal((await req(device,'/api/opstack/session')).status,403);device.cookies.set('opstack_network','default');assert.equal((await req(device,'/api/kiosk/status')).data.device.locationId,empty.id);assert.equal((await req(device,'/api/kiosk/status','GET',undefined,{'X-Opstack-Network':'default'})).status,409);assert.equal((await req(main,'/api/kiosk-devices/'+second.device.id+'/revoke','POST',{revision:2})).status,404);assert.equal((await req(other,'/api/locations/'+empty.id,'PUT',{name:empty.name,archived:true})).status,200);assert.equal((await req(device,'/api/kiosk/status')).data.paired,false);
  }finally{if(server)await new Promise(r=>server.close(r));await fs.rm(root,{recursive:true,force:true});}
 });
+test('paired kiosks list location staff by name only and can tie a PIN to the chosen person',async()=>{
+ const app=await fixture();try{
+  assert.equal((await app.request(null,'/api/kiosk/staff')).status,401);
+  const kiosk=await app.pair(await app.create()),list=await app.request(kiosk,'/api/kiosk/staff');assert.equal(list.status,200);
+  const names=list.data.staff.map(p=>p.name);assert(names.includes('Member'));assert(names.includes('Office'));assert(!names.includes('Outside'),'staff without access to this location stay hidden');
+  assert(list.data.staff.every(p=>Object.keys(p).sort().join()==='id,name'));const raw=JSON.stringify(list.data);assert(!raw.includes('0400000123')&&!raw.includes('0123')&&!raw.includes('clockPin'));
+  await app.user('Pending','5555');const accounts=JSON.parse(await fs.readFile(path.join(app.dir,'accounts.json'),'utf8'));accounts.find(a=>a.username==='Pending').invitation={status:'pending'};await fs.writeFile(path.join(app.dir,'accounts.json'),JSON.stringify(accounts));
+  assert(!(await app.request(kiosk,'/api/kiosk/staff')).data.staff.some(p=>p.name==='Pending'));
+  assert.equal((await app.request(kiosk,'/api/kiosk/unlock','POST',{pin:'0123',userId:'../bad id'})).status,400);
+  assert.equal((await app.request(kiosk,'/api/kiosk/unlock','POST',{pin:'0123',userId:app.manager.id})).status,401,'another person cannot use a PIN that is not theirs');
+  assert.equal((await app.request(kiosk,'/api/kiosk/unlock','POST',{pin:'0123',userId:app.member.id})).status,200);
+  assert.equal((await app.request(kiosk,'/api/session')).data.username,'Member');
+ }finally{await app.close();}
+});
