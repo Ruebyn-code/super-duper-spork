@@ -1,0 +1,172 @@
+/* Modern Opstack console layer. Loaded last; scoped to body.opstack-console so tenant pages are unaffected. */
+body.opstack-console{
+ --cx-bg:#f5f6fb;--cx-surface:#fff;--cx-raised:#fbfbfe;--cx-border:#e5e7f0;--cx-border-strong:#d4d8e6;--cx-text:#0f172a;--cx-muted:#64748b;--cx-soft:#94a3b8;
+ --cx-accent:#4f46e5;--cx-accent-2:#7c3aed;--cx-accent-soft:#eef0ff;--cx-ring:rgba(79,70,229,.28);
+ --cx-grad:linear-gradient(135deg,#0E7490 0%,#4F46E5 52%,#7C3AED 100%);
+ --cx-side:#0b1022;--cx-side-2:#11183a;--cx-side-text:#c7cdf0;--cx-side-muted:#7c84b4;
+ --cx-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06);--cx-shadow-lg:0 2px 6px rgba(15,23,42,.06),0 20px 48px rgba(15,23,42,.10);
+ --cx-radius:16px;
+ background:var(--cx-bg);color:var(--cx-text);font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+html[data-theme=dark] body.opstack-console{--cx-bg:#070b16;--cx-surface:#0f1526;--cx-raised:#131a2e;--cx-border:#1f2944;--cx-border-strong:#2b3657;--cx-text:#e6e9f5;--cx-muted:#98a2c3;--cx-soft:#6f7aa0;--cx-accent:#8b8cff;--cx-accent-soft:#1b1f45;--cx-ring:rgba(139,140,255,.35);--cx-side:#060913;--cx-side-2:#0c1230;--cx-shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);--cx-shadow-lg:0 2px 6px rgba(0,0,0,.35),0 20px 48px rgba(0,0,0,.5)}
+
+/* ---------- Top bar ---------- */
+body.opstack-console .console-topbar{height:64px;padding:0 24px 0 20px;display:flex;align-items:center;justify-content:space-between;background:color-mix(in srgb,var(--cx-surface) 82%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--cx-border)}
+body.opstack-console .console-brand{gap:12px;color:var(--cx-text)}
+body.opstack-console .console-brand img{width:120px;max-height:34px}
+body.opstack-console .console-brand span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--cx-grad);padding:4px 9px;border-radius:999px}
+body.opstack-console .console-identity{gap:12px;color:var(--cx-muted);font-size:13px}
+body.opstack-console #console-user{display:inline-flex;align-items:center;gap:10px;font-weight:500;color:var(--cx-text)}
+body.opstack-console #console-user[data-initials]::before{content:attr(data-initials);display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--cx-grad);color:#fff;font-size:12px;font-weight:700;letter-spacing:.02em;box-shadow:0 0 0 2px var(--cx-surface),0 0 0 3px var(--cx-border)}
+body.opstack-console #console-logout{height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--cx-border);background:var(--cx-surface);color:var(--cx-text);font-weight:500;font-size:13px}
+body.opstack-console #console-logout:hover{border-color:var(--cx-border-strong);background:var(--cx-raised)}
+
+/* ---------- Sidebar ---------- */
+body.opstack-console .console-layout{padding-left:248px;min-height:calc(100dvh - 64px)}
+body.opstack-console .console-layout .page-sidebar,body.opstack-console .console-layout .page-sidebar:is(:hover,:focus-within){top:64px;width:248px;padding:18px 12px;background:radial-gradient(120% 60% at 0% 0%,rgba(124,58,237,.28),transparent 60%),radial-gradient(90% 50% at 100% 100%,rgba(14,116,144,.25),transparent 60%),linear-gradient(180deg,var(--cx-side-2),var(--cx-side));border-right:0;box-shadow:none;overflow-y:auto;height:calc(100dvh - 64px)!important;max-height:none!important;bottom:0}
+body.opstack-console .console-layout .page-sidebar::before{content:"Platform";display:block;padding:4px 12px 10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cx-side-muted)}
+body.opstack-console .console-layout .page-sidebar nav{gap:2px}
+body.opstack-console .console-layout .page-sidebar-link{position:relative;height:42px;padding:0 12px;gap:12px;border-radius:11px;color:var(--cx-side-text);font-size:13.5px;font-weight:500;transition:background .15s ease,color .15s ease}
+body.opstack-console .console-layout .page-sidebar-link>.page-sidebar-label{opacity:1;display:block!important;max-width:none!important;overflow:visible}
+body.opstack-console .console-layout .page-sidebar-link svg{width:19px;height:19px;min-width:19px;stroke:currentColor;opacity:.85}
+body.opstack-console .console-layout .page-sidebar-link .icon-detail{stroke:currentColor;opacity:.6}
+body.opstack-console .console-layout .page-sidebar-link:hover{background:rgba(255,255,255,.06);color:#fff}
+body.opstack-console .console-layout .page-sidebar-link[aria-current]{background:linear-gradient(90deg,rgba(124,140,255,.22),rgba(124,140,255,.06));color:#fff;box-shadow:inset 0 0 0 1px rgba(160,170,255,.18)}
+body.opstack-console .console-layout .page-sidebar-link[aria-current]::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--cx-grad)}
+body.opstack-console .console-layout .page-sidebar-link[aria-current] svg{opacity:1}
+body.opstack-console .console-layout .page-sidebar-link:focus-visible{outline:2px solid #a5b4fc;outline-offset:2px}
+
+/* ---------- Main + headings ---------- */
+body.opstack-console .console-main{max-width:1280px;margin:0 auto;padding:32px 40px 64px}
+body.opstack-console .console-heading{align-items:flex-end;margin-bottom:6px}
+body.opstack-console .console-heading .eyebrow{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.14em;background:var(--cx-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.opstack-console .console-heading h1{margin:6px 0 0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.02em;color:var(--cx-text)}
+body.opstack-console .console-description{color:var(--cx-muted);font-size:14px;line-height:1.6;margin:10px 0 24px}
+body.opstack-console #console-status:not(:empty){margin:12px 0;padding:10px 14px;border-radius:12px;background:var(--cx-accent-soft);color:var(--cx-text);font-size:13px;border:1px solid color-mix(in srgb,var(--cx-accent) 25%,transparent)}
+
+/* ---------- Buttons ---------- */
+body.opstack-console button,body.opstack-console .console-actions a{border-radius:10px;font-weight:500;transition:transform .12s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease}
+body.opstack-console .console-primary{background:var(--cx-grad)!important;border:0!important;color:#fff!important;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 6px 16px -6px rgba(79,70,229,.65);padding:10px 16px;font-weight:600}
+body.opstack-console .console-primary:hover{box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 10px 22px -8px rgba(79,70,229,.8);transform:translateY(-1px)}
+body.opstack-console .console-primary:active{transform:translateY(0)}
+body.opstack-console .console-primary:disabled{opacity:.55;transform:none;box-shadow:none}
+body.opstack-console main button:not(.console-primary):not([role=tab]):not(.console-icon-button):not(.feature-help-button){background:var(--cx-surface);border:1px solid var(--cx-border);color:var(--cx-text)}
+body.opstack-console main button:not(.console-primary):not([role=tab]):not(.console-icon-button):not(.feature-help-button):hover{border-color:var(--cx-border-strong);background:var(--cx-raised)}
+body.opstack-console button:focus-visible,body.opstack-console a:focus-visible{outline:2px solid var(--cx-accent);outline-offset:2px}
+
+/* ---------- Fields ---------- */
+body.opstack-console main input:not([type=checkbox]):not([type=radio]):not([type=color]),body.opstack-console main select,body.opstack-console main textarea,body.opstack-console .console-edit-dialog input:not([type=checkbox]),body.opstack-console .console-auth input{border-radius:10px;border:1px solid var(--cx-border);background:var(--cx-surface);color:var(--cx-text);min-height:40px;padding:8px 12px;font-size:14px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:border-color .15s ease,box-shadow .15s ease}
+body.opstack-console main textarea{min-height:88px;line-height:1.5}
+body.opstack-console main :is(input,select,textarea):focus,body.opstack-console .console-edit-dialog input:focus,body.opstack-console .console-auth input:focus{outline:none;border-color:var(--cx-accent);box-shadow:0 0 0 4px var(--cx-ring)}
+body.opstack-console main label,body.opstack-console .console-auth label{font-size:12.5px;font-weight:600;color:var(--cx-text);letter-spacing:0}
+body.opstack-console main input[type=checkbox]{accent-color:var(--cx-accent)}
+
+/* ---------- Cards & panels ---------- */
+body.opstack-console .console-panel,body.opstack-console .console-card{background:var(--cx-surface);border:1px solid var(--cx-border);border-radius:var(--cx-radius);box-shadow:var(--cx-shadow);padding:22px}
+body.opstack-console .console-card{gap:10px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+body.opstack-console .console-card:hover{transform:translateY(-2px);box-shadow:var(--cx-shadow-lg);border-color:var(--cx-border-strong)}
+body.opstack-console .console-card-grid{gap:18px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+body.opstack-console .console-card h3{margin:0;font-size:16px;font-weight:650;letter-spacing:-.01em;color:var(--cx-text)}
+body.opstack-console .console-card p{font-size:13px;color:var(--cx-muted);line-height:1.5}
+body.opstack-console .console-card-top{align-items:center;gap:12px;flex-wrap:nowrap}
+body.opstack-console .console-card-top>h3{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.opstack-console .console-card .console-actions{gap:8px;padding-top:14px;border-top:1px solid var(--cx-border);margin-top:auto}
+body.opstack-console .console-avatar{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--cx-grad);color:#fff;font-weight:700;font-size:14px;letter-spacing:.02em;box-shadow:0 6px 14px -6px rgba(79,70,229,.6)}
+body.opstack-console .console-avatar.round{border-radius:50%}
+body.opstack-console .console-pill{display:inline-flex;align-items:center;gap:6px;flex:none;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:600;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+body.opstack-console .console-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+body.opstack-console .console-card[data-status=suspended] .console-pill,body.opstack-console .console-pill[data-tone=muted]{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
+body.opstack-console .console-pill[data-tone=warn]{background:#fffbeb;color:#b45309;border-color:#fde68a}
+html[data-theme=dark] body.opstack-console .console-pill{background:rgba(16,185,129,.12);color:#6ee7b7;border-color:rgba(16,185,129,.3)}
+html[data-theme=dark] body.opstack-console .console-card[data-status=suspended] .console-pill,html[data-theme=dark] body.opstack-console .console-pill[data-tone=muted]{background:rgba(148,163,184,.12);color:#cbd5e1;border-color:rgba(148,163,184,.25)}
+html[data-theme=dark] body.opstack-console .console-pill[data-tone=warn]{background:rgba(245,158,11,.12);color:#fcd34d;border-color:rgba(245,158,11,.3)}
+body.opstack-console .console-code-chip{display:inline-flex;align-items:center;gap:6px;width:fit-content;max-width:100%;padding:3px 8px;border-radius:8px;background:var(--cx-raised);border:1px solid var(--cx-border);font:500 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--cx-text)}
+body.opstack-console .console-features-off{background:#fffbeb!important;color:#b45309!important;border:1px solid #fde68a;font-size:11.5px!important}
+html[data-theme=dark] body.opstack-console .console-features-off{background:rgba(245,158,11,.12)!important;color:#fcd34d!important;border-color:rgba(245,158,11,.3)}
+
+/* ---------- Summary stats ---------- */
+body.opstack-console .console-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:0 0 22px}
+body.opstack-console .console-stat{position:relative;overflow:hidden;padding:16px 18px;border-radius:var(--cx-radius);background:var(--cx-surface);border:1px solid var(--cx-border);box-shadow:var(--cx-shadow)}
+body.opstack-console .console-stat::after{content:"";position:absolute;inset:auto -30px -30px auto;width:90px;height:90px;border-radius:50%;background:var(--cx-grad);opacity:.1}
+body.opstack-console .console-stat span{display:block;font-size:12px;font-weight:600;color:var(--cx-muted);text-transform:uppercase;letter-spacing:.06em}
+body.opstack-console .console-stat strong{display:block;margin-top:6px;font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--cx-text);font-variant-numeric:tabular-nums}
+
+/* ---------- Forms in panels ---------- */
+body.opstack-console .console-form-grid{gap:16px 18px}
+body.opstack-console .console-panel h2,body.opstack-console .console-panel h3{letter-spacing:-.01em;color:var(--cx-text)}
+body.opstack-console .small,body.opstack-console main small{color:var(--cx-muted)}
+
+/* ---------- Activity timeline ---------- */
+body.opstack-console #console-activity{padding:8px 22px}
+body.opstack-console .console-activity-row{position:relative;grid-template-columns:170px 200px 1fr;align-items:center;gap:14px;padding:14px 0 14px 22px;border-bottom:1px solid var(--cx-border);font-size:13px;color:var(--cx-text)}
+body.opstack-console .console-activity-row:last-child{border-bottom:0}
+body.opstack-console .console-activity-row::before{content:"";position:absolute;left:2px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:var(--cx-grad);box-shadow:0 0 0 4px var(--cx-accent-soft)}
+body.opstack-console .console-activity-row>:first-child{color:var(--cx-muted);font-variant-numeric:tabular-nums;font-size:12.5px}
+body.opstack-console .console-activity-row>:nth-child(3){font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--cx-muted)}
+
+/* ---------- Tabs, toolbars, tables ---------- */
+body.opstack-console [role=tablist]{background:var(--cx-raised);border:1px solid var(--cx-border);border-radius:12px;padding:4px;gap:2px}
+body.opstack-console [role=tab]{border:0!important;border-radius:9px!important;background:transparent!important;color:var(--cx-muted)!important;font-weight:600}
+body.opstack-console [role=tab][aria-selected=true]{background:var(--cx-surface)!important;color:var(--cx-text)!important;box-shadow:0 1px 3px rgba(15,23,42,.12)}
+body.opstack-console .console-report-table-wrap{border-radius:var(--cx-radius);border:1px solid var(--cx-border);box-shadow:var(--cx-shadow);background:var(--cx-surface);overflow:auto}
+body.opstack-console .console-report-table{font-size:13px}
+body.opstack-console .console-report-table thead th{background:var(--cx-raised);color:var(--cx-muted);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--cx-border)}
+body.opstack-console .console-report-table tbody tr:hover>*{background:color-mix(in srgb,var(--cx-accent) 4%,var(--cx-surface))}
+body.opstack-console .console-report-table tfoot tr>*{background:var(--cx-raised);font-weight:700}
+body.opstack-console .console-report-metric{border-radius:var(--cx-radius)!important;border:1px solid var(--cx-border)!important;box-shadow:var(--cx-shadow);background:var(--cx-surface)!important}
+
+/* ---------- Dialogs ---------- */
+body.opstack-console dialog{border:1px solid var(--cx-border);border-radius:20px;box-shadow:0 30px 80px -20px rgba(15,23,42,.45);background:var(--cx-surface);color:var(--cx-text)}
+body.opstack-console dialog::backdrop{background:rgba(9,12,30,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+body.opstack-console .console-edit-dialog h2{font-size:20px;letter-spacing:-.01em}
+body.opstack-console .console-edit-dialog .console-feature{border-color:var(--cx-border);border-radius:12px;padding:10px 12px;transition:border-color .15s,background .15s}
+body.opstack-console .console-edit-dialog .console-feature:hover{border-color:var(--cx-border-strong);background:var(--cx-raised)}
+
+/* ---------- Sign-in ---------- */
+body.opstack-console .console-auth{position:relative;overflow:hidden;background:radial-gradient(60% 50% at 15% 10%,rgba(124,58,237,.55),transparent 70%),radial-gradient(55% 55% at 90% 90%,rgba(14,116,144,.55),transparent 70%),radial-gradient(40% 40% at 70% 20%,rgba(79,70,229,.45),transparent 70%),#070b1a}
+body.opstack-console .console-auth::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent);-webkit-mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent);pointer-events:none}
+body.opstack-console .console-auth-card{position:relative;width:min(100%,420px);padding:36px;border-radius:24px;background:color-mix(in srgb,var(--cx-surface) 92%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.35);box-shadow:0 40px 100px -30px rgba(0,0,0,.6)}
+html[data-theme=dark] body.opstack-console .console-auth-card{border-color:rgba(255,255,255,.08)}
+body.opstack-console .console-auth-logo{width:150px;margin:0 0 22px}
+body.opstack-console .console-auth-card h1{margin:0 0 6px;font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--cx-text)}
+body.opstack-console .console-auth-card p{color:var(--cx-muted);font-size:14px;line-height:1.55}
+body.opstack-console .console-auth-card form{display:grid;gap:14px;margin-top:20px}
+body.opstack-console .console-auth-card form button[type=submit]{height:44px;margin-top:6px;font-size:14.5px}
+body.opstack-console .console-auth-card a{color:var(--cx-accent);font-weight:500}
+
+/* ---------- Tablet / phone ---------- */
+@media (max-width:1100px){body.opstack-console .console-main{padding:26px 24px 56px}}
+@media (max-width:860px){
+ body.opstack-console .console-layout{padding-left:0}
+ body.opstack-console .console-layout .page-sidebar,body.opstack-console .console-layout .page-sidebar:is(:hover,:focus-within){position:sticky;top:64px;z-index:9;width:auto;height:auto;padding:8px 12px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;background:linear-gradient(90deg,var(--cx-side-2),var(--cx-side))}
+ body.opstack-console .console-layout .page-sidebar,body.opstack-console .console-layout .page-sidebar:is(:hover,:focus-within){height:auto!important}
+ body.opstack-console .console-layout .page-sidebar::-webkit-scrollbar{display:none}
+ body.opstack-console .console-layout .page-sidebar::before{display:none}
+ body.opstack-console .console-layout .page-sidebar nav{flex-direction:row;gap:6px}
+ body.opstack-console .console-layout .page-sidebar-link{height:36px;padding:0 12px;border-radius:999px;font-size:13px}
+ body.opstack-console .console-layout .page-sidebar-label{display:inline!important}
+ body.opstack-console .console-layout .page-sidebar-link[aria-current]::before{display:none}
+ body.opstack-console .console-layout .page-sidebar-link[aria-current]{background:rgba(255,255,255,.14)}
+ body.opstack-console .console-main{padding:22px 16px 48px}
+ body.opstack-console .console-heading h1{font-size:24px}
+ body.opstack-console .console-card-grid{grid-template-columns:1fr}
+ body.opstack-console .console-activity-row{grid-template-columns:1fr;gap:2px}
+}
+@media (max-width:600px){
+ body.opstack-console .console-topbar{padding:0 14px}
+ body.opstack-console .console-brand img{width:96px}
+ body.opstack-console .console-identity>#console-user{font-size:0;gap:0}
+ body.opstack-console .console-identity>#console-user[data-initials]::before{font-size:12px}
+ body.opstack-console .console-identity>span{display:inline-flex!important}
+ body.opstack-console .console-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ body.opstack-console .console-stat strong{font-size:22px}
+ body.opstack-console .console-auth-card{padding:28px 22px}
+}
+@media (prefers-reduced-motion:reduce){body.opstack-console *{transition:none!important}body.opstack-console .console-card:hover,body.opstack-console .console-primary:hover{transform:none}}
+@media (prefers-reduced-transparency:reduce){body.opstack-console .console-topbar,body.opstack-console .console-auth-card{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cx-surface)}}
+/* Feature switches render as toggles. */
+body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:40px;height:23px;margin:1px 0 0;border-radius:999px;background:var(--cx-border-strong);cursor:pointer;transition:background .2s ease}
+body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]::before{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.3);transition:transform .2s ease}
+body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]:checked{background:var(--cx-grad)}
+body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]:checked::before{transform:translateX(17px)}
+body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]:focus-visible{outline:2px solid var(--cx-accent);outline-offset:2px}
+@media (forced-colors:active){body.opstack-console .console-edit-dialog .console-feature input[type=checkbox]{appearance:auto;-webkit-appearance:checkbox;width:18px;height:18px}}

@@ -72,3 +72,7 @@ Besides removing permissions, the app hides settings and options that belong to 
 - **Locations:** with Ordering off, the Supplier delivery days tab and the Target level system choice (location settings and Add location) are hidden. Sending, Employer setup and Devices tabs already follow their permissions.
 - **Location setup:** tasks for switched-off features are removed and not required (Employer setup for Rostering; Ordering sending email and Target level system for Ordering; Kiosk device for Kiosk devices).
 - **Help:** guides and whole categories for switched-off features are hidden, including related-guide links and direct links (which fall back to browsing).
+
+## Console design
+
+The console's look lives in `public/opstack-modern.css`, loaded last on `/opstack` and scoped to `body.opstack-console` so tenant pages are unaffected. It provides a dark gradient sidebar with labelled navigation (a scrolling pill bar on screens up to 860 px), a frosted top bar with the signed-in person's initials, large page headings, rounded cards with soft shadows, gradient primary buttons in the OpStack intelligence palette, segmented tabs, modern fields and tables, a timeline-style Activity list, toggle switches in the Features dialog and a full-screen gradient sign-in. Networks show summary stats (networks, active, suspended, features switched off) and initials avatars; accounts show avatars and toned status pills. Light/dark themes, keyboard focus, reduced motion, reduced transparency and forced colours are supported.
