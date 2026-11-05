@@ -103,4 +103,4 @@
  .ordering-budget-overview .ordering-budget-cart{justify-content:flex-start}
  .ordering-budget-overview .ordering-budget-cart button{margin-left:auto;min-height:40px}
 }
-.already-ordered-note{display:block;font-size:11px;line-height:1.5;font-weight:600;color:var(--theme-primary-text,var(--primary));overflow-wrap:anywhere}
+.already-ordered-note{display:inline-block;width:fit-content;max-width:100%;box-sizing:border-box;font-size:11px;line-height:1.35;margin:4px 0;padding:2px 7px;border-radius:999px;font-weight:600;color:var(--theme-text,#21384a);background:color-mix(in srgb,var(--secondary) 24%,var(--theme-surface,#fff));border:1px solid color-mix(in srgb,var(--secondary) 60%,var(--line,#dce5ed));overflow-wrap:anywhere}
