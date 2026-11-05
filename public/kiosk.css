@@ -144,10 +144,28 @@ body.kiosk-signin-on main{height:100dvh;padding:16px}
 @media (max-width:600px){body.kiosk-signin-on main{padding:10px}.kiosk-hero{padding:14px 16px}.kiosk-chips{display:none}.kiosk-news{display:none}.kiosk-hero-fullscreen{width:36px;height:36px;min-height:36px}.kiosk-step-title h1{font-size:21px}.kiosk-step-title p{font-size:13px}.kiosk-people{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.kiosk-person{padding:10px 6px 8px}.kiosk-person .kiosk-avatar{width:40px;height:40px;font-size:15px}.kiosk-person-name{font-size:12px}}
 @media (min-width:601px){.kiosk-people{grid-template-columns:repeat(auto-fill,minmax(112px,128px))}}
 
-/* Company logo badge at the top of the welcome panel */
-.kiosk-hero-logo{display:inline-flex;align-items:center;justify-content:center;height:56px;max-width:min(220px,70%);padding:8px 14px;border-radius:16px;background:#fff;box-shadow:0 8px 20px -12px rgba(0,0,0,.45)}
-.kiosk-hero-logo img{display:block;max-width:100%;max-height:40px;width:auto;height:auto;object-fit:contain}
-.kiosk-hero-top+.kiosk-greeting{margin-top:18px}
-@media (max-width:900px){.kiosk-hero-logo{height:44px;padding:6px 10px;border-radius:12px}.kiosk-hero-logo img{max-height:32px}.kiosk-hero-top+.kiosk-greeting{margin-top:10px}}
-@media (max-width:600px){.kiosk-hero-logo{height:38px}.kiosk-hero-logo img{max-height:26px}}
-@media (forced-colors:active){.kiosk-hero-logo{border:1px solid CanvasText}}
+
+/* Collapsed sign-in sheet over the company logo */
+.kiosk-stage{position:relative;overflow:hidden;padding:0}
+.kiosk-idle{position:absolute;inset:0 0 84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:32px;pointer-events:none}
+.kiosk-idle-logo{display:block;max-width:min(60%,420px);max-height:45%;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 18px 30px rgba(15,35,70,.12))}
+.kiosk-idle-place{margin:0;font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--k-muted);text-align:center}
+.kiosk-sheet{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--k-surface);border-radius:inherit;box-shadow:0 -12px 32px -18px rgba(15,35,70,.35);transform:translateY(calc(100% - 84px));transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:1}
+.kiosk-sheet[data-expanded=true]{transform:translateY(0)}
+.kiosk-sheet-handle{position:relative;flex:none;display:flex;align-items:center;gap:14px;width:100%;min-height:84px;padding:14px 24px 12px;border:0;border-radius:inherit;background:transparent;color:var(--k-text);text-align:left;cursor:pointer}
+.kiosk-sheet-handle:focus-visible{outline:3px solid var(--k-primary);outline-offset:-3px}
+.kiosk-grip{position:absolute;top:8px;left:50%;width:44px;height:5px;margin-left:-22px;border-radius:999px;background:color-mix(in srgb,var(--k-muted) 45%,transparent)}
+.kiosk-handle-text{flex:1;display:grid;gap:2px;min-width:0}
+.kiosk-handle-text strong{font-size:18px}
+.kiosk-handle-text small{font-size:13px;color:var(--k-muted)}
+.kiosk-handle-chevron{flex:none;padding:8px;width:40px;height:40px;border-radius:50%;color:#fff;background:var(--k-primary);transition:transform .3s ease}
+.kiosk-sheet[data-expanded=false] .kiosk-sheet-handle{background:linear-gradient(90deg,color-mix(in srgb,var(--k-primary) 8%,var(--k-surface)),var(--k-surface))}
+.kiosk-sheet[data-expanded=true] .kiosk-sheet-handle{min-height:56px;padding-top:18px;padding-bottom:4px}
+.kiosk-sheet[data-expanded=true] .kiosk-handle-text strong{font-size:14px;color:var(--k-muted)}
+.kiosk-sheet[data-expanded=true] .kiosk-handle-text small{display:none}
+.kiosk-sheet[data-expanded=true] .kiosk-handle-chevron{transform:rotate(180deg);width:34px;height:34px;padding:6px;background:color-mix(in srgb,var(--k-primary) 14%,var(--k-surface));color:var(--k-primary)}
+.kiosk-sheet-body{flex:1;display:flex;flex-direction:column;min-height:0;padding:8px 26px 22px}
+.kiosk-sheet[data-expanded=false] .kiosk-sheet-body{visibility:hidden;transition:visibility 0s .38s}
+@media (max-width:600px){.kiosk-idle{inset:0 0 76px;padding:20px;gap:12px}.kiosk-idle-logo{max-width:70%}.kiosk-sheet{transform:translateY(calc(100% - 76px))}.kiosk-sheet-handle{min-height:76px;padding:12px 18px 10px}.kiosk-handle-text strong{font-size:16px}.kiosk-sheet-body{padding:6px 16px 16px}}
+@media (prefers-reduced-motion:reduce){.kiosk-sheet,.kiosk-handle-chevron{transition:none}}
+@media (forced-colors:active){.kiosk-sheet{border-top:1px solid CanvasText}.kiosk-handle-chevron{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
