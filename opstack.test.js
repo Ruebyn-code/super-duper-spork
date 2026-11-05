@@ -168,3 +168,19 @@ test('company Home defaults and section edits remain isolated across networks fo
  session=await app.open(support,second.id);assert.equal((await app.request(support,'/api/home-greeting')).data.text,'Hello {user}');assert.equal((await app.request(support,'/api/home-dashboard')).data.revision,0);assert.equal((await app.request(support,'/api/home-dashboard','PUT',{revision:0,sections:[]},{'X-CSRF-Token':session.csrf,'X-Opstack-Network':first.id})).status,409);
  await app.open(support,first.id);assert.equal((await app.request(support,'/api/home-greeting')).data.text,'Hello first {user}');assert.deepEqual((await app.request(support,'/api/home-dashboard')).data.sections,sections);
 });
+test('owners switch features off per network; access, menus and role editing follow while other networks and saved roles stay intact',async t=>{
+ const app=await fixture(t);await app.configure();const network=await app.create(),staff=await app.acceptNetwork(network),other=await app.create('third'),otherStaff=await app.acceptNetwork(other),{actor:support}=await app.support();
+ const read=await app.request(app.owner,'/api/opstack/networks/'+network.id+'/features');assert.equal(read.status,200);assert.deepEqual(read.data.disabled,[]);assert(read.data.catalogue.some(f=>f.id==='ordering'));
+ assert.equal((await app.request(support,'/api/opstack/networks/'+network.id+'/features','PUT',{revision:0,disabled:['ordering']})).status,403,'support cannot change features');
+ assert.equal((await app.request(app.owner,'/api/opstack/networks/'+network.id+'/features','PUT',{revision:0,disabled:['bogus']})).status,400);
+ const saved=await app.request(app.owner,'/api/opstack/networks/'+network.id+'/features','PUT',{revision:0,disabled:['intelligence','ordering']});assert.equal(saved.status,200);assert.deepEqual(saved.data.disabled,['ordering','intelligence']);
+ assert.equal((await app.request(app.owner,'/api/opstack/networks/'+network.id+'/features','PUT',{revision:0,disabled:[]})).status,409,'stale revisions are refused');
+ const list=(await app.request(app.owner,'/api/opstack/networks')).data.networks;assert.deepEqual(list.find(n=>n.id===network.id).disabledFeatures,['ordering','intelligence']);assert.deepEqual(list.find(n=>n.id===other.id).disabledFeatures,[]);
+ const session=(await app.request(staff,'/api/session')).data;assert(!session.permissions.includes('orders.view'));assert.equal(session.actionPermissions['ai.search'],false);assert(session.permissions.includes('home.view'));
+ assert.equal((await app.request(staff,'/api/catalogue')).status,403,'switched-off APIs are refused');assert.notEqual((await app.request(staff,'/stock-count')).status,200,'switched-off pages redirect');
+ const levels=(await app.request(staff,'/api/permission-levels')).data,office=levels.levels.find(level=>level.permissions.includes('orders.view'));assert(office,'saved roles keep switched-off permissions');
+ assert((await app.request(otherStaff,'/api/session')).data.permissions.includes('orders.view'),'other networks are unaffected');
+ assert.deepEqual(JSON.parse(await fs.readFile(path.join(app.root,'networks',network.id,'network-features.json'),'utf8')).disabled,['ordering','intelligence']);
+ assert.equal((await app.request(app.owner,'/api/opstack/networks/'+network.id+'/features','PUT',{revision:1,disabled:[]})).status,200);assert((await app.request(staff,'/api/session')).data.permissions.includes('orders.view'),'turning a feature back on restores access');
+ assert((await app.request(app.owner,'/api/opstack/activity')).data.events.some(e=>e.action==='network.features.updated'));
+});

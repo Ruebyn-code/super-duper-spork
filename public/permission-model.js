@@ -72,7 +72,8 @@
  const any=(account,permissions)=>permissions.some(key=>can(account,key));
  const level=account=>account?.roleLevel??defaults.find(role=>role.id===account?.role)?.level??0;
  const grants=account=>[...keys,...actionKeys].filter(key=>can(account,key));
- const canAssign=(actor,target)=>level(target)<=level(actor)&&grants(target).every(key=>can(actor,key));
+ // Features switched off for the whole network stay in saved roles, so they never block assigning those roles.
+ const canAssign=(actor,target)=>level(target)<=level(actor)&&grants(target).every(key=>can(actor,key)||(actor?.disabledFeatureKeys||[]).includes(key));
  const rosteringKeys=keys.filter(key=>key.startsWith('rostering.'));
  const transferKeys=['transfers.view','transfers.send','transfers.receive'];
  const knowledgeKeys=['knowledge.view','knowledge.manage.company','knowledge.manage.network'];

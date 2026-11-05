@@ -51,3 +51,14 @@ The **Monthly report** shows full-month recurring estimates for Stripe-linked lo
 Platform login, account changes, network opens and support API mutations are logged under **Activity**. Logs include the Opstack identity, network, action, timestamp and response status, excluding passwords, keys, request bodies and setup tokens. Disabling or changing an Opstack account invalidates its active sessions immediately. Platform and network sign-in sessions are memory-only and require signing in again after an app restart.
 
 Automated tests use temporary directories and simulated email responses. They do not send real invitations or modify Railway production data.
+
+## Network features
+
+Opstack owners can switch features off for an individual network from **Networks → Features** on that network's card. The card shows how many features are off. Support accounts can see the count but cannot change it.
+
+The switchable features are defined in `public/network-features-model.js`: Ordering & stock, Sales & finance, Reporting, Rostering & timesheets (including award compliance), Checklists, Learning centre, Knowledge centre, Comms, Labels, OpStack intelligence and Kiosk devices. Home, users, locations, companies, appearance and permission levels always stay on.
+
+- The choice is saved in the network's own data folder as `network-features.json` (revision-checked; stale saves return 409) and recorded in console activity as `network.features.updated`.
+- `permission-levels.js` reads it alongside the permission levels and `decorate()` removes the feature's permissions (and switches off parentless detailed actions such as OpStack intelligence search) from every resolved account, including support sessions, kiosk staff and per-location contexts. All existing API checks, page redirects, menus, Home widgets and scheduled reports therefore follow the switch immediately, with no per-page changes.
+- Saved permission levels and all data are left untouched. Switched-off keys stay in roles and never block editing or assigning them (`canAssign` ignores them), so switching a feature back on restores everyone's access exactly as before.
+- Other networks are unaffected.
