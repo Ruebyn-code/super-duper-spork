@@ -6,6 +6,7 @@ A paired kiosk (`/kiosk`) shows a sign-in screen for the device's location.
 
 - The sign-in screen has no top bar. The welcome panel holds the location, today's trading status and the full-screen button. The top bar remains on the pairing screen.
 
+- **Company logo:** the company's saved logo sits in a white rounded badge at the top of the welcome panel (the Opstack logo when none is uploaded). A paired, locked kiosk may load only `/logo` and `/sidebar-logo` for its own company; every other page or setting still needs a staff PIN.
 - **Welcome panel:** a gradient of the company's primary colour (lighter at the top, deeper at the bottom), with a greeting for the time of day, a large Melbourne clock, the date, the location and short tips. On tablets in portrait and on phones it shrinks to a compact band, and on phones it hides while the PIN pad is open.
 - **What's happening:** inside the welcome panel, today's trading status (Open · closes 10pm, Closed now) and up to four company posts from the last 60 days (company-wide and network-wide posts for the kiosk's company), each with its title, a short excerpt, the author, *Must read* when required, and how long ago it was posted. On portrait tablets the posts scroll sideways; on phones they are hidden.
 - **Who's signing in?** Compact name tiles for everyone who can sign in at this location, with coloured initials avatars. Staff who signed in recently on this device appear first. **Search your name** filters the tiles; typing on a physical keyboard starts a search.

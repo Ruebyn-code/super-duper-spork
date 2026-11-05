@@ -225,9 +225,10 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       }
       if(req.url==='/kiosk'&&req.method==='GET'&&kioskStaff){res.writeHead(303,{Location:'/home'});return res.end();}
       if(kioskCookie&&req.url!=='/kiosk'){
-        if(!kioskDevice||!kioskStaff){if(req.method==='GET'&&!req.url.startsWith('/api/')){res.writeHead(303,{Location:'/kiosk'});return res.end();}fail('Enter your staff PIN at the kiosk.',401);}
+        const lockedLogo=kioskDevice&&!kioskStaff&&req.method==='GET'&&['/logo','/sidebar-logo'].includes(req.url);
+        if((!kioskDevice||!kioskStaff)&&!lockedLogo){if(req.method==='GET'&&!req.url.startsWith('/api/')){res.writeHead(303,{Location:'/kiosk'});return res.end();}fail('Enter your staff PIN at the kiosk.',401);}
         if(req.headers['x-location-id']&&req.headers['x-location-id']!==kioskDevice.locationId||req.headers['x-company-id']&&req.headers['x-company-id']!==kioskDevice.companyId||requestUrl.searchParams.has('company')&&requestUrl.searchParams.get('company')!==kioskDevice.companyId)fail('This kiosk is assigned to another location.',403);
-        if(!kioskPolicy.allowed(kioskStaff.feature,req.url,req.method))fail('This action is not available on this kiosk.',403);
+        if(!lockedLogo&&!kioskPolicy.allowed(kioskStaff.feature,req.url,req.method))fail('This action is not available on this kiosk.',403);
       }
       let session=kioskCookie?kioskStaff?.actor||null:req.url==='/kiosk'?null:await companyStore.context(await locationStore.sessionContext(await auth.session(req),req.headers['x-location-id']));
       const setupTask=requestUrl.searchParams.get('__opstack_setup');
@@ -240,7 +241,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       const platformWrite=platformAppearance&&((req.url.startsWith('/api/')&&customisationRoutes.includes(req.url))||settingsPage||req.url.startsWith('/admin/appearance/'));
       if(platformWrite&&await platformStore?.enabled()&&(!isSupport(session)||session[supportIdentity].platformRole!=='owner'))fail('Manage shared sign-in appearance from the Opstack owner console.',403);
       if(platformWrite){if(!session){if(req.url.startsWith('/api/'))fail('Sign-in required.',401);res.writeHead(303,{Location:'/login'});return res.end();}if(!can(session,'network.access')||!can(session,'appearance.manage')){if(req.url.startsWith('/api/'))fail('Head Office platform appearance permission required.',403);res.writeHead(303,{Location:'/'});return res.end();}}
-      if(await platformStore?.enabled()&&!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset)&&!session)fail('Sign-in required.',401);
+      if(await platformStore?.enabled()&&!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset)&&!session&&!(kioskDevice&&req.method==='GET'&&['/logo','/sidebar-logo'].includes(req.url)))fail('Sign-in required.',401);
       const requestedCompany=!platformAppearance&&(customisationRoutes.includes(req.url)||fontAsset||settingsPage)?(req.headers['x-company-id']||requestUrl.searchParams.get('company')):undefined;
       const appearanceCompany=await companyStore.get(requestedCompany||session?.companyId||kioskDevice?.companyId||companies.defaultCompanyId);
       if(session&&requestedCompany&&!can(session,'network.access')&&!(await companyStore.accessible(session)).some(company=>company.id===appearanceCompany.id))fail('You do not have access to this company.',403);

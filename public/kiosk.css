@@ -143,3 +143,11 @@ body.kiosk-signin-on main{height:100dvh;padding:16px}
 @media (max-width:900px){.kiosk-hero{padding:16px 18px}.kiosk-hero-top{flex-basis:100%}.kiosk-chips{margin:0 0 0 auto}.kiosk-news{flex-basis:100%;margin-top:12px}.kiosk-news-list{display:flex;overflow-x:auto;overflow-y:hidden;gap:10px;padding-bottom:4px}.kiosk-news-item{flex:0 0 min(280px,80%)}.kiosk-news-empty{display:none}}
 @media (max-width:600px){body.kiosk-signin-on main{padding:10px}.kiosk-hero{padding:14px 16px}.kiosk-chips{display:none}.kiosk-news{display:none}.kiosk-hero-fullscreen{width:36px;height:36px;min-height:36px}.kiosk-step-title h1{font-size:21px}.kiosk-step-title p{font-size:13px}.kiosk-people{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.kiosk-person{padding:10px 6px 8px}.kiosk-person .kiosk-avatar{width:40px;height:40px;font-size:15px}.kiosk-person-name{font-size:12px}}
 @media (min-width:601px){.kiosk-people{grid-template-columns:repeat(auto-fill,minmax(112px,128px))}}
+
+/* Company logo badge at the top of the welcome panel */
+.kiosk-hero-logo{display:inline-flex;align-items:center;justify-content:center;height:56px;max-width:min(220px,70%);padding:8px 14px;border-radius:16px;background:#fff;box-shadow:0 8px 20px -12px rgba(0,0,0,.45)}
+.kiosk-hero-logo img{display:block;max-width:100%;max-height:40px;width:auto;height:auto;object-fit:contain}
+.kiosk-hero-top+.kiosk-greeting{margin-top:18px}
+@media (max-width:900px){.kiosk-hero-logo{height:44px;padding:6px 10px;border-radius:12px}.kiosk-hero-logo img{max-height:32px}.kiosk-hero-top+.kiosk-greeting{margin-top:10px}}
+@media (max-width:600px){.kiosk-hero-logo{height:38px}.kiosk-hero-logo img{max-height:26px}}
+@media (forced-colors:active){.kiosk-hero-logo{border:1px solid CanvasText}}

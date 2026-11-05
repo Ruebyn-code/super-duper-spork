@@ -115,3 +115,10 @@ test('locked kiosks show trading status and short company news without full post
   assert.deepEqual((await app.request(kiosk,'/api/kiosk/staff')).data.news,[]);
  }finally{await app.close();}
 });
+test('a locked kiosk can load only its company logo before anyone signs in',async()=>{
+ const app=await fixture();try{
+  const kiosk=await app.pair(await app.create());
+  for(const url of ['/logo','/sidebar-logo']){const result=await app.request(kiosk,url);assert.ok([200,404].includes(result.status),url+' '+result.status);assert.equal(result.redirect,null);}
+  assert.equal((await app.request(kiosk,'/appearance')).status,303);assert.equal((await app.request(kiosk,'/home')).status,303);assert.equal((await app.request(kiosk,'/api/settings')).status,401);
+ }finally{await app.close();}
+});
