@@ -45,6 +45,12 @@
   'Press Save photo to apply it. Choosing a file alone does not save it.',
   'Use the photo removal control to return to initials when needed.'
  ],{notes:['Authorised user managers can also edit photos in Admin → Users. Your profile shows the company, location and access from your current session.'],related:['manage-users'],keywords:['avatar','picture','image','account']});
+ add(c,'notifications','Use notifications','See new messages, tasks and alerts for your account and location in one place.',[
+  'Choose the bell beside search at the top of any page. The red number shows how many notifications you haven’t read yet.',
+  'Review new messages, required posts, training, agreements, rosters, leave, checklists, equipment problems and other alerts for your permissions and the selected location. Choose a notification to open it; it’s marked as read.',
+  'Use Unread to see only new items, or Mark all as read to clear the count. Notifications disappear on their own once the work is done.',
+  'Choose the settings button to turn notification types off for your account, or turn on Desktop alerts to get a browser alert while OpStack is open in another tab.'
+ ],{route:'/home',permissions:['home.view'],notes:['Notifications only show what your permission level already allows and follow the selected location. Opening the bell never starts, completes, approves or marks anything except the notifications you read.','Desktop alerts depend on your browser’s permission and only appear while OpStack is open. They are saved for this browser only.','Turning a type off hides it only for your account; it doesn’t change the feature or anyone else’s notifications.'],related:['navigation','home-dashboards','team-chat'],keywords:['notification','notifications','bell','alerts','unread','badge','reminder']});
  add(c,'dark-mode','Switch between light and dark mode','Set the display theme for your account in this browser.',[
   'Open the blue account dropdown.',
   'Select Dark mode to change the theme.',
