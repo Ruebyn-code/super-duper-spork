@@ -2,7 +2,7 @@
 .app-notify-button{position:relative;display:inline-grid;place-items:center;flex:0 0 42px;width:42px;height:42px;min-height:42px;margin:0 8px 0 0;padding:0;border:1px solid color-mix(in srgb,var(--primary) 22%,var(--theme-line,#dce5ed));border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));cursor:pointer;align-self:center;transition:background-color .15s ease,border-color .15s ease}
 .app-notify-button:hover{background:color-mix(in srgb,var(--primary) 8%,var(--theme-surface,#fff))}
 .app-notify-button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-.app-notify-button[aria-expanded=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--primary) 45%,var(--theme-line,#dce5ed))}
+.app-notify-button[aria-expanded=true]{background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff)));border-color:color-mix(in srgb,var(--primary) 45%,var(--theme-line,#dce5ed))}
 .app-notify-badge{position:absolute;top:-6px;right:-6px;display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;box-sizing:border-box;border-radius:999px;border:2px solid var(--theme-surface,#fff);background:#e5484d;color:#fff;font:700 10px/1 Arial,sans-serif}
 .app-notify-badge[hidden]{display:none}
 .app-notify-button.has-unread svg{transform-origin:50% 10%;animation:app-notify-ring 1.2s ease 1}
@@ -21,7 +21,7 @@
 .app-notify-tabs{display:flex;gap:4px;padding:0 12px 8px;border-bottom:1px solid var(--theme-line,#e5ebf1)}
 .app-notify-tabs[hidden]{display:none}
 .app-notify-tab{border:0;padding:6px 12px;min-height:30px;border-radius:999px;background:none;color:var(--theme-muted,#637287);font:600 12px/1.2 inherit;cursor:pointer}
-.app-notify-tab[aria-selected=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.app-notify-tab[aria-selected=true]{background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff)));color:var(--theme-primary-text,var(--primary))}
 .app-notify-list{overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px;flex:1 1 auto;min-height:0}
 .app-notify-list[hidden]{display:none}
 .app-notify-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px;border-radius:12px;color:inherit;text-decoration:none}
@@ -36,7 +36,7 @@
 .app-notify-item[data-unread=true] .app-notify-item-text strong{font-weight:700}
 .app-notify-item-text small{color:var(--theme-muted,#637287);font-size:12px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .app-notify-item-meta{color:var(--theme-muted,#637287);font-size:11px}
-.app-notify-dot{width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--primary)}
+.app-notify-dot{width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--brand-sheen,none) var(--primary)}
 .app-notify-empty{display:grid;justify-items:center;gap:6px;padding:36px 20px;text-align:center;color:var(--theme-muted,#637287)}
 .app-notify-empty svg{width:34px;height:34px;color:var(--theme-primary-text,var(--primary));opacity:.8}.app-notify-empty strong{color:var(--theme-text,#1d2b3f)}
 .app-notify-settings{overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 12px 12px;display:grid;align-content:start;gap:4px;flex:1 1 auto;min-height:0}
@@ -55,7 +55,7 @@
 @media(forced-colors:active){.app-notify-badge{border-color:Canvas;background:Highlight;color:HighlightText}.app-notify-dot{background:Highlight}}
 @media print{.app-notify-button,.app-notify-panel{display:none!important}}
 /* Inside the blue account control: the bell sits on the right, after the account button. */
-:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button{flex:0 0 46px;width:46px;height:auto;min-height:42px;margin:0;border:0;border-left:1px solid #ffffff40;border-radius:0 12px 12px 0;background:var(--primary);color:#fff;align-self:stretch}
+:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button{flex:0 0 46px;width:46px;height:auto;min-height:42px;margin:0;border:0;border-left:1px solid #ffffff40;border-radius:0 12px 12px 0;background:var(--brand-sheen,none) var(--primary);color:#fff;align-self:stretch}
 :is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button:hover,:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button[aria-expanded=true]{background:color-mix(in srgb,#000 14%,var(--primary));border-color:#ffffff40}
 .app-search-account .app-notify-button:focus-visible{outline:2px solid #fff;outline-offset:-4px}
 .app-search-account .app-notify-badge{top:2px;right:2px;border-color:var(--primary)}

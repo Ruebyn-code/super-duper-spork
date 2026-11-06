@@ -203,14 +203,14 @@
 
 /* Company-primary Quick links retain readable labels across custom palettes. */
 @media screen{
- :root body .home-page .home-section-quick-links .home-action,:root body .home-page .home-section-quick-links .home-action:hover{background:var(--primary);border-color:var(--primary);color:var(--home-quick-link-ink,#fff)}
+ :root body .home-page .home-section-quick-links .home-action,:root body .home-page .home-section-quick-links .home-action:hover{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:var(--home-quick-link-ink,#fff)}
  :root body .home-page .home-section-quick-links .home-action :is(.home-card-content h2,.home-card-value,.home-card-icon,.home-card-arrow){color:var(--home-quick-link-ink,#fff)}
  :root body .home-page .home-section-quick-links .home-action .home-card-icon{background:color-mix(in srgb,var(--home-quick-link-ink,#fff) 9%,transparent)}
  :root body .home-page .home-section-quick-links .home-action .home-card-icon :is(svg,.icon-detail){stroke:var(--home-quick-link-ink,#fff)}
  :root body .home-page .home-section-quick-links .home-action:focus-visible{outline:2px solid var(--home-quick-link-ink,#fff);outline-offset:-4px}
 }
 
-@media screen{html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action,html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action:hover{background:var(--primary)!important;color:var(--home-quick-link-ink,#fff)!important;border-color:var(--primary)!important}}
+@media screen{html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action,html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action:hover{background:var(--brand-sheen,none) var(--primary)!important;color:var(--home-quick-link-ink,#fff)!important;border-color:var(--primary)!important}}
 @media screen{:root body .home-page .home-section-quick-links .home-action>.home-section-icon{color:var(--home-quick-link-ink,#fff)}:root body .home-page .home-section-quick-links .home-action>.home-section-icon svg{stroke:currentColor}}
 
 /* Modern refresh: calmer chrome, tighter type and softer surfaces. Geometry of
@@ -226,7 +226,7 @@
  :root body .subpages-heading{letter-spacing:.06em;font-size:10.5px;margin-bottom:8px}
  :root body .subpages-sidebar .page-sidebar-link{min-height:36px;margin:1px 0;padding:8px 10px;border-radius:10px;color:var(--ui-text);line-height:1.3}
  :root body .subpages-sidebar .page-sidebar-link:hover{background:color-mix(in srgb,var(--primary) 7%,transparent)}
- :root body .subpages-sidebar .page-sidebar-link[aria-current=page]{box-shadow:none;color:var(--ui-primary-text);background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));box-shadow:0 1px 2px #14243b0a}
+ :root body .subpages-sidebar .page-sidebar-link[aria-current=page]{box-shadow:none;color:var(--ui-primary-text);background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff)));box-shadow:0 1px 2px #14243b0a}
  :root body .subpages-sidebar .page-sidebar-link.ai-create-button{color:inherit}
  :root body .subpages-sidebar .subpages-secondary{border-top-color:var(--ui-line)}
  @media(max-width:720px){:root body .subpages-sidebar{border-right:1px solid var(--ui-line);border-radius:0;margin:0;top:0;max-height:100dvh;width:var(--subpage-width)}:root body .subpages-sidebar .page-sidebar-link{padding:9px 8px}}

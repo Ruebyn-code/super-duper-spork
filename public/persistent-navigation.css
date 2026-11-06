@@ -13,7 +13,7 @@ html.persistent-shell,html.persistent-shell body{height:100%;overflow:hidden}
 .phone-roster-popup .rostering-page{padding:0!important}
 .phone-roster-popup .rostering-page>:not(#phone-roster){display:none!important}
 .shell-page-placeholder{position:absolute;inset:0;overflow:auto;pointer-events:none}
-.shell-loading-bar{position:fixed;inset:0 0 auto;height:2px;background:var(--secondary);z-index:150;transform-origin:left;animation:shell-progress 1.3s ease-in-out infinite}
+.shell-loading-bar{position:fixed;inset:0 0 auto;height:2px;background:var(--brand-sheen,none) var(--secondary);z-index:150;transform-origin:left;animation:shell-progress 1.3s ease-in-out infinite}
 .shell-loading-bar[hidden],.shell-navigation-error[hidden]{display:none}
 .shell-navigation-error{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:160;max-width:calc(100vw - 24px);display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:var(--theme-surface,white);color:var(--theme-text,#182b3a);box-shadow:0 8px 28px #0002;font:13px Arial,sans-serif}
 .shell-navigation-error button{margin:0;padding:6px 10px;font:inherit;color:var(--theme-primary-text,var(--primary))}

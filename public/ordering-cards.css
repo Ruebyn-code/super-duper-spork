@@ -65,8 +65,8 @@
 .ordering-budget-overview .ordering-budget-progress{display:grid;gap:6px;min-width:0;width:min(100%,420px)}
 .ordering-budget-overview progress{display:block;width:100%;height:5px;border:0;border-radius:99px;overflow:hidden;appearance:none;background:var(--theme-line,#e4ecf4);accent-color:var(--primary)}
 .ordering-budget-overview progress::-webkit-progress-bar{background:var(--theme-line,#e4ecf4);border-radius:99px}
-.ordering-budget-overview progress::-webkit-progress-value{background:var(--primary);border-radius:99px}
-.ordering-budget-overview progress::-moz-progress-bar{background:var(--primary);border-radius:99px}
+.ordering-budget-overview progress::-webkit-progress-value{background:var(--brand-sheen,none) var(--primary);border-radius:99px}
+.ordering-budget-overview progress::-moz-progress-bar{background:var(--brand-sheen,none) var(--primary);border-radius:99px}
 .ordering-budget-overview[data-budget-state=over] progress{accent-color:var(--theme-danger-text,#b13c2e)}
 .ordering-budget-overview[data-budget-state=over] progress::-webkit-progress-value{background:var(--theme-danger-text,#b13c2e)}
 .ordering-budget-overview[data-budget-state=over] progress::-moz-progress-bar{background:var(--theme-danger-text,#b13c2e)}

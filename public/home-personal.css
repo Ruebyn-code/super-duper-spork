@@ -40,7 +40,7 @@ body[data-home-dashboard=head-office] .dashboard-store-info{display:none}
 .home-personal-avatar{border-radius:6px;overflow:hidden;background:color-mix(in srgb,var(--primary) 20%,var(--theme-surface,#fff));font-size:10px;font-weight:600}
 .home-personal-avatar.profile-photo-avatar{width:24px;height:24px;flex-basis:24px;border-radius:6px}.home-personal-avatar img{width:100%;height:100%;object-fit:cover}
 .home-personal-conversation-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:1.4;font-weight:650}
-.home-personal-unread{flex:0 0 auto;min-width:22px;padding:2px 5px;border-radius:12px;background:var(--primary);color:var(--theme-on-primary,#fff);font-size:11px;font-weight:700;line-height:1.4;font-variant-numeric:tabular-nums;text-align:center}
+.home-personal-unread{flex:0 0 auto;min-width:22px;padding:2px 5px;border-radius:12px;background:var(--brand-sheen,none) var(--primary);color:var(--theme-on-primary,#fff);font-size:11px;font-weight:700;line-height:1.4;font-variant-numeric:tabular-nums;text-align:center}
 @media(max-width:1100px){.home-dashboard-layout{grid-template-columns:minmax(0,1fr)}.home-personal{position:static;max-height:none;overflow:visible}#home-personal-content{display:grid;grid-template-columns:1fr 1fr;gap:16px}.home-personal-group+.home-personal-group{margin:0;padding:0 0 0 16px;border-top:0;border-left:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:220px;overflow:auto;scrollbar-width:thin}}
 @media(max-width:540px){.home-personal{padding:12px}#home-personal-content{grid-template-columns:minmax(0,1fr);gap:12px}.home-personal-group+.home-personal-group{padding:12px 0 0;border-left:0;border-top:1px solid var(--theme-line,#dce5ed)}.home-personal-list{max-height:180px}.home-personal-heading h2{font-size:14px}}
 }
@@ -122,3 +122,5 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 .home-personal-folder-summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 .home-personal-folder-list{margin:2px 0 6px 18px;padding:0 0 0 10px;border-left:2px solid color-mix(in srgb,var(--primary) 22%,transparent)}
 @media(prefers-reduced-motion:reduce){.home-personal-folder-icon{transition:none}}
+/* One-colour gradient on the personal panel. */
+@media screen{.home-personal{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 15%,var(--theme-surface,#fff)) 0%,color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff)) 100%)}}

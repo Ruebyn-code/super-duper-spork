@@ -15,8 +15,8 @@ html.user-setup-open,html.user-setup-open body{overflow:hidden}
 .user-setup-progress{margin:0 0 7px;font-size:.8rem;color:var(--theme-muted,#52687b)}
 .user-setup-dialog progress{display:block;width:100%;height:6px;margin:0 0 8px;border:0;border-radius:8px;overflow:hidden;accent-color:var(--primary,#008cff);background:var(--theme-primary-soft,#edf6ff)}
 .user-setup-dialog progress::-webkit-progress-bar{background:var(--theme-primary-soft,#edf6ff)}
-.user-setup-dialog progress::-webkit-progress-value{background:var(--primary,#008cff)}
-.user-setup-dialog progress::-moz-progress-bar{background:var(--primary,#008cff)}
+.user-setup-dialog progress::-webkit-progress-value{background:var(--brand-sheen,none) var(--primary,#008cff)}
+.user-setup-dialog progress::-moz-progress-bar{background:var(--brand-sheen,none) var(--primary,#008cff)}
 .user-setup-tasks{margin:0;padding:0;list-style:none}
 .user-setup-task{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--theme-line,#d7e3ee)}
 .user-setup-task:last-child{border-bottom:0}

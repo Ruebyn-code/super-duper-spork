@@ -78,7 +78,7 @@ html.stock-settings-open,html.stock-settings-open body{overflow:hidden}
 .stock-admin-page #stock-form .stock-editor-heading p{margin:3px 0 0}
 .stock-admin-page #stock-form .stock-settings-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--theme-line,var(--line,#d3dfea));border-radius:10px;background:var(--theme-surface,#fff)}
 .stock-admin-page #stock-form .stock-settings-tabs button{min-width:0;margin:0;padding:7px 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--theme-muted,var(--muted,#526574));font-size:12px;line-height:1.35}
-.stock-admin-page #stock-form .stock-settings-tabs button[aria-selected=true]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--primary) 35%,var(--theme-line,#d3dfea));color:var(--theme-primary-text,var(--primary));font-weight:700}
+.stock-admin-page #stock-form .stock-settings-tabs button[aria-selected=true]{background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 18%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff)));border-color:color-mix(in srgb,var(--primary) 35%,var(--theme-line,#d3dfea));color:var(--theme-primary-text,var(--primary));font-weight:700}
 .stock-admin-page #stock-form .stock-settings-tabs button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
 .stock-admin-page #stock-form .stock-settings-panel,.stock-admin-page #stock-form .stock-counting-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;align-content:start}
 .stock-admin-page #stock-form .stock-settings-panel[hidden]{display:none}

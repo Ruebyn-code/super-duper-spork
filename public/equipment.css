@@ -45,7 +45,7 @@
 .equip-filters label,.equip-fields label,.equip-inline-form label{display:flex;flex-direction:column;justify-content:flex-end}.equip-filters .app-select,.equip-fields .app-select,.equip-inline-form .app-select{margin:0;width:100%}
 .equipment-page button,.equip-dialog button{font-size:.875rem;letter-spacing:normal}
 .equip-card{letter-spacing:normal;font-family:inherit}
-#equip-new,#equip-save,#equip-detail-done,#equip-fault-save,#equip-service-save{background:var(--primary,#008cff);border-color:var(--primary,#008cff);color:#fff;padding:9px 14px}
+#equip-new,#equip-save,#equip-detail-done,#equip-fault-save,#equip-service-save{background:var(--brand-sheen,none) var(--primary,#008cff);border-color:var(--primary,#008cff);color:#fff;padding:9px 14px}
 #equip-new:hover,#equip-save:hover,#equip-detail-done:hover,#equip-fault-save:hover,#equip-service-save:hover{background:var(--primary-hover,color-mix(in srgb,var(--primary,#008cff) 85%,#000))}
 .equip-heading button.equip-secondary,.equip-dialog-footer .equip-secondary,.equip-section-heading .equip-secondary{padding:9px 14px}
 .equip-filters .app-select,.equip-fields .app-select,.equip-inline-form .app-select{padding:0}
@@ -69,9 +69,9 @@
 .equip-catalog-text{display:grid;gap:3px;min-width:0}.equip-catalog-text strong{overflow-wrap:anywhere}.equip-catalog-text>small{color:var(--theme-muted,#607286);overflow-wrap:anywhere}.equip-catalog-text .equip-badges{align-items:center}
 .equip-dialog .equip-toggle{position:relative;width:44px;height:26px;min-height:26px;padding:0;border-radius:999px;border:1px solid var(--theme-line,#cfd9e3);background:var(--theme-surface-alt,#e6ecf2);transition:background-color .15s ease;flex:none}
 .equip-toggle-knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .15s ease}
-.equip-dialog .equip-toggle[aria-checked=true]{background:var(--primary,#008cff);border-color:var(--primary,#008cff)}.equip-toggle[aria-checked=true] .equip-toggle-knob{transform:translateX(18px)}
+.equip-dialog .equip-toggle[aria-checked=true]{background:var(--brand-sheen,none) var(--primary,#008cff);border-color:var(--primary,#008cff)}.equip-toggle[aria-checked=true] .equip-toggle-knob{transform:translateX(18px)}
 .equip-toggle:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}.equip-toggle:disabled{opacity:.5;cursor:not-allowed}
-#equip-catalog-done{background:var(--primary,#008cff);border-color:var(--primary,#008cff);color:#fff;padding:9px 14px}
+#equip-catalog-done{background:var(--brand-sheen,none) var(--primary,#008cff);border-color:var(--primary,#008cff);color:#fff;padding:9px 14px}
 :root[data-theme=dark] .equip-dialog .equip-toggle:not([aria-checked=true]){background:color-mix(in srgb,var(--theme-text,#fff) 14%,var(--theme-surface,#111))}
 @media(max-width:600px){.equip-catalog-row{grid-template-columns:auto minmax(0,1fr)}.equip-catalog-edit{grid-column:2;justify-self:start}}
 @media(prefers-reduced-motion:reduce){.equip-toggle,.equip-toggle-knob{transition:none}}

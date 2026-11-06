@@ -38,7 +38,7 @@
 .ai-draft-dialog .ai-dialog-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;width:100%;max-width:none;margin:0;padding:12px 16px;border-top:1px solid var(--theme-line,#d3dfea);flex-shrink:0}
 .ai-draft-dialog button,.ai-settings button,.ai-create-button{font-size:12px;min-height:36px;padding:8px 12px}
 .ai-draft-dialog .ai-dialog-close{padding:0;min-height:40px}
-.ai-primary{background:var(--primary);border-color:var(--primary);color:var(--primary-contrast,#fff)}
+.ai-primary{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:var(--primary-contrast,#fff)}
 .ops-heading:has(.ai-create-button),.learning-heading:has(.ai-create-button){justify-content:flex-start;flex-wrap:wrap;gap:8px}
 .ops-heading:has(.ai-create-button)>div:first-child,.learning-heading:has(.ai-create-button)>div:first-child{margin-right:auto}
 .ai-settings{max-width:760px}
