@@ -116,7 +116,7 @@
 - For interface or navigation changes, also check the affected interactions in desktop and phone browsers, including relevant permission levels.
 - Use isolated temporary data for tests so existing accounts, settings and orders are preserved.
 
-- Shared visual styling lives in `public/modern-ui.css`, loaded before Intelligence branding and saved company appearance. Use its `--ui-*` tokens without defining light `--theme-*` roles, which saved colours use as fallbacks. Keep it screen-only and preserve compact layouts, button/date/search geometry, Home configuration, fonts, company colours/images, AI gradients/glow, semantic statuses, native focus/disabled states and printed label/roster artwork.
+- Shared visual styling lives in `public/modern-ui.css`, loaded before Intelligence branding and saved company appearance. Use its `--ui-*` tokens without defining light `--theme-*` roles, which saved colours use as fallbacks. Its modern refresh layer keeps a frameless subpage rail, tight heading tracking, 16 px cards, rounded fields with a primary focus halo, quiet tables/collapsible rows and rounder dialogs. Keep it screen-only and preserve compact layouts, button/date/search geometry, Home configuration, fonts, company colours/images, AI gradients/glow, semantic statuses, native focus/disabled states and printed label/roster artwork.
 
 - Buttons retain their original page/component sizing, padding, alignment and row layouts from before global unification. Do not reintroduce `public/buttons.css`, forced 40px action sizes, global row stretching or shared button alignment overrides. Keep page-owned touch controls, native focus/disabled states, company appearance and Intelligence branding intact; new pages define their own button styles.
 

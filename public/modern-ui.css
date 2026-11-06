@@ -212,3 +212,55 @@
 
 @media screen{html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action,html:root[data-surface-style=liquid-glass] body .home-page .home-section-quick-links .home-action:hover{background:var(--primary)!important;color:var(--home-quick-link-ink,#fff)!important;border-color:var(--primary)!important}}
 @media screen{:root body .home-page .home-section-quick-links .home-action>.home-section-icon{color:var(--home-quick-link-ink,#fff)}:root body .home-page .home-section-quick-links .home-action>.home-section-icon svg{stroke:currentColor}}
+
+/* Modern refresh: calmer chrome, tighter type and softer surfaces. Geometry of
+   buttons, company fonts/colours and authored/printed content stay with their owners. */
+@media screen{
+ :root{--ui-radius-card:16px;--ui-radius-field:10px;--ui-focus-ring:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
+
+ /* Subpage column: a frameless rail on the canvas instead of a boxed card. */
+ :root body .subpages-sidebar{background:transparent;border-color:transparent;box-shadow:none}
+ :root body .subpages-sidebar .subpages-native-nav{gap:2px}
+ @media(min-width:1001px){:root body .subpages-workspace.page-sidebar-layout{--subpage-width:198px}}
+ :root body .app-page main .eyebrow{letter-spacing:.06em}
+ :root body .subpages-heading{letter-spacing:.06em;font-size:10.5px;margin-bottom:8px}
+ :root body .subpages-sidebar .page-sidebar-link{min-height:36px;margin:1px 0;padding:8px 10px;border-radius:10px;color:var(--ui-text);line-height:1.3}
+ :root body .subpages-sidebar .page-sidebar-link:hover{background:color-mix(in srgb,var(--primary) 7%,transparent)}
+ :root body .subpages-sidebar .page-sidebar-link[aria-current=page]{box-shadow:none;color:var(--ui-primary-text);background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));box-shadow:0 1px 2px #14243b0a}
+ :root body .subpages-sidebar .page-sidebar-link.ai-create-button{color:inherit}
+ :root body .subpages-sidebar .subpages-secondary{border-top-color:var(--ui-line)}
+ @media(max-width:720px){:root body .subpages-sidebar{border-right:1px solid var(--ui-line);border-radius:0;margin:0;top:0;max-height:100dvh;width:var(--subpage-width)}:root body .subpages-sidebar .page-sidebar-link{padding:9px 8px}}
+
+ /* Headings: modern tight tracking instead of wide letter-spacing. */
+ :root body .app-page main :is(h1,h2,h3):not(.formatted-text *,.ai-brand *,[class*=ai-] *,.label-designer *,.labels-print *,.learning-canvas *,.kiosk-page *){letter-spacing:-.012em;word-spacing:normal}
+ :root body .app-page main h1:not(.formatted-text *,.learning-canvas *){letter-spacing:-.022em}
+ :root body .subsidebar-heading h2,:root body .admin-collapse>summary :is(h2,h3),:root body .supplier-stock-menu>summary h3{letter-spacing:-.01em}
+
+ /* Cards: a little rounder with hairline borders and soft lift. */
+ :root body :is(.management,.report-panel,.library-card,.learning-card,.history-card,.settings-option,.transfer-card,.ordering-budget,.report-metric):not(.ai-settings,[data-permission="ai.manage"]){border-radius:var(--ui-radius-card)}
+ :root body .home-page .home-section:not(.home-section-quick-links){border-radius:var(--ui-radius-card)}
+ :root body :is(.communication-post,.conversation-card){border-color:var(--ui-line);border-radius:var(--ui-radius-card);box-shadow:var(--ui-card-shadow)}
+ :root body .communication-post-actions{border-top-color:var(--ui-line)}
+
+ /* Fields: rounded with a soft company-coloured focus halo. */
+ :root body .app-page main :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),select,textarea):not(.ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,.learning-canvas *,.label-designer *,.shift-clock-dialog *,.kiosk-page *,.global-search *){border-radius:var(--ui-radius-field);transition:border-color .15s ease,box-shadow .15s ease}
+ :root body .app-page main :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),select,textarea):not(.ai-settings *,.ai-draft-dialog *,.scheduled-dialog *,.learning-canvas *,.label-designer *,.shift-clock-dialog *,.kiosk-page *,.global-search *):focus-visible{border-color:color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dfe6ef));outline:2px solid transparent;box-shadow:var(--ui-focus-ring)}
+ @media(forced-colors:active){:root body .app-page main :is(input,select,textarea):focus-visible{outline:2px solid CanvasText}}
+
+ /* Tables: quiet rows with a gentle hover tint. */
+ :root body :is(.users-table,.locations-table,.companies-table,.report-table,.learning-table) th{text-transform:none;letter-spacing:.01em;font-size:11px}
+ @media(hover:hover){:root body :is(.users-table,.locations-table,.companies-table,.report-table,.learning-table) tbody tr:hover>td{background-color:color-mix(in srgb,var(--primary) 3%,var(--theme-surface,#fff))}}
+
+ /* Dialogs: rounder sheets. */
+ :root body dialog:not(:where(#phone-roster,.ai-draft-dialog,.scheduled-dialog,.kiosk-post)){border-radius:18px;border-color:var(--ui-line)}
+
+ /* Collapsible groups: plain rows with a hover tint instead of filled bars. */
+ :root body :is(.supplier-stock-menu,.admin-collapse){border-color:var(--ui-line);border-radius:12px;background:var(--theme-surface,#fff);box-shadow:var(--ui-card-shadow)}
+ :root body :is(.supplier-stock-menu,.admin-collapse)>summary{background:transparent;transition:background-color .15s ease}
+ :root body :is(.supplier-stock-menu,.admin-collapse)[open]>summary{border-bottom-color:var(--ui-line);background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+ @media(hover:hover){:root body :is(.supplier-stock-menu,.admin-collapse)>summary:hover{background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}}
+
+ /* Hairline dividers everywhere use the same soft line. */
+ :root body .app-page main hr{border:0;border-top:1px solid var(--ui-line)}
+}
+@media screen and (prefers-reduced-motion:reduce){:root body .app-page main :is(input,select,textarea){transition:none}}
