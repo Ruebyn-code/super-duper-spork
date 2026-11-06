@@ -125,6 +125,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/assets/platforms/doordash.svg':'assets/platforms/doordash.svg',
   '/reporting':'reporting.html',
   '/reporting.js':'reporting.js',
+  '/reporting-guide.js':'reporting-guide.js',
   '/reporting-progress.js':'reporting-progress.js',
   '/reporting-progress-model.js':'reporting-progress-model.js',
   '/reporting-model.js':'reporting-model.js',

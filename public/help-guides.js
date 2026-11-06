@@ -535,7 +535,7 @@
   'Choose locations when comparing stores, including accessible stores in other companies.',
   'Review sales, total costs, profit, margin and data-completeness explanations.',
   'Open a detailed report or week to investigate the figures behind the overview.'
- ],{route:'/reporting#overview',permissions:['reporting.view'],notes:['Missing values differ from zero. Financial Cost of goods uses invoices and eligible net cost transfers; draft carts do not count. Platform fees stay separate.'],related:['location-rankings','report-details','invoice-expenses']});
+ ],{route:'/reporting#overview',permissions:['reporting.view'],notes:['Reports are grouped in the left menu (Business, Daily sales, Orders & invoices, Stock, Team), and a short line under the Reporting heading explains the selected report. Figures that cannot be calculated yet show Not available yet, with the reason underneath.','Missing values differ from zero. Financial Cost of goods uses invoices and eligible net cost transfers; draft carts do not count. Platform fees stay separate.'],related:['location-rankings','report-details','invoice-expenses']});
  add(c,'location-rankings','Compare and rank locations','Compare like-for-like dates and available data.',[
   'In Reporting, select Compare locations and choose accessible stores.',
   'Choose the report and ranking measure: financial sales/profit/margin or operational completion/overdue measures.',

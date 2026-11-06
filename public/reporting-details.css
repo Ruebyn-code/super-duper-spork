@@ -65,3 +65,42 @@
 .report-finance-quality button{flex:none;min-height:36px;font-size:11px;margin:0;padding:7px 10px}
 .report-help{font-size:11px;line-height:1.6;color:var(--theme-muted,#64748b);margin:0 0 12px}.report-help>summary{cursor:pointer;color:var(--theme-primary-text,var(--primary));min-height:28px}
 @media(max-width:600px){.report-finance-quality{flex-wrap:wrap}.report-finance-quality button{width:100%}}
+
+/* ---------- Cleaner reporting layout ---------- */
+/* The report picker lives in the left menu, so its empty filter column is hidden. */
+.reporting-page .report-filter-field:has(.subpage-selector-replaced),.subpages-workspace .reporting-page .report-filter-field:has(#report-view),.subpages-workspace .report-filter-field:has(#report-view){display:none}.reporting-page #report-controls .report-filter-field:has(#report-view.location-select-native,.subpage-selector-replaced){display:none}
+.report-view-summary{margin:6px 0 0;max-width:70ch;font-size:13.5px;line-height:1.45;color:var(--theme-muted,#5d6c7c)}
+.report-view-summary:empty{display:none}
+.report-view-summary strong{color:var(--theme-text,#172d3b);font-weight:650}
+.reporting-page .report-header{align-items:flex-start;margin-bottom:14px}
+.reporting-page .report-header .eyebrow{margin-bottom:2px}
+.reporting-page .report-header h1{margin:0}
+.reporting-page .report-shortcuts{display:none}
+/* Filters: one tidy toolbar. */
+.reporting-page #report-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;padding:12px 14px;border-radius:16px;background:var(--theme-surface,#fff);box-shadow:0 1px 3px #14243b0d}
+.reporting-page #report-controls .report-filter-field{display:grid;gap:4px;flex:0 1 240px;min-width:170px}
+.reporting-page #report-controls .report-filter-field>label,.reporting-page #report-controls .report-control-label{margin:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#5d6c7c)}
+.reporting-page #report-controls #report-ai-open{margin-left:auto}
+.reporting-page #report-controls #report-ai-open[hidden]+.report-refresh{margin-left:auto}
+.reporting-page .report-advanced{margin:8px 0 12px}
+.reporting-page .report-advanced>summary{font-size:12.5px}
+/* Summary figures. */
+.reporting-page .report-summary{gap:12px}
+.reporting-page .report-summary .report-metric{display:grid;align-content:start;gap:4px;padding:14px 16px;border-radius:16px;border:1px solid var(--theme-line,#e3e9f0);background:var(--theme-surface,#fff)}
+.reporting-page .report-summary .report-metric>span:first-child{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#5d6c7c)}
+.reporting-page .report-summary .report-metric>strong{font-size:26px;line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--theme-text,#172d3b)}
+.reporting-page .report-summary .report-metric>.small{font-size:12px;line-height:1.35;color:var(--theme-muted,#5d6c7c)}
+.reporting-page #report-detail-summary .report-metric:first-child{background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff)),var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--primary) 22%,var(--theme-line,#e3e9f0))}
+.reporting-page #report-detail-summary .report-metric:first-child>strong{color:var(--theme-primary-text,var(--primary))}
+.reporting-page .report-summary .report-metric.is-missing>strong,.reporting-page #report-cost-breakdown .report-metric.is-missing>strong{font-size:0;line-height:0}.reporting-page .report-summary .report-metric.is-missing>strong>*{display:none}
+.reporting-page .report-summary .report-metric.is-missing>strong::after{content:"Not available yet";display:inline-block;margin:6px 0 4px;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,#d9822b 14%,var(--theme-surface,#fff));color:#9a5410;font-size:12px;line-height:1.4;font-weight:600;letter-spacing:0}
+:root[data-theme=dark] .reporting-page .report-summary .report-metric.is-missing>strong::after{color:#f5b678}
+#report-cost-breakdown .report-metric>strong{font-size:20px}
+/* Panels. */
+.reporting-page .report-panel{border-radius:16px}
+.reporting-page .report-panel-heading h2{font-size:17px;letter-spacing:-.01em}
+/* Left menu group headings. */
+.page-sidebar-group{margin:12px 12px 4px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--theme-muted,#7a8898)}
+.page-sidebar-group[hidden]{display:none}
+.subpages-sidebar .page-sidebar-group:first-of-type{margin-top:2px}
+@media(max-width:720px){.page-sidebar-group{display:none}.reporting-page #report-controls .report-filter-field{flex:1 1 100%}.reporting-page #report-controls #report-ai-open{margin-left:0}.reporting-page .report-summary .report-metric>strong{font-size:22px}}
