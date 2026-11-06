@@ -42,3 +42,5 @@ The training checklist builder opens as a full page inside In-store training (no
 ## Staff folders
 
 In the In-store training list, anyone with two or more sessions in the current filters is grouped into one folder card showing their name, number of trainings, how many are signed off and a progress bar. Opening the folder lists each training with its location, date, trainer, that person's step progress and status, and View session. People with a single session keep the normal session card; a group session still shows as its own card when any of its participants has only that session. Folders follow the existing search, status and location filters, stay open while filtering, and are display-only (no reads or writes beyond the existing list).
+
+Home → Your work → In-store training uses the same idea: items carry a read-only `group` (the learner for single-learner sign-offs, or you for your own sessions) and `checklist` name, and two or more items for the same person collapse into an expandable folder with an average progress ring and an awaiting sign-off count. Rows inside show the checklist name. Grouping is display-only.

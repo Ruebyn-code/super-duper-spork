@@ -110,3 +110,15 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 .home-personal-ring-value{position:relative;font-size:10px;font-weight:700;line-height:1;color:var(--theme-primary-text,var(--primary));font-variant-numeric:tabular-nums}
 .home-personal-ring-value::after{content:'%';font-size:7px;font-weight:600}
 @media (prefers-reduced-motion:reduce){.home-personal-ring-bar{transition:none}}
+/* In-store training for one person is grouped into an expandable folder. */
+.home-personal-folder details>summary{list-style:none;cursor:pointer}
+.home-personal-folder details>summary::-webkit-details-marker{display:none}
+.home-personal-folder-summary{align-items:center}
+.home-personal-folder-summary .home-personal-copy{flex:1;min-width:0}
+.home-personal-folder-icon{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;margin-left:auto;border-radius:8px;color:var(--theme-secondary-text,var(--secondary));background:color-mix(in srgb,var(--secondary) 14%,transparent);transition:transform .15s ease}
+.home-personal-folder-icon svg{width:16px;height:16px}
+.home-personal-folder details[open] .home-personal-folder-icon{background:color-mix(in srgb,var(--primary) 14%,transparent);color:var(--theme-primary-text,var(--primary))}
+.home-personal-folder-summary:hover{background:color-mix(in srgb,var(--primary) 7%,transparent)}
+.home-personal-folder-summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.home-personal-folder-list{margin:2px 0 6px 18px;padding:0 0 0 10px;border-left:2px solid color-mix(in srgb,var(--primary) 22%,transparent)}
+@media(prefers-reduced-motion:reduce){.home-personal-folder-icon{transition:none}}
