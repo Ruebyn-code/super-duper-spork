@@ -65,8 +65,8 @@
  add(c,'kiosk-use','Use a shared kiosk','Open the normal app with your own permissions on a paired device.',[
   'At the kiosk, enter your staff PIN: the last four digits of your saved phone number, including any leading zeroes.',
   'Open the feature you need. The app uses your account’s permissions and the device’s assigned location.',
-  'Use the left navigation rail, expanded search and blue account dropdown to move around.',
-  'Choose Lock kiosk when finished. The kiosk also locks after two minutes without interaction.'
+  'Use the left navigation rail, search bar and blue account dropdown to move around.',
+  'Choose Sign out at the top right when finished. The kiosk also signs you out automatically after your company’s auto sign out time without interaction (two minutes unless changed).'
  ],{notes:['On the sign-in screen, tap your name (recent people appear first, or search), then enter your PIN; it signs in on the fourth digit. Not listed? Choose Sign in with your PIN only.','Clock actions require a fresh PIN check even after unlocking the kiosk. Ask a user manager to correct a missing phone number or duplicate phone ending.'],related:['manage-kiosks','shift-clock','manage-users'],keywords:['device','tablet','PIN','lock']});
 
  c='ordering';
@@ -683,7 +683,7 @@
   'Create a new named kiosk for the intended location and obtain its expiring single-use pairing code.',
   'Open the kiosk page on that device and enter the pairing details.',
   'Test staff PIN access. Revoke the device from management when it should no longer be trusted.'
- ],{route:'/settings/devices',permissions:['devices.manage'],notes:['Pairing fixes its company/location and does not grant staff extra permissions. Browser fullscreen and operating-system kiosk lockdown are separate device settings.'],related:['kiosk-use','manage-users','location-setup']});
+ ],{route:'/settings/devices',permissions:['devices.manage'],notes:['Auto sign out at the top of Kiosk devices sets how long each company’s kiosks wait without a tap or key press before signing staff out (1 minute to 1 hour, two minutes by default). Changing it needs kiosk management with all-location access and applies from the next tap or sign-in.','Pairing fixes its company/location and does not grant staff extra permissions. Browser fullscreen and operating-system kiosk lockdown are separate device settings.'],related:['kiosk-use','manage-users','location-setup']});
  add(c,'location-email','Set up a location’s order-sending email','Connect the sender address and sending service for supplier orders.',[
   'Open Admin → Locations → Edit location → Sending for the intended store.',
   'Enter its sender email and Resend API key, and enable automatic supplier emails.',

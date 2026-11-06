@@ -22,3 +22,10 @@ A paired kiosk (`/kiosk`) shows a sign-in screen for the device's location.
 - `GET /api/kiosk/posts/:id` works only for a paired device and only for company/network posts of the kiosk's company from the last 60 days (the same rule as the feed), and returns 404 when Comms is switched off. It returns the title, author, dates, plain text and formatted text with image, gallery, video, audio, document and embed blocks removed (`hiddenItems` counts them). It never returns media IDs, reactions or read receipts, never records a receipt, and is `no-store`.
 - Recent sign-ins are kept per device in browser storage as account IDs with the time of the last successful sign-in, never PINs, names or session tokens. Older saves that hold only IDs still work.
 - Pairing works as before, restyled to match.
+
+## Signed-in kiosk bar and auto sign out
+
+- **Top bar:** once a staff member signs in, the kiosk shows a normal-width search bar on the right, joined to the blue account button and notification bell (a full row on phones), plus a red **Sign out** button (an icon only on phones). Sign out locks the kiosk and returns to the sign-in screen, the same as Lock kiosk in the account menu.
+- **Auto sign out:** each company chooses how long its kiosks wait without a tap or key press before signing staff out, in Settings → Kiosk devices → Auto sign out. Choices are 1, 2, 3, 5, 10, 15 or 30 minutes, or 1 hour; two minutes is the default when nothing is saved.
+- The setting is stored per company in `kiosk-devices.json` (`settings.companies`) with a revision. Saving uses `PUT /api/kiosk-devices/settings` `{companyId, idleMinutes, revision}`, needs CSRF, `devices.manage` and `locations.all` in that company, and rejects unlisted values and stale revisions. Location-only kiosk managers can see the setting but not change it.
+- The server enforces the time: each PIN sign-in and each real tap or key press sets the grant's expiry to now plus the company's time. A change applies from the next sign-in or tap. Background reads never extend it.

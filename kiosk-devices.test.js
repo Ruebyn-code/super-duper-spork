@@ -141,3 +141,19 @@ test('a locked kiosk can read a recent company post in full without media or mar
   assert.equal((await app.request(kiosk,'/api/kiosk/posts/'+posted.id)).status,404);
  }finally{await app.close();}
 });
+test('each company chooses its kiosk auto sign out time; only company-wide kiosk managers can change it',async()=>{
+ const app=await fixture();try{const issued=await app.create(['app']),kiosk=await app.pair(issued);
+  let list=(await app.request(app.office,'/api/kiosk-devices')).data;const company=list.settings.find(s=>s.companyId===issued.device.companyId);assert.equal(company.idleMinutes,2,'two minutes stays the default');assert.equal(company.canEdit,true);assert.deepEqual(list.idleChoices,[1,2,3,5,10,15,30,60]);
+  assert.equal((await app.unlock(kiosk,'app')).status,200);let status=(await app.request(kiosk,'/api/kiosk/status')).data;assert.equal(Date.parse(status.worker.expiresAt)-Date.parse(status.now),2*60000);
+  for(const bad of [{companyId:company.companyId,idleMinutes:7,revision:0},{companyId:company.companyId,idleMinutes:'10',revision:0},{companyId:company.companyId,idleMinutes:10}])assert.equal((await app.request(app.office,'/api/kiosk-devices/settings','PUT',bad)).status,400);
+  assert.equal((await app.request(app.office,'/api/kiosk-devices/settings','PUT',{companyId:company.companyId,idleMinutes:10,revision:0},{'X-CSRF-Token':''})).status,403);
+  const manager=await app.login('Manager');const limited=(await app.request(manager,'/api/kiosk-devices','GET')).data.settings?.[0];if(limited)assert.equal(limited.canEdit,false);assert.equal((await app.request(manager,'/api/kiosk-devices/settings','PUT',{companyId:company.companyId,idleMinutes:60,revision:0})).status,403,'location-only managers cannot change the company setting');
+  const saved=await app.request(app.office,'/api/kiosk-devices/settings','PUT',{companyId:company.companyId,idleMinutes:10,revision:0});assert.equal(saved.status,200,JSON.stringify(saved.data));assert.deepEqual(saved.data,{companyId:company.companyId,idleMinutes:10,revision:1});
+  assert.equal((await app.request(app.office,'/api/kiosk-devices/settings','PUT',{companyId:company.companyId,idleMinutes:15,revision:0})).status,409);
+  assert.equal((await app.request(kiosk,'/api/kiosk/touch','POST',{})).status,200);status=(await app.request(kiosk,'/api/kiosk/status')).data;assert.equal(Date.parse(status.worker.expiresAt)-Date.parse(status.now),10*60000,'the next tap uses the new time');
+  app.advance(9*60000);assert.ok((await app.request(kiosk,'/api/kiosk/status')).data.worker,'still signed in before the company time');
+  app.advance(2*60000);assert.equal((await app.request(kiosk,'/api/kiosk/status')).data.worker,null,'signed out after the company time');
+  assert.equal((await app.unlock(kiosk,'app')).status,200);status=(await app.request(kiosk,'/api/kiosk/status')).data;assert.equal(Date.parse(status.worker.expiresAt)-Date.parse(status.now),10*60000,'new sign-ins use the company time');
+  list=(await app.request(app.office,'/api/kiosk-devices')).data;assert.equal(list.settings.find(s=>s.companyId===company.companyId).idleMinutes,10);
+ }finally{await app.close();}
+});

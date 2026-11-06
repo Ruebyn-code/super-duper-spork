@@ -9,7 +9,7 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:200px}
 .kiosk-app.persistent-shell .app-shell>.app-page{margin-left:var(--kiosk-rail-width);width:calc(100% - var(--kiosk-rail-width))}
 .kiosk-app .app-shell>#app-sidebar.top-navigation{-webkit-backdrop-filter:none;backdrop-filter:none}
 .kiosk-app #app-sidebar.top-navigation>.sidebar-scroll{display:flex;position:relative;inset:auto;gap:12px;padding:8px 16px;width:100%;max-height:none;height:auto;overflow:visible;border:0;box-shadow:none;background:transparent}
-.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{display:flex;flex:1 1 0;width:auto;min-width:0;max-width:none;margin:0 0 0 12px;padding:0}
+.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{display:flex;flex:0 1 440px;width:440px;min-width:240px;max-width:440px;margin:0 0 0 auto;padding:0}
 .kiosk-app #app-sidebar .app-search-control{display:flex;flex:1;gap:8px;padding:0 10px;min-width:0}
 .kiosk-app #app-sidebar .app-search-control>.app-search-field{display:flex;min-width:0}
 .kiosk-app #app-sidebar .app-search-toggle{display:none!important}
@@ -29,5 +29,14 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:200px}
 .kiosk-app #app-sidebar.top-navigation .secondary-sidebar a{width:100%;min-height:44px;white-space:normal}
 .kiosk-app :is(.mobile-brand-header,#mobile-tabbar,.mobile-nav-backdrop){display:none!important}
 .kiosk-app:is(.shell-conversation-fullscreen,.shell-checklist-fullscreen,.shell-course-fullscreen) .app-shell>.app-page{margin-left:0;width:100%}
-@media(max-width:720px){html.kiosk-app{--kiosk-rail-width:48px}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll{flex-wrap:wrap;gap:6px;padding:8px}.kiosk-app #app-sidebar.top-navigation .sidebar-brand-row{flex-basis:100%}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{flex-basis:100%;margin:0}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{padding:6px 1px 68px}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs a{padding:10px 12px}}
+@media(max-width:720px){html.kiosk-app{--kiosk-rail-width:48px}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll{flex-wrap:wrap;gap:6px;padding:8px}.kiosk-app #app-sidebar.top-navigation .sidebar-brand-row{flex-basis:100%}.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account{flex:1 1 0;width:auto;min-width:0;max-width:none;margin:0}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{padding:6px 1px 68px}.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs a{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.kiosk-app #app-sidebar.top-navigation #top-navigation-tabs{transition:none}}
+
+/* Kiosk Sign out returns to the locked sign-in screen. */
+.kiosk-signout{display:none}
+.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{display:inline-flex;align-items:center;gap:8px;flex:none;align-self:center;height:46px;min-height:46px;margin:0;padding:0 14px;border:1px solid color-mix(in srgb,#e5484d 40%,var(--theme-line,#dce5ed));border-radius:12px;background:var(--theme-surface,#fff);color:#c62828;font:600 14px/1 var(--body-font,Arial,sans-serif);cursor:pointer}
+.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout:hover{background:color-mix(in srgb,#e5484d 10%,var(--theme-surface,#fff))}
+.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+:root[data-theme=dark] .kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout,:root[data-theme=dark].kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{color:#fca5a5}
+@media(forced-colors:active){.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{border-color:ButtonText;color:ButtonText}}
+@media(max-width:720px){.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{width:46px;padding:0;justify-content:center}.kiosk-signout span{display:none}}
