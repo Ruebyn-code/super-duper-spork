@@ -176,6 +176,8 @@ function renderAccountList(){
   const locationCell=el('td',undefined,'users-locations-cell'),locationLabel=el('span','Locations','users-cell-label'),locationList=el('div',undefined,'users-location-list');
   const assigned=accountLocations.filter(record=>(account.locationIds||[account.locationId]).includes(record.id));
   const locationTags=assigned.map(record=>{const tag=el('span',accountLocationName(record),'users-location-tag');tag.dataset.userText='';tag.title=accountLocationName(record);return tag;});
+  // Network-wide Head Office accounts reach every location, even without being added to one here.
+  if((account.permissions||[]).includes('locations.all')&&(account.networkPermissions||[]).includes('network.access')){const tag=el('span',userWording('All locations'),'users-location-tag users-location-all');tag.title=userWording('Access to every location in the network');locationTags.unshift(tag);}
   if(locationTags.length)locationList.append(locationTags[0]);
   if(locationTags.length>1){
    const more=el('button',userWording('+{count} more',{count:locationTags.length-1}),'users-locations-more'),menu=el('div',undefined,'users-locations-popover');more.type='button';menu.id='user-locations-'+account.id;menu.setAttribute('popover','auto');more.setAttribute('popovertarget',menu.id);more.setAttribute('aria-label',userWording('More locations for {name}',{name:account.username}));menu.append(...locationTags.slice(1));
