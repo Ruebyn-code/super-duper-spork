@@ -100,6 +100,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/invoice-reader.js':'invoice-reader.js',
   '/invoice-photo.js':'invoice-photo.js',
   '/invoice-scanner.css':'invoice-scanner.css',
+  '/home-quick-actions.css':'home-quick-actions.css',
+  '/home-quick-actions.js':'home-quick-actions.js',
   '/':'index.html',
   '/home':'home.html',
   '/home.js':'home.js',

@@ -110,3 +110,20 @@ draft did not change with the newer saved amount, keeps days the user changed, a
 names any day where the unsaved amount differs from a newer saved one. Older drafts
 without a recorded base treat blank days as unchanged. A draft that matches the
 saved week is discarded. Nothing is saved until Save sales is pressed.
+
+## Quick actions button
+
+The round button at the bottom right of Home (it replaced the invoice scanner button) opens a **Quick actions** menu with a short staggered slide-up animation. Each shortcut appears only when the current permission level allows it:
+
+| Action | Opens | Needs |
+| --- | --- | --- |
+| Scan invoice | the existing Invoice scanner popup | `invoices.view` |
+| Stock count | `/stock-count#new` | `counts.view` |
+| Place an order | `/` | `orders.view` |
+| Daily sales | `/sales#entry` | `sales.edit` on Manager Home (never Staff Home) |
+| Record wastage | `/wastage` | `wastage.view` |
+| Equipment | `/equipment` | `equipment.view` |
+| Print labels | `/labels` | `prep.view` |
+| Messages | `/communications` | `comms.view` |
+
+The button is hidden when no action is allowed. Opening the menu only shows links: it never saves, starts work or calls a provider; destinations keep their own server checks. Arrow keys, Home/End move through the menu, and Escape, the backdrop or the button close it with focus returned. Closing the invoice scanner returns focus to the button. Reduced motion removes the animation. Code: `public/home-quick-actions.js`/`.css`; the original `#invoice-launcher` stays in the page (hidden) as the scanner's own trigger and `#invoices` deep link.
