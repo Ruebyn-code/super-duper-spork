@@ -209,6 +209,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/feature-help.css':'feature-help.css',
   '/settings':'settings-hub.html',
   '/settings-hub.js':'settings-hub.js',
+  '/settings-catalog.js':'settings-catalog.js',
   '/settings-hub.css':'settings-hub.css',
   '/access.js':'access.js',
   '/permission-model.js':'permission-model.js',

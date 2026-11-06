@@ -11,3 +11,19 @@
 @media(max-width:700px){.permission-fields{grid-template-columns:1fr 1fr}.permission-checkbox-groups{grid-template-columns:1fr}.permission-editor-body{padding:12px}.permission-dialog-header{padding:12px}.permission-dialog .permission-actions{padding:12px}.permission-dialog input:not([type=checkbox]),.permission-dialog select,.permission-dialog textarea{font-size:16px;min-height:40px}.permission-filter-bar{grid-template-columns:1fr}.permission-dialog .permission-actions button{min-height:40px}.permission-dialog-header h2{font-size:1.1rem}}
 
 .permission-checkbox-groups.is-filtered{grid-template-columns:1fr}
+/* Grouped settings catalogue. */
+#settings-options.settings-catalog{display:grid;grid-template-columns:1fr;gap:22px}
+#settings-options.settings-catalog[hidden]{display:none}
+.settings-group[hidden]{display:none}
+.settings-group-title{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--theme-muted,#627383)}
+.settings-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.settings-catalog .settings-option{padding:14px 16px;border-radius:16px}
+.settings-catalog .settings-option>a,.settings-catalog .settings-option>button{display:grid;grid-template-columns:40px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;row-gap:2px;align-items:start;width:100%;height:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;letter-spacing:normal;text-transform:none;text-align:left;text-decoration:none;cursor:pointer;box-shadow:none;min-height:0}
+.settings-catalog .settings-option .settings-option-icon{grid-row:1/3;display:grid;place-items:center;width:40px;height:40px;margin:0;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 16%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff)));color:var(--theme-primary-text,var(--primary))}
+.settings-catalog .settings-option .settings-option-icon svg{width:22px;height:22px}
+.settings-catalog .settings-option .settings-option-icon .icon-detail{color:var(--secondary)}
+.settings-catalog .settings-option h2{margin:1px 0 0;font-size:14.5px;line-height:1.3}
+.settings-catalog .settings-option p{font-size:12.5px;line-height:1.4}
+.settings-catalog .settings-option>button:focus-visible,.settings-catalog .settings-option>a:focus-visible{outline:2px solid var(--primary);outline-offset:4px;border-radius:12px}
+.settings-catalog .settings-option:hover{border-color:color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed))}
+@media(max-width:600px){.settings-catalog .settings-option{padding:12px}.settings-group-grid{gap:8px}}

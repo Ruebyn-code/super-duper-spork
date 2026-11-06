@@ -58,5 +58,5 @@ window.createAppNotifications=({footer,beforeOpen})=>{
  place();new MutationObserver(()=>{if(footer.lastElementChild!==bell)requestAnimationFrame(place);}).observe(document.body,{childList:true,subtree:true});window.addEventListener('resize',()=>requestAnimationFrame(place));
  window.addEventListener('focus',()=>refresh());document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('required-reading-changed',event=>{if(!event.detail?.blocked)refresh(true);});setInterval(()=>refresh(),60000);
  renderBadge();setTimeout(()=>refresh(true),400);
- const api={refresh:()=>refresh(true),close:()=>{if(panel.matches(':popover-open'))panel.hidePopover();}};window.appNotifications=api;return api;
+ const api={refresh:()=>refresh(true),close:()=>{if(panel.matches(':popover-open'))panel.hidePopover();},openSettings:()=>{if(!panel.matches(':popover-open'))bell.click();showSettings=true;lastKey='';status.textContent='';renderList();settingsButton.focus?.();}};window.appNotifications=api;return api;
 };

@@ -19,6 +19,7 @@ window.createAppControls=({footer,toggle,wording,beforeOpen})=>{
  if(toggle)footer.after(toggle);footer.append(trigger);footer.classList.add('account-menu-footer');document.body.append(menu);
  const search=window.createAppSearch?.({footer,trigger,beforeOpen:()=>{close();beforeOpen?.();}});
  const notifications=window.createAppNotifications?.({footer,beforeOpen:()=>{close();search?.close?.();beforeOpen?.();}});
+ window.appAccountTools={openProfile:()=>profileButton?.click(),toggleTheme:()=>themeButton?.click()};
  const profile=create('dialog','user-profile-dialog');profile.id='user-profile-dialog';profile.setAttribute('aria-labelledby','user-profile-title');profile.dataset.layoutUi='';
  const profileHeader=create('div','user-profile-heading'),profileTitle=create('h2',undefined,'User profile'),profileClose=create('button','user-profile-close');profileTitle.id='user-profile-title';profileClose.type='button';profileClose.append(icon('<path d="m6 6 12 12M18 6 6 18"/>'));profileClose.autofocus=true;profileHeader.append(profileTitle,profileClose);
  const profileIdentity=create('div','user-profile-identity'),profileAvatar=create('span','account-menu-avatar'),profileName=create('h3'),profileRole=create('p'),profileText=create('div');for(const node of [profileAvatar,profileName,profileRole])node.dataset.userText='';profileText.append(profileName,profileRole);profileIdentity.append(profileAvatar,profileText);
