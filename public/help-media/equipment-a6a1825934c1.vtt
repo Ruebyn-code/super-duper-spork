@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.375
+Step 1: Open Equipment and check the selected location. The summary shows working items, overdue or upcoming services, open problems and warranties ending soon.
+
+2
+00:00:08.375 --> 00:00:24.250
+Step 2: Managers choose Choose equipment and tick the items this location has from the company or network equipment list. Each location gets its own copy with its own service history; untick to remove it while keeping that history, or use Only at this location for one-off equipment.
+
+3
+00:00:24.250 --> 00:00:36.375
+Step 3: Search or filter by category, list and status, then open an item to see its details, service history and reported problems. Edit details adds this location’s area, serial number, purchase, warranty and service interval.
+
+4
+00:00:36.375 --> 00:00:46.958
+Step 4: If something is wrong, choose Report a problem, describe it and say whether it can still be used. Managers see open problems on the item and in the summary.
+
+5
+00:00:46.958 --> 00:00:59.417
+Step 5: Managers record services and repairs with the date, type, who did it and the cost, and can update the status. Resolve problems with a short note once they are fixed; Export CSV downloads the register.

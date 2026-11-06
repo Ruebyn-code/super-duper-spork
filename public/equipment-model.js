@@ -4,7 +4,7 @@
  const statuses=[['operational','Working'],['attention','Needs attention'],['out-of-service','Out of service'],['retired','Retired']].map(([id,name])=>({id,name}));
  const serviceTypes=[['service','Scheduled service'],['repair','Repair'],['inspection','Inspection or test'],['clean','Deep clean'],['other','Other']].map(([id,name])=>({id,name}));
  const severities=[['minor','Minor – still usable'],['major','Major – affects use'],['unusable','Can’t be used']].map(([id,name])=>({id,name}));
- const scopes=[['location','This location'],['company','Whole company'],['network','Whole network']].map(([id,name])=>({id,name}));
+ const scopes=[['company','Company list'],['network','Network list']].map(([id,name])=>({id,name}));
  const name=(list,id)=>list.find(item=>item.id===id)?.name||id;
  const day=86400000,parse=value=>Date.parse(value+'T12:00:00Z'),add=(value,days)=>new Date(parse(value)+days*day).toISOString().slice(0,10),between=(from,to)=>Math.round((parse(to)-parse(from))/day);
  const lastService=item=>(item.services||[]).filter(s=>s.type!=='clean').map(s=>s.date).sort().pop()||null;
