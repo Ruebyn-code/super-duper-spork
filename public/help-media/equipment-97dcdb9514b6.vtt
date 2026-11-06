@@ -1,0 +1,21 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:08.375
+Step 1: Open Equipment and check the selected location. The summary shows working items, overdue or upcoming services, open problems and warranties ending soon.
+
+2
+00:00:08.375 --> 00:00:18.958
+Step 2: Managers choose Add equipment and enter the name, category, area, make, model, serial number, purchase and warranty details and how often it needs a service, then press Save equipment.
+
+3
+00:00:18.958 --> 00:00:26.708
+Step 3: Search or filter by category and status, then open an item to see its details, service history and reported problems.
+
+4
+00:00:26.708 --> 00:00:37.292
+Step 4: If something is wrong, choose Report a problem, describe it and say whether it can still be used. Managers see open problems on the item and in the summary.
+
+5
+00:00:37.292 --> 00:00:49.750
+Step 5: Managers record services and repairs with the date, type, who did it and the cost, and can update the status. Resolve problems with a short note once they are fixed; Export CSV downloads the register.

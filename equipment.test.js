@@ -1,0 +1,51 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+const {fixture}=require('./test-support/roster-hourly-fixture.cjs'),{createStore}=require('./equipment'),model=require('./public/equipment-model'),permissions=require('./permissions'),features=require('./public/network-features-model');
+const item=(extra={})=>({requestId:crypto.randomUUID(),name:'Walk-in cool room',category:'refrigeration',area:'Back of house',make:'Skope',model:'WR-3000',serialNumber:'SK-1',supplier:'',serviceContact:'CoolTech',purchaseDate:'2026-01-01',purchaseCostCents:1450000,warrantyUntil:'2026-11-10',serviceIntervalDays:180,status:'operational',notes:'',...extra});
+test('equipment model derives service due dates, warranty and summary counts without guessing',()=>{
+ const today='2026-10-23',base={status:'operational',services:[],faults:[]};
+ assert.deepEqual(model.service({...base,serviceIntervalDays:null,purchaseDate:'2026-01-01'},today).state,'none');
+ assert.equal(model.service({...base,serviceIntervalDays:30},today).state,'unknown');
+ assert.deepEqual(model.service({...base,serviceIntervalDays:180,purchaseDate:'2026-01-01'},today),{state:'overdue',next:'2026-06-30',days:-115,last:null});
+ const serviced={...base,serviceIntervalDays:180,purchaseDate:'2026-01-01',services:[{date:'2026-05-01',type:'service'},{date:'2026-10-01',type:'clean'}]};assert.equal(model.service(serviced,today).next,'2026-10-28');assert.equal(model.service(serviced,today).state,'soon');
+ assert.equal(model.service({...serviced,status:'retired'},today).state,'none');assert.equal(model.warranty({warrantyUntil:'2026-11-10'},today).state,'soon');assert.equal(model.warranty({warrantyUntil:'2026-10-01'},today).state,'expired');
+ const summary=model.summarize([serviced,{...base,status:'out-of-service',faults:[{status:'open'},{status:'resolved'}]},{...base,status:'retired',faults:[{status:'open'}]}],today);assert.deepEqual(summary,{total:2,retired:1,outOfService:1,attention:0,openFaults:1,overdue:0,dueSoon:1,warrantySoon:0});
+});
+test('equipment managers add, edit and service items with idempotent retries, revisions and private costs',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());const payload=item();
+ const replies=await Promise.all([f.api(f.office,'/api/equipment','POST',payload),f.api(f.office,'/api/equipment','POST',payload)]);assert.equal(replies[0].id,replies[1].id);const saved=replies[0];
+ assert.equal(saved.locationId,f.location);assert.equal(saved.revision,1);assert.equal(saved.purchaseCostCents,1450000);assert(!Object.hasOwn(saved,'requestId'));assert(!Object.hasOwn(saved,'fingerprint'));assert.equal(saved.serviceDue.next,'2026-06-30');assert.equal(saved.warranty.state,'soon');
+ assert.equal((await f.request(f.office,'/api/equipment','POST',{...payload,name:'Different'})).status,409);assert.equal((await f.request(f.staff,'/api/equipment','POST',payload)).status,403);
+ const edited=await f.api(f.office,'/api/equipment/'+saved.id,'PUT',{...payload,name:'Cool room',revision:1});assert.equal(edited.revision,2);assert.equal(edited.name,'Cool room');
+ assert.equal((await f.request(f.office,'/api/equipment/'+saved.id,'PUT',{...payload,name:'Stale',revision:1})).status,409);
+ const service={requestId:crypto.randomUUID(),date:'2026-10-20',type:'repair',provider:'CoolTech',costCents:32000,notes:'Seals replaced',status:'operational'};
+ const serviced=await f.api(f.office,'/api/equipment/'+saved.id+'/services','POST',service);assert.equal(serviced.services.length,1);assert.equal(serviced.serviceDue.next,'2027-04-18');assert.equal(serviced.services[0].costCents,32000);
+ assert.equal((await f.api(f.office,'/api/equipment/'+saved.id+'/services','POST',service)).services.length,1,'retries add one service');
+ for(const bad of [{...service,requestId:crypto.randomUUID(),date:'2026-10-24'},{...service,requestId:crypto.randomUUID(),type:'invented'},{...service,requestId:crypto.randomUUID(),costCents:-1}])assert.equal((await f.request(f.office,'/api/equipment/'+saved.id+'/services','POST',bad)).status,400);
+ for(const bad of [item({name:''}),item({category:'rocket'}),item({serviceIntervalDays:0}),item({purchaseDate:'2026-02-30'}),item({purchaseCostCents:1.5}),item({status:'lost'}),item({notes:'a'.repeat(2001)})])assert.equal((await f.request(f.office,'/api/equipment','POST',bad)).status,400);
+ const staffView=(await f.api(f.staff,'/api/equipment')).items.find(i=>i.id===saved.id);assert.equal(staffView.canManage,undefined);assert(!Object.hasOwn(staffView,'purchaseCostCents'),'staff never see purchase costs');assert(!Object.hasOwn(staffView.services[0],'costCents'),'staff never see service costs');assert.equal(staffView.services[0].provider,'CoolTech');
+ const csv=await fetch(f.base+'/api/equipment/export',{headers:f.office.headers});assert.equal(csv.status,200);assert.match(await csv.text(),/Cool room/);assert.equal((await fetch(f.base+'/api/equipment/export',{headers:f.staff.headers})).status,403);
+ assert.equal(f.calls(),0);
+});
+test('staff report problems, managers resolve them, and scope, CSRF and feature switches are enforced',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());const saved=await f.api(f.office,'/api/equipment','POST',item());
+ const list=await f.api(f.staff,'/api/equipment');assert.equal(list.canManage,false);assert.equal(list.items.length,1);assert.equal(list.today,'2026-10-23');
+ const report={requestId:crypto.randomUUID(),description:'Door seal torn',severity:'major'};assert.equal((await f.request(f.staff,'/api/equipment/'+saved.id+'/faults','POST',report,{'X-CSRF-Token':''})).status,403);
+ const reported=await f.api(f.staff,'/api/equipment/'+saved.id+'/faults','POST',report);assert.equal(reported.openFaults,1);assert.equal(reported.status,'operational','reporting never changes the status');assert.equal((await f.api(f.staff,'/api/equipment/'+saved.id+'/faults','POST',report)).faults.length,1);
+ assert.equal((await f.request(f.staff,'/api/equipment/'+saved.id+'/faults','POST',{...report,requestId:crypto.randomUUID(),severity:'bad'})).status,400);
+ const fault=reported.faults[0],resolve={requestId:crypto.randomUUID(),resolution:'Seal replaced'};assert.equal((await f.request(f.staff,'/api/equipment/'+saved.id+'/faults/'+fault.id+'/resolve','POST',resolve)).status,403);
+ const resolved=await f.api(f.office,'/api/equipment/'+saved.id+'/faults/'+fault.id+'/resolve','POST',resolve);assert.equal(resolved.openFaults,0);assert.equal(resolved.faults[0].resolvedBy.id,f.office.session.id);assert.equal((await f.api(f.office,'/api/equipment/'+saved.id+'/faults/'+fault.id+'/resolve','POST',resolve)).faults[0].status,'resolved');assert.equal((await f.request(f.office,'/api/equipment/'+saved.id+'/faults/'+fault.id+'/resolve','POST',{...resolve,requestId:crypto.randomUUID()})).status,409);
+ const other=await f.api(f.office,'/api/locations','POST',{name:'Other store'}),company=await f.api(f.office,'/api/companies','POST',{name:'Other company',locationName:'Other company store'});
+ assert.equal((await f.api(f.office,'/api/equipment','GET',undefined,{'X-Location-Id':other.id})).items.length,0);assert.equal((await f.api(f.office,'/api/equipment','GET',undefined,{'X-Location-Id':company.locationId})).items.length,0);
+ assert.equal((await f.request(f.office,'/api/equipment/'+saved.id,'PUT',{...item(),revision:saved.revision},{'X-Location-Id':other.id})).status,404);assert.equal((await f.request(f.staff,'/api/equipment','GET',undefined,{'X-Location-Id':other.id})).status,403);
+ assert.equal((await f.request(null,'/api/equipment')).status,401);assert.equal((await fetch(f.base+'/equipment',{redirect:'manual'})).headers.get('location'),'/login');assert.equal((await fetch(f.base+'/equipment',{headers:f.staff.headers})).status,200);
+ const state=await f.api(f.office,'/api/permission-levels'),role=await f.api(f.office,'/api/permission-levels','POST',{name:'Home only',level:2,permissions:['home.view'],revision:state.revision});await f.api(f.office,'/api/accounts','POST',{username:'Home only',password:'roster-hourly-test-password',role:role.levels.find(r=>!state.levels.some(old=>old.id===r.id)).id,roleScope:'company',companyId:f.office.session.companyId,locationId:f.location});const home=await f.login('Home only');
+ assert.equal((await f.request(home,'/api/equipment')).status,403);assert.equal((await fetch(f.base+'/equipment',{headers:home.headers,redirect:'manual'})).headers.get('location'),'/home');
+ const found=(await f.api(f.staff,'/api/search?q='+encodeURIComponent('Walk-in cool'))).results.filter(r=>r.type==='Equipment');assert.equal(found.length,1);assert.match(found[0].url,/^\/equipment\?q=/);assert.equal((await f.api(f.office,'/api/search?q='+encodeURIComponent('Walk-in cool'),'GET',undefined,{'X-Location-Id':other.id})).results.filter(r=>r.type==='Equipment').length,0,'search stays scoped to the selected location');assert.equal((await f.api(home,'/api/search?q='+encodeURIComponent('Walk-in cool'))).results.filter(r=>r.type==='Equipment').length,0);
+ assert.equal((await f.api(f.office,'/api/equipment')).items[0].revision,resolved.revision,'searching never writes');
+ const store=createStore(f.dir,{context:async actor=>actor});await assert.rejects(store.list({...f.staff.session,permissions:[]}),error=>error.status===403);assert.equal(f.calls(),0);
+});
+test('equipment defaults, dependencies and the console feature switch',()=>{
+ assert.deepEqual(permissions.equipmentKeys,['equipment.view','equipment.manage']);assert.equal(permissions.dependencies['equipment.manage'],'equipment.view');
+ const defaults=Object.fromEntries(permissions.defaults.map(role=>[role.id,role.permissions]));assert(defaults.user.includes('equipment.view')&&!defaults.user.includes('equipment.manage'));assert(defaults.franchisee.includes('equipment.manage'));assert(defaults.admin.includes('equipment.manage'));
+ const off=features.apply({permissions:['home.view','equipment.view','equipment.manage']},['equipment']);assert.deepEqual(off.permissions,['home.view']);assert(off.disabledFeatureKeys.includes('equipment.view'));
+});

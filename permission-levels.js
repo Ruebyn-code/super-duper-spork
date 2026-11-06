@@ -7,7 +7,7 @@ function createStore(dir){
  async function read(){const data=await readLevels(),features=await require('./network-features').read(dir);Object.defineProperty(data,'disabledFeatures',{value:features.disabled,enumerable:false,configurable:true});return data;}
  async function readLevels(){
   try{
-   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key)),features=[['communicationsVersion',model.communicationKeys],['knowledgeVersion',model.knowledgeKeys],['rosteringVersion',model.rosteringKeys],['awardsVersion',model.awardKeys],['leaveVersion',model.leaveKeys],['transfersVersion',model.transferKeys],['userEmailsVersion',model.userEmailKeys],['opsVersion',model.opsKeys],['prepVersion',model.prepKeys],['learningVersion',model.learningKeys],['devicesVersion',model.deviceKeys],['aiVersion',model.aiKeys],['reportsVersion',model.reportKeys]];
+   const data=JSON.parse(await fs.readFile(file,'utf8')),same=(role,keys)=>role.permissions.length===keys.length&&keys.every(key=>role.permissions.includes(key)),features=[['communicationsVersion',model.communicationKeys],['knowledgeVersion',model.knowledgeKeys],['rosteringVersion',model.rosteringKeys],['awardsVersion',model.awardKeys],['leaveVersion',model.leaveKeys],['transfersVersion',model.transferKeys],['userEmailsVersion',model.userEmailKeys],['opsVersion',model.opsKeys],['prepVersion',model.prepKeys],['learningVersion',model.learningKeys],['devicesVersion',model.deviceKeys],['aiVersion',model.aiKeys],['reportsVersion',model.reportKeys],['equipmentVersion',model.equipmentKeys]];
    // Only exact historical defaults and full network roles gain new default grants.
    // Customised roles keep their existing access, including company overrides.
    for(let index=0;index<features.length;index++){
@@ -23,7 +23,7 @@ function createStore(dir){
     data[version]=1;
    }
    return data;
-  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,awardsVersion:1,leaveVersion:1,transfersVersion:1,userEmailsVersion:1,opsVersion:1,prepVersion:1,learningVersion:1,devicesVersion:1,aiVersion:1,reportsVersion:1,levels:structuredClone(model.defaults)};}
+  }catch(error){if(error.code!=='ENOENT')throw error;return{revision:0,communicationsVersion:1,knowledgeVersion:1,rosteringVersion:1,awardsVersion:1,leaveVersion:1,transfersVersion:1,userEmailsVersion:1,opsVersion:1,prepVersion:1,learningVersion:1,devicesVersion:1,aiVersion:1,reportsVersion:1,equipmentVersion:1,levels:structuredClone(model.defaults)};}
  }
  async function locations(){try{return JSON.parse(await fs.readFile(path.join(dir,'locations.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return[];throw error;}}
  function decorate(account,companyId,data,stores=[]){return require('./public/network-features-model').apply(resolve(account,companyId,data,stores),data?.disabledFeatures||[]);}

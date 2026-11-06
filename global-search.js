@@ -4,6 +4,7 @@ const pages=[
  ['ordering','Ordering','Catalogue stock items suppliers purchase request','/',['orders.view']],
  ['cart','Cart','Review submit stock order','/#cart',['orders.view']],
  ['counts','Stock counts','Inventory stock take usage','/stock-count',['counts.view']],
+ ['equipment','Equipment','Equipment assets fridge oven machine service repair maintenance fault broken warranty serial','/equipment',['equipment.view']],
  ['wastage','Wastage','Waste spoiled expired damaged stock loss','/wastage',['wastage.view']],
  ['transfers','Stock transfers','Send receive inter company location stock','/stock-transfers',['transfers.view']],
  ['sales','Daily sales','Sales entry projections ordering budget','/sales#entry',['sales.view']],

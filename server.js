@@ -45,6 +45,7 @@ const uploadedFonts=require('./uploaded-fonts');
 const appearanceStyles=require('./public/appearance-style');const editParts=require('./public/edit-parts');
 const stockCounts=require('./stock-counts');
 const wastage=require('./wastage');
+const equipment=require('./equipment');
 const stockCountGroups=require('./public/stock-count-groups');
 const stockCountUnits=require('./public/stock-count-units');
 const manualPar=require('./manual-par');
@@ -149,6 +150,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const usageHistory=stockUsage.createReader();
   const transferStore=stockTransfers.createStore(dataDir,{locations:locationStore,companies:companyStore,catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:transfersNow});
   const wastageStore=wastage.createStore(dataDir,{catalogues:catalogueStore,context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:salesNow});
+  const equipmentStore=equipment.createStore(dataDir,{context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),now:salesNow});
   const salesStore=sales.createStore(),hourlySalesStore=hourlySales.createStore(dataDir,{now:salesNow});
   // Per-day projected sales for one week, using the same historical forecast as rosters (aggregates only).
   const dailyProjection=async(actor,weekStart)=>{const projection=await sales.rosterProjection(dataDir,actor,weekStart,{now:new Date(salesNow())});return{weekStart,days:projection.daily.map(day=>Number.isSafeInteger(day?.salesCents)?day.salesCents:null)};};
@@ -282,7 +284,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         res.setHeader('Set-Cookie',[...(res.getHeader('Set-Cookie')||[]),`admin_session=${loggedIn.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secureCookie(req)?'; Secure':''}`]);
         return json(200,{role:loggedIn.role});
       }
-      const privatePages=['/employment-documents','/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
+      const privatePages=['/employment-documents','/help','/location-setup-step','/order-history','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/equipment','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/devices','/settings/awards','/rostering','/communications','/knowledge-library','/learning-centre','/ops-management','/labels','/admin/appearance/signin','/admin/appearance/setup'];
       let requiredReading;
       const setupStepRoute=req.url.match(/^\/api\/location-setup\/steps\/([a-zA-Z0-9-]+)\/(team|par|devices)$/);
       if(setupStepRoute){
@@ -361,6 +363,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(await rosteringRoutes.route({req,url:req.url,params:requestUrl.searchParams,session,store:rosteringStore,body,json,fail}))return;
       if(await stockTransfers.route({req,url:req.url,params:requestUrl.searchParams,session,store:transferStore,body,json}))return;
       if(await wastage.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:wastageStore,body,json}))return;
+      if(await equipment.route({req,res,url:req.url,session,store:equipmentStore,body,json}))return;
       const required=apiPermission(req.url,req.method);
       if(required){if(!session)fail('Sign-in required.',401);if(!canAny(session,required))fail('Your permission level does not allow this action.',403);}
       const management=required&&!['/api/menu','/api/catalogue'].includes(req.url)&&(required.some(key=>key.endsWith('.manage'))||req.url.startsWith('/api/permission-levels')||req.url.startsWith('/api/companies'));
@@ -393,6 +396,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         if(can(session,'comms.view'))providers.Comms=(q,terms)=>communicationStore.search(session,terms);
         if(can(session,'learning.view'))providers['Learning centre']=async(q,terms)=>{const data=await learningStore.dashboard(session);return filtered([...data.courses.map(c=>({id:'course:'+c.id,type:'Courses',title:c.title,text:[c.description,c.category].filter(Boolean).join(' · '),url:link('/learning-centre',c.title,'#courses')})),...data.myLearning.map(a=>({id:'assignment:'+a.id,type:'My learning',title:a.title,text:a.progress.status,url:'/learning-centre#learn-'+a.id}))],terms);};
         if(can(session,'ops.view'))providers.Checklists=async(q,terms)=>{const data=await opsStore.list(session,{location:session.locationId});return filtered([...data.tasks.map(t=>({id:'task:'+t.plannerId,type:'Checklists',title:t.title,text:[t.plannerName,t.locationName,t.dueDate].filter(Boolean).join(' · '),url:link('/ops-management',t.title,'#checklists')})),...(can(session,'ops.manage')?data.templates.map(t=>({id:'template:'+t.id,type:'Checklist templates',title:t.title,text:t.description||'',url:link('/ops-management',t.title,'#templates')})):[])],terms);};
+        if(can(session,'equipment.view'))providers.Equipment=async(q,terms)=>{const data=await equipmentStore.list(session);return filtered(data.items.map(i=>({id:'equipment:'+i.id,type:'Equipment',title:i.name,text:[i.area,i.make,i.model,i.serialNumber,i.assetTag].filter(Boolean).join(' · '),url:link('/equipment',i.name)})),terms);};
         if(can(session,'prep.view'))providers.Labels=async(q,terms)=>{const data=await prepLabelStore.list(session);return filtered(data.items.filter(p=>p.active||data.canManage).map(p=>({id:'label:'+p.id,type:'Labels',title:p.name,text:[p.category,p.notes].filter(Boolean).join(' · '),url:link('/labels',p.name)})),terms);};
         if(can(session,'users.manage'))providers.Users=async(q,terms)=>{const ids=new Set((await locationStore.list()).filter(s=>s.companyId===session.companyId).map(s=>s.id));return filtered((await auth.list(session)).filter(p=>locationIds(p).some(id=>ids.has(id))).map(p=>({id:'user:'+p.id,type:'Users',title:p.username,text:p.email||'',url:link('/admin/accounts',p.username,'#accounts')})),terms);};
         if(canAny(session,['users.manage','locations.manage','email.manage','companies.manage','awards.manage']))providers.Locations=async(q,terms)=>filtered((await locationStore.accessible(session)).filter(s=>s.companyId===session.companyId).map(s=>({id:'location:'+s.id,type:'Locations',title:s.name,text:'Company location',url:link('/admin/accounts',s.name,'#locations')})),terms);
@@ -712,7 +716,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(accountRoute&&req.method==='DELETE'){const removed=await auth.remove(session,accountRoute[1]);await photoStore.purge(accountRoute[1]);return json(200,removed);}
 
       if(req.method==='GET'&&req.url==='/employment-documents'&&!session){const id=requestUrl.searchParams.get('document'),target='/employment-documents'+(/^[a-f0-9-]{36}$/i.test(id||'')?'?document='+id:'');res.writeHead(303,{Location:'/login?returnTo='+encodeURIComponent(target)+(network.id==='default'?'':'&network='+encodeURIComponent(network.slug))});return res.end();}
-      if(req.method==='GET'&&['/employment-documents','/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
+      if(req.method==='GET'&&['/employment-documents','/help','/rostering','/knowledge-library','/learning-centre','/ops-management','/labels','/communications','/','/home','/cart','/stock-count','/stock-transfers','/wastage','/equipment','/sales','/reporting','/email-settings','/admin','/admin/accounts','/admin/settings','/settings','/settings/awards','/admin/appearance/signin','/admin/appearance/setup'].includes(req.url)&&!session){res.writeHead(303,{Location:'/login'});return res.end();}
       if(req.method==='GET'&&!(req.url==='/communications'&&requiredReading?.due.length)&&pagePermission(req.url)&&!canAny(session,pagePermission(req.url))){res.writeHead(303,{Location:['/admin','/admin/accounts','/admin/settings','/admin/appearance/signin','/admin/appearance/setup','/email-settings'].includes(req.url)?'/':'/home'});return res.end();}
       if(req.method==='GET'&&req.url==='/email-settings'){const accountId=requestUrl.searchParams.get('account'),account=accountId?(await auth.list()).find(account=>account.id===accountId):null;const id=requestUrl.searchParams.get('location')||account?.locationId||session.locationId;res.writeHead(303,{Location:'/admin/accounts?location='+encodeURIComponent(id)+'#locations'});return res.end();}
       if (req.method === 'GET' && ['/api/menu','/api/catalogue'].includes(req.url)) {

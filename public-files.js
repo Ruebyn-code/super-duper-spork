@@ -10,6 +10,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/favicon.png':'assets/branding/opstack-icon.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',
   '/checklist-phone-frame.png':'assets/branding/checklist-phone-frame.png',
+  '/equipment':'equipment.html','/equipment.js':'equipment.js','/equipment.css':'equipment.css','/equipment-model.js':'equipment-model.js',
   '/wastage':'wastage.html','/wastage.js':'wastage.js','/wastage.css':'wastage.css','/wastage-model.js':'wastage-model.js',
   '/stock-transfers':'stock-transfers.html',
   '/stock-transfers.js':'stock-transfers.js',
