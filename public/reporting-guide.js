@@ -17,7 +17,8 @@
   'daily-overview':'Daily sales compared with what was projected.',
   sales:'Each daily sales entry as it was saved.',
   training:'Who has finished, started or is overdue on training.',
-  checklists:'Checklists completed, missed and in progress.'
+  checklists:'Checklists completed, missed and in progress.',
+  activity:'What each person did and when: checklist steps, clock-ins, orders, counts, wastage, labels, training and equipment. Filter by people and time of day.'
  };
  function update(){const option=select.selectedOptions[0];if(!option){line.textContent='';return;}const group='';line.replaceChildren();const strong=document.createElement('strong');strong.textContent=group+option.textContent;line.append(strong,document.createTextNode(about[option.value]?' — '+about[option.value]:''));}
  // Mark summary figures that cannot be calculated so they read as "missing" rather than zero.

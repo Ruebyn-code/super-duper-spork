@@ -194,6 +194,18 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   }
   return{rows};
  }
+ // Read-only staff activity: completed steps and checklists, limited to runs and steps this actor may see.
+ async function activity(actor,{start,end,locationId}){
+  const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
+  if(!selected.length||actor.kiosk&&locationId!==actor.locationId)fail('Location access required.',403);
+  date(start);date(end);const state=await read(),events=[],inside=value=>{const day=plannerModel.local(Date.parse(value)).slice(0,10);return day>=start&&day<=end;};
+  for(const run of state.runs.filter(run=>run.locationId===locationId&&allowed(run,actor,selected,state))){
+   const title=summary(run).title;
+   for(const step of visibleSteps(run.snapshot.steps||[],run.locationId,actor)){if(!stepModel.responseStep(step))continue;const item=run.stepActivity?.[step.id];if(item?.completedAt&&inside(item.completedAt))events.push({at:item.completedAt,userId:item.completedById||null,userName:item.completedBy||'',type:'checklist-step',title:step.title||'Checklist step',detail:title});}
+   if(run.status==='completed'&&run.completedAt&&inside(run.completedAt))events.push({at:run.completedAt,userId:run.completedById||null,userName:run.completedBy||'',type:'checklist-complete',title:'Completed checklist: '+title,detail:run.plannerName&&run.plannerName!==title?run.plannerName:''});
+  }
+  return events;
+ }
  function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
  async function saveTemplate(actor,input,id){
   need(actor,'ops.manage');const stores=await access(actor);return mutate(async state=>{
@@ -356,7 +368,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,report,saveTemplate,setTemplateStatus,savePlanner,keepPlanner,start,get,saveRun,upload,download};
+ return{list,report,saveTemplate,setTemplateStatus,savePlanner,keepPlanner,start,get,saveRun,upload,download,activity};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);

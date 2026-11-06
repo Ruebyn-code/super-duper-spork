@@ -555,13 +555,13 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const [accessible,companyList]=await Promise.all([locationStore.accessible(session,{allCompanies:true}),companyStore.accessible(session)]),available=(await Promise.all(accessible.map(async record=>can(await auth.forCompany(session,record.companyId),'reporting.view')?record:null))).filter(Boolean),names=new Map(companyList.map(company=>[company.id,company.name]));
         return json(200,{locations:available.map(location=>({...location,companyName:names.get(location.companyId)||''}))});
       }
-      if(['/api/reporting/training','/api/reporting/checklists'].includes(req.url)&&req.method==='GET'){
+      if(['/api/reporting/training','/api/reporting/checklists','/api/reporting/activity'].includes(req.url)&&req.method==='GET'){
         const params=Object.fromEntries(requestUrl.searchParams),period=reporting.range(params,new Date(communicationsNow())),ids=reporting.selectLocations(params.locations||session.locationId,await locationStore.accessible(session,{allCompanies:true}));
         const contexts=await Promise.all(ids.map(async id=>companyStore.context(await locationStore.sessionContext(session,id))));
         if(contexts.some(actor=>!can(actor,'reporting.view')))fail('Reporting access is required in every selected company.',403);
-        const kind=req.url.endsWith('/training')?'training':'checklists';
-        if(session.kiosk&&(contexts.some(actor=>actor.companyId!==session.companyId)||kind==='checklists'&&ids.some(id=>id!==session.locationId)))fail('This kiosk is assigned to another location.',403);
-        const result=await require('./reporting-operations')[kind](contexts,period,kind==='training'?learningStore:opsStore);
+        const kind=req.url.endsWith('/training')?'training':req.url.endsWith('/activity')?'activity':'checklists';
+        if(session.kiosk&&(contexts.some(actor=>actor.companyId!==session.companyId)||kind!=='training'&&ids.some(id=>id!==session.locationId)))fail('This kiosk is assigned to another location.',403);
+        const result=kind==='activity'?await require('./reporting-operations').activity(contexts,period,{directory:()=>auth.directory(),ops:opsStore,rostering:rosteringStore,labels:prepLabelStore,wastage:wastageStore,equipment:equipmentStore,learning:learningStore,orders:()=>usageHistory(dataDir),counts:actor=>stockCounts.list(dataDir,actor)}):await require('./reporting-operations')[kind](contexts,period,kind==='training'?learningStore:opsStore);
         return json(200,{period,...result});
       }
       if(req.url==='/api/reporting'&&req.method==='GET'){
