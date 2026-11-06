@@ -75,3 +75,31 @@
 #learning-main label.instore-auto-assign,#learning-main .instore-dialog label.instore-auto-assign{flex-direction:row;align-items:flex-start;gap:8px;line-height:1.45;font-weight:500;font-size:12px}
 #learning-main label.instore-auto-assign[hidden]{display:none}
 #learning-main label.instore-auto-assign>input{flex:none;width:16px;height:16px;margin:1px 0 0}
+/* Staff with several sessions are grouped into one folder card. */
+#learning-main .instore-folder{min-width:0;border:1px solid var(--theme-line,#dfe6ef);border-radius:16px;background:var(--theme-surface,#fff);box-shadow:0 1px 2px #14243b05,0 5px 18px #14243b06;overflow:hidden;align-self:start}
+#learning-main .instore-folder[open]{grid-column:1/-1;border-color:color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dfe6ef))}
+#learning-main .instore-folder-summary{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"icon avatar text chevron" "bar bar bar bar";gap:6px 10px;align-items:center;padding:14px;cursor:pointer;list-style:none}
+#learning-main .instore-folder-summary::-webkit-details-marker{display:none}
+#learning-main .instore-folder-summary:hover{background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+#learning-main .instore-folder-summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+#learning-main .instore-folder-icon{grid-area:icon;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--secondary,#e27925) 16%,var(--theme-surface,#fff));color:var(--theme-secondary-text,var(--secondary,#e27925))}
+#learning-main .instore-folder-avatar{grid-area:avatar;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font:700 12px/1 var(--body-font,Arial,sans-serif)}
+#learning-main .instore-folder-text{grid-area:text;display:grid;gap:2px;min-width:0}
+#learning-main .instore-folder-text strong{font-size:15px;overflow-wrap:anywhere}
+#learning-main .instore-folder-text small{font-size:12px;color:var(--theme-muted,#63768c)}
+#learning-main .instore-folder-chevron{grid-area:chevron;display:grid;place-items:center;color:var(--theme-muted,#63768c);transition:transform .15s ease}
+#learning-main .instore-folder[open] .instore-folder-chevron{transform:rotate(90deg)}
+#learning-main .instore-folder-bar{grid-area:bar;height:5px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));overflow:hidden}
+#learning-main .instore-folder-bar span{display:block;height:100%;border-radius:inherit;background:var(--primary)}
+#learning-main .instore-folder-rows{display:grid;gap:6px;padding:0 14px 14px;border-top:1px solid var(--theme-line,#e5ebf1);padding-top:10px}
+#learning-main .instore-folder-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--theme-line,#e5ebf1);border-radius:12px;background:color-mix(in srgb,var(--primary) 2%,var(--theme-surface,#fff))}
+#learning-main .instore-folder-info{display:grid;gap:2px;min-width:0}
+#learning-main .instore-folder-info strong{font-size:14px;overflow-wrap:anywhere}
+#learning-main .instore-folder-info small{font-size:12px;color:var(--theme-muted,#63768c);overflow-wrap:anywhere}
+#learning-main .instore-folder-badge{white-space:nowrap}
+#learning-main .instore-folder-badge[data-tone=good]{background:color-mix(in srgb,#16a34a 14%,var(--theme-surface,#fff));color:#15803d}
+#learning-main .instore-folder-badge[data-tone=warn]{background:color-mix(in srgb,#f59e0b 18%,var(--theme-surface,#fff));color:#a05a00}
+#learning-main .instore-folder-badge[data-tone=active]{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+:root[data-theme=dark] #learning-main .instore-folder-badge[data-tone=good]{color:#86efac}:root[data-theme=dark] #learning-main .instore-folder-badge[data-tone=warn]{color:#fcd34d}
+@media(max-width:600px){#learning-main .instore-folder-row{grid-template-columns:minmax(0,1fr) auto}#learning-main .instore-folder-row>button{grid-column:1/-1;justify-self:start}}
+@media(prefers-reduced-motion:reduce){#learning-main .instore-folder-chevron{transition:none}}
