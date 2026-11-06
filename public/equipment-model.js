@@ -4,6 +4,7 @@
  const statuses=[['operational','Working'],['attention','Needs attention'],['out-of-service','Out of service'],['retired','Retired']].map(([id,name])=>({id,name}));
  const serviceTypes=[['service','Scheduled service'],['repair','Repair'],['inspection','Inspection or test'],['clean','Deep clean'],['other','Other']].map(([id,name])=>({id,name}));
  const severities=[['minor','Minor – still usable'],['major','Major – affects use'],['unusable','Can’t be used']].map(([id,name])=>({id,name}));
+ const scopes=[['location','This location'],['company','Whole company'],['network','Whole network']].map(([id,name])=>({id,name}));
  const name=(list,id)=>list.find(item=>item.id===id)?.name||id;
  const day=86400000,parse=value=>Date.parse(value+'T12:00:00Z'),add=(value,days)=>new Date(parse(value)+days*day).toISOString().slice(0,10),between=(from,to)=>Math.round((parse(to)-parse(from))/day);
  const lastService=item=>(item.services||[]).filter(s=>s.type!=='clean').map(s=>s.date).sort().pop()||null;
@@ -16,6 +17,6 @@
  function warranty(item,today){if(!item.warrantyUntil)return{state:'none'};const days=between(today,item.warrantyUntil);return{state:days<0?'expired':days<=30?'soon':'active',days};}
  const openFaults=item=>(item.faults||[]).filter(f=>f.status==='open');
  function summarize(items,today){const active=items.filter(i=>i.status!=='retired');return{total:active.length,retired:items.length-active.length,outOfService:active.filter(i=>i.status==='out-of-service').length,attention:active.filter(i=>i.status==='attention').length,openFaults:active.reduce((n,i)=>n+openFaults(i).length,0),overdue:active.filter(i=>service(i,today).state==='overdue').length,dueSoon:active.filter(i=>service(i,today).state==='soon').length,warrantySoon:active.filter(i=>warranty(i,today).state==='soon').length};}
- const api={categories,statuses,serviceTypes,severities,name,service,warranty,openFaults,summarize,lastService};
+ const api={scopes,categories,statuses,serviceTypes,severities,name,service,warranty,openFaults,summarize,lastService};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.equipmentModel=api;
 })(typeof window==='object'?window:globalThis);

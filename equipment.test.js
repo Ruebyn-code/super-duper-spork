@@ -49,3 +49,27 @@ test('equipment defaults, dependencies and the console feature switch',()=>{
  const defaults=Object.fromEntries(permissions.defaults.map(role=>[role.id,role.permissions]));assert(defaults.user.includes('equipment.view')&&!defaults.user.includes('equipment.manage'));assert(defaults.franchisee.includes('equipment.manage'));assert(defaults.admin.includes('equipment.manage'));
  const off=features.apply({permissions:['home.view','equipment.view','equipment.manage']},['equipment']);assert.deepEqual(off.permissions,['home.view']);assert(off.disabledFeatureKeys.includes('equipment.view'));
 });
+test('equipment can be shared with one location, the whole company or the whole network with matching authority',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const other=await f.api(f.office,'/api/locations','POST',{name:'Second store'}),company=await f.api(f.office,'/api/companies','POST',{name:'Other company',locationName:'Other company store'});
+ const local=await f.api(f.office,'/api/equipment','POST',item({name:'Local fryer'})),shared=await f.api(f.office,'/api/equipment','POST',item({name:'Company van',scope:'company'})),network=await f.api(f.office,'/api/equipment','POST',item({name:'Network POS standard',scope:'network'}));
+ assert.equal(local.scope,'location');assert.equal(shared.scope,'company');assert.equal(network.scope,'network');
+ const names=async(actor,locationId)=>(await f.api(actor,'/api/equipment','GET',undefined,locationId?{'X-Location-Id':locationId}:{})).items.map(i=>i.name).sort();
+ assert.deepEqual(await names(f.office),['Company van','Local fryer','Network POS standard']);
+ assert.deepEqual(await names(f.office,other.id),['Company van','Network POS standard'],'another location in the company sees company and network items');
+ assert.deepEqual(await names(f.office,company.locationId),['Network POS standard'],'another company sees only network items');
+ const options=await f.api(f.office,'/api/equipment');assert.deepEqual(options.scopes.map(s=>s.id),['location','company','network']);
+ await f.api(f.office,'/api/accounts','POST',{username:'Franchisee',password:'roster-hourly-test-password',role:'franchisee',locationId:f.location});const franchisee=await f.login('Franchisee');
+ const mine=await f.api(franchisee,'/api/equipment');assert.deepEqual(mine.scopes.map(s=>s.id),['location']);assert.equal(mine.items.find(i=>i.name==='Company van').canEdit,false);assert.equal(mine.items.find(i=>i.name==='Local fryer').canEdit,true);
+ for(const scope of ['company','network'])assert.equal((await f.request(franchisee,'/api/equipment','POST',item({scope}))).status,403);
+ assert.equal((await f.request(franchisee,'/api/equipment','POST',item({scope:'everywhere'}))).status,400);
+ assert.equal((await f.request(franchisee,'/api/equipment/'+shared.id,'PUT',{...item({scope:'company'}),revision:shared.revision})).status,403);
+ assert.equal((await f.request(franchisee,'/api/equipment/'+local.id,'PUT',{...item({name:'Local fryer',scope:'company'}),revision:local.revision})).status,403,'cannot widen without company authority');
+ assert.equal((await f.request(franchisee,'/api/equipment/'+shared.id+'/services','POST',{requestId:crypto.randomUUID(),date:'2026-10-20',type:'service'})).status,403);
+ const reported=await f.api(f.staff,'/api/equipment/'+shared.id+'/faults','POST',{requestId:crypto.randomUUID(),description:'Flat tyre',severity:'major'});assert.equal(reported.openFaults,1,'anyone who can see shared equipment can report a problem');
+ assert.equal((await f.api(f.office,'/api/equipment','GET',undefined,{'X-Location-Id':other.id})).items.find(i=>i.id===shared.id).openFaults,1,'problems show at every location it is shared with');
+ const narrowed=await f.api(f.office,'/api/equipment/'+shared.id,'PUT',{...item({name:'Company van',scope:'location'}),revision:reported.revision},{'X-Location-Id':other.id});assert.equal(narrowed.scope,'location');assert.equal(narrowed.locationId,other.id);
+ assert.deepEqual(await names(f.office),['Local fryer','Network POS standard'],'narrowing pins it to the editing location');
+ const csv=await (await fetch(f.base+'/api/equipment/export',{headers:f.office.headers})).text();assert.match(csv,/Shared with/);assert.match(csv,/Whole network/);
+ assert.equal(f.calls(),0);
+});

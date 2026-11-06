@@ -14,10 +14,26 @@ Only exact historical default roles and full network roles gain these grants (`e
 in `permission-levels.json`); customised roles keep their existing access. Owners can switch the
 whole feature off per network in the console (Networks → Features → Equipment).
 
+## Shared lists
+
+Each item is added to one list, chosen in **Add to** (and changeable in Edit details):
+
+| List | Shows at | Who can add or change it |
+| --- | --- | --- |
+| This location (default) | The location it was added at | `equipment.manage` |
+| Whole company | Every location in that company | `equipment.manage` + `locations.all` |
+| Whole network | Every location in every company of the network | `equipment.manage` + `locations.all` + `network.access` |
+
+Records saved before lists existed are treated as location items. Anyone who can see an item can
+report a problem; services, edits and resolving need the authority for its list. Narrowing a
+shared item to one location pins it to the editor's selected location. The page's **List** filter
+and the Company/Network badges show where items come from, and the summary covers everything shown
+at the selected location.
+
 ## Data and rules
 
-- Records live in the network's `equipment.json`, each pinned to one company/location. Every
-  request uses the session's selected location; other locations and companies never see them.
+- Records live in the network's `equipment.json`, each with a list (`scope`) plus the company/location
+  it was added at. Every request uses the session's selected location; items outside its list never appear.
 - Writes require CSRF. Creates, services, problem reports and resolutions carry a `requestId`, so
   retries apply once; a reused ID with different content is rejected. Edits are revision-checked.
 - The next service date counts from the latest service, repair or inspection (deep cleans are

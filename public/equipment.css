@@ -54,3 +54,5 @@
 .equip-badge[data-tone=muted]{background:color-mix(in srgb,var(--theme-muted,#607286) 12%,var(--theme-surface,#fff))}
 @media screen{:root[data-theme=dark] .equip-badge[data-tone=good]{color:#86efac}:root[data-theme=dark] .equip-badge[data-tone=warn]{color:#fcd34d}:root[data-theme=dark] .equip-badge[data-tone=bad]{color:#fca5a5}:root[data-theme=dark] .equip-metrics article[data-alert=true][data-tone=bad] strong{color:#f87171}:root[data-theme=dark] .equip-metrics article[data-alert=true][data-tone=warn] strong{color:#fbbf24}}
 @media(forced-colors:active){.equip-badge{border:1px solid CanvasText}}
+.equip-badge[data-tone=scope]{background:color-mix(in srgb,var(--secondary,#45efc3) 18%,var(--theme-surface,#fff));color:var(--theme-text,#1d2b3f)}
+.equip-fields label[hidden]{display:none}
