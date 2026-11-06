@@ -54,3 +54,13 @@
 @media(prefers-reduced-motion:reduce){.app-notify-button.has-unread svg{animation:none}.app-notify-button{transition:none}}
 @media(forced-colors:active){.app-notify-badge{border-color:Canvas;background:Highlight;color:HighlightText}.app-notify-dot{background:Highlight}}
 @media print{.app-notify-button,.app-notify-panel{display:none!important}}
+/* Inside the blue account control: the bell sits on the right, after the account button. */
+:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button{flex:0 0 46px;width:46px;height:auto;min-height:42px;margin:0;border:0;border-left:1px solid #ffffff40;border-radius:0 12px 12px 0;background:var(--primary);color:#fff;align-self:stretch}
+:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button:hover,:is(#app-sidebar,.mobile-brand-header) .app-search-account button.app-notify-button.app-notify-button[aria-expanded=true]{background:color-mix(in srgb,#000 14%,var(--primary));border-color:#ffffff40}
+.app-search-account .app-notify-button:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+.app-search-account .app-notify-badge{top:2px;right:2px;border-color:var(--primary)}
+.app-search-account:has(>.app-notify-button) #toolbar-toggle{border-radius:0!important}
+:is(#app-sidebar,.mobile-brand-header) .app-search-account.app-search-expanded button.app-notify-button.app-notify-button{border-bottom-right-radius:0}
+#app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account:has(>.app-notify-button){flex-basis:366px;width:366px}
+@media(max-width:1000px){#app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account:has(>.app-notify-button){flex-basis:296px;width:296px}}
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){.mobile-brand-header .account-menu-footer.app-search-account:has(>.app-notify-button){flex:0 0 142px;width:142px;min-width:142px}.app-search-account .app-notify-button{flex-basis:46px;width:46px;height:auto;min-height:44px;margin:0}}

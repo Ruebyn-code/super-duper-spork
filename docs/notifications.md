@@ -1,6 +1,6 @@
 # Notifications
 
-A bell sits beside search in the persistent header on every signed-in page (desktop, tablet and
+A bell sits on the right of the blue account control (joined to search) in the persistent header on every signed-in page (desktop, tablet and
 phone, including unlocked kiosks). Its red badge shows unread notifications (capped at 9+). The
 panel lists notifications for the signed-in account and the **selected location**, with All/Unread
 tabs, **Mark all as read**, per-type settings and optional **Desktop alerts**.
