@@ -281,3 +281,19 @@ test('steps limited to locations or permission levels are hidden and skipped for
  const second=await app.start(template.id,app.second,app.office);assert.equal(second.status,201,JSON.stringify(second.data));assert.deepEqual(second.data.snapshot.steps.map(step=>step.title),['Everyone checks the door','Second store only'],'the second store adds its own step; other permission levels stay hidden');
  const again=(await app.start(template.id,app.first,app.franchisee,{requestId:crypto.randomUUID()})).data;assert.equal((await app.api(app.franchisee,'/runs/'+again.id,'PUT',{revision:again.revision,complete:true,answers:{[everyone.id]:true}})).status,400,'the manager still needs their own required step');
 }finally{await app.close();}});
+test('checklist reports list each visible step with done, time, person and timed-section timing but never answers',async()=>{const app=await fixture();try{
+ const a=app.step('check',{title:'Wipe tables'}),timed={id:crypto.randomUUID(),type:'timed-section',title:'',help:'',required:false,startTime:'09:00',endTime:'12:00'},b=app.step('check',{title:'Flush coffee'}),c=app.step('text',{title:'Note the float'}),d=app.step('check',{title:'Manager only',roleIds:['franchisee']});
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Opening',steps:[a,timed,b,c,d]})).data;assert.ok(template.id,JSON.stringify(template));
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Opening',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;assert.ok(plan.id,JSON.stringify(plan));
+ const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.ok(run.id,JSON.stringify(run));
+ const saved=await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,complete:false,answers:{[a.id]:true,[b.id]:true}});assert.equal(saved.status,200,JSON.stringify(saved.data));
+ const store=ops.createStore(app.dir,{locations:async()=>[{id:app.first,name:'Office',companyId:'default'}],now:()=>Date.parse('2026-10-19T02:00Z')});
+ const row=(await store.report(app.member.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id),steps=row.steps;
+ assert.equal(row.templateId,template.id);assert.deepEqual(steps.map(step=>step.title),['Wipe tables','Flush coffee','Note the float']);
+ const [first,second,third]=steps;
+ assert.equal(first.done,true);assert.equal(first.timed,false);assert.equal(first.timing,null);assert.equal(first.completedBy,'Member');assert.ok(first.completedAt);
+ assert.equal(second.timed,true);assert.equal(second.sectionTitle,'9:00 am – 12:00 pm');assert.equal(second.timing,'late');
+ assert.equal(third.done,false);assert.equal(third.timing,'missed');assert.equal(third.completedAt,null);
+ assert.ok(steps.every(step=>!('answer' in step)&&!('value' in step)&&!('answers' in step)));
+ const manager=(await store.report(app.franchisee.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);assert.ok(manager.steps.some(step=>step.title==='Manager only'));
+}finally{await app.close();}});

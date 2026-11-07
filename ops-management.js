@@ -178,6 +178,18 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const history=state.runs.filter(run=>allowed(run,actor,selected,state)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
   return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(item=>summary(item,actor)),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
+ // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
+ function reportSteps(list,run,locationId,actor,current){
+  const timing=run?stepTiming.evaluate(run):{byStep:{},sections:[]},windows=new Map(timing.sections.map(item=>[item.id,item.window])),visible=new Set(visibleSteps(list,locationId,actor).map(step=>step.id)),result=[];let section=null;
+  for(const step of list){
+   if(stepModel.isSection(step)){section=step.type==='timed-section'?{id:step.id,title:stepTiming.sectionTitle(step),timed:true,window:windows.get(step.id)||null,startTime:step.startTime||null,endTime:step.endTime||null}:{id:step.id,title:step.title||'Section',timed:false};continue;}
+   if(!stepModel.responseStep(step)||!visible.has(step.id))continue;
+   const done=!!run&&stepModel.answered(step,run.answers?.[step.id]),activity=run?.stepActivity?.[step.id];let state=null;
+   if(section?.timed){state=run?(timing.byStep[step.id]?.state||'pending'):'pending';if(state==='pending'&&section.window&&Date.parse(section.window.end)<current)state='missed';}
+   result.push({id:step.id,title:step.title||'Checklist step',type:step.type,sectionId:section?.id||null,sectionTitle:section?.title||'',timed:!!section?.timed,startTime:section?.timed?section.startTime:null,endTime:section?.timed?section.endTime:null,done,completedAt:done&&activity?.completedAt||null,completedBy:done&&activity?.completedBy||'',timing:state});
+  }
+  return result;
+ }
  async function report(actor,{start,end,locationId}){
   const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
   if(!selected.length||actor.kiosk&&locationId!==actor.locationId)fail('Location access required.',403);
@@ -186,11 +198,11 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const workDate=run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
    if(workDate<start||workDate>end)continue;
    const item=summary(run),dueAt=run.dueAt!==undefined?run.dueAt:plannerModel.deadline(run.dueDate,run.snapshot.planner?.dueTime);
-   rows.push({id:run.id,title:item.title,plannerName:run.plannerName||'',workDate,dueDate:run.dueDate,dueAt,status:run.status==='completed'?'completed':dueAt&&Date.parse(dueAt)<current?'overdue':'in-progress',answered:item.answered,stepCount:item.stepCount,percent:run.status==='completed'?100:Math.round(item.answered/Math.max(1,item.stepCount)*100),startedAt:run.createdAt,completedAt:run.completedAt,completedBy:run.completedBy||'',updatedBy:run.updatedBy||run.createdBy||'',kind:'saved'});
+   rows.push({id:run.id,templateId:run.templateId||null,steps:reportSteps(run.snapshot.steps||[],{...run,workDate},run.locationId,actor,current),title:item.title,plannerName:run.plannerName||'',workDate,dueDate:run.dueDate,dueAt,status:run.status==='completed'?'completed':dueAt&&Date.parse(dueAt)<current?'overdue':'in-progress',answered:item.answered,stepCount:item.stepCount,percent:run.status==='completed'?100:Math.round(item.answered/Math.max(1,item.stepCount)*100),startedAt:run.createdAt,completedAt:run.completedAt,completedBy:run.completedBy||'',updatedBy:run.updatedBy||run.createdBy||'',kind:'saved'});
   }
   if(start<=today()&&end>=today()){
    const dashboard=await list(actor,{date:today(),location:locationId});
-   for(const task of dashboard.tasks.filter(task=>!task.run&&task.type!=='on-demand'&&task.availability.opensAt<=stamp()&&(!task.workDate||task.workDate>=start&&task.workDate<=end)))rows.push({id:task.plannerId+'|'+locationId+'|'+(task.periodKey||task.workDate||today()),title:task.title,plannerName:task.plannerName,workDate:task.workDate||today(),dueDate:task.dueDate,dueAt:task.dueAt,status:task.dueAt&&Date.parse(task.dueAt)<current?'overdue':'not-started',answered:0,stepCount:task.stepCount,percent:0,startedAt:null,completedAt:null,completedBy:'',updatedBy:'',kind:'scheduled'});
+   for(const task of dashboard.tasks.filter(task=>!task.run&&task.type!=='on-demand'&&task.availability.opensAt<=stamp()&&(!task.workDate||task.workDate>=start&&task.workDate<=end)))rows.push({id:task.plannerId+'|'+locationId+'|'+(task.periodKey||task.workDate||today()),templateId:task.templateId,steps:reportSteps(state.templates.find(item=>item.id===task.templateId)?.steps||[],null,locationId,actor,current).map(step=>step.timed&&step.endTime&&step.startTime?{...step,timing:(()=>{const window=stepTiming.windowFor({workDate:task.workDate||today()},{startTime:step.startTime,endTime:step.endTime});return window&&Date.parse(window.end)<current?'missed':'pending';})()}:step),title:task.title,plannerName:task.plannerName,workDate:task.workDate||today(),dueDate:task.dueDate,dueAt:task.dueAt,status:task.dueAt&&Date.parse(task.dueAt)<current?'overdue':'not-started',answered:0,stepCount:task.stepCount,percent:0,startedAt:null,completedAt:null,completedBy:'',updatedBy:'',kind:'scheduled'});
   }
   return{rows};
  }

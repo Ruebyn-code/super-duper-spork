@@ -25,3 +25,25 @@ test('progress reporting APIs enforce scopes and planner audiences, include unst
 
  }finally{await app.close();}
 });
+
+test('checklist step reports total each step across runs with timed-section on-time rates', () => {
+ const steps=require('./public/reporting-checklist-steps.js');
+ const step=(id,extra)=>({id,title:id,type:'check',sectionId:null,sectionTitle:'',timed:false,done:false,completedAt:null,completedBy:'',timing:null,...extra});
+ const timed=extra=>step('flush',{sectionId:'s1',sectionTitle:'9:00 am – 11:00 am',timed:true,...extra});
+ const run=(id,workDate,list,templateId='t1')=>({id,templateId,title:'Opening',workDate,status:'completed',locationNames:['Store'],companyName:'Co',steps:list});
+ const rows=[
+  run('r1','2026-11-01',[step('wipe',{done:true,completedAt:'2026-10-31T21:40:00Z',completedBy:'Sam'}),timed({done:true,completedAt:'2026-10-31T22:15:00Z',completedBy:'Sam',timing:'within'})]),
+  run('r2','2026-11-02',[step('wipe',{done:true,completedAt:'2026-11-01T21:50:00Z',completedBy:'Alex'}),timed({done:true,completedAt:'2026-11-02T00:30:00Z',completedBy:'Alex',timing:'late'})]),
+  run('r3','2026-11-03',[step('wipe'),timed({timing:'missed'})]),
+  run('r4','2026-11-03',[step('other')],'t2')
+ ];
+ assert.deepEqual(steps.checklists(rows).map(item=>[item.key,item.runs]),[['t1',3],['t2',1]]);
+ const summary=steps.summarise(rows,'t1');
+ assert.equal(summary.runs,3);assert.equal(summary.total,6);assert.equal(summary.done,4);
+ const [wipe,flush]=summary.steps;
+ assert.equal(wipe.done,2);assert.equal(wipe.total,3);assert.equal(wipe.onTime,null);assert.equal(steps.clockText(wipe.usualMinute),'8:45 am');
+ assert.equal(flush.timing.within,1);assert.equal(flush.timing.late,1);assert.equal(flush.timing.missed,1);assert.equal(Math.round(flush.onTime),33);
+ assert.equal(summary.sections.length,2);assert.equal(summary.sections[1].timed,true);assert.equal(summary.onTime,flush.onTime);
+ assert.deepEqual(flush.entries.map(entry=>entry.runId),['r3','r2','r1']);
+ assert.equal(wipe.topPerson.count,1);
+});

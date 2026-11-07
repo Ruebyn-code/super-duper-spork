@@ -173,3 +173,14 @@ stack the row (Visible at/to side by side) with touch-sized controls.
   (for example managers) can still answer it in the same run.
 - Limits are part of the template snapshot, so started runs keep the audience they
   started with.
+
+## Step reports
+
+Reporting → Checklist progress has a **By checklist / By step** toggle. By step uses the checklist rows already loaded for the selected dates and locations (no extra reads or writes).
+
+- Choose a checklist (shown with its run count). Each response step the viewer can see is listed under its section, with Done (runs where it was answered ÷ runs that included it), Completion, Usual time (median Melbourne time it was ticked off, from server-recorded step activity), Most done by and Last done.
+- Timed sections show their window, e.g. "Timed section · 9:00 am – 11:00 am", and an On time rate: steps completed inside the window ÷ timed steps that are decided (on time, early, late or missed). A step still unanswered after the window ends counts as **missed**; one with no recorded time is "Time not recorded" and is left out of the rate.
+- Selecting a step name opens its run-by-run history (work date, location, done, done at, done by, timing). Export CSV in By step exports every step on every run of the chosen checklist, with Melbourne local times.
+- Today's unstarted scheduled tasks use the current checklist's steps as not done. Earlier unstarted schedules still cannot be reconstructed.
+
+The server only adds step facts to report rows: step ID/title/type, section, done, completion time and person, and timing state. Answer values, files, photos and signatures are never included, and steps limited to other locations or permission levels are left out for viewers who cannot see them.

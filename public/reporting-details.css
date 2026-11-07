@@ -202,3 +202,35 @@
 @media(max-width:720px){.report-people-tools{width:100%}.report-people-tools .app-select,.report-people-tools>select{flex:1;width:auto}.report-people-grid{grid-template-columns:1fr 1fr}.report-person-card{padding:9px 10px}}
 @media(max-width:420px){.report-people-grid{grid-template-columns:1fr}}
 .reporting-page .report-people-tools .app-select-trigger{margin:0;min-height:36px;height:36px;padding:6px 12px;border-radius:10px;font-size:13px}
+
+/* Checklist progress → By step. */
+.report-step-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-right:auto}
+.report-step-controls[hidden],.report-step-picker[hidden],.report-step-history[hidden]{display:none}
+.report-step-mode{display:inline-flex;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));border:1px solid var(--line,#dbe3ea)}
+.report-step-mode button{margin:0;min-height:32px;padding:5px 12px;border:0;border-radius:8px;background:transparent;color:var(--theme-primary-text,var(--primary));font-size:12px;font-weight:600;box-shadow:none}
+.report-step-mode button[aria-pressed=true]{background:var(--brand-sheen,none) var(--primary);color:var(--theme-on-primary,#fff)}
+.report-step-picker{display:flex;align-items:center;gap:8px}
+.report-step-picker label{margin:0;font-size:12px;font-weight:600}
+.report-step-picker .app-select,.report-step-picker>select{width:260px;max-width:100%;margin:0}
+.reporting-page .report-step-picker .app-select-trigger{margin:0;min-height:34px;height:34px;padding:6px 12px;border-radius:10px;font-size:13px}
+.report-step-row td{vertical-align:middle}
+.report-step-section td{padding:10px 8px 6px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));border-top:1px solid var(--line,#dbe3ea)}
+.report-step-section td strong{font-size:12px;margin-right:12px}
+.report-step-section.is-timed td{background:color-mix(in srgb,var(--secondary,#45efc3) 12%,var(--theme-surface,#fff))}
+.report-step-section-facts{display:inline-flex;gap:12px;font-size:11px;color:var(--theme-muted,#5d6c7c)}
+.reporting-page .report-step-open{display:inline;height:auto;line-height:1.35;margin:0;padding:0;border:0;background:none;box-shadow:none;color:var(--theme-primary-text,var(--primary));font:inherit;font-weight:600;text-align:left;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--primary) 35%,transparent);text-underline-offset:3px;cursor:pointer;min-height:0}
+.report-step-row[data-open=true] td{background:color-mix(in srgb,var(--primary) 8%,var(--theme-surface,#fff))}
+.report-step-completion{white-space:nowrap}
+.report-step-bar{display:inline-block;vertical-align:middle;width:70px;height:6px;margin-right:8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));overflow:hidden}
+.report-step-bar>span{display:block;height:100%;border-radius:inherit;background:var(--brand-sheen,none) var(--primary)}
+.report-step-timing{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;white-space:nowrap;background:var(--theme-surface-raised,#edf2f6);color:var(--theme-muted,#5d6c7c)}
+.report-step-timing[data-timing=within]{background:var(--theme-success-soft,#eaf8ef);color:var(--theme-success-text,#28774e)}
+.report-step-timing[data-timing=early],.report-step-timing[data-timing=late]{background:var(--theme-warning-soft,#fff4d6);color:var(--theme-warning-text,#8a5a00)}
+.report-step-timing[data-timing=missed]{background:var(--theme-danger-soft,#fee9e6);color:var(--theme-danger-text,#ae2b23)}
+.report-step-history{margin-top:14px;padding:12px;border:1px solid var(--line,#dbe3ea);border-radius:12px;background:color-mix(in srgb,var(--primary) 3%,var(--theme-surface,#fff))}
+.report-step-history .report-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.report-step-history h3{margin:0;font-size:15px}
+.report-step-close{margin:0;min-height:32px;padding:5px 12px;font-size:12px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));border:1px solid var(--line,#dbe3ea)}
+.report-step-history-table{min-width:620px}
+.report-step-history-table td small{display:block;color:var(--theme-muted,#64748b);font-size:10px}
+@media(max-width:720px){.report-step-controls{width:100%}.report-step-picker{width:100%}.report-step-picker .app-select,.report-step-picker>select{flex:1;width:auto}}
