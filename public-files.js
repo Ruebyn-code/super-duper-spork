@@ -59,6 +59,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/formatted-text.js':'formatted-text.js',
   '/text-editor.js':'text-editor.js',
   '/formatted-text.css':'formatted-text.css',
+  '/knowledge-article-popup.js':'knowledge-article-popup.js',
+  '/knowledge-article-popup.css':'knowledge-article-popup.css',
   '/communications':'communications.html',
   '/communications.js':'communications.js',
   '/communications.css':'communications.css',

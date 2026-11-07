@@ -126,11 +126,11 @@ test('a locked kiosk can read a recent company post in full without media or mar
  const app=await fixture();try{
   const posted=(await app.request(app.office,'/api/communications/posts','POST',{title:'Roster changes',body:'Line one.\nLine two with more detail for the whole team.',scope:'company',requireRead:true,requestId:crypto.randomUUID()})).data;
   const file=path.join(app.dir,'communications.json'),state=JSON.parse(await fs.readFile(file,'utf8')),stored=state.posts.find(p=>p.id===posted.id);
-  stored.richText={version:1,blocks:[{type:'paragraph',spans:[{text:'Line one.'}]},{type:'image',asset:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},{type:'embed',url:'https://www.youtube.com/watch?v=abcdefghijk'}]};
+  stored.richText={version:1,blocks:[{type:'paragraph',spans:[{text:'Line one.'}]},{type:'image',asset:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},{type:'embed',url:'https://www.youtube.com/watch?v=abcdefghijk'},{type:'article',articleId:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',title:'Fridge SOP'}]};
   const receiptsBefore=JSON.stringify(stored.receipts);await fs.writeFile(file,JSON.stringify(state));
   assert.equal((await app.request(null,'/api/kiosk/posts/'+posted.id)).status,401);
   const kiosk=await app.pair(await app.create()),read=await app.request(kiosk,'/api/kiosk/posts/'+posted.id);assert.equal(read.status,200,JSON.stringify(read.data));
-  const post=read.data.post;assert.equal(post.title,'Roster changes');assert.ok(post.body.includes('Line two'));assert.equal(post.required,true);assert.equal(post.hiddenItems,2);
+  const post=read.data.post;assert.equal(post.title,'Roster changes');assert.ok(post.body.includes('Line two'));assert.equal(post.required,true);assert.equal(post.hiddenItems,3);assert.ok(!JSON.stringify(post.richText).includes('Fridge SOP'),'article links need a signed-in reader');
   assert.deepEqual(post.richText.blocks.map(b=>b.type),['paragraph']);assert.ok(!JSON.stringify(read.data).includes('receipts'));assert.ok(!JSON.stringify(read.data).includes('aaaaaaaa-aaaa'));
   assert.equal(JSON.stringify(JSON.parse(await fs.readFile(file,'utf8')).posts.find(p=>p.id===posted.id).receipts),receiptsBefore,'reading on the kiosk never records a receipt');
   assert.equal((await app.request(kiosk,'/api/kiosk/posts/'+crypto.randomUUID())).status,404);

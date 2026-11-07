@@ -58,3 +58,9 @@ demo content. Check desktop/phone layouts, narrow course properties panes, live
 preview, learner reading, required announcements, keyboard menus and custom course
 styles. Browsing, previews and cosmetic changes must not create progress records
 or call intelligence/providers.
+
+## Knowledge centre article links
+
+- **Rich text** (Comms messages and posts, Knowledge centre articles, training lessons): Insert → **Knowledge centre article** opens a search picker over the articles you can read. It inserts an `article` block, `{type:'article', articleId, title}`. The title is a ≤200-character snapshot, and the plain-text fallback is "Knowledge centre: <title>". It shows as a card in the editor and to readers. It's validated by the shared `formatted-text.js` normaliser, preserved by OpStack intelligence writing like media, and stripped from locked-kiosk post reads.
+- **Checklists**: a step's options have **Knowledge centre article** (Link an article / Change / Remove) for any step except sections. It's saved as `article: {id, title}`, validated on the server and copied into run snapshots. In the checklist, the step shows a "Read the guide" button.
+- **Popup**: both open `public/knowledge-article-popup.js`, a read-only dialog loaded on every signed-in page. It fetches through the normal permission-checked `GET /api/knowledge-library/:id`, so people only see articles they could open in the Knowledge centre. Otherwise it says the article isn't available. It has an **Open in Knowledge centre** link, closes with Close, Escape or the backdrop, and returns focus to the link. Opening it never edits, acknowledges or saves anything.

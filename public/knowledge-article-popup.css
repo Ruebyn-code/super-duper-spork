@@ -1,0 +1,41 @@
+/* Knowledge centre article links (rich text cards and checklist steps) and their read-only popup. */
+.formatted-article-link{margin:10px 0}
+.formatted-article-open,.ops-step-article{display:flex;align-items:center;gap:10px;width:100%;max-width:520px;margin:0;padding:10px 12px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dbe3ea));border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff));color:var(--theme-text,#182b3a);font:inherit;text-align:left;cursor:pointer;box-shadow:none;min-height:0}
+.formatted-article-open:hover,.ops-step-article:hover{background:color-mix(in srgb,var(--primary) 11%,var(--theme-surface,#fff));border-color:color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dbe3ea))}
+.formatted-article-open:focus-visible,.ops-step-article:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.formatted-article-open svg,.ops-step-article svg{flex:none;color:var(--theme-primary-text,var(--primary))}
+.formatted-article-text{display:grid;gap:1px;min-width:0}
+.formatted-article-text small{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--theme-primary-text,var(--primary))}
+.formatted-article-text strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc-article-dialog{width:min(760px,calc(100vw - 24px));max-height:min(86dvh,900px);padding:0;border:1px solid var(--theme-line,#dbe3ea);border-radius:18px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);box-shadow:0 24px 70px #182b3a40;display:none;flex-direction:column;overflow:hidden}
+.kc-article-dialog[open]{display:flex}
+.kc-article-dialog::backdrop{background:#0f172a73}
+.kc-article-picker{width:min(560px,calc(100vw - 24px))}
+.kc-article-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--theme-line,#e2e8f0)}
+.kc-article-kicker{margin:0 0 2px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--theme-primary-text,var(--primary))}
+.kc-article-title{margin:0;font-size:19px;line-height:1.3}
+.kc-article-close{flex:none;display:grid;place-items:center;width:34px;height:34px;min-height:0;margin:0;padding:0;border:1px solid var(--theme-line,#dbe3ea);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);cursor:pointer}
+.kc-article-body{flex:1;min-height:0;overflow:auto;padding:14px 18px 18px;overscroll-behavior:contain}
+.kc-article-meta{margin:0 0 12px;font-size:12px;color:var(--theme-muted,#64748b)}
+.kc-article-status{margin:6px 0;font-size:13px;color:var(--theme-muted,#64748b)}
+.kc-article-status:empty{display:none}
+.kc-article-error{color:var(--theme-danger-text,#ae2b23)}
+.kc-article-foot{display:flex;justify-content:flex-end;padding:10px 18px;border-top:1px solid var(--theme-line,#e2e8f0)}
+.kc-article-full{font-size:13px;font-weight:600;color:var(--theme-primary-text,var(--primary))}
+.kc-article-search{width:100%;margin:0 0 8px}
+.kc-article-results{display:grid;gap:6px}
+.kc-article-option{display:grid;gap:2px;width:100%;margin:0;padding:10px 12px;border:1px solid var(--theme-line,#dbe3ea);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);text-align:left;font:inherit;cursor:pointer;min-height:0;box-shadow:none}
+.kc-article-option:hover,.kc-article-option:focus-visible{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
+.kc-article-option small{font-size:11px;color:var(--theme-muted,#64748b)}
+.kc-article-excerpt{font-size:12px;color:var(--theme-muted,#64748b);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ops-step-article-field{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ops-step-article-field .ops-step-article{max-width:360px}
+.ops-step-article-field button.ops-step-article-change{margin:0;min-height:32px;padding:5px 12px;font-size:12px}
+@media(max-width:700px){.kc-article-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0;margin:0}.kc-article-title{font-size:17px}}
+@media(forced-colors:active){.formatted-article-open,.ops-step-article,.kc-article-option{border:1px solid CanvasText}}
+/* Win over shared dialog header/footer styling so the popup spans its full width. */
+dialog.kc-article-dialog>header.kc-article-head,dialog.kc-article-dialog>footer.kc-article-foot{box-sizing:border-box;width:100%;max-width:none;margin:0;text-align:left;position:static;background:none}
+dialog.kc-article-dialog>header.kc-article-head{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px 12px;border-bottom:1px solid var(--theme-line,#e2e8f0)}
+dialog.kc-article-dialog .kc-article-titles{flex:1;min-width:0;text-align:left}
+dialog.kc-article-dialog>footer.kc-article-foot{display:flex;justify-content:flex-end;padding:10px 18px;border-top:1px solid var(--theme-line,#e2e8f0)}
+.ops-step-article-field .ops-step-article>span{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

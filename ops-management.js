@@ -67,6 +67,8 @@ function normalize(input){
    if(!Array.isArray(value)||!value.length||value.length>max||value.some(id=>typeof id!=='string'||!id||id.length>80)||new Set(value).size!==value.length)fail('Choose at least one of the '+label+' for “'+result.title+'”, or show it to everyone.');
    result[key]=[...value];
   }
+  // Optional linked Knowledge centre article (opened read-only from the step; access is checked when it opens).
+  if(step.article!==undefined&&step.article!==null){const article=step.article;if(stepModel.isSection(result)||!article||typeof article!=='object'||!uuid(article.id))fail('Choose a Knowledge centre article for “'+result.title+'”.');result.article={id:article.id,title:text(article.title,200,'the article title')};}
   // Optional logic: pass rule, corrective action on fail and show-when rule (source must be an earlier step).
   if(step.passRule!==undefined&&step.passRule!==null){
    const rule=step.passRule;if(!stepLogic.canHaveRule(result)||!rule||typeof rule!=='object'||Array.isArray(rule))fail('Choose a valid pass rule for “'+result.title+'”.');

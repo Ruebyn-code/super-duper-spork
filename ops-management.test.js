@@ -328,3 +328,12 @@ test('auto-collapse is a saved checklist setting copied into new runs and kept w
  const off=(await app.api(app.office,'/templates/'+created.id,'PUT',{contentOnly:true,revision:older.revision,title:'Collapse renamed',autoCollapse:false,steps:created.steps})).data;assert.equal(off.autoCollapse,false);
  assert.equal((await app.api(app.member,'/runs/'+run.id)).data.snapshot.autoCollapse,true,'started runs keep their snapshot');
 }finally{await app.close();}});
+test('checklist steps can link a Knowledge centre article that is validated and copied into runs',async()=>{const app=await fixture();try{
+ const article={id:crypto.randomUUID(),title:'Fridge temperature SOP'};
+ assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[app.step('check',{article:{id:'nope',title:'x'}})]})).status,400);
+ assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{id:crypto.randomUUID(),type:'section',title:'S',help:'',required:false,article}]})).status,400);
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Fridge',steps:[app.step('check',{title:'Check fridge',article}),app.step('instruction',{title:'Read first',required:false,article})]})).data;
+ assert.deepEqual(template.steps[0].article,article);assert.deepEqual(template.steps[1].article,article);
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Fridge',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.deepEqual(run.snapshot.steps[0].article,article);
+}finally{await app.close();}});

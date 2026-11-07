@@ -1,5 +1,5 @@
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./formatted-text'):root.formattedText);if(typeof module==='object'&&module.exports)module.exports=api;else root.aiWritingModel=api;})(globalThis,formatted=>{
- const kinds=['message','post','article'],modes=['draft','rewrite','summarise'],media=['image','gallery','video','audio','document','embed'];
+ const kinds=['message','post','article'],modes=['draft','rewrite','summarise'],media=['image','gallery','video','audio','document','embed','article'];
  const fail=message=>{throw Object.assign(Error(message),{status:400});};
  const schema={type:'object',properties:{title:{type:'string'},body:{type:'string'}},required:['title','body'],additionalProperties:false};
  function parameters(input){if(!kinds.includes(input.kind)||!modes.includes(input.mode)||input.kind!=='message'&&!['company','network'].includes(input.scope))fail('Choose a writing task and its audience.');if(input.mode!=='draft'&&!input.notes?.trim())fail('Add approved source text to rewrite or summarise.');return{mode:input.mode,...(input.kind==='message'?{}:{scope:input.scope})};}

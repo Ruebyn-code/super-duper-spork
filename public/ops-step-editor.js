@@ -1,6 +1,6 @@
 // Optional settings let other builders (for example in-store training) reuse this editor:
 // kinds limits the step types, selectionSources limits selection item sources and extraDetails adds a step's own settings.
-window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audienceOptions,kinds,selectionSources,extraDetails,logic:withLogic=false})=>{
+window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audienceOptions,kinds,selectionSources,extraDetails,logic:withLogic=false,articleLinks=false})=>{
  const model=opsStepModel,timing=opsStepTiming,opened=new Set(),kindList=kinds||model.kinds,kindName=type=>kindList[type]||model.kinds[type]||type;let items=[],drag=null,scrollFrame=0;
  const el=(tag,cls)=>{const node=document.createElement(tag);if(cls)node.className=cls;return node;};
  const input=(type,value)=>{const node=el('input');node.type=type;node.value=value??'';return node;};
@@ -56,6 +56,7 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   basics?.querySelector(':scope>.ops-audience-fields')?.remove();if(!model.isSection(step)&&audienceOptions){const audience=audienceSection(step);if(basics)(basics.querySelector(':scope>.ops-toggle')?basics.querySelector(':scope>.ops-toggle').before(audience):basics.append(audience));else grid.append(audience);grid.prepend(ui('p','Visible at / to: leave blank for everyone. People who can’t see a step don’t need to complete it.','ops-audience-help ops-wide'));}
   extraDetails?.(step,grid,changed);
   if(withLogic&&window.opsStepLogic)grid.append(logicSection(step,host));
+  if(articleLinks&&!model.isSection(step)&&(step.article||window.knowledgeArticlePopup?.canLink()))grid.append(articleField(step,host));
   host.append(grid);
  }
  // Logic: show this step only after a matching earlier answer, pass/fail the answer and ask for a corrective action.
@@ -91,6 +92,14 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   }
   box.append(ui('p','Hidden steps aren’t required. Failed answers are flagged and lower the completion rate in reports.','small ops-wide'));
   return box;
+ }
+ // Link a Knowledge centre article to a step; staff open it as a read-only popup.
+ function articleField(step,host){
+  const wrap=el('div','ops-step-article-field ops-wide'),label=ui('span','Knowledge centre article','ops-logic-caption');wrap.append(label);
+  if(step.article){const card=el('button','ops-step-article');card.type='button';card.dataset.kcArticle=step.article.id;card.dataset.kcTitle=step.article.title;card.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h12"/></svg>';card.append(data('span',step.article.title));card.title='Preview article';wrap.append(card);}
+  if(window.knowledgeArticlePopup?.canLink()){const change=el('button','ops-step-article-change');change.type='button';change.textContent=step.article?(typeof interfaceLabel==='function'?interfaceLabel('Change'):'Change'):(typeof interfaceLabel==='function'?interfaceLabel('Link an article'):'Link an article');change.onclick=async()=>{const picked=await window.knowledgeArticlePopup.pick({parent:host.closest('dialog')||document.body});if(!picked)return;step.article={id:picked.id,title:picked.title.slice(0,200)};changed();details(step,host);};wrap.append(change);}
+  if(step.article){const remove=el('button','ops-step-article-change');remove.type='button';remove.textContent=typeof interfaceLabel==='function'?interfaceLabel('Remove'):'Remove';remove.onclick=()=>{delete step.article;changed();details(step,host);};wrap.append(remove);}
+  return wrap;
  }
  function refreshLogicBadge(step,node){const top=node?.querySelector('.ops-step-top');if(!top||!withLogic)return;let badge=top.querySelector('.ops-step-logic-badge');const parts=[step.showWhen&&'Conditional',step.passRule&&'Pass/fail'].filter(Boolean);if(!parts.length){badge?.remove();return;}if(!badge){badge=el('span','ops-step-logic-badge');top.append(badge);}badge.textContent=parts.join(' · ');badge.title=[window.opsStepLogic?.conditionText(step,items),window.opsStepLogic?.ruleText(step)].filter(Boolean).join('. ');}
  // Who sees this step: omitted lists mean everyone; chips add specific locations or permission levels.
