@@ -151,3 +151,16 @@
 @media(max-width:600px){.report-activity-table thead{display:none}.report-activity-table tr:not(.report-activity-day){display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:8px 0}.report-activity-table tr:not(.report-activity-day) td{padding:0 12px;border:0}.report-activity-table td:nth-child(3){grid-column:1/-1}.report-activity-what{min-width:0}.report-activity-table td:last-child{grid-column:1/-1;font-size:12px;color:var(--theme-muted,#5d6c7c)}}
 .report-activity-table th,.report-activity-person-table th:first-child{text-align:left}
 .report-activity-person-table td,.report-activity-table td{vertical-align:middle}
+.report-activity-filters{grid-template-columns:repeat(3,minmax(0,1fr))}
+.report-activity-filter>select{width:100%;margin:0}
+.report-activity-times{align-content:start}
+.report-activity-source{grid-template-columns:18px 12px minmax(0,1fr) auto}
+.report-activity-swatch{width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.report-activity-swatch[data-source=clock]{background:#22a06b}.report-activity-swatch[data-source=orders]{background:#d9822b}.report-activity-swatch[data-source=equipment]{background:#e5484d}.report-activity-swatch[data-source=training]{background:#7c3aed}
+@media(max-width:900px){.report-activity-filters{grid-template-columns:1fr}}
+.report-activity-filter .app-select,.report-activity-filter .location-picker{margin:0;width:100%}
+.reporting-page .report-activity-filter .app-select-trigger{margin:0;min-height:38px;height:38px;padding:7px 12px;border-radius:10px;font-size:13px}
+.reporting-page .report-activity-filter>.report-activity-label{margin:0;display:block}
+.report-activity-column-tools{display:flex;align-items:center;gap:10px}
+.report-activity-columns-toggle{width:auto;min-width:150px}
+.report-activity-column{grid-template-columns:18px minmax(0,1fr)}

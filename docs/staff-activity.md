@@ -22,15 +22,15 @@ Sources without permission are never read and are listed as "Not shown because o
 ## Filters
 
 - **People:** a searchable multi-select of everyone with activity in the period (Everyone by default). Selecting a name in **By person** narrows the timeline to that person.
-- **Time of day:** All day, Morning (5–11 am), Midday (11 am–3 pm), Afternoon (3–6 pm), Evening (6–11 pm), Overnight (11 pm–5 am, wrapping past midnight) or a Custom from/to time. Times are Melbourne time; the end time is exclusive.
-- **Activity:** turn sources on or off.
+- **Time of day:** a dropdown with All day, Morning (5–11 am), Midday (11 am–3 pm), Afternoon (3–6 pm), Evening (6–11 pm), Overnight (11 pm–5 am, wrapping past midnight) or a Custom from/to time. Times are Melbourne time; the end time is exclusive.
+- **Activity:** a dropdown with a tick box per source (with counts) to turn sources on or off; All activity and Clear reset it.
 - The toolbar search also matches people, actions, details and locations.
 
 These filters run in the browser over the loaded timeline, so changing them never reloads or writes anything. Locations and Period reload the report.
 
 ## Output
 
-Summary cards (actions, people, busiest hour, most active person), a **By person** table with counts per source and first/last action, and a day-grouped **Timeline**. Export CSV downloads the filtered timeline.
+Summary cards (actions, people, busiest hour, most active person), a **By person** table with counts per source and first/last action (its **Columns** dropdown shows any one or more of Actions, each source, First and Last; columns for sources switched off in Activity are left out), and a day-grouped **Timeline**. Export CSV downloads the filtered timeline.
 
 ## Rules
 
