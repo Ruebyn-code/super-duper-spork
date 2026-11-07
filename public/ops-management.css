@@ -490,3 +490,27 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-page .ops-auto-collapse input[type=checkbox]:focus-visible{outline:2px solid var(--theme-primary-text,var(--primary,#008cff))}
 @media(prefers-reduced-motion:reduce){.ops-page .ops-auto-collapse input[type=checkbox],.ops-page .ops-auto-collapse input[type=checkbox]::after{transition:none}}
 @media(forced-colors:active){.ops-page .ops-auto-collapse input[type=checkbox]{appearance:auto;-webkit-appearance:auto}.ops-page .ops-auto-collapse input[type=checkbox]::after{display:none}}
+
+/* Camera-only photo/video steps. */
+.ops-camera-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}
+.ops-page .ops-camera-button{display:inline-flex;align-items:center;gap:7px;min-height:40px;margin:0;padding:8px 14px;border:1px solid color-mix(in srgb,var(--primary) 40%,var(--theme-line,#dbe3ea));border-radius:10px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-weight:600;cursor:pointer}
+.ops-page .ops-camera-button:hover{background:color-mix(in srgb,var(--primary) 13%,var(--theme-surface,#fff))}
+
+/* Compact step options. */
+.ops-page .ops-step-details{gap:6px 8px;padding:7px 2px 4px}
+.ops-page .ops-step-details label{font-size:.7rem;gap:3px}
+.ops-page .ops-step-details input:not([type=checkbox]):not([type=radio]),.ops-page .ops-step-details textarea{min-height:30px;padding:5px 8px;font-size:.78rem}
+.ops-page .ops-step-details textarea{height:30px}
+.ops-page .ops-step-details .location-select-trigger{min-height:30px;padding:5px 8px;font-size:.78rem}
+.ops-page .ops-step-details p.small,.ops-page .ops-step-details .ops-audience-help{font-size:.66rem;line-height:1.35;color:var(--theme-muted,#64748b)}
+.ops-page .ops-step-details .ops-toggle{padding:4px 8px;font-size:.72rem}
+.ops-page .ops-logic-fields{gap:4px 8px;padding:6px 10px 8px;margin-top:2px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.ops-page .ops-logic-fields>legend{font-size:.6rem;padding:0 4px}
+.ops-page .ops-logic-fields>p{font-size:.64rem}
+.ops-page .ops-logic-pass{gap:4px 12px}
+.ops-page .ops-logic-pass .ops-option{font-size:.74rem;min-height:0;padding:2px 0}
+.ops-page .ops-logic-caption{font-size:.68rem}
+.ops-page .ops-step-article-field{gap:6px}
+.ops-page .ops-step-article-field>.ops-logic-caption{flex-basis:auto;margin-right:2px}
+.ops-page .ops-step-article-field button.ops-step-article-change{min-height:28px;padding:3px 10px;font:600 .72rem/1.2 inherit;font-family:inherit;text-transform:none;letter-spacing:normal;border-radius:8px}
+.ops-page .ops-step-article-field .ops-step-article{padding:5px 9px;min-height:28px;border-radius:9px}

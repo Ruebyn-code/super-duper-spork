@@ -1,0 +1,22 @@
+/* Camera-only capture dialog for checklist photos and videos. */
+.camera-capture-dialog{width:min(640px,calc(100vw - 20px));padding:0;border:0;border-radius:18px;background:#0b1220;color:#fff;box-shadow:0 24px 70px #0008;overflow:hidden}
+.camera-capture-dialog::backdrop{background:#020617b3}
+.camera-capture-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.camera-capture-head strong{font-size:15px}
+.camera-capture-close{width:34px;height:34px;min-height:0;margin:0;padding:0;border:0;border-radius:10px;background:#ffffff1f;color:#fff;font-size:20px;line-height:1;cursor:pointer}
+.camera-capture-stage{position:relative;display:grid;place-items:center;background:#000;aspect-ratio:4/3;max-height:min(70dvh,520px)}
+.camera-capture-stage>video,.camera-capture-stage>img{width:100%;height:100%;object-fit:contain;background:#000}
+.camera-capture-stage>[hidden]{display:none}
+.camera-capture-timer{position:absolute;top:10px;left:10px;padding:3px 9px;border-radius:999px;background:#dc2626;color:#fff;font:700 12px/1.4 system-ui,sans-serif}
+.camera-capture-status{margin:0;padding:8px 14px 0;font-size:13px;color:#cbd5e1}
+.camera-capture-status:empty{display:none}
+.camera-capture-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:12px 14px 14px}
+.camera-capture-actions [hidden]{display:none}
+.camera-capture-actions button{min-height:42px;margin:0;padding:8px 16px;border-radius:999px;font:600 14px/1.2 system-ui,sans-serif;cursor:pointer}
+.camera-capture-primary{border:0;background:var(--brand-sheen,none) var(--primary,#008cff);color:var(--theme-on-primary,#fff)}
+.camera-capture-secondary{border:1px solid #ffffff4d;background:#ffffff14;color:#fff}
+.camera-capture-actions button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:700px){.camera-capture-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;margin:0;display:none;flex-direction:column}.camera-capture-dialog[open]{display:flex}.camera-capture-stage{flex:1;aspect-ratio:auto;max-height:none}}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary:focus,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary:hover{border:0;background:var(--brand-sheen,none) var(--primary,#008cff);color:var(--theme-on-primary,#fff)}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary:hover{border:1px solid #ffffff4d;background:#ffffff14;color:#fff}
+dialog.camera-capture-dialog button:focus-visible{outline:2px solid #fff;outline-offset:2px}

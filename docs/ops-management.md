@@ -225,3 +225,12 @@ Checklist steps can use logic, set in each step's options under **Logic** (Ops c
 - **Copy step** duplicates a step directly after it. Copying a section copies its steps too. Copies get new IDs, and show-when rules inside the copied block point at the copies.
 - Dragging gives faster feedback: moves animate in 90 ms, and autoscroll near the screen edge is quicker.
 - **Collapse steps once they're done while filling in** (`autoCollapse`) is a checklist setting. It's kept when older writers omit it, and copied into each new run's snapshot, so started runs keep the value they began with. In the reader, a finished response step (answered, with any corrective action recorded) shrinks to its heading once focus leaves it. Tapping the heading, or pressing Enter/Space, reopens it and it stays open. This is display-only and never saves answers.
+
+## Camera-only photo and video steps
+
+Photo / video steps (and corrective-action photos on failed checks) are captured with the device camera, not uploaded from files:
+
+- **Take photo** and **Record video** open the camera in the app (`public/camera-capture.js`). You can switch between front and back cameras, retake, then choose **Use photo** or **Use video**. Videos are capped at 60 seconds and 25 MB. Allowed media (photos, videos or both) decides which buttons appear.
+- If the browser can't open the camera in the app, phones fall back to their own camera screen. Computers without a camera show a note to use a phone or tablet. There's no file picker for these steps.
+- File submission steps still accept uploaded files as before.
+- Captured files go through the same run media upload, size checks and private media access as before.
