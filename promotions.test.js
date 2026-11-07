@@ -1,0 +1,52 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {fixture}=require('./test-support/roster-hourly-fixture.cjs'),{createStore}=require('./promotions'),model=require('./public/promotions-model');
+const promo=(locationIds,extra={})=>({requestId:crypto.randomUUID(),name:'Tuesday 2-for-1',kind:'bogo',value:null,channels:['in-store','uber-eats'],startDate:'2026-10-19',endDate:'2026-10-25',locationIds,notes:'',...extra});
+test('promotion model describes offers, channels, lengths and status',()=>{
+ assert.equal(model.offer({kind:'percent',value:20}),'20% off');assert.equal(model.offer({kind:'amount',value:500}),'$5 off');assert.equal(model.offer({kind:'price',value:995}),'Special price $9.95');assert.equal(model.offer({kind:'bogo'}),'Buy one get one');
+ assert.equal(model.channelText(['uber-eats','in-store']),'Uber Eats, In store');assert.equal(model.days('2026-10-30','2026-11-02'),4);
+ const item={startDate:'2026-10-19',endDate:'2026-10-25'};assert.equal(model.status(item,'2026-10-18'),'upcoming');assert.equal(model.status(item,'2026-10-25'),'running');assert.equal(model.status(item,'2026-10-26'),'finished');
+ assert(model.overlaps(item,'2026-10-25','2026-10-31'));assert(!model.overlaps(item,'2026-10-26','2026-11-01'));
+});
+test('sales editors add, edit and delete promotions with idempotent retries, revisions and read-only performance',async t=>{
+ const f=await fixture();t.after(()=>f.close());const payload=promo([f.location],{name:'Spring 20% off',kind:'percent',value:20});
+ const replies=await Promise.all([f.api(f.office,'/api/promotions','POST',payload),f.api(f.office,'/api/promotions','POST',payload)]);assert.equal(replies[0].id,replies[1].id,'retries create one promotion');
+ const saved=replies[0];assert.equal(saved.revision,1);assert.equal(saved.status,'running');assert.deepEqual(saved.locationNames,['Office']);assert(saved.canEdit);for(const key of ['requestId','requestFingerprint','companyId'])assert(!Object.hasOwn(saved,key));
+ assert.equal((await f.request(f.office,'/api/promotions','POST',{...payload,name:'Different'})).status,409,'a reused retry ID with new details is rejected');
+ for(const bad of [promo([f.location],{name:''}),promo([f.location],{kind:'rocket'}),promo([f.location],{kind:'percent',value:0}),promo([f.location],{kind:'amount',value:null}),promo([f.location],{channels:[]}),promo([f.location],{channels:['fax']}),promo([f.location],{endDate:'2026-10-18'}),promo([f.location],{startDate:'2026-02-30'}),promo([f.location],{endDate:'2027-03-01'}),promo([],{}),promo([f.location],{notes:'a'.repeat(501)})])assert.equal((await f.request(f.office,'/api/promotions','POST',bad)).status,400);
+ assert.equal((await f.request(f.office,'/api/promotions','POST',promo(['someone-elses-location']))).status,403,'only reachable locations can be chosen');
+ assert.equal((await f.request(f.staff,'/api/promotions')).status,200,'promotions follow the existing sales viewing permission');
+ const listed=await f.api(f.office,'/api/promotions');assert.equal(listed.today,'2026-10-23');assert.equal(listed.promotions.length,1);assert(listed.canEdit);assert(listed.locations.some(location=>location.id===f.location));
+ assert.equal((await f.api(f.office,'/api/promotions?from=2026-10-26&to=2026-11-01')).promotions.length,0,'date filters only return overlapping promotions');
+ const edited=await f.api(f.office,'/api/promotions/'+saved.id,'PUT',{...payload,name:'Spring 25% off',value:25,revision:1});assert.equal(edited.revision,2);assert.equal(edited.value,25);
+ assert.equal((await f.request(f.office,'/api/promotions/'+saved.id,'PUT',{...payload,revision:1})).status,409,'stale revisions are rejected');
+ // Performance compares saved weekly-report-first sales with the normal projection for recorded days up to today.
+ const week=await f.api(f.office,'/api/sales?week=2026-10-19'),days=[12000,null,9000,15000,null,null,null];
+ await f.api(f.office,'/api/sales','PUT',{weekStart:'2026-10-19',revision:week.record?.revision??week.revision??0,days});
+ const projected=(await f.api(f.office,'/api/sales?week=2026-10-19')).dailyProjection.days;
+ const before=await fs.readFile(path.join(f.dir,'promotions',f.office.session.companyId+'.json'),'utf8');
+ const result=await f.api(f.office,'/api/promotions/'+saved.id+'/performance');
+ assert.equal(result.days.length,5,'only days up to today are included');assert.equal(result.recordedDays,3);
+ const compared=[0,2,3].filter(index=>Number.isSafeInteger(projected[index]));assert.equal(result.comparedDays,compared.length);
+ assert.equal(result.actualCents,compared.reduce((sum,index)=>sum+days[index],0));assert.equal(result.projectedCents,compared.reduce((sum,index)=>sum+projected[index],0));assert.equal(result.differenceCents,result.actualCents-result.projectedCents);
+ assert.equal(await fs.readFile(path.join(f.dir,'promotions',f.office.session.companyId+'.json'),'utf8'),before,'reading performance never writes');
+ const upcoming=await f.api(f.office,'/api/promotions','POST',promo([f.location],{startDate:'2026-11-01',endDate:'2026-11-03'}));assert.equal((await f.api(f.office,'/api/promotions/'+upcoming.id+'/performance')).status,'upcoming');
+ assert.equal((await f.request(f.office,'/api/promotions/'+saved.id,'DELETE',{revision:1})).status,409);
+ assert.deepEqual(await f.api(f.office,'/api/promotions/'+saved.id,'DELETE',{revision:2}),{deleted:true,id:saved.id});assert.deepEqual(await f.api(f.office,'/api/promotions/'+saved.id,'DELETE',{revision:2}),{deleted:true,id:saved.id},'repeated deletes are harmless');
+ assert(!(await f.api(f.office,'/api/promotions')).promotions.some(item=>item.id===saved.id),'deleted promotions are hidden');assert.equal((await f.request(f.office,'/api/promotions/'+saved.id+'/performance')).status,404);
+ assert.equal(f.calls(),0,'promotions never call providers');
+});
+test('promotions stay scoped to their locations and need access to every listed location to edit',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'promotions-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ const locations=[{id:'loc-a',name:'Richmond',companyId:'co'},{id:'loc-b',name:'Carlton',companyId:'co'},{id:'loc-c',name:'Archived',companyId:'co',archived:true},{id:'loc-x',name:'Other company',companyId:'other'}];
+ const store=createStore(dir,{locations:async()=>locations,now:()=>Date.parse('2026-10-23T02:00:00Z'),actuals:async()=>[],projection:async()=>({days:[]})});
+ const person=(id,locationIds,permissions=['sales.view','sales.edit'],locationId=locationIds[0])=>({id,username:id,role:'user',permissions,companyId:'co',locationId,locationIds});
+ const both=person('both',['loc-a','loc-b']),onlyA=person('only-a',['loc-a']),viewer=person('viewer',['loc-a','loc-b'],['sales.view'],'loc-b');
+ const shared=await store.create(both,promo(['loc-a','loc-b']));assert.deepEqual(shared.locationNames,['Richmond','Carlton']);
+ await assert.rejects(store.create(onlyA,promo(['loc-a','loc-b'])),{status:403});await assert.rejects(store.create(both,promo(['loc-c'])),{status:403},'archived locations cannot be chosen');await assert.rejects(store.create(both,promo(['loc-x'])),{status:403});
+ await assert.rejects(store.create(viewer,promo(['loc-b'])),{status:403},'viewers cannot add promotions');
+ const seenByA=(await store.list(onlyA)).promotions[0];assert.equal(seenByA.id,shared.id);assert.equal(seenByA.canEdit,false,'editors without every location see the promotion read-only');
+ await assert.rejects(store.update(onlyA,shared.id,{...promo(['loc-a']),revision:1}),{status:403});await assert.rejects(store.remove(onlyA,shared.id,{revision:1}),{status:403});
+ const local=await store.create(both,promo(['loc-a'],{name:'Richmond only'}));
+ assert.deepEqual((await store.list(viewer)).promotions.map(item=>item.id),[shared.id],'each location only sees its own promotions');assert.equal((await store.list(viewer)).locations.length,0,'only editors receive the location picker');
+ await assert.rejects(store.performance(viewer,local.id),{status:404});await assert.rejects(store.list({...viewer,permissions:[]}),{status:403});
+});

@@ -46,6 +46,7 @@ const appearanceStyles=require('./public/appearance-style');const editParts=requ
 const stockCounts=require('./stock-counts');
 const wastage=require('./wastage');
 const equipment=require('./equipment');
+const promotions=require('./promotions');
 const stockCountGroups=require('./public/stock-count-groups');
 const stockCountUnits=require('./public/stock-count-units');
 const manualPar=require('./manual-par');
@@ -162,6 +163,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   const reportSources=require('./ai-report-sources').createSources({dir:dataDir,auth,locations:locationStore,companies:companyStore,catalogues:catalogueStore,history:usageHistory,sales:salesStore,weekly:weeklySalesReportStore,learning:learningStore,ops:opsStore,now:communicationsNow});
   const homePersonal=require('./home-personal').createReader({learning:learningStore,comms:communicationStore,agreements:employmentDocumentStore,rostering:rosteringStore,now:communicationsNow});
   // Notification centre sources reuse existing permission-checked readers; reads never write.
+  const promotionStore=promotions.createStore(dataDir,{locations:()=>locationStore.list(),now:salesNow,actuals:(actor,starts)=>sales.projectionRecords(dataDir,actor,starts),projection:(actor,weekStart)=>dailyProjection(actor,weekStart)});
   const notificationStore=require('./notifications').createStore(dataDir,{now:communicationsNow,sources:{personal:actor=>homePersonal.read(actor),rostering:actor=>rosteringStore.notificationFeed(actor),ops:actor=>opsStore.list(actor),equipment:actor=>equipmentStore.list(actor),transfers:actor=>transferStore.homePending(actor),reports:actor=>reportStore.list(actor),
    dailySales:async actor=>{const now=locationNow(),location=await locationStore.status(actor.locationId,now);if(!location||/^\s*head\s+office\s*$/i.test(location.name||''))return null;const entry=locationHoursModel.salesEntry(location.tradingHours,now);if(!entry?.available)return null;const record=await sales.read(dataDir,actor,sales.currentWeek(new Date(entry.tradingDate+'T12:00:00Z'))),amount=record?.days?.[(new Date(entry.tradingDate+'T12:00:00Z').getUTCDay()+6)%7];return amount===null||amount===undefined?{tradingDate:entry.tradingDate,locationName:location.name}:null;}}});
   const homeInsights=require('./home-insights').createReader({dir:dataDir,locations:actor=>locationStore.accessible(actor),context:async(actor,id)=>companyStore.context(await locationStore.sessionContext(actor,id)),history:()=>usageHistory(dataDir),salesStore,weekly:weeklySalesReportStore,ops:opsStore,now:communicationsNow});
@@ -367,6 +369,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(await stockTransfers.route({req,url:req.url,params:requestUrl.searchParams,session,store:transferStore,body,json}))return;
       if(await wastage.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:wastageStore,body,json}))return;
       if(await equipment.route({req,res,url:req.url,session,store:equipmentStore,body,json}))return;
+      if(await promotions.route({req,url:req.url,params:requestUrl.searchParams,session,store:promotionStore,body,json}))return;
       if(await require('./notifications').route({req,url:req.url,session,store:notificationStore,body,json}))return;
       const required=apiPermission(req.url,req.method);
       if(required){if(!session)fail('Sign-in required.',401);if(!canAny(session,required))fail('Your permission level does not allow this action.',403);}
