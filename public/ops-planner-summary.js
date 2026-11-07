@@ -25,20 +25,24 @@
   if(s.kind==='monthly')return 'Every month on day '+Number(s.startDate.slice(8))+' · last day in shorter months';
   return 'Every year on '+new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'long',timeZone:'UTC'}).format(new Date(s.startDate+'T12:00:00Z'))+' · last day of the month when needed';
  }
- function point(point){const anchor=point.anchor==='opening'?'opening':'closing',minutes=Math.abs(point.offsetMinutes);return minutes?minutes+' minutes '+(point.offsetMinutes<0?'before ':'after ')+anchor:'At '+anchor;}
- const minutes=value=>value%60===0?(value/60)+(value===60?' hour':' hours'):value+(value===1?' minute':' minutes');
- function spoken(point){const anchor=point.anchor==='opening'?'opening':'closing',value=Math.abs(point.offsetMinutes);return value?minutes(value)+(point.offsetMinutes<0?' before ':' after ')+anchor:anchor;}
+ const duration=value=>value%60===0?(value/60)+(value===60?' hour':' hours'):value+(value===1?' minute':' minutes');
+ function point(point){const anchor=point.anchor==='opening'?'opening':'closing',minutes=Math.abs(point.offsetMinutes);return minutes?duration(minutes)+(point.offsetMinutes<0?' before ':' after ')+anchor:'At '+anchor;}
+ function spoken(point){const anchor=point.anchor==='opening'?'opening':'closing',value=Math.abs(point.offsetMinutes);return value?duration(value)+(point.offsetMinutes<0?' before ':' after ')+anchor:anchor;}
  // One plain-language sentence for the plan summary box.
- function sentence(plan){
+ const clock=value=>new Intl.DateTimeFormat('en-AU',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:model.zone}).format(new Date(value));
+ // window: an upcoming trading-hours window ({opensAt,closesAt,dueAt,tradingDate}) whose clock times are shown beside each point.
+ function sentence(plan,{window,place}={}){
+  const at=(text,value)=>window&&value?text+' ('+clock(value)+')':text;
   const s=plan.schedule,type=model.type(plan),from=[plan.activeFrom||'00:00',plan.startTime||'00:00'].sort().at(-1),overnight=plan.activeUntil?plan.activeUntil<(plan.activeFrom||plan.startTime||'00:00'):true;
-  const hours=plan.tradingHours?'available from '+spoken(plan.tradingHours.start)+' until '+spoken(plan.tradingHours.until):from==='00:00'&&!plan.activeUntil?'available all day':'available from '+time(from)+' to '+time(plan.activeUntil||'00:00')+(overnight?' the next day':'');
-  const offset=plan.dueAfterDays,day=offset===undefined?'':offset===0?'the same day':offset===1?'the next day':offset+' days after it starts',timed=plan.tradingHours?.due?'at '+spoken(plan.tradingHours.due):plan.dueTime?'at '+time(plan.dueTime):'',endOf=offset===1?'by the end of the next day':offset>1?'by the end of the day, '+day:'by the end of the day';
+  const hours=plan.tradingHours?'available from '+at(spoken(plan.tradingHours.start),window?.opensAt)+' until '+at(spoken(plan.tradingHours.until),window?.closesAt):from==='00:00'&&!plan.activeUntil?'available all day':'available from '+time(from)+' to '+time(plan.activeUntil||'00:00')+(overnight?' the next day':'');
+  const offset=plan.dueAfterDays,day=offset===undefined?'':offset===0?'the same day':offset===1?'the next day':offset+' days after it starts',timed=plan.tradingHours?.due?'at '+at(spoken(plan.tradingHours.due),window?.dueAt):plan.dueTime?'at '+time(plan.dueTime):'',endOf=offset===1?'by the end of the next day':offset>1?'by the end of the day, '+day:'by the end of the day';
   const due=s.kind==='hourly'&&type==='recurring'?'due at the end of each hour':type==='on-demand'&&!plan.dueTime&&!plan.tradingHours?.due?'with no deadline':'due '+(timed?(day?day+' ':'')+timed:endOf);
   const repeats=repeat(plan).split(' · ')[0];
   const text=type==='on-demand'?'From '+date(s.startDate)+', team members can start this checklist when needed, '+hours+', '+due+'.':type==='once'?'This checklist will run once on '+date(s.startDate)+', '+hours+', '+due+'.':'This checklist will start on '+date(s.startDate)+', '+hours+', '+due+', and will repeat '+repeats.charAt(0).toLowerCase()+repeats.slice(1)+'.';
-  return plan.active?text:'Paused. When activated: '+text.charAt(0).toLowerCase()+text.slice(1);
+  const note=plan.tradingHours&&window?' Times are for '+(place||'the selected location')+' on '+new Intl.DateTimeFormat('en-AU',{weekday:'long',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(window.tradingDate+'T12:00:00Z'))+'.':'';
+  return(plan.active?text:'Paused. When activated: '+text.charAt(0).toLowerCase()+text.slice(1))+note;
  }
- function describe(plan){
+ function describe(plan,options={}){
   const error=validate(plan);if(error)return{valid:false,message:error};const type=model.type(plan),state=type==='unscheduled'?'Unscheduled':plan.active?'Active':'Paused';
   if(type==='unscheduled')return{valid:true,state,headline:'This checklist is not scheduled and will stay off the active list.',rows:[],hasWindows:false};
   const s=plan.schedule,from=[plan.activeFrom||'00:00',plan.startTime||'00:00'].sort().at(-1),until=plan.activeUntil||'00:00',overnight=plan.activeUntil?plan.activeUntil<(plan.activeFrom||plan.startTime||'00:00'):true;
@@ -46,7 +50,7 @@
   const offset=plan.dueAfterDays,day=offset===undefined?'Due date follows its repeat period':offset===0?'Same day':offset===1?'Next day':offset+' days after the period starts';
   const dueDay=day+(['weekly','fortnightly','monthly','yearly'].includes(s.kind)&&offset>0?' (capped to the repeat period)':'');
   const due=s.kind==='hourly'?'At the end of each hour, or the active finish if earlier':type==='on-demand'&&!plan.dueTime&&!plan.tradingHours?.due?'No deadline':dueDay+' · '+(plan.tradingHours?.due?point(plan.tradingHours.due):plan.dueTime?time(plan.dueTime):'end of day');
-  return{valid:true,state,sentence:sentence(plan),headline:!plan.active?'Paused · these settings will apply when activated.':type==='on-demand'?'Team members can start this checklist manually during its available windows.':'A checklist becomes available in each planned window and leaves Active when that window finishes.',rows:[['Repeats',repeat(plan)],[s.endDate?'Saved date range':'Start date',date(s.startDate)+(s.endDate?' → '+date(s.endDate)+' (saved limit; removed on edit)':type==='once'?' · once only':' onwards')],['Active hours',hours],['Deadline',due]],hasWindows:true,windowTitle:!plan.active?'Preview if activated':type==='on-demand'?'Available start windows':'Current and next runs'};
+  return{valid:true,state,sentence:sentence(plan,options),headline:!plan.active?'Paused · these settings will apply when activated.':type==='on-demand'?'Team members can start this checklist manually during its available windows.':'A checklist becomes available in each planned window and leaves Active when that window finishes.',rows:[['Repeats',repeat(plan)],[s.endDate?'Saved date range':'Start date',date(s.startDate)+(s.endDate?' → '+date(s.endDate)+' (saved limit; removed on edit)':type==='once'?' · once only':' onwards')],['Active hours',hours],['Deadline',due]],hasWindows:true,windowTitle:!plan.active?'Preview if activated':type==='on-demand'?'Available start windows':'Current and next runs'};
  }
  function upcoming(plan,now,hours,limit=3){
   const description=describe(plan);if(!description.valid||!description.hasWindows)return{windows:[],message:description.message||'No scheduled runs.'};

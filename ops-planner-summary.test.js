@@ -38,3 +38,9 @@ test('plan summary sentence reads the schedule in plain language without changin
  assert.match(summary.describe(plan('hourly',{active:false,schedule:{kind:'hourly',startDate:'2026-10-26',days:[1]}})).sentence,/^Paused\. When activated: this checklist .*due at the end of each hour, and will repeat every hour on Monday\.$/);
  assert.equal(summary.describe(plan('unscheduled',{type:'unscheduled'})).sentence,undefined);assert.equal(summary.describe(plan('daily',{schedule:{kind:'daily',startDate:''}})).sentence,undefined);
 });
+test('trading-hours sentences show the clock times of the next window and name the location and day',()=>{
+ const point=(anchor,offsetMinutes=0)=>({anchor,offsetMinutes}),value=plan('daily',{activeFrom:null,activeUntil:null,dueTime:null,schedule:{kind:'daily',startDate:'2026-11-01'},tradingHours:{start:point('closing',-60),until:point('closing'),due:point('closing',30)}}),hours=Array.from({length:7},()=>({open:'10:00',close:'22:00'}));
+ const window=summary.upcoming(value,now('2026-11-05','08:00'),hours,1).windows[0],text=summary.describe(value,{window,place:'Richmond'}).sentence;
+ assert.match(text,/available from 1 hour before closing \(9:00 pm\) until closing \(10:00 pm\), due the same day at 30 minutes after closing \(10:30 pm\)/);assert.match(text,/Times are for Richmond on Thursday 5 Nov\.$/);
+ assert(!/\(/.test(summary.describe(value).sentence));assert.match(Object.fromEntries(summary.describe(value).rows)['Active hours'],/^1 hour before closing/);
+});
