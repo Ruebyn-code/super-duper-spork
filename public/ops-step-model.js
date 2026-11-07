@@ -1,5 +1,5 @@
 (function(root){
- const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction'};
+ const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction','yes-no-na':'Yes / No / N/A'};
  const formats={integer:'Whole number',decimal:'Decimal',currency:'Currency',percentage:'Percentage',temperature:'Temperature',weight:'Weight',volume:'Volume',length:'Length',duration:'Duration',custom:'Custom unit'};
  const units={temperature:['°C','°F'],weight:['kg','g','mg','lb','oz'],volume:['L','mL','gal'],length:['m','cm','mm','km','ft','in'],duration:['minutes','hours','seconds']};
  const isSection=step=>['section','timed-section'].includes(step.type);
@@ -16,6 +16,7 @@
   if(['text','textarea'].includes(step.type))return nonempty(value)&&value.length<=(step.type==='textarea'?5000:500);
   if(step.type==='number')return validNumber(step,value);
   if(step.type==='yesno')return['yes','no'].includes(value);
+  if(step.type==='yes-no-na')return['yes','no','na'].includes(value);
   if(step.type==='choice')return step.options.includes(value);
   if(step.type==='multiple')return Array.isArray(value)&&value.length>0&&new Set(value).size===value.length&&value.every(item=>step.options.includes(item));
   if(step.type==='selection')return step.multiple?Array.isArray(value)&&value.length>0&&new Set(value).size===value.length&&value.every(nonempty):nonempty(value);

@@ -197,3 +197,24 @@ Checklist completion rates treat timed sections as pass/fail. Any step in a time
 ## Rank colours
 
 Every Reporting location ranking (Business overview, Training and the checklist ring cards) uses the same gold, silver and bronze as the Home Sales leaderboard for places 1, 2 and 3. Each gets a medal-coloured place badge (read out as, for example, "Gold · Place 1") and a matching row or card tint. Tied places share a colour, and unranked locations keep the plain style.
+
+## Checklist logic
+
+Checklist steps can use logic, set in each step's options under **Logic** (Ops checklists only; in-store training is unchanged). The shared `public/ops-step-logic.js` model is used by the server, the run reader, the builder's phone preview and reports.
+
+- **Yes / No / N/A** (`yes-no-na`) is a quick three-answer step. N/A is a complete answer and never fails. The older `yesno` type still converts to a selection step as before.
+- **Show this step** (`showWhen`) shows a step only when an earlier step matches a rule:
+  - a checkbox is or isn't ticked
+  - a Yes / No / N/A or custom selection answer is or isn't a value
+  - a number is below or above a value
+  - any step with a pass/fail check fails or passes
+
+  Rules can chain. A step is hidden whenever its source step is hidden, missing, after it, or not visible to that person. Hidden steps aren't required, don't count in progress and are left out of reports. Answers already saved on them are kept.
+- **Pass/fail check** (`passRule`) can be set on these steps:
+  - Yes / No / N/A: which answer passes
+  - number: lowest and/or highest passing value, inclusive
+  - custom selection: the passing items
+
+  Failed answers are marked Failed in the checklist. In Reporting they count as failed steps in the completion rate, the same as timed-section misses, and appear in the Passed column, the step history Result column and the CSV.
+- **If it fails, require** (`failAction`) asks for a note and/or a photo explaining the corrective action. Notes (up to 1000 characters) and photos (up to 5, images only) are saved in `run.actions`, separately from answers. They use the run's existing media audience and can't be completed without. Completed records show them read-only.
+- The builder clears rules that no longer fit before saving, for example when the source step is deleted, moved below the step or changes type. The server rejects invalid rules. Checklists with logic don't offer the one-tap quick tick.

@@ -297,3 +297,25 @@ test('checklist reports list each visible step with done, time, person and timed
  assert.ok(steps.every(step=>!('answer' in step)&&!('value' in step)&&!('answers' in step)));
  const manager=(await store.report(app.franchisee.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);assert.ok(manager.steps.some(step=>step.title==='Manager only'));
 }finally{await app.close();}});
+test('checklist logic: show-when follow-ups, Yes/No/N/A pass rules and corrective actions are enforced on the server',async()=>{const app=await fixture();try{
+ const fridge=app.step('yes-no-na',{title:'Fridge OK?',passRule:{pass:'yes'},failAction:{note:true,photo:false}}),why=app.step('text',{title:'What happened?',showWhen:{stepId:fridge.id,operator:'is',value:'no'}}),temp=app.step('number',{title:'Temperature',format:'decimal',decimals:1,unit:'°C',passRule:{min:0,max:5}});
+ const bad=await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...why,showWhen:{stepId:temp.id,operator:'gt',value:1}},temp]});assert.equal(bad.status,400,'a rule must point at an earlier step');
+ const badRule=await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...fridge,passRule:{pass:'na'}}]});assert.equal(badRule.status,400);
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Fridge checks',steps:[fridge,why,temp]})).data;assert.ok(template.id,JSON.stringify(template));
+ assert.deepEqual(template.steps[1].showWhen,{stepId:fridge.id,operator:'is',value:'no'});assert.deepEqual(template.steps[2].passRule,{min:0,max:5});
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Fridge checks',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const save=async(run,body)=>app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,...body});
+ let run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;
+ let result=await save(run,{complete:true,answers:{[fridge.id]:'no',[temp.id]:3}});assert.equal(result.status,400);assert.match(result.data.error,/What happened/);
+ result=await save(run,{complete:true,answers:{[fridge.id]:'no',[why.id]:'Door left open',[temp.id]:3}});assert.equal(result.status,400);assert.match(result.data.error,/corrective action/);
+ result=await save(run,{complete:true,answers:{[fridge.id]:'maybe',[temp.id]:3}});assert.equal(result.status,400);
+ result=await save(run,{complete:true,answers:{[fridge.id]:'no',[why.id]:'Door left open',[temp.id]:7},actions:{[fridge.id]:{note:'Closed the door and rechecked'}}});assert.equal(result.status,200,JSON.stringify(result.data));
+ assert.deepEqual(result.data.actions,{[fridge.id]:{note:'Closed the door and rechecked'}});assert.equal(result.data.status,'completed');
+ const store=ops.createStore(app.dir,{locations:async()=>[{id:app.first,name:'Office',companyId:'default'}],now:()=>Date.parse('2026-10-19T02:00Z')}),row=(await store.report(app.member.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);
+ assert.deepEqual(row.steps.map(step=>[step.title,step.outcome]),[['Fridge OK?','fail'],['What happened?',null],['Temperature','fail']]);assert.equal(row.steps[0].actionDone,true);
+ // A follow-up hidden by a passing answer is not required and doesn't count in reports.
+ run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id,requestId:crypto.randomUUID()})).data;
+ result=await save(run,{complete:true,answers:{[fridge.id]:'yes',[temp.id]:4}});assert.equal(result.status,200,JSON.stringify(result.data));
+ const second=(await store.report(app.member.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);assert.deepEqual(second.steps.map(step=>step.title),['Fridge OK?','Temperature']);
+ const actionsOnly=await app.api(app.member,'/runs/'+run.id,'GET');assert.ok(!JSON.stringify(actionsOnly.data).includes('Closed the door'),'actions stay on their own run');
+}finally{await app.close();}});

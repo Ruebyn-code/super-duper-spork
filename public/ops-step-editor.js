@@ -1,6 +1,6 @@
 // Optional settings let other builders (for example in-store training) reuse this editor:
 // kinds limits the step types, selectionSources limits selection item sources and extraDetails adds a step's own settings.
-window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audienceOptions,kinds,selectionSources,extraDetails})=>{
+window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audienceOptions,kinds,selectionSources,extraDetails,logic:withLogic=false})=>{
  const model=opsStepModel,timing=opsStepTiming,opened=new Set(),kindList=kinds||model.kinds,kindName=type=>kindList[type]||model.kinds[type]||type;let items=[],drag=null,scrollFrame=0;
  const el=(tag,cls)=>{const node=document.createElement(tag);if(cls)node.className=cls;return node;};
  const input=(type,value)=>{const node=el('input');node.type=type;node.value=value??'';return node;};
@@ -55,8 +55,44 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   if(step.type==='signature')selectField('signatureMode','Signature method',[['either','Type or draw'],['drawn','Draw signature'],['typed','Type name']],step.signatureMode||'either');
   basics?.querySelector(':scope>.ops-audience-fields')?.remove();if(!model.isSection(step)&&audienceOptions){const audience=audienceSection(step);if(basics)(basics.querySelector(':scope>.ops-toggle')?basics.querySelector(':scope>.ops-toggle').before(audience):basics.append(audience));else grid.append(audience);grid.prepend(ui('p','Visible at / to: leave blank for everyone. People who can’t see a step don’t need to complete it.','ops-audience-help ops-wide'));}
   extraDetails?.(step,grid,changed);
+  if(withLogic&&window.opsStepLogic)grid.append(logicSection(step,host));
   host.append(grid);
  }
+ // Logic: show this step only after a matching earlier answer, pass/fail the answer and ask for a corrective action.
+ function logicSection(step,host){
+  const logic=window.opsStepLogic,box=el('fieldset','ops-logic-fields ops-wide'),legend=el('legend');legend.append(ui('span','Logic'));box.append(legend);
+  const redraw=()=>{details(step,host);refreshLogicBadge(step,host.closest('.ops-step-editor'));};
+  const select=(caption,options,value,onPick)=>{const control=el('select');control.setAttribute('aria-label',caption);choices(control,options,value);control.onchange=()=>{onPick(control.value);changed();redraw();};const wrap=field(caption,control);box.append(wrap);return control;};
+  if(logic.canHaveCondition(step)){
+   const index=items.findIndex(item=>item.id===step.id),sources=items.slice(0,Math.max(0,index)).filter(item=>logic.operators(item).length);
+   const current=sources.find(item=>item.id===step.showWhen?.stepId);
+   select('Show this step',[['','Always'],...sources.map(item=>[item.id,'When “'+(item.title||'Untitled step')+'”…'])],current?.id||'',value=>{if(!value){delete step.showWhen;return;}const source=sources.find(item=>item.id===value),operator=logic.operators(source)[0],options=logic.valueOptions(source);step.showWhen={stepId:value,operator,...(logic.needsValue(operator)?{value:options[0]?.[0]??0}:{})};});
+   if(current){
+    select('Rule',logic.operators(current).map(key=>[key,logic.operatorNames[key]]),step.showWhen.operator,value=>{const options=logic.valueOptions(current);step.showWhen={stepId:current.id,operator:value,...(logic.needsValue(value)?{value:['lt','gt'].includes(value)?(typeof step.showWhen.value==='number'?step.showWhen.value:0):(options.some(([key])=>key===step.showWhen.value)?step.showWhen.value:options[0]?.[0])}:{})};});
+    if(['is','isNot'].includes(step.showWhen.operator))select('Answer',logic.valueOptions(current),step.showWhen.value,value=>{step.showWhen.value=value;});
+    if(['lt','gt'].includes(step.showWhen.operator)){const number=input('number',step.showWhen.value);number.step='any';number.oninput=()=>{if(number.value!==''){step.showWhen.value=Number(number.value);changed();}};box.append(field('Number',number));}
+   }else if(!sources.length)box.append(ui('p','Add a checkbox, Yes / No / N/A, number or custom selection step above this one to show it conditionally.','small ops-wide'));
+  }
+  if(logic.canHaveRule(step)){
+   if(step.type==='yes-no-na')select('Pass/fail check',[['','No pass rule'],['yes','Yes passes'],['no','No passes']],step.passRule?.pass||'',value=>{if(value)step.passRule={pass:value};else{delete step.passRule;delete step.failAction;}});
+   else if(step.type==='number'){
+    const toggle=input('checkbox');toggle.checked=Boolean(step.passRule);toggle.setAttribute('role','switch');toggle.onchange=()=>{if(toggle.checked)step.passRule={min:step.min??null,max:step.max??null};else{delete step.passRule;delete step.failAction;}changed();redraw();};const wrap=field('Pass/fail check',toggle);wrap.className='ops-toggle';box.append(wrap);
+    if(step.passRule)for(const[key,caption]of[['min','Lowest passing value'],['max','Highest passing value']]){const control=input('number',step.passRule[key]);control.step='any';control.oninput=()=>{step.passRule[key]=control.value===''?null:Number(control.value);changed();};box.append(field(caption,control));}
+   }else{
+    const wrap=el('div','ops-logic-pass ops-wide');wrap.append(ui('span','Passing items (none ticked = no pass rule)','ops-logic-caption'));
+    for(const option of (step.options||[]).map(value=>value.trim()).filter(Boolean)){const box2=input('checkbox');box2.checked=Boolean(step.passRule?.options?.includes(option));box2.onchange=()=>{const chosen=new Set(step.passRule?.options||[]);if(box2.checked)chosen.add(option);else chosen.delete(option);if(chosen.size)step.passRule={options:(step.options||[]).filter(value=>chosen.has(value))};else{delete step.passRule;delete step.failAction;}changed();redraw();};const label=el('label','ops-option');label.append(box2,data('span',option));wrap.append(label);}
+    box.append(wrap);
+   }
+   if(step.passRule){
+    const wrap=el('div','ops-logic-pass ops-wide');wrap.append(ui('span','If it fails, require','ops-logic-caption'));
+    for(const[key,caption]of[['note','A note on what was done'],['photo','A photo']]){const toggle=input('checkbox');toggle.checked=Boolean(step.failAction?.[key]);toggle.onchange=()=>{const next={note:Boolean(step.failAction?.note),photo:Boolean(step.failAction?.photo),[key]:toggle.checked};if(next.note||next.photo)step.failAction=next;else delete step.failAction;changed();refreshLogicBadge(step,host.closest('.ops-step-editor'));};const label=el('label','ops-option');label.append(toggle,ui('span',caption));wrap.append(label);}
+    box.append(wrap);
+   }
+  }
+  box.append(ui('p','Hidden steps aren’t required. Failed answers are flagged and lower the completion rate in reports.','small ops-wide'));
+  return box;
+ }
+ function refreshLogicBadge(step,node){const top=node?.querySelector('.ops-step-top');if(!top||!withLogic)return;let badge=top.querySelector('.ops-step-logic-badge');const parts=[step.showWhen&&'Conditional',step.passRule&&'Pass/fail'].filter(Boolean);if(!parts.length){badge?.remove();return;}if(!badge){badge=el('span','ops-step-logic-badge');top.append(badge);}badge.textContent=parts.join(' · ');badge.title=[window.opsStepLogic?.conditionText(step,items),window.opsStepLogic?.ruleText(step)].filter(Boolean).join('. ');}
  // Who sees this step: omitted lists mean everyone; chips add specific locations or permission levels.
  function audienceGroups(step){const options=audienceOptions?.()||{};return[['locationIds','Locations','All locations',(options.locations||[]).map(item=>[item.id,item.name])],['roleIds','Permission levels','Everyone',(options.levels||[]).map(item=>[item.id,item.name])]].map(([key,label,allLabel,items])=>{const all=[...items];for(const id of step[key]||[])if(!all.some(([known])=>known===id))all.push([id,'Unavailable']);return{key,label,allLabel,title:key==='locationIds'?'Visible at':'Visible to',items:all};});}
  function audienceSummary(step){if(model.isSection(step))return '';const parts=[];for(const group of audienceGroups(step)){const ids=step[group.key];if(!Array.isArray(ids))continue;parts.push(ids.length===1?(group.items.find(([id])=>id===ids[0])?.[1]||'1 selected'):ids.length+(group.key==='locationIds'?' locations':' permission levels'));}return parts.join(' · ');}
@@ -78,7 +114,7 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
    title.className='ops-step-title-input';syncTitle(step,title);title.maxLength=200;title.setAttribute('aria-label','Step title');title.placeholder=typeof interfaceLabel==='function'?interfaceLabel('Step title'):'Step title';title.oninput=()=>{step.title=title.value;changed();};
    const edit=iconButton('Step options','<path d="m8 10 4 4 4-4"/>',()=>{opened.has(step.id)?opened.delete(step.id):opened.add(step.id);toggle();});
    const remove=iconButton('Remove step','<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15"/><g class="icon-detail"><path d="M10 10v7M14 10v7"/></g>',()=>{if(items.length===1)return;items=items.filter(item=>item.id!==step.id);opened.delete(step.id);changed();render(items);});remove.disabled=items.length===1;
-   function toggle(){body.hidden=!opened.has(step.id);edit.setAttribute('aria-expanded',String(!body.hidden));node.classList.toggle('ops-step-open',!body.hidden);}toggle();const typeField=field('Step type',type);typeField.className='ops-step-type-field';const basics=el('div','ops-step-basics');basics.append(typeField);body.append(basics,config);top.append(handle,number,title,kind,edit,remove);node.append(top,body);details(step,config);refreshBadge(step,node);host.append(node);typePicker(type);
+   function toggle(){body.hidden=!opened.has(step.id);edit.setAttribute('aria-expanded',String(!body.hidden));node.classList.toggle('ops-step-open',!body.hidden);}toggle();const typeField=field('Step type',type);typeField.className='ops-step-type-field';const basics=el('div','ops-step-basics');basics.append(typeField);body.append(basics,config);top.append(handle,number,title,kind,edit,remove);node.append(top,body);details(step,config);refreshBadge(step,node);refreshLogicBadge(step,node);host.append(node);typePicker(type);
   }
  }
  window.addEventListener('pointermove',event=>drag?.move(event));window.addEventListener('pointerup',()=>endDrag());window.addEventListener('pointercancel',()=>endDrag(true));host.addEventListener('lostpointercapture',()=>{if(drag)endDrag(true);});

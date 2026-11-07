@@ -405,7 +405,7 @@
   'Enter the required responses, photos or other evidence and wait for saves to finish.',
   'For a checklist with one checkbox response, use the card’s tick to complete it directly.',
   'When all required responses are saved and uploads finish, completion is recorded. Review History for completed or earlier work.'
- ],{popular:true,route:'/ops-management#checklists',permissions:['ops.view'],notes:['Active cards only appear during their planned window and leave the list when it ends. History retains saved work. Opening a card alone does not complete it.'],related:['checklist-builder','checklist-planners','checklist-history'],keywords:['task','tick','one step','active']});
+ ],{popular:true,route:'/ops-management#checklists',permissions:['ops.view'],notes:['Some steps appear only after an earlier answer. If an answer fails its check it is marked Failed; add the requested note or photo under Corrective action before the checklist can finish.','Active cards only appear during their planned window and leave the list when it ends. History retains saved work. Opening a card alone does not complete it.'],related:['checklist-builder','checklist-planners','checklist-history'],keywords:['task','tick','one step','active']});
  add(c,'checklist-builder','Build a checklist','Create instructions and response steps before planning its use.',[
   'Open Checklists → Checklist builder and create or edit a checklist.',
   'Add sections, instructions and response steps. Choose the response type and set required fields or validation.',
@@ -417,7 +417,7 @@
   'Set required status, options or numeric precision where available.',
   'Use instructions or section headings to explain the task; these are not responses.',
   'Configure timed sections when a minimum elapsed process is needed, then review the complete checklist before planning it.'
- ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Step activity and completion are recorded from saved work. Required uploads and active editing must finish before completion.'],related:['checklist-builder','complete-checklist']});
+ ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Use Yes / No / N/A for quick checks; N/A never counts as a fail. Open a step’s options and use Logic to show it only when an earlier answer matches (for example, when “Fridge OK?” is No), set a pass/fail check (which answer passes, a passing number range, or passing items), and require a note and/or photo as the corrective action when it fails. Hidden steps aren’t required; failed answers are flagged in the checklist and lower the completion rate in Reporting.','Step activity and completion are recorded from saved work. Required uploads and active editing must finish before completion.'],related:['checklist-builder','complete-checklist']});
  add(c,'checklist-planners','Configure checklist Plans','Use one planner for each checklist.',[
   'Open the checklist’s Plans stage. Choose Set up planner if none exists, or Edit planner to change its single planner.',
   'Choose recurrence, a start date and fixed times or location trading hours. Plan breakdown shows repeats, active hours and deadlines. Expand Current and next runs for exact windows. Planners continue until paused; once off still runs once.',

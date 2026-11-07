@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),crypto=require('node:crypto');
 const model=require('./public/reporting-progress-model'),operations=require('./reporting-operations'),fixture=require('./test-support/reporting-progress-fixture.cjs');
 test('progress rates use completed work over active assignments, preserve zero and exclude cancelled work',()=>{
- const rows=[{status:'completed'},{status:'overdue'},{status:'in-progress'},{status:'not-started'},{status:'cancelled'}];assert.deepEqual(model.summary(rows),{total:4,completed:1,overdue:1,inProgress:1,notStarted:1,timedFails:0,timedFailRuns:0,rate:25});assert.equal(model.summary([]).rate,null);assert.equal(model.summary([{status:'overdue'}]).rate,0);
+ const rows=[{status:'completed'},{status:'overdue'},{status:'in-progress'},{status:'not-started'},{status:'cancelled'}];assert.deepEqual(model.summary(rows),{total:4,completed:1,overdue:1,inProgress:1,notStarted:1,timedFails:0,timedFailRuns:0,ruleFails:0,rate:25});assert.equal(model.summary([]).rate,null);assert.equal(model.summary([{status:'overdue'}]).rate,0);
  const locations=[{id:'a',name:'A',companyId:'company'},{id:'b',name:'B',companyId:'company'},{id:'c',name:'C',companyId:'company'}],shared={status:'completed',companyId:'company',locationIds:['a','b']},ranked=model.progressRankings([shared],locations);assert.deepEqual(ranked.map(r=>[r.name,r.rank,r.value]),[['A',1,100],['B',1,100],['C',null,null]]);assert.equal(model.summary([shared]).total,1);
 });
 test('financial location rankings are weighted, handle ties and losses, and leave missing figures unranked',()=>{

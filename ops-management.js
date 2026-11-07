@@ -1,6 +1,7 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions'),files=require('./communication-media');
 const stepModel=require('./public/ops-step-model'),plannerModel=require('./public/ops-planner-model'),stepTiming=require('./public/ops-step-timing');
+const stepLogic=require('./public/ops-step-logic');
 const queues=new Map(),types=[...Object.keys(stepModel.kinds),'yesno','choice','multiple','photo','date','time'];
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/i.test(value);
@@ -19,7 +20,7 @@ function normalize(input){
  if(endDate&&endDate<startDate)fail('The end date must follow the start date.');
  if(s.kind==='weekly'&&(!Number.isInteger(s.weekday)||s.weekday<1||s.weekday>7))fail('Choose the weekly due day.');
  if(!Array.isArray(input.steps)||!input.steps.length||input.steps.length>100)fail('Add between 1 and 100 steps.');
- const ids=new Set(),steps=input.steps.map(step=>{
+ const ids=new Set(),earlier=[],steps=input.steps.map(step=>{
   if(!step||!types.includes(step.type)||!uuid(step.id)||ids.has(step.id)||typeof step.required!=='boolean')fail('Choose valid, unique checklist steps.');
   ids.add(step.id);
   const result={id:step.id,type:step.type,title:step.type==='timed-section'?stepTiming.sectionTitle(step):text(step.title,200,'a step title'),help:text(step.help??'',2000,'step instructions',true),required:stepModel.responseStep(step)&&step.required};
@@ -66,6 +67,26 @@ function normalize(input){
    if(!Array.isArray(value)||!value.length||value.length>max||value.some(id=>typeof id!=='string'||!id||id.length>80)||new Set(value).size!==value.length)fail('Choose at least one of the '+label+' for “'+result.title+'”, or show it to everyone.');
    result[key]=[...value];
   }
+  // Optional logic: pass rule, corrective action on fail and show-when rule (source must be an earlier step).
+  if(step.passRule!==undefined&&step.passRule!==null){
+   const rule=step.passRule;if(!stepLogic.canHaveRule(result)||!rule||typeof rule!=='object'||Array.isArray(rule))fail('Choose a valid pass rule for “'+result.title+'”.');
+   if(result.type==='yes-no-na'){if(!['yes','no'].includes(rule.pass))fail('Choose which answer passes for “'+result.title+'”.');result.passRule={pass:rule.pass};}
+   else if(result.type==='number'){const limits={};for(const key of ['min','max']){const value=rule[key]===undefined||rule[key]===''?null:rule[key];if(value!==null&&!stepModel.validNumber({...result,min:null,max:null},value))fail('Enter valid pass limits for “'+result.title+'”.');limits[key]=value;}if(limits.min===null&&limits.max===null)fail('Enter a lowest or highest passing value for “'+result.title+'”.');if(limits.min!==null&&limits.max!==null&&limits.min>limits.max)fail('The lowest passing value must not exceed the highest for “'+result.title+'”.');result.passRule=limits;}
+   else{if(!Array.isArray(rule.options)||!rule.options.length||rule.options.length>100||new Set(rule.options).size!==rule.options.length||rule.options.some(value=>!result.options.includes(value)))fail('Choose the passing items for “'+result.title+'”.');result.passRule={options:[...rule.options]};}
+  }
+  if(step.failAction!==undefined&&step.failAction!==null){
+   const action=step.failAction;if(!result.passRule||!action||typeof action!=='object'||typeof action.note!=='boolean'||typeof action.photo!=='boolean'||!action.note&&!action.photo)fail('Choose a note and/or photo for the corrective action on “'+result.title+'”.');
+   result.failAction={note:action.note,photo:action.photo};
+  }
+  if(step.showWhen!==undefined&&step.showWhen!==null){
+   const condition=step.showWhen,source=earlier.find(item=>item.id===condition?.stepId);
+   if(!stepLogic.canHaveCondition(result)||!condition||typeof condition!=='object'||!source||!stepLogic.operators(source).includes(condition.operator))fail('Choose an earlier step and rule for when “'+result.title+'” shows.');
+   const value={stepId:source.id,operator:condition.operator};
+   if(['is','isNot'].includes(condition.operator)){if(!stepLogic.valueOptions(source).some(([option])=>option===condition.value))fail('Choose the answer that shows “'+result.title+'”.');value.value=condition.value;}
+   if(['lt','gt'].includes(condition.operator)){if(!stepModel.validNumber({...source,min:null,max:null},condition.value))fail('Enter the number that shows “'+result.title+'”.');value.value=condition.value;}
+   result.showWhen=value;
+  }
+  earlier.push(result);
   return result;
  });
  return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps};
@@ -144,17 +165,17 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   return options;
  }
  async function presentRun(state,actor,stores,run){
-  const attached=new Set(run.snapshot.steps.flatMap(step=>stepModel.assetIds(step,run.answers[step.id]))),resources={};
+  const attached=new Set([...run.snapshot.steps.flatMap(step=>stepModel.assetIds(step,run.answers[step.id])),...Object.values(run.actions||{}).flatMap(action=>action?.photos||[])]),resources={};
   for(const asset of state.assets.filter(asset=>asset.runId===run.id&&(run.status==='draft'||attached.has(asset.id)))){
    const record=asset.name?asset:await media.info(asset.id);
    resources[asset.id]={id:asset.id,name:record.name,mime:record.mime,size:record.size,url:'/api/ops-management/media/'+asset.id};
   }
   const view=structuredClone(run),hidden=new Set(run.snapshot.steps.filter(step=>!stepApplies(step,run.locationId,actor)).map(step=>step.id));
-  if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
+  if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];if(view.actions)delete view.actions[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
   const options=await selectionOptions(actor,stores,run);for(const id of hidden)delete options[id];
   return{...view,selectionOptions:options,resources};
  }
- const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps;return{...result,title:snapshot.title,stepCount:steps.filter(stepModel.responseStep).length,answered:steps.filter(step=>stepModel.responseStep(step)&&stepModel.answered(step,answers[step.id])).length};};
+ const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
@@ -171,7 +192,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
     const run=state.runs.findLast(run=>runPlanner(run)===plan.id&&run.locationId===store.id&&(slot.key===null?run.status==='draft':run.periodKey===slot.key)),storedPlan=run?.snapshot.planner?{...run.snapshot.planner,active:true,schedule:run.snapshot.planner.schedule||run.snapshot.schedule}:plan,storedSlot=run?plannerModel.period(storedPlan,run.workDate||slot.startDate)||slot:slot,activeWindow=run?.activeWindow||plannerModel.activeWindow(storedPlan,storedSlot,store.tradingHours);
     if(!plannerModel.visible(activeWindow,now()))continue;if(activeWindow.closesAt<nextChangeAt)nextChangeAt=activeWindow.closesAt;
     const currentDue=plannerModel.due(plan,slot,store.tradingHours),dueDate=run?run.dueDate:currentDue.dueDate,dueAt=run?(run.dueAt!==undefined?run.dueAt:plannerModel.deadline(dueDate,run.snapshot.planner?.dueTime)):currentDue.dueAt,reminderMinutes=run?(run.snapshot.planner?.reminderMinutes||0):plan.reminderMinutes,dueTime=run?((run.snapshot.planner?.tradingHours||run.snapshot.schedule.kind==='hourly')&&dueAt?plannerModel.local(Date.parse(dueAt)).slice(11,16):run.snapshot.planner?.dueTime||null):currentDue.dueTime;
-    tasks.push({plannerId:plan.id,plannerName:run?.plannerName||plan.title,templateId:template.id,title:run?.snapshot.title||template.title,locationId:store.id,locationName:store.name,type:plannerModel.type(plan),schedule:plan.schedule.kind,periodKey:slot.key,activeWindow,workDate:run?.workDate||slot.tradingDate||day,dueDate,dueAt,availability:{...activeWindow,allowed:true},startWindow:{plan:{schedule:{endDate:plan.schedule.endDate||null},startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,tradingHours:plan.tradingHours||null},slot,...(plan.tradingHours?{hours:store.tradingHours||[]}: {})},dueTime,reminderMinutes,priority:run?(run.snapshot.planner?.priority||'normal'):plan.priority,timing:run?.status==='completed'?null:plannerModel.timing(dueAt,reminderMinutes,now()),quickStep:(()=>{const steps=visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor).filter(stepModel.responseStep);return steps.length===1&&steps[0].type==='check'?{id:steps[0].id,title:steps[0].title}:null;})(),stepCount:visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor).filter(stepModel.responseStep).length,run:run?summary(run,actor):null});
+    tasks.push({plannerId:plan.id,plannerName:run?.plannerName||plan.title,templateId:template.id,title:run?.snapshot.title||template.title,locationId:store.id,locationName:store.name,type:plannerModel.type(plan),schedule:plan.schedule.kind,periodKey:slot.key,activeWindow,workDate:run?.workDate||slot.tradingDate||day,dueDate,dueAt,availability:{...activeWindow,allowed:true},startWindow:{plan:{schedule:{endDate:plan.schedule.endDate||null},startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,tradingHours:plan.tradingHours||null},slot,...(plan.tradingHours?{hours:store.tradingHours||[]}: {})},dueTime,reminderMinutes,priority:run?(run.snapshot.planner?.priority||'normal'):plan.priority,timing:run?.status==='completed'?null:plannerModel.timing(dueAt,reminderMinutes,now()),quickStep:(()=>{const all=visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor),steps=all.filter(stepModel.responseStep);return steps.length===1&&steps[0].type==='check'&&!all.some(step=>step.showWhen||step.passRule)?{id:steps[0].id,title:steps[0].title}:null;})(),stepCount:stepLogic.evaluate(visibleSteps(run?run.snapshot.steps:template.steps,store.id,actor),run?.answers||{}).responses.length,run:run?summary(run,actor):null});
    }
   }
   const priority={urgent:0,high:1,normal:2};tasks.sort((a,b)=>(priority[a.priority]-priority[b.priority])||(a.dueAt||'z').localeCompare(b.dueAt||'z')||a.title.localeCompare(b.title));
@@ -180,13 +201,13 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
  function reportSteps(list,run,locationId,actor,current){
-  const timing=run?stepTiming.evaluate(run):{byStep:{},sections:[]},windows=new Map(timing.sections.map(item=>[item.id,item.window])),visible=new Set(visibleSteps(list,locationId,actor).map(step=>step.id)),result=[];let section=null;
+  const timing=run?stepTiming.evaluate(run):{byStep:{},sections:[]},windows=new Map(timing.sections.map(item=>[item.id,item.window])),mine=visibleSteps(list,locationId,actor),visible=new Set(mine.map(step=>step.id)),off=stepLogic.hidden(mine,run?.answers||{}),result=[];let section=null;
   for(const step of list){
    if(stepModel.isSection(step)){section=step.type==='timed-section'?{id:step.id,title:stepTiming.sectionTitle(step),timed:true,window:windows.get(step.id)||null,startTime:step.startTime||null,endTime:step.endTime||null}:{id:step.id,title:step.title||'Section',timed:false};continue;}
-   if(!stepModel.responseStep(step)||!visible.has(step.id))continue;
+   if(!stepModel.responseStep(step)||!visible.has(step.id)||off.has(step.id))continue;
    const done=!!run&&stepModel.answered(step,run.answers?.[step.id]),activity=run?.stepActivity?.[step.id];let state=null;
    if(section?.timed){state=run?(timing.byStep[step.id]?.state||'pending'):'pending';if(state==='pending'&&section.window&&Date.parse(section.window.end)<current)state='missed';}
-   result.push({id:step.id,title:step.title||'Checklist step',type:step.type,sectionId:section?.id||null,sectionTitle:section?.title||'',timed:!!section?.timed,startTime:section?.timed?section.startTime:null,endTime:section?.timed?section.endTime:null,done,completedAt:done&&activity?.completedAt||null,completedBy:done&&activity?.completedBy||'',timing:state});
+   result.push({id:step.id,title:step.title||'Checklist step',type:step.type,sectionId:section?.id||null,sectionTitle:section?.title||'',timed:!!section?.timed,startTime:section?.timed?section.startTime:null,endTime:section?.timed?section.endTime:null,done,completedAt:done&&activity?.completedAt||null,completedBy:done&&activity?.completedBy||'',timing:state,ruled:Boolean(step.passRule),outcome:done?stepLogic.outcome(step,run.answers?.[step.id]):null,actionDone:done&&stepLogic.outcome(step,run.answers?.[step.id])==='fail'&&step.failAction?!stepLogic.actionMissing(step,run.answers[step.id],run.actions?.[step.id]).length:null});
   }
   return result;
  }
@@ -299,16 +320,14 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(!stepModel.responseStep(step))continue;
    if(!stepApplies(step,run.locationId,actor)){if(run.answers[step.id]!==undefined)result[step.id]=run.answers[step.id];if(run.selectionLabels?.[step.id])labels[step.id]=run.selectionLabels[step.id];continue;}
    let value=input[step.id];const missing=value===undefined||value===null||value===''||Array.isArray(value)&&!value.length;
-   if(complete&&step.required&&(missing||step.type==='check'&&value!==true))fail('Complete the required step: '+step.title);
    if(missing)continue;
    if(['text','textarea'].includes(step.type)){
-    value=text(value,step.type==='textarea'?5000:500,'an answer',true);
-    if(complete&&step.required&&!value)fail('Complete the required step: '+step.title);
+    value=text(value,step.type==='textarea'?5000:500,'an answer',true);if(!value)continue;
    }
    if(step.type==='signature'){
     if(typeof value==='string'){
      if(step.signatureMode==='drawn')fail('Draw a signature for '+step.title+'.');
-     value=text(value,500,'a signature',true);if(complete&&step.required&&!value)fail('Complete the required step: '+step.title);
+     value=text(value,500,'a signature',true);if(!value)continue;
     }else{
      if(!value||typeof value!=='object'||Array.isArray(value)||!['drawn','either'].includes(step.signatureMode)||!state.assets.some(asset=>asset.id===value.assetId&&asset.runId===run.id&&asset.stepId===step.id&&asset.kind==='signature'))fail('Add a valid signature for '+step.title+'.');
      value={name:text(value.name,500,'the signer’s name'),assetId:value.assetId};
@@ -316,6 +335,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    }
    if(step.type==='check'&&typeof value!=='boolean')fail('Choose a valid checkbox answer.');
    if(step.type==='number'&&!stepModel.validNumber(step,value))fail('Enter a number matching the format and limits for '+step.title+'.');
+   if(step.type==='yes-no-na'&&!['yes','no','na'].includes(value))fail('Choose Yes, No or N/A for '+step.title+'.');
    if(step.type==='yesno'&&!['yes','no'].includes(value)||step.type==='choice'&&!step.options.includes(value))fail('Choose an answer for '+step.title+'.');
    if(step.type==='multiple'&&(!Array.isArray(value)||value.length>100||new Set(value).size!==value.length||value.some(item=>!step.options.includes(item))))fail('Choose valid answers for '+step.title+'.');
    if(step.type==='selection'){
@@ -333,7 +353,27 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(['media','file'].includes(step.type)&&(!Array.isArray(value)||value.length>step.maxFiles||new Set(value).size!==value.length||value.some(id=>typeof id!=='string'||!state.assets.some(asset=>asset.id===id&&asset.runId===run.id&&asset.stepId===step.id&&asset.kind===step.type))))fail('Upload valid files for '+step.title+'.');
    result[step.id]=value;
   }
-  return{values:result,labels};
+  // Steps hidden by show-when rules (for this person) are not required; answers already saved stay unchanged.
+  const mine=visibleSteps(run.snapshot.steps,run.locationId,actor),logic=stepLogic.evaluate(mine,result,{});
+  if(complete)for(const step of logic.responses)if(step.required&&!stepModel.answered(step,result[step.id]))fail('Complete the required step: '+step.title);
+  return{values:result,labels,hidden:logic.hidden,mine};
+ }
+ // Corrective actions for failed answers: a note and/or photos, kept separately from answers.
+ function actions(state,run,input,values,hiddenIds,mine,complete,actor){
+  if(input!==undefined&&(input===null||typeof input!=='object'||Array.isArray(input)))fail('Choose valid corrective actions.');
+  const result={},given=input||{},allowed=new Map(mine.filter(step=>step.failAction).map(step=>[step.id,step]));
+  for(const key of Object.keys(given))if(!allowed.has(key))fail('Choose valid corrective actions.');
+  // Keep actions on steps this person can't see.
+  for(const [key,saved] of Object.entries(run.actions||{}))if(!mine.some(step=>step.id===key))result[key]=saved;
+  for(const [key,step] of allowed){
+   const value=input===undefined?run.actions?.[key]:given[key];if(value===undefined||value===null)continue;
+   if(typeof value!=='object'||Array.isArray(value))fail('Choose a valid corrective action for '+step.title+'.');
+   const note=value.note===undefined||value.note===null?'':text(value.note,1000,'a corrective note',true),photos=value.photos===undefined?[]:value.photos;
+   if(!Array.isArray(photos)||photos.length>5||new Set(photos).size!==photos.length||photos.some(id=>typeof id!=='string'||!state.assets.some(asset=>asset.id===id&&asset.runId===run.id&&asset.stepId===step.id&&asset.kind==='action')))fail('Upload valid corrective photos for '+step.title+'.');
+   if(note||photos.length)result[key]={...(note?{note}:{}),...(photos.length?{photos:[...photos]}:{})};
+  }
+  if(complete)for(const step of mine){if(hiddenIds.has(step.id))continue;const gaps=stepLogic.actionMissing(step,values[step.id],result[step.id]);if(gaps.length)fail('Add '+(gaps.length>1?'a note and photo':'a '+gaps[0])+' explaining the corrective action for '+step.title+'.');}
+  return result;
  }
  function recordStepActivity(run,values,actor,at){
   const activity={...run.stepActivity};
@@ -353,7 +393,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(run.status==='completed')fail('Completed checklists cannot be changed.',409);
    if(input?.revision!==run.revision)fail('Someone updated this checklist. Reload before saving.',409);
    if(typeof input.complete!=='boolean')fail('Choose a draft or completed checklist.');
-   const saved=await answers(state,run,input.answers,input.complete,actor,stores);run.stepActivity=recordStepActivity(run,saved.values,actor,stamp());run.answers=saved.values;run.selectionLabels=saved.labels;
+   const saved=await answers(state,run,input.answers,input.complete,actor,stores),savedActions=actions(state,run,input.actions,saved.values,saved.hidden,saved.mine,input.complete,actor);run.stepActivity=recordStepActivity(run,saved.values,actor,stamp());run.answers=saved.values;run.selectionLabels=saved.labels;if(Object.keys(savedActions).length||run.actions)run.actions=savedActions;
    run.revision++;run.updatedAt=stamp();run.updatedBy=actor.username;
    if(input.complete){run.status='completed';run.completedAt=stamp();run.completedBy=actor.username;run.completedById=actor.id;}
    return presentRun(state,actor,stores,run);
@@ -365,7 +405,8 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const run=findRun(state,actor,stores,id);
    if(run.status!=='draft')fail('Completed checklists cannot be changed.',409);
    if(typeof input?.name!=='string')fail('Choose a supported file.');
-   const step=run.snapshot.steps.find(step=>step.id===input?.stepId&&stepApplies(step,run.locationId,actor)),mime=files.formats[path.extname(input?.name||'').toLowerCase()],category=mime?files.category(mime):null;
+   const step=run.snapshot.steps.find(step=>step.id===input?.stepId&&stepApplies(step,run.locationId,actor)),mime=files.formats[path.extname(input?.name||'').toLowerCase()],category=mime?files.category(mime):null,forAction=input?.purpose==='action';
+   if(forAction){if(!step?.failAction?.photo)fail('Choose a step that asks for a corrective photo.');if(category!=='image')fail('Choose a photo for the corrective action.');const saved=await media.save(actor,input);state.assets.push({...saved,runId:id,stepId:step.id,kind:'action'});return{...saved,url:'/api/ops-management/media/'+saved.id};}
    if(!step||!['photo','media','file','signature'].includes(step.type))fail('Choose a file submission step.');
    if(step.type==='photo'&&category!=='image'||step.type==='media'&&(!['image','video'].includes(category)||step.mediaKind==='photo'&&category!=='image'||step.mediaKind==='video'&&category!=='video'))fail('Choose a photo or video matching this step.');
    if(step.type==='signature'&&(!['drawn','either'].includes(step.signatureMode)||mime!=='image/png'))fail('Choose a drawn signature step.');
@@ -376,7 +417,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  async function download(actor,id){
   const stores=await access(actor),state=await read(),asset=state.assets.find(item=>item.id===id);
   if(!asset)fail('File not found.',404);
-  const run=findRun(state,actor,stores,asset.runId),assetStep=run.snapshot.steps.find(step=>step.id===asset.stepId);if(assetStep&&!stepApplies(assetStep,run.locationId,actor))fail('File not found.',404);const attached=run.snapshot.steps.some(step=>stepModel.assetIds(step,run.answers[step.id]).includes(id));
+  const run=findRun(state,actor,stores,asset.runId),assetStep=run.snapshot.steps.find(step=>step.id===asset.stepId);if(assetStep&&!stepApplies(assetStep,run.locationId,actor))fail('File not found.',404);const attached=run.snapshot.steps.some(step=>stepModel.assetIds(step,run.answers[step.id]).includes(id))||Object.values(run.actions||{}).some(action=>action?.photos?.includes(id));
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
