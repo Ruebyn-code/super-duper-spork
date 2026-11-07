@@ -266,3 +266,5 @@ span.report-ranking-ring-place:not(.report-rank-place){font-size:11px;font-weigh
 #report-ranking-rows tr[data-rank] td:first-child{box-shadow:inset 3px 0 0 var(--medal)}
 .report-ranking-ring-card[data-rank="1"],.report-ranking-ring-card[data-rank="2"],.report-ranking-ring-card[data-rank="3"]{border-color:color-mix(in srgb,var(--medal) 70%,var(--line,#dbe3ea));background:color-mix(in srgb,var(--medal) 20%,var(--theme-surface,#fff))}
 @media(forced-colors:active){.report-rank-place[data-medal]{background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none}#report-ranking-rows tr[data-rank] td{background:Canvas}}
+/* Keep status badge text on the same line as the other top-aligned cells. */
+.report-progress-table td>.report-progress-badge:first-child{margin-top:-5px}

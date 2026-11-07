@@ -129,6 +129,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/reporting-activity.js':'reporting-activity.js',
   '/reporting-people.js':'reporting-people.js',
   '/reporting-checklist-steps.js':'reporting-checklist-steps.js',
+  '/reporting-table-align.js':'reporting-table-align.js',
   '/reporting-progress.js':'reporting-progress.js',
   '/reporting-progress-model.js':'reporting-progress-model.js',
   '/reporting-model.js':'reporting-model.js',
