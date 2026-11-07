@@ -514,3 +514,43 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-page .ops-step-article-field>.ops-logic-caption{flex-basis:auto;margin-right:2px}
 .ops-page .ops-step-article-field button.ops-step-article-change{min-height:28px;padding:3px 10px;font:600 .72rem/1.2 inherit;font-family:inherit;text-transform:none;letter-spacing:normal;border-radius:8px}
 .ops-page .ops-step-article-field .ops-step-article{padding:5px 9px;min-height:28px;border-radius:9px}
+/* Plans popup: schedule-dialog look — large type cards, flat sections, outlined fields and a sentence summary box. */
+#ops-planner-dialog{width:min(760px,calc(100vw - 24px));border-radius:16px}
+#ops-planner-dialog .ops-compact-schedule{--plan-line:color-mix(in srgb,var(--theme-text,#182b3a) 22%,var(--theme-surface,#fff))}
+#ops-planner-dialog .ops-compact-schedule .ops-schedule-section{border:0;border-top:1px solid var(--theme-line,#e2e8f0);border-radius:0;background:none;box-shadow:none;padding:14px 0 6px;margin:0}
+#ops-planner-dialog .ops-compact-schedule .ops-schedule-section h3>span[aria-hidden]{display:none}
+#ops-planner-dialog .ops-compact-schedule .ops-schedule-section h3{font-size:.82rem;font-weight:650}
+#ops-planner-dialog .ops-schedule-identity{padding:6px 0 12px;align-items:flex-end}
+/* Outlined fields with the label sitting on the outline. */
+#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name){position:relative;padding-top:7px;gap:0}
+#ops-planner-dialog .ops-compact-schedule .ops-field-name{position:absolute;top:0;left:9px;z-index:1;max-width:calc(100% - 18px);padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.66rem;font-weight:500;line-height:14px;color:var(--theme-muted,#5b6b7a);background:var(--theme-surface,#fff);pointer-events:none}
+#ops-planner-dialog .ops-compact-schedule label:focus-within>.ops-field-name{color:var(--theme-primary-text,var(--primary))}
+#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name) :is(input:not([type=checkbox]):not([type=hidden]),textarea,.location-select-trigger,select){min-height:40px;height:40px;padding:8px 12px;border:1px solid var(--plan-line);border-radius:6px;background:var(--theme-surface,#fff);font-size:.82rem;box-shadow:none}
+#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name) textarea{height:auto;min-height:64px}
+#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name) :is(input,textarea,.location-select-trigger,select):focus-visible{border-color:var(--primary);outline:1px solid var(--primary);outline-offset:0}
+#ops-planner-dialog .ops-schedule-name input{font-weight:500}
+/* Type cards: centred icon and name; the selected card is filled with the company colour. */
+#ops-planner-dialog .ops-plan-types{gap:10px;margin:12px 0 14px}
+#ops-planner-dialog .ops-plan-types>button{align-items:center;text-align:center;gap:3px;min-height:96px;padding:12px 8px;border:1px solid var(--plan-line);border-radius:8px;background:var(--theme-surface,#fff);box-shadow:none}
+#ops-planner-dialog .ops-plan-types>button svg{flex:none;margin-bottom:3px;color:var(--theme-muted,#5b6b7a)}
+#ops-planner-dialog .ops-plan-types strong{font-size:.84rem;font-weight:600}
+#ops-planner-dialog .ops-plan-types>button:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+#ops-planner-dialog .ops-plan-types>button[aria-pressed=true]{background-color:var(--primary);background-image:var(--brand-sheen,none);border-color:var(--primary);box-shadow:0 4px 14px color-mix(in srgb,var(--primary) 30%,transparent)}
+#ops-planner-dialog .ops-plan-types>button[aria-pressed=true] :is(strong,span,svg){color:var(--on-primary,#fff)}
+#ops-planner-dialog .ops-plan-types>button[aria-pressed=true] span{opacity:.88}
+/* Repeat row. */
+#ops-planner-dialog .ops-plan-recurrence{border:0;padding:4px 0 10px;margin:0;gap:12px}
+#ops-planner-dialog .ops-plan-recurrence>label{flex-direction:column;align-items:stretch;flex:0 0 200px}
+#ops-planner-dialog .ops-plan-recurrence #ops-plan-days .ops-location-choice{min-height:32px;padding:5px 9px;border-radius:16px;font-size:.68rem}
+#ops-planner-dialog .ops-settings-dialog .ops-config.ops-schedule-times,#ops-planner-dialog .ops-config.ops-schedule-times{gap:12px 12px;margin-bottom:10px}
+#ops-planner-dialog .ops-schedule-section-heading{margin-bottom:10px}
+#ops-planner-dialog .ops-schedule-options{margin:10px 0 0;border-radius:8px}
+/* Sentence summary box at the bottom. */
+#ops-planner-dialog .ops-compact-schedule .ops-schedule-breakdown{margin:14px 0 4px;padding:12px 14px;border:0;border-radius:6px;background:color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff))}
+#ops-planner-dialog .ops-schedule-breakdown #ops-plan-summary,#ops-planner-dialog .ops-schedule-breakdown:has(#ops-plan-breakdown-fields:not(:empty)) #ops-plan-summary{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;margin:0 0 8px;font-size:.84rem;line-height:1.45;color:var(--theme-text,#182b3a)}
+#ops-planner-dialog .ops-schedule-breakdown dl{padding-top:8px;border-top:1px solid color-mix(in srgb,var(--primary) 16%,transparent)}
+#ops-planner-dialog .ops-breakdown-heading h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--theme-primary-text,var(--primary))}
+#ops-planner-dialog .ops-settings-footer .ops-primary{min-height:38px;padding:8px 22px;border-radius:8px}
+@media(max-width:600px){#ops-planner-dialog .ops-plan-types{gap:8px}#ops-planner-dialog .ops-plan-types>button{min-height:84px;padding:10px 6px}#ops-planner-dialog .ops-plan-recurrence>label{flex:1 1 100%;max-width:none}#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name) :is(input:not([type=checkbox]):not([type=hidden]),textarea,.location-select-trigger,select){min-height:44px;height:44px;font-size:16px}#ops-planner-dialog .ops-compact-schedule label:has(>.ops-field-name) textarea{height:auto}#ops-planner-dialog .ops-schedule-breakdown #ops-plan-summary{font-size:.84rem}}
+@media(forced-colors:active){#ops-planner-dialog .ops-plan-types>button[aria-pressed=true]{border:2px solid Highlight;background:Highlight}#ops-planner-dialog .ops-plan-types>button[aria-pressed=true] :is(strong,span,svg){color:HighlightText}}
+#ops-planner-dialog .ops-plan-recurrence{align-items:flex-end}

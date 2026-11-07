@@ -29,3 +29,12 @@ test('hourly DST windows use elapsed hours and distinguish repeated clock times 
 test('incomplete dates, repeat days, fixed windows and trading offsets give usable draft feedback',()=>{
  for(const [value,pattern] of [[plan('daily',{schedule:{kind:'daily',startDate:''}}),/date/],[plan('daily',{schedule:{kind:'daily',startDate:'2026-02-30'}}),/date/],[plan('daily',{schedule:{kind:'daily',startDate:'2026-10-26',days:[]}}),/repeat day/],[plan('daily',{activeFrom:'12:00',activeUntil:'12:00'}),/active hours/],[plan('daily',{startTime:'18:00'}),/active hours/],[plan('daily',{tradingHours:{start:{anchor:'opening',offsetMinutes:1.5},until:{anchor:'closing',offsetMinutes:0}}}),/offsets/]]){assert.equal(summary.describe(value).valid,false);assert.match(summary.describe(value).message,pattern);assert.equal(summary.upcoming(value,now('2026-10-26','10:00')).windows.length,0);}
 });
+test('plan summary sentence reads the schedule in plain language without changing the rows',()=>{
+ assert.equal(summary.describe(plan('daily',{schedule:{kind:'daily',startDate:'2027-01-25'}})).sentence,'This checklist will start on 25 Jan 2027, available from 9:00 am to 5:00 pm, due the same day at 4:00 pm, and will repeat every day.');
+ const point=(anchor,offsetMinutes=0)=>({anchor,offsetMinutes}),trading=summary.describe(plan('daily',{activeFrom:null,activeUntil:null,dueTime:null,dueAfterDays:undefined,tradingHours:{start:point('closing',-60),until:point('closing'),due:point('closing',90)}}));
+ assert.match(trading.sentence,/available from 1 hour before closing until closing, due at 90 minutes after closing, and will repeat every Monday/);
+ assert.equal(summary.describe(plan('manual',{type:'on-demand',dueTime:null,activeFrom:null,activeUntil:null})).sentence,'From 26 Oct 2026, team members can start this checklist when needed, available all day, with no deadline.');
+ assert.match(summary.describe(plan('once',{type:'once',schedule:{kind:'once',startDate:'2026-10-26'},dueTime:null,dueAfterDays:1})).sentence,/^This checklist will run once on 26 Oct 2026, .*due by the end of the next day\.$/);
+ assert.match(summary.describe(plan('hourly',{active:false,schedule:{kind:'hourly',startDate:'2026-10-26',days:[1]}})).sentence,/^Paused\. When activated: this checklist .*due at the end of each hour, and will repeat every hour on Monday\.$/);
+ assert.equal(summary.describe(plan('unscheduled',{type:'unscheduled'})).sentence,undefined);assert.equal(summary.describe(plan('daily',{schedule:{kind:'daily',startDate:''}})).sentence,undefined);
+});
