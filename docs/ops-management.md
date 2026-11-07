@@ -193,3 +193,7 @@ Checklist completion rates treat timed sections as pass/fail. Any step in a time
 - The Completion rate card, Location rankings, the Progress column and the CSV export all use this score, as do scheduled OpStack intelligence report facts. Training keeps its completed ÷ total rate.
 - Timed steps still inside their window are not failures yet. A step with no recorded time isn't counted as failed.
 - Checklist Location rankings show each shop side by side as a card with its rank, a completion-rate progress ring (green 90% and above, red below 60%) and its name. Cards follow the Rank by choice; shops without matching work show an empty ring and Unranked. Each card has a spoken label with the rate. Training rankings keep their table.
+
+## Rank colours
+
+Every Reporting location ranking (Business overview, Training and the checklist ring cards) uses the same gold, silver and bronze as the Home Sales leaderboard for places 1, 2 and 3. Each gets a medal-coloured place badge (read out as, for example, "Gold · Place 1") and a matching row or card tint. Tied places share a colour, and unranked locations keep the plain style.

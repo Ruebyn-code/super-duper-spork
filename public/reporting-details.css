@@ -239,8 +239,8 @@
 .report-ranking-rings{display:flex;flex-wrap:wrap;gap:10px}
 .report-ranking-rings[hidden]{display:none}
 .report-ranking-ring-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:150px;padding:14px 10px 12px;border:1px solid var(--line,#dbe3ea);border-radius:14px;background:var(--theme-surface,#fff);text-align:center}
-.report-ranking-ring-card[data-rank="1"]{border-color:color-mix(in srgb,var(--primary) 45%,var(--line,#dbe3ea));background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
-.report-ranking-ring-place{align-self:flex-start;font-size:11px;font-weight:700;color:var(--theme-muted,#64748b)}
+.report-ranking-ring-place{align-self:flex-start}
+span.report-ranking-ring-place:not(.report-rank-place){font-size:11px;font-weight:700;color:var(--theme-muted,#64748b)}
 .report-ranking-ring-name{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .report-rank-ring{position:relative;display:inline-grid;place-items:center;width:84px;height:84px}
 .report-rank-ring svg{width:84px;height:84px;grid-area:1/1}
@@ -254,3 +254,15 @@
 @media(max-width:720px){.report-ranking-ring-card{width:calc(50% - 5px)}}
 @media(prefers-reduced-motion:reduce){.report-rank-ring-value{transition:none}}
 @media(forced-colors:active){.report-rank-ring-value{stroke:CanvasText}.report-rank-ring-track{stroke:GrayText}}
+
+/* Rank colours: gold, silver and bronze for places 1–3 wherever Reporting ranks locations (same metals as the Home leaderboard). */
+[data-medal=gold],#report-ranking-rows tr[data-rank="1"],.report-ranking-ring-card[data-rank="1"]{--medal:#e9bc42;--medal-ink:#76530b}
+[data-medal=silver],#report-ranking-rows tr[data-rank="2"],.report-ranking-ring-card[data-rank="2"]{--medal:#c5cfdc;--medal-ink:#46566a}
+[data-medal=bronze],#report-ranking-rows tr[data-rank="3"],.report-ranking-ring-card[data-rank="3"]{--medal:#d89a69;--medal-ink:#704022}
+.report-rank-place{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:700;color:var(--theme-muted,#64748b)}
+.report-rank-place[data-medal]{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--medal) 55%,#fff),var(--medal) 70%);color:var(--medal-ink);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--medal-ink) 35%,var(--medal)),0 1px 2px #0000001f}
+#report-ranking-rows tr[data-rank] td{background:color-mix(in srgb,var(--medal) 22%,var(--theme-surface,#fff))}
+#report-ranking-rows tr[data-rank]:hover td{background:color-mix(in srgb,var(--medal) 32%,var(--theme-surface,#fff))}
+#report-ranking-rows tr[data-rank] td:first-child{box-shadow:inset 3px 0 0 var(--medal)}
+.report-ranking-ring-card[data-rank="1"],.report-ranking-ring-card[data-rank="2"],.report-ranking-ring-card[data-rank="3"]{border-color:color-mix(in srgb,var(--medal) 70%,var(--line,#dbe3ea));background:color-mix(in srgb,var(--medal) 20%,var(--theme-surface,#fff))}
+@media(forced-colors:active){.report-rank-place[data-medal]{background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none}#report-ranking-rows tr[data-rank] td{background:Canvas}}
