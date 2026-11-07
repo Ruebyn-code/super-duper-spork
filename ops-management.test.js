@@ -319,3 +319,12 @@ test('checklist logic: show-when follow-ups, Yes/No/N/A pass rules and correctiv
  const second=(await store.report(app.member.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);assert.deepEqual(second.steps.map(step=>step.title),['Fridge OK?','Temperature']);
  const actionsOnly=await app.api(app.member,'/runs/'+run.id,'GET');assert.ok(!JSON.stringify(actionsOnly.data).includes('Closed the door'),'actions stay on their own run');
 }finally{await app.close();}});
+test('auto-collapse is a saved checklist setting copied into new runs and kept when older writers omit it',async()=>{const app=await fixture();try{
+ const created=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Collapse',autoCollapse:true,steps:[app.step()]})).data;assert.equal(created.autoCollapse,true);
+ const older=(await app.api(app.office,'/templates/'+created.id,'PUT',{contentOnly:true,revision:created.revision,title:'Collapse renamed',steps:created.steps})).data;assert.equal(older.autoCollapse,true,'omitted by an older client');
+ assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',autoCollapse:'yes',steps:[app.step()]})).status,400);
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:created.id,title:'Collapse',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const run=(await app.start(created.id,app.first,app.member,{plannerId:plan.id})).data;assert.equal(run.snapshot.autoCollapse,true);
+ const off=(await app.api(app.office,'/templates/'+created.id,'PUT',{contentOnly:true,revision:older.revision,title:'Collapse renamed',autoCollapse:false,steps:created.steps})).data;assert.equal(off.autoCollapse,false);
+ assert.equal((await app.api(app.member,'/runs/'+run.id)).data.snapshot.autoCollapse,true,'started runs keep their snapshot');
+}finally{await app.close();}});

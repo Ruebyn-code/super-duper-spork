@@ -218,3 +218,10 @@ Checklist steps can use logic, set in each step's options under **Logic** (Ops c
   Failed answers are marked Failed in the checklist. In Reporting they count as failed steps in the completion rate, the same as timed-section misses, and appear in the Passed column, the step history Result column and the CSV.
 - **If it fails, require** (`failAction`) asks for a note and/or a photo explaining the corrective action. Notes (up to 1000 characters) and photos (up to 5, images only) are saved in `run.actions`, separately from answers. They use the run's existing media audience and can't be completed without. Completed records show them read-only.
 - The builder clears rules that no longer fit before saving, for example when the source step is deleted, moved below the step or changes type. The server rejects invalid rules. Checklists with logic don't offer the one-tap quick tick.
+
+## Builder shortcuts and auto-collapse
+
+- Click anywhere on a step's header (not its controls) to open or close it. Adding a step closes the others so only the new step is open.
+- **Copy step** duplicates a step directly after it. Copying a section copies its steps too. Copies get new IDs, and show-when rules inside the copied block point at the copies.
+- Dragging gives faster feedback: moves animate in 90 ms, and autoscroll near the screen edge is quicker.
+- **Collapse steps once they're done while filling in** (`autoCollapse`) is a checklist setting. It's kept when older writers omit it, and copied into each new run's snapshot, so started runs keep the value they began with. In the reader, a finished response step (answered, with any corrective action recorded) shrinks to its heading once focus leaves it. Tapping the heading, or pressing Enter/Space, reopens it and it stays open. This is display-only and never saves answers.

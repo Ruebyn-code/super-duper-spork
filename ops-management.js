@@ -89,11 +89,12 @@ function normalize(input){
   earlier.push(result);
   return result;
  });
- return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps};
+ if(input.autoCollapse!==undefined&&typeof input.autoCollapse!=='boolean')fail('Choose whether completed steps collapse.');
+ return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps,...(typeof input.autoCollapse==='boolean'?{autoCollapse:input.autoCollapse}:{})};
 }
 function normalizeContent(input){
  const value=normalize({...input,locationIds:['content'],active:true,schedule:{kind:'manual',startDate:'2026-01-01'}});
- return{title:value.title,description:value.description,steps:value.steps};
+ return{title:value.title,description:value.description,steps:value.steps,...(value.autoCollapse!==undefined?{autoCollapse:value.autoCollapse}:{})};
 }
 function normalizeTradingHours(value){
  if(value===undefined||value===null)return null;
@@ -310,7 +311,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const availability=plannerModel.availability(plan,slot,now(),store.tradingHours);if(!availability.allowed)fail(availability.reason);
   const plannerSnapshot={id:plan.id,title:plan.title,schedule:structuredClone(plan.schedule),dueTime:plan.dueTime,reminderMinutes:plan.reminderMinutes,priority:plan.priority,instructions:plan.instructions,type:plannerModel.type(plan),startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,roleIds:plan.roleIds||null,dueAfterDays:plan.dueAfterDays??null,tradingHours:structuredClone(plan.tradingHours||null)};
   const due=plannerModel.due(plan,slot,store.tradingHours);
-  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:slot.tradingDate||(plan.schedule.kind==='daily'?slot.startDate:day),dueDate:due.dueDate,dueAt:due.dueAt,activeWindow:{opensAt:availability.opensAt,closesAt:availability.closesAt},snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
+  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:slot.tradingDate||(plan.schedule.kind==='daily'?slot.startDate:day),dueDate:due.dueDate,dueAt:due.dueAt,activeWindow:{opensAt:availability.opensAt,closesAt:availability.closesAt},snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),...(template.autoCollapse?{autoCollapse:true}:{}),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
  });}
  async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){

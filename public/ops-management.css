@@ -457,3 +457,36 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-corrective-photo img{width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line,#dbe3ea)}
 .ops-corrective-photo button{min-height:28px;padding:3px 10px;font-size:12px}
 @media(max-width:580px){.ops-step-top>.ops-step-logic-badge{right:60px}.ops-yes-no-na .ops-option{min-height:44px}}
+
+/* Step header: copy button, whole-header open/close and faster dragging feedback. */
+.ops-step-top{grid-template-columns:24px 18px minmax(0,1fr) auto 28px 28px 28px}
+.ops-step-top:has(.ops-step-audience-badge){grid-template-columns:24px 18px minmax(0,1fr) auto auto 28px 28px 28px}
+.ops-step-top-openable{cursor:pointer}
+.ops-step-top-openable:hover{background:color-mix(in srgb,var(--primary) 4%,transparent);border-radius:8px}
+.ops-step-top>.ops-step-logic-badge{right:100px}
+.ops-step-dragging{transition:none!important}
+@media(max-width:580px){
+ .ops-step-top,.ops-step-top:has(.ops-step-audience-badge){grid-template-columns:24px minmax(0,1fr) 26px 26px 26px}
+ .ops-step-top>.ops-step-copy{grid-column:3;grid-row:1}
+ .ops-step-top>button[aria-expanded]{grid-column:4;grid-row:1}
+ .ops-step-top>button:last-child{grid-column:5;grid-row:1}
+ .ops-step-top>.ops-step-logic-badge{right:84px}
+}
+/* Auto-collapse: finished steps shrink to their heading while filling in. */
+.ops-auto-collapse{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ops-answer.ops-answer-collapsed>:not(.ops-answer-heading){display:none!important}
+.ops-answer.ops-answer-collapsed{padding-top:8px;padding-bottom:8px}
+.ops-answer.ops-answer-collapsed .ops-answer-heading{margin-bottom:0}
+.ops-answer-heading[role=button]{cursor:pointer;border-radius:8px}
+.ops-answer-heading[role=button]:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+.ops-answer-heading[role=button]::after{content:"";flex:none;align-self:center;width:8px;height:8px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);opacity:.5;transition:transform .15s ease}
+.ops-answer:not(.ops-answer-collapsed)>.ops-answer-heading[role=button]::after{transform:rotate(-135deg)}
+@media(prefers-reduced-motion:reduce){.ops-answer-heading[role=button]::after{transition:none}}
+.ops-page .ops-auto-collapse{justify-content:flex-start;margin:0;font-size:12px;font-weight:600}
+.ops-page .ops-auto-collapse input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:30px;height:18px;min-height:0;margin:0;padding:0;border:0;border-radius:99px;background:color-mix(in srgb,var(--theme-muted,#64748b) 35%,var(--theme-surface,#fff));transition:background .15s;cursor:pointer;box-shadow:none;outline-offset:2px}
+.ops-page .ops-auto-collapse input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .15s}
+.ops-page .ops-auto-collapse input[type=checkbox]:checked{background:var(--brand-sheen,none) var(--primary,#008cff)}
+.ops-page .ops-auto-collapse input[type=checkbox]:checked::after{transform:translateX(12px)}
+.ops-page .ops-auto-collapse input[type=checkbox]:focus-visible{outline:2px solid var(--theme-primary-text,var(--primary,#008cff))}
+@media(prefers-reduced-motion:reduce){.ops-page .ops-auto-collapse input[type=checkbox],.ops-page .ops-auto-collapse input[type=checkbox]::after{transition:none}}
+@media(forced-colors:active){.ops-page .ops-auto-collapse input[type=checkbox]{appearance:auto;-webkit-appearance:auto}.ops-page .ops-auto-collapse input[type=checkbox]::after{display:none}}
