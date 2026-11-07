@@ -5,7 +5,7 @@ function movements(records,session){
  const result=[],seen=new Set();for(const record of records||[]){if(record?.status!=='received'||seen.has(record.id)||!Array.isArray(record.items))continue;seen.add(record.id);
   const outgoing=record.from?.id===session.locationId,incoming=record.to?.id===session.locationId;if(!outgoing&&!incoming)continue;
   const createdAt=outgoing?record.createdAt:record.receivedAt;if(!Number.isFinite(Date.parse(createdAt)))continue;
-  for(const [index,item] of record.items.entries()){const product=outgoing?item.source:item.target,quantity=outgoing?-item.quantity:item.targetQuantity;if(!product||!Number.isFinite(quantity))continue;result.push({id:record.id+'-'+index,transferId:record.id,createdAt,receivedAt:record.receivedAt,product,quantity,direction:outgoing?'out':'in',counterpart:outgoing?record.to:record.from,moveCosts:record.moveCosts,totalCents:record.moveCosts?(outgoing?-item.totalCents:item.totalCents):0,pricePending:false});}
+  for(const [index,item] of record.items.entries()){const product=outgoing?item.source:item.target,quantity=outgoing?-item.quantity:item.targetQuantity;if(!product||!Number.isFinite(quantity))continue;result.push({id:record.id+'-'+index,transferId:record.id,createdAt,receivedAt:record.receivedAt,product,quantity,direction:outgoing?'out':'in',counterpart:outgoing?record.to:record.from,handledBy:(outgoing?record.createdBy?.name:record.receivedBy?.name)||'',moveCosts:record.moveCosts,totalCents:record.moveCosts?(outgoing?-item.totalCents:item.totalCents):0,pricePending:false});}
  }return result;
 }
 function costLines(records,session,{startDate,endDate,weeks}={}){

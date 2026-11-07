@@ -35,3 +35,21 @@ Summary cards (actions, people, busiest hour, most active person), a **By person
 ## Rules
 
 `GET /api/reporting/activity` requires `reporting.view` in every selected company, uses the same location selection, kiosk and date-range checks as the training and checklist reports, and is read-only. Code: `reporting-operations.js` (`activity`), store readers `ops-management.activity`, `rostering.clockActivity`, `prep-labels.batchActivity`, and `public/reporting-activity.js`. Tests: `reporting-activity.test.js`.
+
+## By person on every report
+
+Every other report type has a **By person** section above its table (`public/reporting-people.js`). It is built only from the rows already loaded for that report, so it never makes extra reads or writes.
+
+| Report | Person shown |
+| --- | --- |
+| Business overview, Sales & reconciliation, Expense breakdown | Saved by |
+| Cost of goods · details | Requested by |
+| Stock transfers | Sent by (outgoing) / received by (incoming) |
+| Stored invoices | Uploaded by |
+| Stock count detail | Counted by |
+| Training progress | Learner |
+| Checklist progress | Completed or last worked by (unstarted shows "Not started yet") |
+
+Choosing a person in the dropdown, or clicking their card, filters the table, summary and export to their rows; rows with no recorded person group under "Not recorded". Reports that combine records (supplier totals, usage, bundles, platform fees, daily sales) say they don't record a person and link to the report that does.
+
+A short **Highlights** strip above it calls out the best/largest/top values for the selected rows and how many entries need attention.

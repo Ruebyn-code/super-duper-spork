@@ -62,3 +62,16 @@ test('missing reconciliation stays visible and grouped rows do not inherit a sin
  const report={company:{id:'a',name:'A'},location:{id:'a',name:'A shop'},details:{expenses:[{id:'a',category:'Op Ex',name:'Power',weekStart:'2026-10-05',billId:'old',totalCents:100},{id:'b',category:'Op Ex',name:'Power',weekStart:'2026-10-12',billId:'new',totalCents:200}],orderLines:[{id:'a',supplier:'Fresh',name:'Rice',totalCents:100,deliveryStatus:'submitted',requestedBy:'Alice'},{id:'b',supplier:'Fresh',name:'Rice',totalCents:100,deliveryStatus:'failed',requestedBy:'Bob'}]}};assert.equal(model.rows([report],'expenses',{group:'name'})[0].billId,'');const grouped=model.rows([report],'order-lines',{group:'item'})[0];assert.equal(grouped.deliveryStatus,'');assert.equal(grouped.requestedBy,'');assert.equal(grouped.totalCents,200);assert.equal(model.financeTotal([result.finance[0],{...result.finance[0],salesCents:null}]).costOfGoodsPercent,null);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('report rows filter by the person recorded on each report type and transfers keep who handled them', () => {
+ const location={id:'l1',name:'Store'},company={id:'c1',name:'Co'};
+ const reports=[{company,location,details:{counts:[{date:'2026-11-02',weekStart:'2026-11-02',name:'Fries',recordedBy:'Sam'},{date:'2026-11-03',weekStart:'2026-11-02',name:'Buns',recordedBy:'Alex'},{date:'2026-11-04',weekStart:'2026-11-02',name:'Salt',recordedBy:''}]}}];
+ assert.deepEqual(model.filtered(reports,'counts',{person:'Sam'}).map(row=>row.name),['Fries']);
+ assert.deepEqual(model.filtered(reports,'counts',{person:'Not recorded'}).map(row=>row.name),['Salt']);
+ assert.equal(model.filtered(reports,'counts',{}).length,3);
+ for(const view of ['finance','reconciliation','expenses','order-lines','transfers','invoices','counts'])assert.ok(model.views[view].person,view+' names its person');
+ const transfers=require('./stock-transfer-effects');
+ const record={id:'t1',status:'received',from:{id:'l1'},to:{id:'l2'},createdAt:'2026-11-02T01:00:00Z',receivedAt:'2026-11-02T03:00:00Z',createdBy:{name:'Sam'},receivedBy:{name:'Alex'},moveCosts:false,items:[{source:'p1',target:'p2',quantity:2,targetQuantity:2}]};
+ const rows=transfers.movements([record],{locationId:'l1'}).concat(transfers.movements([record],{locationId:'l2'}));
+ assert.equal(rows.length,2);assert.ok(rows.every(row=>row.handledBy===(row.direction==='out'?'Sam':'Alex')));
+});

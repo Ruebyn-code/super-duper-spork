@@ -127,6 +127,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/reporting.js':'reporting.js',
   '/reporting-guide.js':'reporting-guide.js',
   '/reporting-activity.js':'reporting-activity.js',
+  '/reporting-people.js':'reporting-people.js',
   '/reporting-progress.js':'reporting-progress.js',
   '/reporting-progress-model.js':'reporting-progress-model.js',
   '/reporting-model.js':'reporting-model.js',
