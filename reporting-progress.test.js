@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),crypto=require('node:crypto');
 const model=require('./public/reporting-progress-model'),operations=require('./reporting-operations'),fixture=require('./test-support/reporting-progress-fixture.cjs');
 test('progress rates use completed work over active assignments, preserve zero and exclude cancelled work',()=>{
- const rows=[{status:'completed'},{status:'overdue'},{status:'in-progress'},{status:'not-started'},{status:'cancelled'}];assert.deepEqual(model.summary(rows),{total:4,completed:1,overdue:1,inProgress:1,notStarted:1,rate:25});assert.equal(model.summary([]).rate,null);assert.equal(model.summary([{status:'overdue'}]).rate,0);
+ const rows=[{status:'completed'},{status:'overdue'},{status:'in-progress'},{status:'not-started'},{status:'cancelled'}];assert.deepEqual(model.summary(rows),{total:4,completed:1,overdue:1,inProgress:1,notStarted:1,timedFails:0,timedFailRuns:0,rate:25});assert.equal(model.summary([]).rate,null);assert.equal(model.summary([{status:'overdue'}]).rate,0);
  const locations=[{id:'a',name:'A',companyId:'company'},{id:'b',name:'B',companyId:'company'},{id:'c',name:'C',companyId:'company'}],shared={status:'completed',companyId:'company',locationIds:['a','b']},ranked=model.progressRankings([shared],locations);assert.deepEqual(ranked.map(r=>[r.name,r.rank,r.value]),[['A',1,100],['B',1,100],['C',null,null]]);assert.equal(model.summary([shared]).total,1);
 });
 test('financial location rankings are weighted, handle ties and losses, and leave missing figures unranked',()=>{
@@ -46,4 +46,16 @@ test('checklist step reports total each step across runs with timed-section on-t
  assert.equal(summary.sections.length,2);assert.equal(summary.sections[1].timed,true);assert.equal(summary.onTime,flush.onTime);
  assert.deepEqual(flush.entries.map(entry=>entry.runId),['r3','r2','r1']);
  assert.equal(wipe.topPerson.count,1);
+});
+
+test('timed-section steps done outside their window fail and reduce the checklist completion rate', () => {
+ const step=(id,extra={})=>({id,done:true,timed:false,timing:null,...extra}),locations=[{id:'a',name:'A',companyId:'co'},{id:'b',name:'B',companyId:'co'}];
+ const onTime={status:'completed',companyId:'co',locationIds:['a'],steps:[step('1'),step('2',{timed:true,timing:'within'}),step('3',{timed:true,timing:'within'}),step('4')]};
+ const late={status:'completed',companyId:'co',locationIds:['b'],steps:[step('1'),step('2',{timed:true,timing:'late'}),step('3',{timed:true,timing:'early'}),step('4')]};
+ const missed={status:'in-progress',companyId:'co',locationIds:['b'],steps:[step('1'),step('2',{timed:true,timing:'missed',done:false}),step('3',{timed:true,timing:'pending',done:false}),step('4',{done:false})]};
+ assert.equal(model.score(onTime),1);assert.equal(model.score(late),0.5);assert.equal(model.score(missed),0.25);
+ assert.equal(model.timedFails(late),2);assert.equal(model.timedFails(missed),1);
+ const total=model.summary([onTime,late,missed]);assert.equal(total.completed,2);assert.equal(total.timedFails,3);assert.equal(total.timedFailRuns,2);assert.equal(Math.round(total.rate*100)/100,58.33);
+ assert.deepEqual(model.progressRankings([onTime,late,missed],locations).map(row=>[row.name,row.rank,row.value,row.timedFails]),[['A',1,100,0],['B',2,37.5,3]]);
+ assert.equal(model.summary([{status:'completed'},{status:'overdue'}]).rate,50);
 });

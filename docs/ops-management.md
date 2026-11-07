@@ -184,3 +184,12 @@ Reporting → Checklist progress has a **By checklist / By step** toggle. By ste
 - Today's unstarted scheduled tasks use the current checklist's steps as not done. Earlier unstarted schedules still cannot be reconstructed.
 
 The server only adds step facts to report rows: step ID/title/type, section, done, completion time and person, and timing state. Answer values, files, photos and signatures are never included, and steps limited to other locations or permission levels are left out for viewers who cannot see them.
+
+## Timed sections and the completion rate
+
+Checklist completion rates treat timed sections as pass/fail. Any step in a timed section that was done **early**, **late**, or not done by the time the window ended (**missed**) is a failed step.
+
+- Each checklist run scores between 0% and 100%. A completed run scores 100% minus its share of failed timed steps (for example, 2 failed out of 5 visible steps = 60%). A run that isn't completed scores the share of its steps answered on time.
+- The Completion rate card, Location rankings, the Progress column and the CSV export all use this score, as do scheduled OpStack intelligence report facts. Training keeps its completed ÷ total rate.
+- Timed steps still inside their window are not failures yet. A step with no recorded time isn't counted as failed.
+- Checklist Location rankings show each shop side by side as a card with its rank, a completion-rate progress ring (green 90% and above, red below 60%) and its name. Cards follow the Rank by choice; shops without matching work show an empty ring and Unranked. Each card has a spoken label with the rate. Training rankings keep their table.

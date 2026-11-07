@@ -234,3 +234,23 @@
 .report-step-history-table{min-width:620px}
 .report-step-history-table td small{display:block;color:var(--theme-muted,#64748b);font-size:10px}
 @media(max-width:720px){.report-step-controls{width:100%}.report-step-picker{width:100%}.report-step-picker .app-select,.report-step-picker>select{flex:1;width:auto}}
+
+/* Checklist location rankings: shops side by side, each a completion ring. */
+.report-ranking-rings{display:flex;flex-wrap:wrap;gap:10px}
+.report-ranking-rings[hidden]{display:none}
+.report-ranking-ring-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;width:150px;padding:14px 10px 12px;border:1px solid var(--line,#dbe3ea);border-radius:14px;background:var(--theme-surface,#fff);text-align:center}
+.report-ranking-ring-card[data-rank="1"]{border-color:color-mix(in srgb,var(--primary) 45%,var(--line,#dbe3ea));background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.report-ranking-ring-place{align-self:flex-start;font-size:11px;font-weight:700;color:var(--theme-muted,#64748b)}
+.report-ranking-ring-name{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.report-rank-ring{position:relative;display:inline-grid;place-items:center;width:84px;height:84px}
+.report-rank-ring svg{width:84px;height:84px;grid-area:1/1}
+.report-rank-ring-label{grid-area:1/1;font-weight:700;font-size:18px;color:var(--theme-text,#182b3a)}
+.report-rank-ring-track{stroke:color-mix(in srgb,var(--primary) 22%,var(--theme-surface,#fff))}
+.report-rank-ring-value{stroke:var(--primary);transition:stroke-dashoffset .5s ease}
+.report-rank-ring[data-level=high] .report-rank-ring-value{stroke:var(--theme-success-text,#28a060)}
+.report-rank-ring[data-level=low] .report-rank-ring-value{stroke:var(--theme-danger-text,#d64535)}
+.report-rank-ring[data-level=none] .report-rank-ring-value{stroke:transparent}
+.report-progress-fail{display:block;margin-top:3px;font-size:10px;color:var(--theme-danger-text,#ae2b23)}
+@media(max-width:720px){.report-ranking-ring-card{width:calc(50% - 5px)}}
+@media(prefers-reduced-motion:reduce){.report-rank-ring-value{transition:none}}
+@media(forced-colors:active){.report-rank-ring-value{stroke:CanvasText}.report-rank-ring-track{stroke:GrayText}}
