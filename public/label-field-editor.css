@@ -258,3 +258,88 @@
 @media(max-width:700px){.label-design-selection>span{flex-basis:auto}.label-design-selection>#label-design-edit-selected{order:1;margin-left:auto;min-height:32px}.label-design-selection>.label-quick-tools{order:2;flex-basis:100%}}
 .label-design-padding{display:inline-flex;align-items:center;gap:5px;margin:0;font:10px/1.4 Arial,sans-serif;color:var(--theme-muted,#627383);white-space:nowrap}.label-design-padding input{width:52px;min-height:30px;margin:0;padding:4px 5px;border:1px solid var(--theme-line,#dce5ed);border-radius:6px;font:12px Arial,sans-serif;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a)}.label-designer-canvas-first .label-designer-overlay{inset:var(--label-padding-y,0%) var(--label-padding-x,0%)}.label-designer-overlay:before{content:'';position:absolute;inset:0;pointer-events:none;border:1px dashed color-mix(in srgb,var(--label-accent) 28%,transparent)}
 @media(max-width:700px){.label-design-padding input{min-height:32px;font-size:16px;width:52px}.label-design-title{gap:6px 9px}}
+
+/* Modern template editor: a details card, an icon toolbar, a clean field list and one floating tool bar. */
+#labels-item-dialog{--lbl-line:color-mix(in srgb,var(--theme-text,#182b3a) 14%,var(--theme-surface,#fff));--lbl-field:color-mix(in srgb,var(--theme-text,#182b3a) 22%,var(--theme-surface,#fff));--lbl-soft:color-mix(in srgb,var(--primary,#008cff) 8%,var(--theme-surface,#fff));width:min(1160px,calc(100% - 24px));height:min(760px,calc(100dvh - 24px));padding:0;border:1px solid var(--lbl-line);border-radius:18px;box-shadow:0 30px 80px #0f172a38}
+#labels-item-dialog #labels-item-form{gap:0}
+#labels-item-dialog #labels-item-form>.labels-card-heading{padding:16px 20px;border-bottom:1px solid var(--lbl-line)}
+#labels-item-dialog #labels-item-form>.labels-card-heading h2{margin:0;font-size:1.05rem}
+#labels-item-dialog #labels-item-close{display:grid;place-items:center;width:34px;height:34px;min-height:0;padding:0;margin:0;border:1px solid var(--lbl-line);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-size:20px;line-height:1}
+#labels-item-dialog #labels-item-close:hover{background:var(--lbl-soft)}
+#labels-item-dialog .labels-editor-body{grid-template-columns:260px minmax(0,1fr);gap:0}
+/* Details panel with labels on each field's outline. */
+#labels-item-dialog .labels-template-details{padding:18px 18px 18px 20px;border-right:1px solid var(--lbl-line);background:color-mix(in srgb,var(--primary,#008cff) 3%,var(--theme-surface,#fff))}
+#labels-item-dialog .labels-panel-title{margin:0 0 14px;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--theme-primary-text,var(--primary))}
+#labels-item-dialog .labels-template-details>label,#labels-item-dialog .labels-template-details .labels-fields{margin:0 0 14px}
+#labels-item-dialog .labels-template-details label:has(>.labels-field-name){position:relative;display:flex;flex-direction:column;padding-top:7px}
+#labels-item-dialog .labels-field-name{position:absolute;top:0;left:9px;z-index:1;max-width:calc(100% - 18px);padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.66rem;font-weight:500;line-height:14px;color:var(--theme-muted,#5b6b7a);background:color-mix(in srgb,var(--primary,#008cff) 3%,var(--theme-surface,#fff));pointer-events:none}
+#labels-item-dialog label:focus-within>.labels-field-name{color:var(--theme-primary-text,var(--primary))}
+#labels-item-dialog .labels-template-details label:has(>.labels-field-name) :is(input,.location-select-trigger,select){height:42px;min-height:42px;margin:0;padding:8px 12px;border:1px solid var(--lbl-field);border-radius:8px;background:var(--theme-surface,#fff);font-size:.84rem;box-shadow:none}
+#labels-item-dialog .labels-template-details label:has(>.labels-field-name) .location-picker{margin:0}
+#labels-item-dialog .labels-template-details label:has(>.labels-field-name) :is(input,.location-select-trigger):focus-visible{border-color:var(--primary);outline:1px solid var(--primary);outline-offset:0}
+#labels-item-dialog .labels-template-details .labels-fields{gap:10px}
+/* Active label template as a switch. */
+#labels-item-dialog .labels-toggle{display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse;gap:10px;padding:11px 12px;border:1px solid var(--lbl-line);border-radius:10px;background:var(--theme-surface,#fff);font-size:.8rem;font-weight:600;cursor:pointer}
+#labels-item-dialog .labels-toggle input{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:38px!important;height:22px!important;min-width:38px;min-height:0;margin:0;padding:0;border:0;border-radius:11px;background:color-mix(in srgb,var(--theme-text,#182b3a) 25%,var(--theme-surface,#fff));cursor:pointer;transition:background-color .18s}
+#labels-item-dialog .labels-toggle input:after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .18s}
+#labels-item-dialog .labels-toggle input:checked{background-color:var(--primary);background-image:var(--brand-sheen,none)}
+#labels-item-dialog .labels-toggle input:checked:after{transform:translateX(16px)}
+#labels-item-dialog .labels-toggle input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+/* Designer area. */
+#labels-item-dialog #labels-designer{padding:16px 20px 14px;min-width:0;min-height:0}
+#labels-item-dialog .label-design-toolbar{padding:0 0 12px;border-color:var(--lbl-line)}
+#labels-item-dialog .label-design-title h3{font-size:15px!important}
+#labels-item-dialog .label-design-dimensions{padding:3px 9px;border-radius:999px;background:var(--lbl-soft);color:var(--theme-primary-text,var(--primary));font-weight:600}
+#labels-item-dialog .label-design-padding{gap:0;padding:0 0 0 9px;border:1px solid var(--lbl-line);border-radius:999px;background:var(--theme-surface,#fff)}
+#labels-item-dialog .label-design-padding input{width:48px;min-height:26px;border:0;border-left:1px solid var(--lbl-line);border-radius:0 999px 999px 0;margin-left:7px;text-align:center;background:transparent}
+#labels-item-dialog .label-design-actions{gap:8px}
+#labels-item-dialog .label-design-actions button,#labels-item-dialog #labels-designer .label-design-actions .label-add-field,#labels-item-dialog #labels-designer .label-design-actions .label-design-reset{min-height:36px;padding:7px 13px!important;border-radius:10px;border-color:var(--lbl-line);gap:6px}
+#labels-item-dialog .label-design-actions :is(#label-design-snap,#label-design-preview,.label-design-reset):before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:var(--lbl-icon) center/contain no-repeat;mask:var(--lbl-icon) center/contain no-repeat}
+#labels-item-dialog #label-design-snap{--lbl-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4M9 12h6M12 9v6'/%3E%3C/svg%3E")}
+#labels-item-dialog #label-design-preview{--lbl-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")}
+#labels-item-dialog .label-design-reset{--lbl-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3 12a9 9 0 1 0 3-6.7L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E")}
+#labels-item-dialog .label-design-actions :is(#label-design-snap,#label-design-preview)[aria-pressed=true]{background:var(--lbl-soft);border-color:color-mix(in srgb,var(--primary) 45%,var(--lbl-line));color:var(--theme-primary-text,var(--primary))}
+#labels-item-dialog #labels-designer .label-design-actions .label-add-field{background-color:var(--primary);background-image:var(--brand-sheen,none);border-color:var(--primary);color:var(--theme-on-primary,#fff);box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 28%,transparent)}
+#labels-item-dialog #labels-designer .label-design-actions .label-design-reset{border-color:transparent;background:transparent}
+#labels-item-dialog #labels-designer .label-design-actions .label-design-reset:hover{background:var(--lbl-soft)}
+#labels-item-dialog .label-design-workspace{grid-template-columns:minmax(0,1fr) 210px;gap:14px}
+#labels-item-dialog #labels-designer .label-designer-preview{border-color:var(--lbl-line);border-radius:14px}
+#labels-item-dialog #labels-designer .label-designer-paper{border-radius:6px;box-shadow:0 2px 4px #1634500d,0 18px 40px #1634501f}
+/* Field list. */
+#labels-item-dialog .label-design-layers{border-color:var(--lbl-line);border-radius:14px}
+#labels-item-dialog .label-design-layers>summary{padding:12px 14px;border-color:var(--lbl-line);font-size:12.5px;border-radius:14px 14px 0 0}
+#labels-item-dialog .label-design-layers>summary>span{min-width:22px;padding:1px 7px;border-radius:999px;background:var(--lbl-soft);color:var(--theme-primary-text,var(--primary));font-weight:700;text-align:center}
+#labels-item-dialog .label-design-field-list{padding:6px}
+#labels-item-dialog .label-design-layer{position:relative;gap:10px;min-height:46px;padding:7px 9px;margin:0 0 2px;border:0;border-radius:10px;font:inherit}
+#labels-item-dialog .label-design-layer .label-source-icon{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--lbl-soft);color:var(--theme-primary-text,var(--primary))}
+#labels-item-dialog .label-design-layer .label-source-icon svg{width:16px;height:16px}
+#labels-item-dialog .label-layer-copy{display:grid;gap:1px;min-width:0}
+#labels-item-dialog .label-layer-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;letter-spacing:0}
+#labels-item-dialog .label-layer-copy small{font-size:11px;color:var(--theme-muted,#64748b)}
+#labels-item-dialog .label-design-layer:hover{background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+#labels-item-dialog .label-design-layer[aria-pressed=true]{background:var(--lbl-soft);box-shadow:inset 3px 0 0 var(--primary)}
+#labels-item-dialog .label-design-layer[aria-pressed=true] .label-source-icon{background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff)}
+#labels-item-dialog .label-design-layer[aria-pressed=true] strong{color:var(--theme-primary-text,var(--primary))}
+#labels-item-dialog .label-design-layer.is-hidden{opacity:.55}
+/* Floating tool bar for the selected field. */
+#labels-item-dialog .label-design-selection{align-self:start;justify-self:start;gap:8px 10px;padding:6px 6px 6px 14px;border:1px solid var(--lbl-line);border-radius:14px;background:var(--theme-surface,#fff);box-shadow:0 6px 18px #1634500f;font-size:12px;color:var(--theme-text,#182b3a)}
+#labels-item-dialog .label-design-selection>span{font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#labels-item-dialog .label-quick-tools{gap:6px;margin-left:6px;padding-left:10px;border-left:1px solid var(--lbl-line)}
+#labels-item-dialog :is(.label-move-tools,.label-text-tools){padding:2px;border:0;border-radius:10px;background:color-mix(in srgb,var(--theme-text,#182b3a) 5%,var(--theme-surface,#fff))}
+#labels-item-dialog .label-design-selection :is(.label-move-tools,.label-text-tools) button{min-width:32px;height:32px;min-height:32px;border-radius:8px;font-size:14px;color:var(--theme-text,#182b3a)}
+#labels-item-dialog .label-design-selection :is(.label-move-tools,.label-text-tools) button:hover:not(:disabled){background:var(--theme-surface,#fff);box-shadow:0 1px 3px #16345026}
+#labels-item-dialog .label-design-selection #label-design-undo-move{min-height:32px;border:0;border-radius:8px;background:transparent;color:var(--theme-muted,#5b6b7a)}
+#labels-item-dialog .label-design-selection #label-design-edit-selected{min-height:34px;padding:6px 14px;border:0;border-radius:10px;background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff)}
+#labels-item-dialog .label-design-selection #label-design-edit-selected:disabled{background:color-mix(in srgb,var(--theme-text,#182b3a) 10%,var(--theme-surface,#fff));color:var(--theme-muted,#5b6b7a);opacity:1}
+/* Footer. */
+#labels-item-dialog .labels-editor-footer{padding:12px 20px;border-top:1px solid var(--lbl-line);background:var(--theme-surface,#fff);border-radius:0 0 18px 18px}
+#labels-item-dialog .labels-editor-footer #labels-editor-status{margin:0 auto 0 0;font-size:.78rem;color:var(--theme-muted,#5b6b7a)}
+#labels-item-dialog #labels-item-save{min-height:40px;padding:8px 22px;border-radius:10px}
+@media(max-width:1000px){#labels-item-dialog .label-design-workspace{grid-template-columns:minmax(0,1fr)}#labels-item-dialog .label-design-layers{max-height:150px}}
+@media(max-width:700px){#labels-item-dialog{width:calc(100% - 12px);height:calc(100dvh - 12px);border-radius:14px}#labels-item-dialog .labels-editor-body{grid-template-columns:minmax(0,1fr)}#labels-item-dialog .labels-template-details{border-right:0;border-bottom:1px solid var(--lbl-line);padding:14px}#labels-item-dialog .labels-template-details label:has(>.labels-field-name) :is(input,.location-select-trigger){height:44px;min-height:44px;font-size:16px}#labels-item-dialog #labels-designer{padding:12px}#labels-item-dialog #labels-item-form>.labels-card-heading{padding:12px 14px}#labels-item-dialog .label-design-selection{justify-self:stretch;padding:6px 8px}#labels-item-dialog .label-quick-tools{margin-left:0;padding-left:0;border-left:0}#labels-item-dialog .labels-editor-footer{padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-radius:0 0 14px 14px}#labels-item-dialog .label-design-actions button,#labels-item-dialog #labels-designer .label-design-actions .label-add-field,#labels-item-dialog #labels-designer .label-design-actions .label-design-reset{min-height:38px;padding:7px 10px!important}}
+@media(prefers-reduced-motion:reduce){#labels-item-dialog .labels-toggle input,#labels-item-dialog .labels-toggle input:after{transition:none}}
+@media(forced-colors:active){#labels-item-dialog .labels-toggle input{border:1px solid CanvasText}#labels-item-dialog .labels-toggle input:checked{background:Highlight}#labels-item-dialog .label-design-layer[aria-pressed=true]{outline:2px solid Highlight}}
+@media(max-width:700px){#labels-item-dialog #labels-designer{padding:10px 12px;overflow:auto;overscroll-behavior:contain}#labels-item-dialog #labels-designer .label-designer-preview{min-height:180px;padding:12px}#labels-item-dialog .label-design-toolbar{padding-bottom:8px}#labels-item-dialog .label-design-title{flex-wrap:nowrap;gap:6px}#labels-item-dialog .label-design-title h3{white-space:nowrap}#labels-item-dialog .label-design-padding{padding-left:7px;font-size:9.5px}#labels-item-dialog .label-design-padding input{width:40px;min-height:28px;margin-left:5px}#labels-item-dialog .label-design-actions{gap:6px;width:100%}#labels-item-dialog .label-design-actions>button{flex:1 1 auto}#labels-item-dialog .label-design-selection{padding:0;border:0;box-shadow:none;background:transparent}#labels-item-dialog .label-design-layers>summary{padding:9px 12px}}
+@media(max-width:700px){#labels-item-dialog #labels-designer.label-designer-canvas-first{grid-template-rows:auto auto auto;align-content:start}#labels-item-dialog .label-design-workspace{grid-template-rows:auto auto}}
+@media(max-width:700px){#labels-item-dialog .label-design-workspace,#labels-item-dialog .label-design-layers{min-height:auto}}
+@media(max-width:700px){#labels-item-dialog .label-design-selection{position:sticky;bottom:-10px;z-index:2;margin:0 -12px -10px;padding:8px 12px 10px;background:var(--theme-surface,#fff);border-top:1px solid var(--lbl-line)}}
