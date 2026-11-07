@@ -1,17 +1,17 @@
 // Smoothly slide the selected highlight between buttons that sit next to each other
 // (segmented controls, tabs, view toggles and radio-style choices). Display only:
 // around a real click/keypress it measures the old and new selected buttons and
-// animates the group's ::before highlight between them. It never changes state or data,
+// animates the group's ::before highlight between them (460 ms, gentle ease-in-out). It never changes state or data,
 // and it adds no elements, so :first-child/:last-child styling and child lists stay intact.
 (()=>{
  if(window.__segmentedMotion)return;window.__segmentedMotion=true;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)'),forced=matchMedia('(forced-colors: active)');
  const candidate='button,[role=tab],[role=radio],a[aria-current],label:has(>input[type=radio])';
- const DURATION=240,lengths=['x','y','w','h'];
+ const DURATION=460,EASE='cubic-bezier(.45,.05,.2,1)',lengths=['x','y','w','h'];
  const css='@property --sm-x{syntax:"<length>";inherits:true;initial-value:0px}@property --sm-y{syntax:"<length>";inherits:true;initial-value:0px}@property --sm-w{syntax:"<length>";inherits:true;initial-value:0px}@property --sm-h{syntax:"<length>";inherits:true;initial-value:0px}'
   +'.segmented-motion-host{isolation:isolate}.segmented-motion-host.segmented-motion-static{position:relative}'
   +'.segmented-motion-host::before{content:"";position:absolute;left:0;top:0;width:var(--sm-w);height:var(--sm-h);transform:translate(var(--sm-x),var(--sm-y));border-radius:var(--sm-r,8px);background-color:var(--sm-bg,transparent);background-image:var(--sm-img,none);box-shadow:var(--sm-shadow,none);z-index:-1;pointer-events:none;transition:none}'
-  +'.segmented-motion-host.segmented-motion-run{transition:--sm-x '+DURATION+'ms cubic-bezier(.2,.8,.2,1),--sm-y '+DURATION+'ms cubic-bezier(.2,.8,.2,1),--sm-w '+DURATION+'ms cubic-bezier(.2,.8,.2,1),--sm-h '+DURATION+'ms cubic-bezier(.2,.8,.2,1)}'
+  +'.segmented-motion-host.segmented-motion-run{transition:--sm-x '+DURATION+'ms '+EASE+',--sm-y '+DURATION+'ms '+EASE+',--sm-w '+DURATION+'ms '+EASE+',--sm-h '+DURATION+'ms '+EASE+'}'
   +'.segmented-motion-host>.segmented-motion-target{background:transparent!important;box-shadow:none!important}'
   +'@media (prefers-reduced-motion:reduce),(forced-colors:active){.segmented-motion-host::before{display:none}}';
  function addStyle(){if(document.getElementById('segmented-motion-style'))return;const style=document.createElement('style');style.id='segmented-motion-style';style.textContent=css;(document.head||document.documentElement).append(style);}
@@ -43,13 +43,13 @@
   const before=group.options.filter(selected);if(before.length!==1)return;
   const old=before[0],rect=old.getBoundingClientRect();if(!rect.width||!rect.height)return;
   pending.set(group.parent,{old,rect,at:performance.now()});
-  requestAnimationFrame(()=>requestAnimationFrame(()=>settle(group.parent)));setTimeout(()=>settle(group.parent),150);
+  setTimeout(()=>settle(group.parent),700);
  }
  function settle(parent){
   const record=pending.get(parent);if(!record)return;
   if(!parent.isConnected){pending.delete(parent);return;}
   const now=[...parent.children].filter(child=>child.matches(candidate)&&selected(child));
-  if(now.length!==1||now[0]===record.old&&record.old.isConnected){if(performance.now()-record.at>450)pending.delete(parent);return;}
+  if(now.length!==1||now[0]===record.old&&record.old.isConnected){if(performance.now()-record.at>650)pending.delete(parent);return;}
   pending.delete(parent);slide(parent,record.rect,now[0],record.old.isConnected?record.old:null);
  }
  function slide(parent,from,next,old){
@@ -69,12 +69,15 @@
   if(old&&oldColour!==nextColour){next.style.setProperty('color',oldColour,'important');old.style.setProperty('color',nextColour,'important');swaps.push(next,old);}
   set(place(from));parent.classList.add('segmented-motion-host');next.classList.add('segmented-motion-target');
   void parent.offsetWidth;
-  for(const node of swaps){node.style.setProperty('transition','color '+DURATION+'ms ease','important');node.style.removeProperty('color');}
+  for(const node of swaps){node.style.setProperty('transition','color '+DURATION+'ms '+EASE,'important');node.style.removeProperty('color');}
   if(!swaps.includes(next))next.style.setProperty('transition','none','important');
   parent.classList.add('segmented-motion-run');set(place(to));
   let cleaned=false;const done=()=>{if(cleaned)return;cleaned=true;parent.classList.remove('segmented-motion-host','segmented-motion-run','segmented-motion-static');next.classList.remove('segmented-motion-target');for(const node of swaps)if(node!==next)node.style.removeProperty('transition');next.style.setProperty('transition','none','important');requestAnimationFrame(()=>requestAnimationFrame(restoreTransition));for(const key of [...lengths,'r','bg','img','shadow'])parent.style.removeProperty('--sm-'+key);};
-  setTimeout(done,DURATION+40);
+  setTimeout(done,DURATION+60);
  }
  document.addEventListener('pointerdown',event=>{if(event.button===0)capture(event);},true);
+ // The app updates the selection in its click/keyboard handlers; slide on the next frame, before it paints.
+ const after=event=>{const group=groupOf(event.target);if(group&&pending.has(group.parent))requestAnimationFrame(()=>settle(group.parent));};
+ document.addEventListener('click',after,true);document.addEventListener('keyup',after,true);
  document.addEventListener('keydown',event=>{if(['Enter',' ','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))capture(event);},true);
 })();
