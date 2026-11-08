@@ -723,3 +723,8 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 @media(pointer:coarse){.ops-page .ops-step-editor .ops-logic-add{min-height:40px}.ops-page .ops-step-editor .ops-logic-remove{padding:3px 11px}}
 @media(prefers-reduced-motion:reduce){.ops-page .ops-step-editor .ops-logic-add{transition:none}}
 @media(forced-colors:active){.ops-page .ops-step-editor .ops-logic-add,.ops-page .ops-step-editor .ops-logic-remove{border:1px solid ButtonText}}
+/* Sections that start collapsed: the heading opens/closes the section's steps (display only). */
+.ops-answer.ops-section-folded{display:none!important}
+.ops-section-foldable>.ops-answer-heading{align-items:center}
+.ops-section-count{flex:none;padding:2px 8px;border-radius:999px;font:600 .68rem/1.5 Arial,sans-serif;background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font-variant-numeric:tabular-nums}
+.ops-section-foldable.ops-section-done .ops-section-count{background:color-mix(in srgb,var(--theme-success-text,#147d43) 12%,var(--theme-surface,#fff));color:var(--theme-success-text,#147d43)}

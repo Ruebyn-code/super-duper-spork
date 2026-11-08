@@ -42,6 +42,7 @@ function normalize(input){
    if(step.buttons!==undefined&&step.buttons!==null&&step.buttons!==''){if(typeof step.buttons!=='string'||!Object.hasOwn(stepModel.buttonSets,step.buttons))fail('Choose a valid button style for “'+result.title+'”.');if(result.source==='custom'&&!result.multiple)result.buttons=step.buttons;}
   }
   if(step.type==='timed-section'){if(!stepTiming.clock(step.startTime)||!stepTiming.clock(step.endTime)||step.startTime===step.endTime)fail('Choose different valid start and end times for the timed section.');result.startTime=step.startTime;result.endTime=step.endTime;}
+  if(stepModel.isSection(step)&&step.collapsed!==undefined){if(typeof step.collapsed!=='boolean')fail('Choose whether the section starts collapsed.');if(step.collapsed)result.collapsed=true;}
   if(step.type==='number'){
    if(step.format!==undefined){
     if(!Object.hasOwn(stepModel.formats,step.format))fail('Choose a valid number format.');

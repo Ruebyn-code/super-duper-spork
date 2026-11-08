@@ -376,3 +376,11 @@ test('scored checklist steps can use custom points per button, validated on the 
  assert.deepEqual(logic.score(template.steps,{[pass.id]:'Fail',[rate.id]:'4',[fridge.id]:'yes',[plain.id]:'Compliant'}),{points:0.5,max:16,scored:4,answered:4,percent:3});
  assert.deepEqual(logic.score(template.steps,{[pass.id]:'Pass',[rate.id]:'5',[fridge.id]:'na',[plain.id]:'Compliant'}),{points:13,max:13,scored:3,answered:3,percent:100});
 }finally{await app.close();}});
+test('sections and timed sections can start collapsed; only sections keep the setting and runs copy it',async()=>{const app=await fixture();try{
+ const section=app.step('section',{title:'Close down',required:false,collapsed:true}),timed=app.step('timed-section',{title:'',required:false,startTime:'09:00',endTime:'10:00',collapsed:true}),open=app.step('section',{title:'Open',required:false,collapsed:false}),check={...app.step('check',{title:'Lights off'}),collapsed:true};
+ assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...section,collapsed:'yes'},check]})).status,400);
+ const made=await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Folded',steps:[section,check,timed,app.step('check',{title:'Count till'}),open,app.step('check',{title:'Unlock'})]});assert.equal(made.status,201,JSON.stringify(made.data));const template=made.data;
+ assert.equal(template.steps[0].collapsed,true);assert.equal(template.steps[2].collapsed,true);assert.equal('collapsed' in template.steps[4],false,'false is not stored');assert.equal('collapsed' in template.steps[1],false,'response steps never keep it');
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Folded',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.equal(run.snapshot.steps[0].collapsed,true);assert.equal(run.snapshot.steps[2].collapsed,true);
+}finally{await app.close();}});
