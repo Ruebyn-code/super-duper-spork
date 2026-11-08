@@ -36,10 +36,10 @@
  // Scored checklists: a live total of the button answers (points / max and %), computed by the shared ops-step-logic score.
  function scoreText(score){return 'Score '+score.points+' / '+score.max+(score.percent==null?'':' · '+score.percent+'%');}
  function renderScore(values){const node=$('ops-run-score');if(!node)return;const on=run?.snapshot?.scoring===true;if(!on){node.hidden=true;return;}const score=opsStepLogic.score(run.snapshot.steps,values);const text=score.scored?scoreText(score):'Score —';if(node.textContent!==text)node.textContent=text;node.hidden=false;node.title=score.scored?score.answered+' of '+score.scored+' scored steps answered':'This checklist has no button steps to score yet.';}
- // Sections set to Start collapsed hide their steps (up to the next section) until the heading is tapped. Display only: never writes.
+ // Every section heading opens/closes its steps (up to the next section); Start collapsed sections begin closed. Display only: never writes.
  function foldSections(cards,list){const folds=[];let current=null;
-  list.forEach((step,index)=>{const card=cards[index];if(!card)return;if(stepModel.isSection(step)){current=step.collapsed===true?{card,members:[],steps:[]}:null;if(current){folds.push(current);bindFold(current);}return;}if(current){current.members.push(card);current.steps.push(step);}});
-  for(const fold of folds)fold.set?.(false);return folds;}
+  list.forEach((step,index)=>{const card=cards[index];if(!card)return;if(stepModel.isSection(step)){current={card,members:[],steps:[],closed:step.collapsed===true};folds.push(current);return;}if(current){current.members.push(card);current.steps.push(step);}});
+  const used=folds.filter(fold=>fold.members.length);for(const fold of used){bindFold(fold);fold.set?.(!fold.closed);}return used;}
  function bindFold(fold){const heading=fold.card.querySelector('.ops-answer-heading');if(!heading)return;fold.count=el('span',undefined,'ops-section-count');heading.querySelector('h3')?.after(fold.count);fold.card.classList.add('ops-section-foldable');
   const set=open=>{fold.card.classList.toggle('ops-answer-collapsed',!open);heading.setAttribute('aria-expanded',String(open));for(const member of fold.members)member.classList.toggle('ops-section-folded',!open);};
   heading.setAttribute('role','button');heading.tabIndex=0;heading.addEventListener('click',event=>{if(event.target.closest('input,select,textarea,a'))return;set(fold.card.classList.contains('ops-answer-collapsed'));});heading.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();set(fold.card.classList.contains('ops-answer-collapsed'));}});fold.set=set;}
