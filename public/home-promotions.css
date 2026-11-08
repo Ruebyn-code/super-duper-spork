@@ -17,3 +17,15 @@
 .home-promotion-offer{padding:2px 8px;border-radius:999px;font-weight:700;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
 @media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(220px,82%)}}
 @media(forced-colors:active){.home-promotion{border:1px solid CanvasText}}
+/* Compact fit: cards share the row width (scrolling sideways only when they no longer fit), with a 16:9 thumbnail beside the text. */
+.home-promotions{margin:0 0 12px}
+.home-promotions-heading{margin:0 0 6px}
+.home-promotions-list{grid-auto-columns:minmax(300px,1fr);gap:10px;padding:2px 2px 6px}
+.home-promotion{flex-direction:row;align-items:center;gap:12px;padding:8px;border-radius:14px}
+.home-promotion-media{flex:none;width:156px;aspect-ratio:16/9;border-radius:10px;overflow:hidden}
+.home-promotion-media.is-empty svg{width:24px;height:24px}
+.home-promotion-body{flex:1;min-width:0;padding:0 4px 0 0;gap:6px}
+.home-promotion-body h3{font-size:.9rem}
+@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(260px,88%)}.home-promotion-media{width:116px}}
+.home-promotion-media{width:clamp(140px,22%,220px)}
+@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(270px,1fr)}.home-promotion-media{width:116px}}
