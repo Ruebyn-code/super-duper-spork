@@ -18,8 +18,25 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
   if(step.type==='selection'){
    const values=Array.isArray(answer)?answer:answer?[answer]:[],available=(run.selectionOptions?.[step.id]||[]).map(option=>({...option})),saved=run.selectionLabels?.[step.id]||{};
    for(const value of values)if(!available.some(option=>option.value===value)&&saved[value])available.push({value,label:saved[value]});
+   const style=model.buttonStyle(step);
+   if(style){
+    // Button steps: one tap picks an answer (tap it again to clear). Passing/failing answers colour green/red when a pass rule is set.
+    const group=el('div','ops-button-set ops-button-set-'+(style.startsWith('rating-')?'rating':style==='satisfaction'?'satisfaction':'choices')),name='ops-buttons-'+step.id+'-'+Math.random().toString(36).slice(2),radios=[],faces=['😞','🙁','😐','🙂','😄'],passing=step.passRule?.options;
+    group.setAttribute('role','radiogroup');group.setAttribute('aria-label',step.title);group.id='ops-answer-'+step.id;if(style.startsWith('rating-'))group.style.setProperty('--ops-button-count',String(Math.min(available.length,10)));
+    for(const [index,option] of available.entries()){
+     const choice=el('label','ops-button-choice'),radio=input('radio'),text=data('span',option.label,'ops-button-label');radio.name=name;radio.value=option.value;radio.checked=values.includes(option.value);radio.disabled=readonly;
+     if(passing)choice.classList.add(passing.includes(option.value)?'is-pass':'is-fail');
+     if(style==='satisfaction'&&available.length===5){const face=el('span','ops-button-face');face.textContent=faces[index];face.setAttribute('aria-hidden','true');choice.append(radio,face,text);}else choice.append(radio,text);
+     let was=false;radio.addEventListener('pointerdown',()=>{was=radio.checked;});radio.addEventListener('keydown',event=>{if(event.key===' ')was=radio.checked;});
+     radio.addEventListener('click',()=>{if(was&&!step.required){radio.checked=false;}was=false;onChange();});radio.addEventListener('change',onChange);
+     radios.push(radio);group.append(choice);
+    }
+    host.append(group);if(!available.length)host.append(ui('p','No choices have been added to this step.','ops-help'));
+    read=()=>radios.find(radio=>radio.checked)?.value||null;inspect=read;
+   }else{
    if(readonly){const pills=el('div','ops-options');for(const value of values)pills.append(data('span',saved[value]||available.find(option=>option.value===value)?.label||value,'ops-badge'));host.append(pills);}
    else{const control=accessible(el('select'));control.multiple=step.multiple;choices(control,[...(!step.multiple?[['','Choose an option']]:[]),...available.map(option=>[option.value,option.label])],step.multiple?'':answer||'');if(step.multiple)for(const option of control.options)option.selected=values.includes(option.value);host.append(control);if(!available.length)host.append(ui('p','No selections are available for this location.','ops-help'));control.onchange=onChange;read=()=>step.multiple?[...control.selectedOptions].map(option=>option.value):control.value||null;inspect=read;}
+   }
   }
   if(['media','file'].includes(step.type)){
    let ids=Array.isArray(answer)?[...answer]:[];const files=el('div','ops-submissions');host.append(files);

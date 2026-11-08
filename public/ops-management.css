@@ -574,3 +574,45 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 #ops-planner-dialog .ops-schedule-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #ops-planner-dialog .ops-schedule-section-heading .ops-toggle{display:flex;flex-direction:row;align-items:center;gap:7px;margin:0;font-size:.75rem;font-weight:600}
 #ops-planner-dialog .ops-schedule-section-heading .ops-toggle input{width:16px;height:16px;margin:0}
+/* Add step picker: Buttons group entries carry an icon before the label. */
+.ops-step-picker .ops-step-picker-choice[data-button-style],.ops-step-picker .ops-step-picker-choice[data-step-type=yes-no-na]{display:flex;align-items:center;gap:9px;text-align:left}
+.ops-step-picker .ops-step-picker-icon{flex:none;color:var(--theme-muted,#5b6b7a)}
+.ops-step-picker .ops-step-picker-choice:hover .ops-step-picker-icon,.ops-step-picker .ops-step-picker-choice:focus-visible .ops-step-picker-icon{color:var(--theme-primary-text,var(--primary))}
+/* Button steps (ops-step-fields.js): tappable answer buttons. */
+.ops-button-set{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;min-width:0;margin:2px 0}
+.ops-button-choice{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:46px;padding:9px 12px;border:1.5px solid color-mix(in srgb,var(--theme-text,#182b3a) 16%,var(--theme-surface,#fff));border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-weight:600;font-size:.86rem;line-height:1.25;text-align:center;cursor:pointer;user-select:none;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease,box-shadow .15s ease}
+.ops-button-choice input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.ops-button-label{overflow-wrap:anywhere}
+.ops-button-choice:hover{border-color:color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dce5ed));background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.ops-button-choice:active{transform:scale(.97)}
+.ops-button-choice:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+.ops-button-choice:has(input:checked){border-color:var(--primary);background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 30%,transparent)}
+.ops-button-choice.is-pass:has(input:checked){border-color:#16a34a;background:#16a34a;color:#fff;box-shadow:0 4px 12px #16a34a40}
+.ops-button-choice.is-fail:has(input:checked){border-color:#dc2626;background:#dc2626;color:#fff;box-shadow:0 4px 12px #dc262640}
+.ops-button-choice:has(input:disabled){cursor:default;opacity:.85}.ops-button-choice:has(input:disabled):not(:has(input:checked)){opacity:.55}
+.ops-button-choice:has(input:disabled) input{cursor:default}
+/* Number ratings: compact square buttons in one row (wrapping to rows of up to ten). */
+.ops-button-set-rating{grid-template-columns:repeat(var(--ops-button-count,5),minmax(0,1fr));gap:6px}
+.ops-button-set-rating .ops-button-choice{min-height:44px;padding:6px 2px;border-radius:10px;font-size:.95rem;font-variant-numeric:tabular-nums}
+/* Satisfaction: face buttons with a small caption. */
+.ops-button-set-satisfaction{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.ops-button-set-satisfaction .ops-button-choice{padding:8px 4px;min-height:74px}
+.ops-button-face{font-size:1.7rem;line-height:1;filter:grayscale(.35);transition:transform .15s ease,filter .15s ease}
+.ops-button-choice:has(input:checked) .ops-button-face{filter:none;transform:scale(1.12)}
+.ops-button-set-satisfaction .ops-button-label{font-size:.66rem;font-weight:600;line-height:1.15}
+@media(max-width:540px){.ops-button-set-rating{grid-template-columns:repeat(min(var(--ops-button-count,5),5),minmax(0,1fr))}.ops-button-set-satisfaction .ops-button-label{font-size:.6rem}.ops-button-set-satisfaction .ops-button-choice{min-height:68px}}
+@media(prefers-reduced-motion:reduce){.ops-button-choice,.ops-button-face{transition:none}.ops-button-choice:active{transform:none}}
+@media(forced-colors:active){.ops-button-choice{border:1px solid ButtonText}.ops-button-choice:has(input:checked){background:Highlight;color:HighlightText;forced-color-adjust:none}}
+.ops-button-set .ops-button-choice span{color:inherit}
+/* Yes / No / N/A uses the same tappable button look as the other button steps. */
+.ops-options.ops-yes-no-na .ops-option{position:relative;display:flex;align-items:center;justify-content:center;min-height:46px;padding:9px 12px;border:1.5px solid color-mix(in srgb,var(--theme-text,#182b3a) 16%,var(--theme-surface,#fff));border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-weight:600;font-size:.86rem;cursor:pointer;user-select:none;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease,box-shadow .15s ease}
+.ops-options.ops-yes-no-na .ops-option input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.ops-options.ops-yes-no-na .ops-option span{color:inherit}
+.ops-options.ops-yes-no-na .ops-option:hover{border-color:color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dce5ed));background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.ops-options.ops-yes-no-na .ops-option:active{transform:scale(.97)}
+.ops-options.ops-yes-no-na .ops-option:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+.ops-options.ops-yes-no-na .ops-option:has(input:checked){border-color:var(--primary);background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);box-shadow:0 4px 12px color-mix(in srgb,var(--primary) 30%,transparent)}
+.ops-options.ops-yes-no-na .ops-option:has(input:disabled){cursor:default}.ops-options.ops-yes-no-na .ops-option:has(input:disabled):not(:has(input:checked)){opacity:.55}
+@media(prefers-reduced-motion:reduce){.ops-options.ops-yes-no-na .ops-option{transition:none}.ops-options.ops-yes-no-na .ops-option:active{transform:none}}
+@media(forced-colors:active){.ops-options.ops-yes-no-na .ops-option{border:1px solid ButtonText}.ops-options.ops-yes-no-na .ops-option:has(input:checked){background:Highlight;color:HighlightText;forced-color-adjust:none}}
+.ops-options.ops-yes-no-na{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

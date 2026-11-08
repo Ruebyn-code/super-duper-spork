@@ -337,3 +337,17 @@ test('checklist steps can link a Knowledge centre article that is validated and 
  const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Fridge',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
  const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.deepEqual(run.snapshot.steps[0].article,article);
 }finally{await app.close();}});
+test('button steps save a validated button style on custom single selections and answer like ordinary selections',async()=>{const app=await fixture();try{
+ const model=require('./public/ops-step-model');
+ const preset=id=>{const set=model.buttonSets[id];return app.step('selection',{title:set.title||set.label,source:'custom',multiple:false,options:[...set.options],buttons:id,...(set.pass?{passRule:{options:[...set.pass]}}:{})});};
+ const pass=preset('pass-fail'),rating=preset('rating-10'),mood=preset('satisfaction'),plain=app.step('selection',{title:'Pick',source:'custom',multiple:true,options:['A','B'],buttons:'buttons'});
+ const bad=await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...pass,buttons:'sparkly'}]});assert.equal(bad.status,400,'unknown button styles are rejected');
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Button checks',steps:[pass,rating,mood,plain]})).data;assert.ok(template.id,JSON.stringify(template));
+ assert.equal(template.steps[0].buttons,'pass-fail');assert.deepEqual(template.steps[0].passRule,{options:['Pass']});assert.deepEqual(template.steps[1].options,['1','2','3','4','5','6','7','8','9','10']);assert.equal(template.steps[2].buttons,'satisfaction');
+ assert.equal(template.steps[3].buttons,undefined,'multiple selections never keep a button style');
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Button checks',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.equal(run.snapshot.steps[0].buttons,'pass-fail','runs freeze the button style');
+ const wrong=await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,answers:{[rating.id]:'11'}});assert.ok(wrong.status>=400,'answers must be one of the buttons');
+ const saved=await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,complete:true,answers:{[pass.id]:'Fail',[rating.id]:'7',[mood.id]:'Satisfied',[plain.id]:['A']}});assert.equal(saved.status,200,JSON.stringify(saved.data));
+ assert.equal(saved.data.answers[rating.id],'7');assert.equal(require('./public/ops-step-logic').outcome(saved.data.snapshot.steps[0],'Fail'),'fail');
+}finally{await app.close();}});

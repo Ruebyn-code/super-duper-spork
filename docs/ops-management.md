@@ -234,3 +234,20 @@ Photo / video steps (and corrective-action photos on failed checks) are captured
 - If the browser can't open the camera in the app, phones fall back to their own camera screen. Computers without a camera show a note to use a phone or tablet. There's no file picker for these steps.
 - File submission steps still accept uploaded files as before.
 - Captured files go through the same run media upload, size checks and private media access as before.
+
+## Button steps
+
+Add step → **Buttons** offers ready-made steps answered with one tap:
+
+| Picker entry | Buttons | Preset pass rule |
+| --- | --- | --- |
+| Completed without having to interfere | Yes · No (title prefilled) | Yes passes |
+| They Know What It is | Yes · No (title prefilled) | Yes passes |
+| Number rating (1 to 5 / 10 / 20) | 1 … 5 / 10 / 20 | — |
+| Yes, No | Yes · No | — |
+| Yes, No, N/A | the existing Yes / No / N/A step | — |
+| Pass, Fail | Pass · Fail | Pass passes |
+| Compliant, Not Compliant | Compliant · Not compliant | Compliant passes |
+| Satisfaction | Very dissatisfied … Very satisfied (faces) | — |
+
+Each entry (from `opsStepModel.buttonSets`) creates an ordinary custom, single-choice **Selection** step with editable options, an optional preset pass rule and a saved `buttons` style id. The server accepts only known style ids and keeps the style only on custom single selections; runs freeze it with the rest of the step. Any custom single Selection can turn on **Show as buttons** (the generic `buttons` style). The checklist reader and phone preview draw these as radio-backed buttons: ratings as a number grid (up to ten per row, five on phones), Satisfaction with faces, and answers with a pass rule turning green or red when chosen. Tapping the chosen button again clears an optional step. Answers, show-when rules, pass rules, corrective actions, autosave, History and reports behave exactly as for Selection steps. The Yes / No / N/A step uses the same button look.

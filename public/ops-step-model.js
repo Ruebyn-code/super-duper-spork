@@ -2,6 +2,22 @@
  const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction','yes-no-na':'Yes / No / N/A'};
  const formats={integer:'Whole number',decimal:'Decimal',currency:'Currency',percentage:'Percentage',temperature:'Temperature',weight:'Weight',volume:'Volume',length:'Length',duration:'Duration',custom:'Custom unit'};
  const units={temperature:['°C','°F'],weight:['kg','g','mg','lb','oz'],volume:['L','mL','gal'],length:['m','cm','mm','km','ft','in'],duration:['minutes','hours','seconds']};
+ // Button steps: ready-made custom Selection steps answered by tapping one button. `buttons` is the saved style id;
+ // the options stay ordinary editable choices, so show-when rules, pass rules and reports work unchanged.
+ const ratings=count=>Array.from({length:count},(_,index)=>String(index+1));
+ const buttonSets={
+  interfere:{label:'Completed without having to interfere',icon:'list',title:'Completed without having to interfere',options:['Yes','No'],pass:['Yes']},
+  knows:{label:'They Know What It is',icon:'list',title:'They know what it is',options:['Yes','No'],pass:['Yes']},
+  'rating-5':{label:'Number rating (1 to 5)',icon:'star',options:ratings(5)},
+  'rating-10':{label:'Number rating (1 to 10)',icon:'star',options:ratings(10)},
+  'rating-20':{label:'Number rating (1 to 20)',icon:'star',options:ratings(20)},
+  'yes-no':{label:'Yes, No',icon:'list',options:['Yes','No']},
+  'pass-fail':{label:'Pass, Fail',icon:'check',options:['Pass','Fail'],pass:['Pass']},
+  compliant:{label:'Compliant, Not Compliant',icon:'shield',options:['Compliant','Not compliant'],pass:['Compliant']},
+  satisfaction:{label:'Satisfaction',icon:'smile',options:['Very dissatisfied','Dissatisfied','Neutral','Satisfied','Very satisfied']},
+  buttons:{label:'Buttons',icon:'list',options:[]}
+ };
+ const buttonStyle=step=>step?.type==='selection'&&(step.source||'custom')==='custom'&&!step.multiple&&Object.hasOwn(buttonSets,step.buttons||'')?step.buttons:'';
  const isSection=step=>['section','timed-section'].includes(step.type);
  const responseStep=step=>step.type!=='instruction'&&!isSection(step);
  function editable(value){const step={...value};if(step.type==='photo'){step.type='media';step.mediaKind='photo';}if(['choice','multiple','yesno'].includes(step.type)){step.multiple=step.type==='multiple';step.options=step.type==='yesno'?['Yes','No']:step.options;step.type='selection';step.source='custom';}if(['date','time'].includes(step.type)){step.dateMode=step.type;step.type='datetime';}if(step.type==='signature')step.signatureMode||='typed';return step;}
@@ -32,5 +48,5 @@
  // Moving a section carries its following steps up to the next section.
  function movingIds(steps,id){const index=steps.findIndex(step=>step.id===id);if(index<0)return[];let end=index+1;if(isSection(steps[index]))while(end<steps.length&&!isSection(steps[end]))end++;return steps.slice(index,end).map(step=>step.id);}
  function move(steps,id,beforeId){const ids=new Set(movingIds(steps,id));if(!ids.size||ids.has(beforeId))return steps;const moving=steps.filter(step=>ids.has(step.id)),remaining=steps.filter(step=>!ids.has(step.id)),at=beforeId===null?remaining.length:remaining.findIndex(step=>step.id===beforeId);if(at<0)return steps;return[...remaining.slice(0,at),...moving,...remaining.slice(at)];}
- const api={kinds,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,allAnswered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
+ const api={kinds,buttonSets,buttonStyle,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,allAnswered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
 })(globalThis);

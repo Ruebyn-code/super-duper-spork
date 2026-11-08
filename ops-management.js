@@ -33,6 +33,7 @@ function normalize(input){
   if(step.type==='selection'){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
    if(!['users','locations','custom'].includes(result.source)||typeof result.multiple!=='boolean')fail('Choose a valid selection source.');
+   if(step.buttons!==undefined&&step.buttons!==null&&step.buttons!==''){if(typeof step.buttons!=='string'||!Object.hasOwn(stepModel.buttonSets,step.buttons))fail('Choose a valid button style for “'+result.title+'”.');if(result.source==='custom'&&!result.multiple)result.buttons=step.buttons;}
   }
   if(step.type==='timed-section'){if(!stepTiming.clock(step.startTime)||!stepTiming.clock(step.endTime)||step.startTime===step.endTime)fail('Choose different valid start and end times for the timed section.');result.startTime=step.startTime;result.endTime=step.endTime;}
   if(step.type==='number'){
