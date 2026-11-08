@@ -161,3 +161,13 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 .home-personal-more{padding:4px 3px;margin:2px 0 0}
 .home-personal-conversation{min-height:32px;padding:3px 4px}
 }
+/* Phones: Your work groups sit side by side as small cards, two per row. */
+@media screen and (max-width:700px){
+#home-personal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:6px;align-content:start}
+#home-personal>:not(.home-personal-group,#home-personal-content){grid-column:1/-1}
+#home-personal>#home-personal-content{display:contents}
+#home-personal .home-personal-group,#home-personal .home-personal-group+.home-personal-group,#home-personal .home-personal-approvals{min-width:0;margin:0 0 6px;padding:6px 7px;border:1px solid color-mix(in srgb,var(--primary) 14%,var(--theme-line,#dce5ed));border-radius:10px;background:color-mix(in srgb,var(--theme-surface,#fff) 70%,transparent)}
+#home-personal .home-personal-group-heading{gap:4px}#home-personal .home-personal-group-heading h3{min-width:0;overflow-wrap:anywhere}
+#home-personal .home-personal-item{padding:4px 2px}
+#home-personal .home-personal-list{max-height:150px;overflow-y:auto;overscroll-behavior-y:contain}
+}
