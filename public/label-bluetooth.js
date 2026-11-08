@@ -1,6 +1,6 @@
 // Labels: an explicit, user-chosen Bluetooth (BLE) label printer connection through Web Bluetooth.
 // Connecting always goes through the browser's device chooser; nothing reconnects or prints on its own.
-// The printer receives the same raster ZPL as Download Zebra file, so entered text never becomes printer commands.
+// The printer receives the batch's raster as ZPL, so entered text never becomes printer commands.
 (()=>{
  // Known label-printer write channels: Zebra Link-OS BLE parser, then common generic BLE printer serial services.
  const channels=[
