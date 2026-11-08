@@ -30,10 +30,11 @@ function normalize(input){
    result.options=step.options.map(option=>text(option,120,'a choice'));
    if(new Set(result.options).size!==result.options.length)fail('Choices must be different.');
   }
+  if(step.type==='yes-no-na'){const points=customPoints(step,2);if(points&&(points[0]!==1||points[1]!==0))result.points=points;}
   if(step.type==='buttons'){
    // Button types take their buttons from the shared catalogue (the saved step keeps a copy for run snapshots).
    if(typeof step.buttons!=='string'||step.buttons==='buttons'||!Object.hasOwn(stepModel.buttonSets,step.buttons))fail('Choose a valid button type for “'+result.title+'”.');
-   result.buttons=step.buttons;result.options=[...stepModel.buttonSets[step.buttons].options];result.points=[...stepModel.buttonSets[step.buttons].points];
+   result.buttons=step.buttons;result.options=[...stepModel.buttonSets[step.buttons].options];result.points=customPoints(step,result.options.length)||[...stepModel.buttonSets[step.buttons].points];
   }
   if(step.type==='selection'){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
@@ -100,6 +101,12 @@ function normalize(input){
  if(input.autoCollapse!==undefined&&typeof input.autoCollapse!=='boolean')fail('Choose whether completed steps collapse.');
  if(input.scoring!==undefined&&typeof input.scoring!=='boolean')fail('Choose whether this checklist is scored.');
  return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps,...(typeof input.autoCollapse==='boolean'?{autoCollapse:input.autoCollapse}:{}),...(typeof input.scoring==='boolean'?{scoring:input.scoring}:{})};
+}
+// Optional per-step score points (one per button, in button order): numbers from -1000 to 1000 with up to two decimals.
+function customPoints(step,count){
+ if(step.points===undefined||step.points===null)return null;
+ if(!Array.isArray(step.points)||step.points.length!==count||step.points.some(value=>typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>1000||Math.abs(value*100-Math.round(value*100))>1e-9))fail('Give each button a score from -1000 to 1000 (up to two decimal places) for “'+String(step.title||'a step').slice(0,200)+'”.');
+ return step.points.map(value=>Math.round(value*100)/100);
 }
 function normalizeContent(input){
  const value=normalize({...input,locationIds:['content'],active:true,schedule:{kind:'manual',startDate:'2026-01-01'}});

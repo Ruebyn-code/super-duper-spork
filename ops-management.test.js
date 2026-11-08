@@ -367,3 +367,12 @@ test('scored checklists total button answers, leave out N/A and hidden steps, an
  const history=await app.api(app.member,'/runs?date=2026-10-19');const listed=(history.data.runs||[]).find(item=>item.id===run.id);if(listed)assert.equal(listed.score.points,9);
  const reportStore=ops.createStore(app.dir,{locations:async()=>[{id:app.first,name:'Office',companyId:'default'}],now:()=>Date.parse('2026-10-19T02:00Z')}),report=(await reportStore.report(app.member.session,{start:'2026-10-19',end:'2026-10-19',locationId:app.first})).rows.find(item=>item.id===run.id);assert.equal(report.score.points,9);assert.equal(report.score.max,11);
 }finally{await app.close();}});
+test('scored checklist steps can use custom points per button, validated on the server',async()=>{const app=await fixture();try{
+ const pass=app.step('buttons',{title:'Food safe',buttons:'pass-fail',points:[10,-5]}),rate=app.step('buttons',{title:'Presentation',buttons:'rating-5',points:[0,0.5,1,1.5,2]}),fridge=app.step('yes-no-na',{title:'Fridge OK?',points:[3,0]}),plain=app.step('buttons',{title:'Default',buttons:'compliant'});
+ for(const points of [[1],[1,'2'],[1,5000],[1,0.123]])assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...pass,points}]})).status,400,JSON.stringify(points));
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Custom points',scoring:true,steps:[pass,rate,fridge,plain]})).data;
+ assert.deepEqual(template.steps[0].points,[10,-5]);assert.deepEqual(template.steps[1].points,[0,0.5,1,1.5,2]);assert.deepEqual(template.steps[2].points,[3,0]);assert.deepEqual(template.steps[3].points,[1,0],'omitted points use the defaults');
+ const logic=require('./public/ops-step-logic');
+ assert.deepEqual(logic.score(template.steps,{[pass.id]:'Fail',[rate.id]:'4',[fridge.id]:'yes',[plain.id]:'Compliant'}),{points:0.5,max:16,scored:4,answered:4,percent:3});
+ assert.deepEqual(logic.score(template.steps,{[pass.id]:'Pass',[rate.id]:'5',[fridge.id]:'na',[plain.id]:'Compliant'}),{points:13,max:13,scored:3,answered:3,percent:100});
+}finally{await app.close();}});

@@ -63,14 +63,14 @@
  // but still count toward the maximum; N/A leaves that step out of both. Points come from the step's saved copy,
  // falling back to the shared catalogue for steps saved before points were recorded.
  function stepPoints(step){
-  if(step?.type==='yes-no-na')return{options:['yes','no'],points:[1,0],skip:['na']};
+  if(step?.type==='yes-no-na')return{options:['yes','no'],points:Array.isArray(step.points)&&step.points.length===2?step.points:[1,0],skip:['na']};
   if(step?.type!=='buttons')return null;const set=model.buttonSets[step.buttons];const options=step.options||set?.options||[],points=Array.isArray(step.points)&&step.points.length===options.length?step.points:set&&set.options.length===options.length?set.points:null;
   return points?{options,points,skip:[]}:null;
  }
  function score(steps,answers={}){
   const off=hidden(steps,answers);let points=0,max=0,scored=0,answered=0;
   for(const step of steps||[]){if(off.has(step.id))continue;const scale=stepPoints(step);if(!scale)continue;const value=answers?.[step.id];if(scale.skip.includes(value))continue;scored++;max+=Math.max(...scale.points);const at=scale.options.indexOf(value);if(at>=0){points+=scale.points[at];answered++;}}
-  return{points,max,scored,answered,percent:max?Math.round(points/max*100):null};
+  points=Math.round(points*100)/100;max=Math.round(max*100)/100;return{points,max,scored,answered,percent:max>0?Math.round(points/max*100):null};
  }
  // Every visible response answered and every needed corrective action recorded.
  function complete(steps,answers={},actions={}){const state=evaluate(steps,answers,actions);return state.responses.length>0&&state.answered===state.responses.length&&!state.missingActions.length;}
