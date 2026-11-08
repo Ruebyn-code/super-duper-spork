@@ -124,3 +124,40 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 @media(prefers-reduced-motion:reduce){.home-personal-folder-icon{transition:none}}
 /* One-colour gradient on the personal panel. */
 @media screen{.home-personal{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 15%,var(--theme-surface,#fff)) 0%,color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff)) 100%)}}
+/* Phones: a compact personal panel — smaller greeting, tighter Quick links tiles and denser Your work groups. */
+@media screen and (max-width:700px){
+.home-personal{padding:10px 10px 8px}
+#home-personal .home-hero{padding:0 0 8px;margin:0 0 8px}
+#home-personal .home-hero>div:first-child{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
+#home-personal #user-greeting{font-size:20px;line-height:1.2}
+#home-personal #home-today{font-size:10px}
+.home-side-quick-links{margin:0 0 8px;padding:0 0 6px}
+#home-side-quick-links .home-section-heading{min-height:24px;margin:0 0 4px}
+#home-side-quick-links .home-quick-scroll-controls button{width:28px;height:28px;min-height:28px;font-size:12px}
+#home-side-quick-links .home-actions{gap:5px;padding:1px 0 4px}
+#home-side-quick-links .home-actions .home-action{flex:0 0 62px;min-width:62px;max-width:62px;height:52px;min-height:52px;max-height:52px;gap:2px;padding:3px}
+#home-side-quick-links .home-action :is(.home-card-icon,.home-section-icon){width:18px;height:18px;flex:0 0 18px}
+#home-side-quick-links .home-action svg{width:16px;height:16px}
+#home-side-quick-links .home-card-content h2,#home-side-quick-links .home-quick-add-label{font-size:8.5px}
+#home-side-quick-links .home-quick-add-tile .home-quick-add-symbol.home-card-icon{width:18px;height:18px;flex-basis:18px;font-size:14px}
+#home-side-quick-links .home-action:has(.home-card-value:not(:empty)) .home-card-content h2{-webkit-line-clamp:1}
+#home-side-quick-links .home-card-value{display:block;margin-top:1px;font-size:8px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-personal-heading{margin:0 0 4px}.home-personal-heading h2{font-size:13px}
+.home-personal-heading>button{flex-basis:28px;width:28px;height:28px;padding:5px}
+#home-personal-content{grid-template-columns:minmax(0,1fr);gap:0}
+.home-personal-group+.home-personal-group{margin:0;padding:7px 0 0;border-left:0;border-top:1px solid var(--theme-line,#dce5ed)}
+.home-personal-group{padding-bottom:5px}
+.home-personal-group-heading{min-height:24px}.home-personal-group-heading h3{font-size:11.5px}
+.home-personal-count{min-width:20px;min-height:18px;font-size:10px}
+.home-personal-list{margin:3px 0 0}
+.home-personal-item{gap:7px;padding:5px 4px}
+.home-personal-marker{flex-basis:22px;width:22px;height:22px}.home-personal-marker svg{width:14px;height:14px}
+.home-personal-copy strong{font-size:11.5px;line-height:1.35}.home-personal-copy small{margin-top:1px;font-size:9.5px;line-height:1.35}
+.home-personal-item .home-personal-marker.home-personal-ring{width:28px;height:28px;flex-basis:28px}
+.home-personal-ring-value{font-size:9px}
+.home-personal-status,.home-personal-empty,.home-personal-error{margin:2px 0 0;font-size:10px;line-height:1.4}
+.home-personal-sales{margin:0 0 6px}
+.home-personal-approvals{margin:0 0 7px;padding:0 0 5px}
+.home-personal-more{padding:4px 3px;margin:2px 0 0}
+.home-personal-conversation{min-height:32px;padding:3px 4px}
+}
