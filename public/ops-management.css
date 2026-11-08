@@ -751,3 +751,4 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-filter-menu .ops-upcoming-toggle input:checked::after{transform:translateX(13px)}
 .ops-filter-menu .ops-upcoming-toggle input:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}
 @media(forced-colors:active){.ops-filter-menu .ops-upcoming-toggle input{appearance:auto;-webkit-appearance:auto}.ops-filter-menu .ops-upcoming-toggle input::after{display:none}}
+.ops-task-pin.ops-task-pin-static,.ops-task-pin.ops-task-pin-static:hover{opacity:1;cursor:default;background:transparent;pointer-events:none}

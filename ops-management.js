@@ -222,7 +222,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   }
   const priority={urgent:0,high:1,normal:2};tasks.sort((a,b)=>(priority[a.priority]-priority[b.priority])||(a.dueAt||'z').localeCompare(b.dueAt||'z')||a.title.localeCompare(b.title));
   const history=state.runs.filter(run=>allowed(run,actor,selected,state)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
-  return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(item=>summary(item,actor)),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
+  return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,pins:(state.pins||[]).filter(item=>item.companyId===actor.companyId&&planners.some(plan=>plan.id===item.plannerId)).map(item=>item.plannerId),locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(item=>summary(item,actor)),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
  // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
  function reportSteps(list,run,locationId,actor,current){
@@ -282,6 +282,16 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    // Compatibility for older clients. The builder itself never edits location or scheduling data.
    if(!contentOnly){if(!can(actor,'ops.planners'))fail('Checklist planner permission required.',403);if(state.planners.some(plan=>!plan.retired&&plan.templateId===saved.id&&plan.id!==saved.id))fail('This checklist already has a planner. Edit it through Plans.',409);const old=state.planners.find(plan=>plan.id===saved.id&&plan.legacy);const plan={...old,id:saved.id,legacy:true,templateId:saved.id,companyId:saved.companyId,title:old?.title||saved.title,locationIds:value.locationIds,active:value.active,schedule:value.schedule,dueTime:old?.dueTime||null,reminderMinutes:old?.reminderMinutes||0,priority:old?.priority||'normal',instructions:old?.instructions||'',revision:(old?.revision||0)+1,requestId:old?.requestId||'migrated:'+saved.id,createdAt:old?.createdAt||saved.createdAt,createdById:old?.createdById||saved.createdById,createdBy:old?.createdBy||saved.createdBy,updatedAt:stamp(),updatedBy:actor.username};if(old)state.planners.splice(state.planners.indexOf(old),1,plan);else state.planners.push(plan);}
    return templateResult(state,saved,actor,stores);
+  });
+ }
+ // Pinned checklists are shared by the whole company: managers pin a plan and it sits at the top of everyone's Checklists page.
+ async function setPin(actor,input){
+  need(actor,'ops.manage');if(!input||typeof input!=='object'||typeof input.plannerId!=='string'||typeof input.pinned!=='boolean')fail('Choose a checklist to pin or unpin.');const stores=await access(actor);
+  return mutate(state=>{
+   const plan=state.planners.find(item=>item.id===input.plannerId&&!item.retired&&company(item,actor)&&item.locationIds.some(id=>stores.some(store=>store.id===id)));if(!plan)fail('Checklist not found.',404);
+   state.pins=(state.pins||[]).filter(item=>!(item.companyId===actor.companyId&&item.plannerId===plan.id));
+   if(input.pinned){if(state.pins.filter(item=>item.companyId===actor.companyId).length>=100)fail('Up to 100 checklists can be pinned.');state.pins.push({companyId:actor.companyId,plannerId:plan.id,pinnedAt:stamp(),pinnedById:actor.id||null,pinnedBy:actor.username||actor.name||''});}
+   return{pins:state.pins.filter(item=>item.companyId===actor.companyId).map(item=>item.plannerId)};
   });
  }
  async function setTemplateStatus(actor,id,input){
@@ -447,7 +457,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,report,saveTemplate,setTemplateStatus,savePlanner,keepPlanner,start,get,saveRun,upload,download,activity};
+ return{list,report,saveTemplate,setTemplateStatus,setPin,savePlanner,keepPlanner,start,get,saveRun,upload,download,activity};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
@@ -455,6 +465,7 @@ async function route({req,res,url,params,session,store,body,json,fail}){
  if(url==='/api/ops-management/templates'&&req.method==='POST'){json(201,await store.saveTemplate(session,await body(req,250000)));return true;}
  const templateStatus=url.match(/^\/api\/ops-management\/templates\/([a-f0-9-]{36})\/status$/i);if(templateStatus&&req.method==='PUT'){json(200,await store.setTemplateStatus(session,templateStatus[1],await body(req,10000)));return true;}
  const template=url.match(/^\/api\/ops-management\/templates\/([a-f0-9-]{36})$/i);if(template&&req.method==='PUT'){json(200,await store.saveTemplate(session,await body(req,250000),template[1]));return true;}
+ if(url==='/api/ops-management/pins'&&req.method==='PUT'){json(200,await store.setPin(session,await body(req,5000)));return true;}
  if(url==='/api/ops-management/planners'&&req.method==='POST'){json(201,await store.savePlanner(session,await body(req,30000)));return true;}
  const keep=url.match(/^\/api\/ops-management\/planners\/([a-f0-9-]{36})\/keep$/i);if(keep&&req.method==='POST'){json(200,await store.keepPlanner(session,keep[1],await body(req,30000)));return true;}
  const planner=url.match(/^\/api\/ops-management\/planners\/([a-f0-9-]{36})$/i);if(planner&&req.method==='PUT'){json(200,await store.savePlanner(session,await body(req,30000),planner[1]));return true;}

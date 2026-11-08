@@ -400,3 +400,14 @@ test('the whole-day Checklists list keeps finished and completed checklists on t
  assert.equal((await app.start(missed.template.id,app.first,app.member,{plannerId:missed.plan.id})).status,400,'finished windows cannot start');
  assert.ok(Date.parse(whole.nextChangeAt)<=Date.parse('2026-10-19T03:00:00Z'),'refreshes when the next window opens or closes');
 }finally{await app.close();}});
+test('pinned checklists are shared by the company and only checklist managers can change them',async()=>{const app=await fixture();try{
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Pinned',steps:[app.step('check')]})).data,plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Pinned',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ assert.equal((await app.api(app.member,'/pins','PUT',{plannerId:plan.id,pinned:true})).status,403,'staff cannot pin');
+ assert.equal((await app.api(app.office,'/pins','PUT',{plannerId:plan.id,pinned:'yes'})).status,400);
+ assert.equal((await app.api(app.office,'/pins','PUT',{plannerId:crypto.randomUUID(),pinned:true})).status,404);
+ const pinned=await app.api(app.office,'/pins','PUT',{plannerId:plan.id,pinned:true});assert.equal(pinned.status,200);assert.deepEqual(pinned.data.pins,[plan.id]);
+ assert.deepEqual((await app.api(app.office,'/pins','PUT',{plannerId:plan.id,pinned:true})).data.pins,[plan.id],'pinning twice keeps one pin');
+ assert.deepEqual((await app.api(app.member,'?whole=1&location='+app.first)).data.pins,[plan.id],'everyone in the company sees the pin');
+ assert.deepEqual((await app.api(app.outside,'?whole=1')).data.pins,[],'other companies do not');
+ assert.deepEqual((await app.api(app.office,'/pins','PUT',{plannerId:plan.id,pinned:false})).data.pins,[]);
+}finally{await app.close();}});
