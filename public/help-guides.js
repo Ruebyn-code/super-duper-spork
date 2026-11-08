@@ -781,7 +781,7 @@
   'Fill any On Print or On Label fields, check ready/discard times and choose quantity.',
   'Review the complete label preview and selected media settings.',
   'Use the available print/download action and confirm the physical output on your printer.'
- ],{route:'/labels',permissions:['prep.view'],notes:['Labels → Prep list shows each location’s daily prep items grouped by station. Tick items off as you finish them (your name and the time are saved); items linked to a label template show Print labels. Managers use Manage items to set the amount, unit, station and days for each item.','Creating a print batch does not prove a physical printer delivered it. Saved templates determine shelf-life rules; check them before use.'],related:['label-templates','label-history'],keywords:['prep','Zebra','print','expiry','food label']});
+ ],{route:'/labels',permissions:['prep.view'],notes:['Print by Bluetooth sends labels straight to a Bluetooth label printer: choose Connect in the print popup, pick the printer from the browser’s Bluetooth list, then print. It needs Chrome or Edge on Android, Windows, Mac or ChromeOS (not iPhone or iPad), and you reconnect after reloading the page.','Labels → Prep list shows each location’s daily prep items grouped by station. Tick items off as you finish them (your name and the time are saved); items linked to a label template show Print labels. Managers use Manage items to set the amount, unit, station and days for each item.','Creating a print batch does not prove a physical printer delivered it. Saved templates determine shelf-life rules; check them before use.'],related:['label-templates','label-history'],keywords:['prep','Zebra','print','expiry','food label']});
  add(c,'label-templates','Design label templates and printer settings','Build company templates using the actual paper size.',[
   'In Labels, choose Add label template or edit through a template’s menu.',
   'Choose its category, name and company-approved timing rules.',
@@ -800,7 +800,7 @@
   'In the system print dialog, select the installed printer, matching paper size, 100%/actual scale, no headers or footers and zero margins.',
   'For a Zebra-file workflow, download the ZPL and send it through your installed Zebra software or configured print service.',
   'Check the physical label for media calibration, resolution and margins. Ask your device administrator if no printer is available.'
- ],{notes:['Phone printing needs a compatible system printer or print service. A saved batch or downloaded file does not itself confirm physical printing.'],related:['print-labels','label-templates','support-request']});
+ ],{notes:['For Bluetooth printing, make sure the printer is on, nearby and not connected to another device, then choose Connect again. The connection drops when the page reloads.','Phone printing needs a compatible system printer or print service. A saved batch or downloaded file does not itself confirm physical printing.'],related:['print-labels','label-templates','support-request']});
  add(c,'order-not-sent','An order saved but the supplier email did not send','Check sender settings, recipient details and the actual outcome.',[
   'Open the saved order and read each supplier’s delivery message before placing anything again.',
   'Check the correct location’s Sending tab: sender, saved Resend key and Enable automatic supplier emails.',

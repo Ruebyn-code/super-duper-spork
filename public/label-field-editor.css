@@ -343,3 +343,14 @@
 @media(max-width:700px){#labels-item-dialog #labels-designer.label-designer-canvas-first{grid-template-rows:auto auto auto;align-content:start}#labels-item-dialog .label-design-workspace{grid-template-rows:auto auto}}
 @media(max-width:700px){#labels-item-dialog .label-design-workspace,#labels-item-dialog .label-design-layers{min-height:auto}}
 @media(max-width:700px){#labels-item-dialog .label-design-selection{position:sticky;bottom:-10px;z-index:2;margin:0 -12px -10px;padding:8px 12px 10px;background:var(--theme-surface,#fff);border-top:1px solid var(--lbl-line)}}
+/* Print popup: Bluetooth printer connection line above the print actions. */
+#labels-print-dialog .labels-bt{display:flex;align-items:center;gap:7px;min-width:0;padding:5px 6px 5px 9px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));border-radius:9px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));font-size:.74rem;color:var(--theme-muted,#5b6b7a)}
+#labels-print-dialog .labels-bt-icon{flex:none;color:var(--theme-muted,#5b6b7a)}
+#labels-print-dialog .labels-bt[data-state=on]{border-color:color-mix(in srgb,#16a34a 40%,var(--theme-line,#dce5ed));background:color-mix(in srgb,#16a34a 7%,var(--theme-surface,#fff));color:var(--theme-text,#182b3a)}
+#labels-print-dialog .labels-bt[data-state=on] .labels-bt-icon{color:#16a34a}
+#labels-print-dialog .labels-bt-state{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#labels-print-dialog .labels-bt[data-state=unsupported] .labels-bt-state{white-space:normal}
+#labels-print-dialog .labels-bt-connect{flex:none;min-height:30px;margin:0;padding:4px 11px;border:1px solid color-mix(in srgb,var(--secondary) 45%,var(--theme-line,#dce5ed));border-radius:7px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));font:inherit;font-weight:600;cursor:pointer}
+#labels-print-dialog .labels-bt-connect[hidden],#labels-print-dialog #labels-bluetooth[hidden]{display:none}
+#labels-print-dialog .labels-bt-connect:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(forced-colors:active){#labels-print-dialog .labels-bt{border:1px solid CanvasText}}

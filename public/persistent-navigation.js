@@ -137,7 +137,7 @@
    const childUrl=new URL(current.contentWindow.location.href);if(childUrl.hash!==url.hash){childUrl.hash=url.hash;current.contentWindow.location.replace(childUrl.href);}setAddress(url,mode);return true;
   }
   generation++;if(pending){clearTimeout(pending.navigationTimer);pending.remove();}
-  const frame=document.createElement('iframe'),version=generation;frame.className='shell-page-frame';frame.dataset.pending='';frame.title='Loading page';
+  const frame=document.createElement('iframe'),version=generation;frame.className='shell-page-frame';frame.allow='bluetooth';frame.dataset.pending='';frame.title='Loading page';
   frame.addEventListener('load',()=>loaded(frame,version,mode));
   frame.addEventListener('error',()=>{if(frame===pending){frame.remove();pending=null;fail('Connection unavailable. Try opening this page again.');}});
   frame.navigationTimer=setTimeout(()=>{if(pending===frame){frame.remove();pending=null;fail('This page is taking longer than expected. Try again.');}},30000);
