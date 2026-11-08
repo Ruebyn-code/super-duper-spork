@@ -251,3 +251,18 @@ Add step → **Buttons** offers ready-made steps answered with one tap:
 | Satisfaction | Very dissatisfied … Very satisfied (faces) | — |
 
 Each entry (from `opsStepModel.buttonSets`) is its own step type: it appears by name in the step's **Step type** dropdown and lists its buttons in the step options. Steps are saved as `{type: 'buttons', buttons: '<preset id>', options}`; the server always takes the buttons from the catalogue (ignoring any sent by the browser), rejects unknown ids and accepts only one of those buttons as an answer. Presets that start with a pass rule can have it changed or removed under Logic. Button steps saved earlier as Selection steps with a button style keep working and open as the matching button type. A plain custom, single-choice Selection can still turn on **Show as buttons**. The checklist reader and phone preview draw these as radio-backed buttons: ratings as a number grid (up to ten per row, five on phones), Satisfaction with faces, and answers with a pass rule turning green or red when chosen. Tapping the chosen button again clears an optional step. Answers, show-when rules, pass rules, corrective actions, autosave, History and reports behave exactly as for Selection steps. The Yes / No / N/A step uses the same button look.
+
+## Scored checklists
+
+Turn on **Score this checklist** (beside Collapse steps) to add up button answers. It is a saved checklist setting (`scoring`) that older writers keep when they omit it, and new runs freeze it in their snapshot.
+
+| Step | Points |
+| --- | --- |
+| Completed without having to interfere, They Know What It is, Yes/No | Yes 1 · No 0 |
+| Pass/Fail | Pass 1 · Fail 0 |
+| Compliant/Not Compliant | Compliant 1 · Not compliant 0 |
+| Number rating 1–5 / 1–10 / 1–20 | the number chosen |
+| Satisfaction | Very dissatisfied 1 … Very satisfied 5 |
+| Yes / No / N/A | Yes 1 · No 0 · N/A left out of the total and maximum |
+
+The total is points ÷ the highest possible points of every scored step the person can see. Steps hidden by show-when rules are left out. Unanswered steps add nothing but still count toward the maximum, so the score only reaches 100% when every scored step gets its best answer. Button steps save their points with the step (`points`), so later changes to the catalogue don't change old runs. `opsStepLogic.score` is shared by the reader, the server's run summaries, History and Reporting. The run reader shows **Score points / max · %** beside the progress count and updates as answers change. History cards show the same badge, and Reporting → Checklist progress adds it under the progress figure and as Score, Score max and Score % columns in the CSV. Scores are always worked out from saved answers and are never stored separately.

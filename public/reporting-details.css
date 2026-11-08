@@ -268,3 +268,4 @@ span.report-ranking-ring-place:not(.report-rank-place){font-size:11px;font-weigh
 @media(forced-colors:active){.report-rank-place[data-medal]{background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none}#report-ranking-rows tr[data-rank] td{background:Canvas}}
 /* Keep status badge text on the same line as the other top-aligned cells. */
 .report-progress-table td>.report-progress-badge:first-child{margin-top:-5px}
+.report-progress-score{display:block;margin-top:3px;font-size:10px;font-weight:600;color:var(--theme-primary-text,var(--primary));font-variant-numeric:tabular-nums}

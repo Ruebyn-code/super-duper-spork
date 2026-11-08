@@ -59,6 +59,19 @@
   for(const step of responses){const value=answers?.[step.id];if(outcome(step,value)==='fail')fails.push(step.id);const gaps=actionMissing(step,value,actions?.[step.id]);if(gaps.length)missing.push({id:step.id,missing:gaps});}
   return{hidden:off,visible,responses,answered:responses.filter(step=>model.answered(step,answers?.[step.id])).length,fails,missingActions:missing};
  }
+ // Scored checklists: each visible button step (and Yes / No / N/A) adds its answer's points; unanswered steps add 0
+ // but still count toward the maximum; N/A leaves that step out of both. Points come from the step's saved copy,
+ // falling back to the shared catalogue for steps saved before points were recorded.
+ function stepPoints(step){
+  if(step?.type==='yes-no-na')return{options:['yes','no'],points:[1,0],skip:['na']};
+  if(step?.type!=='buttons')return null;const set=model.buttonSets[step.buttons];const options=step.options||set?.options||[],points=Array.isArray(step.points)&&step.points.length===options.length?step.points:set&&set.options.length===options.length?set.points:null;
+  return points?{options,points,skip:[]}:null;
+ }
+ function score(steps,answers={}){
+  const off=hidden(steps,answers);let points=0,max=0,scored=0,answered=0;
+  for(const step of steps||[]){if(off.has(step.id))continue;const scale=stepPoints(step);if(!scale)continue;const value=answers?.[step.id];if(scale.skip.includes(value))continue;scored++;max+=Math.max(...scale.points);const at=scale.options.indexOf(value);if(at>=0){points+=scale.points[at];answered++;}}
+  return{points,max,scored,answered,percent:max?Math.round(points/max*100):null};
+ }
  // Every visible response answered and every needed corrective action recorded.
  function complete(steps,answers={},actions={}){const state=evaluate(steps,answers,actions);return state.responses.length>0&&state.answered===state.responses.length&&!state.missingActions.length;}
  // Remove rules that no longer fit the steps (source deleted, moved later or changed type). Used before saving drafts.
@@ -78,5 +91,5 @@
  function conditionText(step,steps){const condition=step.showWhen;if(!condition)return'';const source=(steps||[]).find(item=>item.id===condition.stepId),name=source?.title||'an earlier step';let value='';if(['is','isNot'].includes(condition.operator))value=' '+(source?.type==='yes-no-na'?(yesNoNa.find(([key])=>key===condition.value)?.[1]||condition.value):condition.value);if(['lt','gt'].includes(condition.operator))value=' '+numberText(source||{},condition.value);return'Shown when “'+name+'” '+operatorNames[condition.operator]+value;}
  function ruleText(step){const rule=step.passRule;if(!rule)return'';if(step.type==='yes-no-na')return'Passes when '+(rule.pass==='yes'?'Yes':'No')+' · N/A doesn’t count';if(step.type==='number'){if(rule.min!=null&&rule.max!=null)return'Passes from '+numberText(step,rule.min)+' to '+numberText(step,rule.max);if(rule.min!=null)return'Passes at '+numberText(step,rule.min)+' or more';return'Passes at '+numberText(step,rule.max)+' or less';}return'Passes when '+(rule.options||[]).join(', ');}
  function actionText(step){const action=step.failAction;if(!action)return'';const parts=[action.note&&'a note',action.photo&&'a photo'].filter(Boolean);return parts.length?'If it fails, add '+parts.join(' and ')+' explaining what was done':'';}
- return{yesNoNa,operatorNames,ruleTypes,canHaveRule,canHaveCondition,customSelection,operators,needsValue,valueOptions,outcome,matches,hidden,actionNeed,actionMissing,evaluate,complete,sanitize,conditionText,ruleText,actionText};
+ return{score,stepPoints,yesNoNa,operatorNames,ruleTypes,canHaveRule,canHaveCondition,customSelection,operators,needsValue,valueOptions,outcome,matches,hidden,actionNeed,actionMissing,evaluate,complete,sanitize,conditionText,ruleText,actionText};
 });

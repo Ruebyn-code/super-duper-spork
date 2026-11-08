@@ -620,3 +620,9 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-button-type-preview{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
 .ops-button-type-label{margin-right:4px;font-size:.78rem;font-weight:600;color:var(--theme-muted,#5b6b7a)}
 .ops-button-type-chip{padding:4px 10px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff));font-size:.76rem;font-weight:600;color:var(--theme-text,#182b3a)}
+/* Scored checklists: live total beside the progress count, and on History cards. */
+.ops-run-score{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);font-size:12px;font-weight:700;line-height:1.4;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ops-run-score[hidden]{display:none}
+.ops-run-progress{flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.ops-badge.score{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-weight:700;font-variant-numeric:tabular-nums}
+@media(forced-colors:active){.ops-run-score{border:1px solid CanvasText}}

@@ -6,15 +6,16 @@
  // the options stay ordinary editable choices, so show-when rules, pass rules and reports work unchanged.
  const ratings=count=>Array.from({length:count},(_,index)=>String(index+1));
  const buttonSets={
-  interfere:{label:'Completed without having to interfere',icon:'list',title:'Completed without having to interfere',options:['Yes','No'],pass:['Yes']},
-  knows:{label:'They Know What It is',icon:'list',title:'They know what it is',options:['Yes','No'],pass:['Yes']},
-  'rating-5':{label:'Number rating (1 to 5)',icon:'star',options:ratings(5)},
-  'rating-10':{label:'Number rating (1 to 10)',icon:'star',options:ratings(10)},
-  'rating-20':{label:'Number rating (1 to 20)',icon:'star',options:ratings(20)},
-  'yes-no':{label:'Yes, No',icon:'list',options:['Yes','No']},
-  'pass-fail':{label:'Pass, Fail',icon:'check',options:['Pass','Fail'],pass:['Pass']},
-  compliant:{label:'Compliant, Not Compliant',icon:'shield',options:['Compliant','Not compliant'],pass:['Compliant']},
-  satisfaction:{label:'Satisfaction',icon:'smile',options:['Very dissatisfied','Dissatisfied','Neutral','Satisfied','Very satisfied']},
+  // points: what each button adds to a scored checklist's total (same order as options).
+  interfere:{label:'Completed without having to interfere',icon:'list',title:'Completed without having to interfere',options:['Yes','No'],points:[1,0],pass:['Yes']},
+  knows:{label:'They Know What It is',icon:'list',title:'They know what it is',options:['Yes','No'],points:[1,0],pass:['Yes']},
+  'rating-5':{label:'Number rating (1 to 5)',icon:'star',options:ratings(5),points:ratings(5).map(Number)},
+  'rating-10':{label:'Number rating (1 to 10)',icon:'star',options:ratings(10),points:ratings(10).map(Number)},
+  'rating-20':{label:'Number rating (1 to 20)',icon:'star',options:ratings(20),points:ratings(20).map(Number)},
+  'yes-no':{label:'Yes, No',icon:'list',options:['Yes','No'],points:[1,0]},
+  'pass-fail':{label:'Pass, Fail',icon:'check',options:['Pass','Fail'],points:[1,0],pass:['Pass']},
+  compliant:{label:'Compliant, Not Compliant',icon:'shield',options:['Compliant','Not compliant'],points:[1,0],pass:['Compliant']},
+  satisfaction:{label:'Satisfaction',icon:'smile',options:['Very dissatisfied','Dissatisfied','Neutral','Satisfied','Very satisfied'],points:[1,2,3,4,5]},
   buttons:{label:'Buttons',icon:'list',options:[]}
  };
  // Button steps are their own `buttons` type (one preset per type choice); a plain custom single Selection may also show as generic buttons.

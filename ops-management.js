@@ -33,7 +33,7 @@ function normalize(input){
   if(step.type==='buttons'){
    // Button types take their buttons from the shared catalogue (the saved step keeps a copy for run snapshots).
    if(typeof step.buttons!=='string'||step.buttons==='buttons'||!Object.hasOwn(stepModel.buttonSets,step.buttons))fail('Choose a valid button type for “'+result.title+'”.');
-   result.buttons=step.buttons;result.options=[...stepModel.buttonSets[step.buttons].options];
+   result.buttons=step.buttons;result.options=[...stepModel.buttonSets[step.buttons].options];result.points=[...stepModel.buttonSets[step.buttons].points];
   }
   if(step.type==='selection'){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
@@ -98,11 +98,12 @@ function normalize(input){
   return result;
  });
  if(input.autoCollapse!==undefined&&typeof input.autoCollapse!=='boolean')fail('Choose whether completed steps collapse.');
- return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps,...(typeof input.autoCollapse==='boolean'?{autoCollapse:input.autoCollapse}:{})};
+ if(input.scoring!==undefined&&typeof input.scoring!=='boolean')fail('Choose whether this checklist is scored.');
+ return{title,description,active:input.active,locationIds:[...input.locationIds],schedule:{kind:s.kind,startDate,endDate,weekday:s.kind==='weekly'?s.weekday:null},steps,...(typeof input.autoCollapse==='boolean'?{autoCollapse:input.autoCollapse}:{}),...(typeof input.scoring==='boolean'?{scoring:input.scoring}:{})};
 }
 function normalizeContent(input){
  const value=normalize({...input,locationIds:['content'],active:true,schedule:{kind:'manual',startDate:'2026-01-01'}});
- return{title:value.title,description:value.description,steps:value.steps,...(value.autoCollapse!==undefined?{autoCollapse:value.autoCollapse}:{})};
+ return{title:value.title,description:value.description,steps:value.steps,...(value.autoCollapse!==undefined?{autoCollapse:value.autoCollapse}:{}),...(value.scoring!==undefined?{scoring:value.scoring}:{})};
 }
 function normalizeTradingHours(value){
  if(value===undefined||value===null)return null;
@@ -184,7 +185,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const options=await selectionOptions(actor,stores,run);for(const id of hidden)delete options[id];
   return{...view,selectionOptions:options,resources};
  }
- const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length};};
+ const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length,...(snapshot.scoring?{score:stepLogic.score(steps,answers)}:{})};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
@@ -228,7 +229,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    const workDate=run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
    if(workDate<start||workDate>end)continue;
    const item=summary(run),dueAt=run.dueAt!==undefined?run.dueAt:plannerModel.deadline(run.dueDate,run.snapshot.planner?.dueTime);
-   rows.push({id:run.id,templateId:run.templateId||null,steps:reportSteps(run.snapshot.steps||[],{...run,workDate},run.locationId,actor,current),title:item.title,plannerName:run.plannerName||'',workDate,dueDate:run.dueDate,dueAt,status:run.status==='completed'?'completed':dueAt&&Date.parse(dueAt)<current?'overdue':'in-progress',answered:item.answered,stepCount:item.stepCount,percent:run.status==='completed'?100:Math.round(item.answered/Math.max(1,item.stepCount)*100),startedAt:run.createdAt,completedAt:run.completedAt,completedBy:run.completedBy||'',updatedBy:run.updatedBy||run.createdBy||'',kind:'saved'});
+   rows.push({id:run.id,templateId:run.templateId||null,steps:reportSteps(run.snapshot.steps||[],{...run,workDate},run.locationId,actor,current),title:item.title,plannerName:run.plannerName||'',workDate,dueDate:run.dueDate,dueAt,status:run.status==='completed'?'completed':dueAt&&Date.parse(dueAt)<current?'overdue':'in-progress',answered:item.answered,stepCount:item.stepCount,percent:run.status==='completed'?100:Math.round(item.answered/Math.max(1,item.stepCount)*100),startedAt:run.createdAt,completedAt:run.completedAt,completedBy:run.completedBy||'',updatedBy:run.updatedBy||run.createdBy||'',...(item.score?{score:item.score}:{}),kind:'saved'});
   }
   if(start<=today()&&end>=today()){
    const dashboard=await list(actor,{date:today(),location:locationId});
@@ -319,7 +320,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const availability=plannerModel.availability(plan,slot,now(),store.tradingHours);if(!availability.allowed)fail(availability.reason);
   const plannerSnapshot={id:plan.id,title:plan.title,schedule:structuredClone(plan.schedule),dueTime:plan.dueTime,reminderMinutes:plan.reminderMinutes,priority:plan.priority,instructions:plan.instructions,type:plannerModel.type(plan),startTime:plan.startTime||null,activeFrom:plan.activeFrom||null,activeUntil:plan.activeUntil||null,roleIds:plan.roleIds||null,dueAfterDays:plan.dueAfterDays??null,tradingHours:structuredClone(plan.tradingHours||null)};
   const due=plannerModel.due(plan,slot,store.tradingHours);
-  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:slot.tradingDate||(plan.schedule.kind==='daily'?slot.startDate:day),dueDate:due.dueDate,dueAt:due.dueAt,activeWindow:{opensAt:availability.opensAt,closesAt:availability.closesAt},snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),...(template.autoCollapse?{autoCollapse:true}:{}),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
+  const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:slot.tradingDate||(plan.schedule.kind==='daily'?slot.startDate:day),dueDate:due.dueDate,dueAt:due.dueAt,activeWindow:{opensAt:availability.opensAt,closesAt:availability.closesAt},snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),...(template.autoCollapse?{autoCollapse:true}:{}),...(template.scoring?{scoring:true}:{}),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
  });}
  async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){
