@@ -787,7 +787,7 @@
   'Choose its category, name and company-approved timing rules.',
   'Use Add a field in the toolbar. Click a field to select it, then drag its body or resize handles. Use move arrows, text-size buttons and Undo move for quick adjustments. Padding (mm) reserves an inner border on the printed label. Snap uses 0.5 mm steps and other-field guides, without page-edge or page-centre magnets. Switch it off or hold Alt while dragging for free movement. Double-click or use Edit field for full formatting. Preview hides editing boxes. Done keeps a field edit, closing cancels it, and Save commits the template.',
   'Configure the printer/media resolution and test a preview before normal printing.'
- ],{route:'/labels',permissions:['prep.view','prep.manage'],notes:['The default Zebra media is 50 × 25 mm at 203 dpi. Explicitly configure other media/resolutions. Template edits do not rewrite old print batches.'],related:['print-labels','label-history']});
+ ],{route:'/labels',permissions:['prep.view','prep.manage'],notes:['Add photo in Template details shows a picture of the food on the label card to help staff pick the right label. It is saved with Save label template and is never printed.','The default Zebra media is 50 × 25 mm at 203 dpi. Explicitly configure other media/resolutions. Template edits do not rewrite old print batches.'],related:['print-labels','label-history']});
  add(c,'label-history','Review printed label batches','Find the recorded template and values used for a batch.',[
   'Open Labels → History at the relevant location.',
   'Find the batch and review its saved label details and timing.',

@@ -84,3 +84,16 @@ test('label padding is validated, retained for older writers and frozen into bat
  const profile={widthMm:50,heightMm:25},block={x:0,y:0,width:100,height:100};assert.deepEqual(model.fieldBox(design,profile,block),{x:2,y:4,width:96,height:92});assert.deepEqual(model.fieldBox(null,profile,block),block);
  }finally{await a.close();}
 });
+test('label template photos are manager-only, revision-checked, kept on edits and scoped to the company',async()=>{const a=await fixture();try{
+ const item=await a.item(),png=Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),Buffer.alloc(40,1)]).toString('base64');
+ await assert.rejects(a.store.setPhoto(a.member,item.id,{revision:item.revision,data:png}),e=>e.status===403);
+ await assert.rejects(a.store.setPhoto(a.office,item.id,{revision:item.revision,data:Buffer.from('not an image').toString('base64')}),e=>e.status===400);
+ await assert.rejects(a.store.setPhoto(a.office,item.id,{revision:item.revision+5,data:png}),e=>e.status===409);
+ const withPhoto=await a.store.setPhoto(a.office,item.id,{revision:item.revision,data:png});assert.equal(withPhoto.revision,item.revision+1);assert.equal(withPhoto.photo.type,'png');
+ const file=await a.store.photoFile(a.member,item.id);assert.equal(file.mime,'image/png');assert.equal(file.bytes.toString('base64'),png);
+ await assert.rejects(a.store.photoFile(a.other,item.id),e=>e.status===404);
+ const edited=await a.store.saveItem(a.office,{name:'Tzatziki',shelfLife:24,shelfLifeUnit:'hours',notes:'',active:true,revision:withPhoto.revision},item.id);assert.deepEqual(edited.photo,withPhoto.photo,'editing the template keeps its photo');
+ const removed=await a.store.setPhoto(a.office,item.id,{revision:edited.revision,remove:true});assert.equal(removed.photo,undefined);
+ await assert.rejects(a.store.photoFile(a.member,item.id),e=>e.status===404);
+ const listed=(await a.store.list(a.member)).items.find(entry=>entry.id===item.id);assert.equal(listed.photo,undefined);
+}finally{await a.close();}});

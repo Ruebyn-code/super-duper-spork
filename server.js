@@ -343,7 +343,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       }
       const detailedAction=actionPermission(req.url,req.method);if(detailedAction){if(!session)fail('Sign-in required.',401);if(!can(session,detailedAction))fail('Your permission level does not allow this action.',403);}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
-      if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
+      if(await prepLabels.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
       if(await prepList.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepListStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
       if(req.url==='/api/invoices/intelligence'){

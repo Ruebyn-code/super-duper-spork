@@ -13,3 +13,25 @@
 .labels-page .labels-heading,.labels-page .labels-card-heading,.labels-page .labels-dialog-heading{max-width:none;width:100%;margin-left:0;margin-right:0;padding:0;border:0;background:transparent}.labels-page .labels-heading{margin-bottom:20px}.labels-page .labels-card-heading{margin-bottom:14px}#labels-item-form label{margin-top:0}#labels-item-form #labels-active{width:16px;height:16px;min-height:16px;flex:none;margin:0 6px 0 0}#labels-item-form>.labels-toggle{justify-content:flex-start;gap:5px}.labels-category-sidebar{display:block;margin-top:0}.labels-print-dialog .labels-dialog-heading{margin-bottom:14px}
 /* Keep primary label actions filled on hover (the global button:hover tint would wash out white text). */
 button.labels-primary:hover:not(:disabled){background:var(--brand-sheen,none) color-mix(in srgb,var(--primary,#008cff) 88%,#000);color:#fff}
+/* Label cards: name bar on top, preview below; the category pill gets its own row so it never covers the label. */
+.labels-item-card .labels-card-open{display:flex!important;flex-direction:column}
+.labels-item-card .labels-card-open h3{border-bottom:1px solid var(--theme-line,#dce5ed)}
+.labels-item-card button.labels-card-more{top:11px;bottom:auto}
+.labels-card-stage{padding-top:38px}
+.labels-inactive-badge{top:auto;bottom:9px}
+/* Template photo: fills the preview area, with the label shown as a smaller card on top. */
+.labels-card-stage.has-photo{place-items:end;padding:38px 10px 10px;background:#2b2b2b}
+.labels-card-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.labels-card-stage.has-photo canvas{position:relative;width:50%;box-shadow:0 4px 16px #0007}
+.labels-card-stage .labels-category-badge{z-index:1}
+/* Template editor photo picker. */
+#labels-item-dialog .labels-photo-field{display:grid;gap:6px;margin:0 0 12px;min-width:0}
+#labels-item-dialog .labels-photo-row{display:flex;align-items:center;gap:10px;min-width:0}
+#labels-item-dialog .labels-photo-preview{flex:none;width:112px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:1px solid var(--theme-line,#dce5ed);background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
+#labels-item-dialog .labels-photo-preview img{display:block;width:100%;height:100%;object-fit:cover}
+#labels-item-dialog .labels-photo-preview.is-empty{background-image:linear-gradient(135deg,transparent 46%,color-mix(in srgb,var(--primary) 18%,transparent) 47% 53%,transparent 54%)}
+#labels-item-dialog .labels-photo-actions{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+#labels-item-dialog .labels-photo-actions button{min-height:34px;margin:0;padding:6px 11px;font-size:.76rem}
+#labels-item-dialog .labels-photo-actions button[hidden]{display:none}
+#labels-item-dialog .labels-photo-note{margin:0;font-size:.7rem;color:var(--theme-muted,#64748b)}
+.labels-item-card{display:flex;flex-direction:column}.labels-item-card .labels-card-open{flex:1 1 auto}.labels-item-card .labels-card-stage{flex:1 1 auto}
