@@ -31,3 +31,51 @@ dialog.camera-capture-dialog button:focus-visible{outline:2px solid #fff;outline
 .camera-capture-actions{padding-bottom:max(14px,env(safe-area-inset-bottom))}
 @media(max-width:700px){.camera-capture-dialog{max-height:100dvh}.camera-capture-stage{flex:1 1 0;min-height:120px}}
 @media(min-width:701px){.camera-capture-stage{flex:0 1 auto;max-height:min(70dvh,520px)}}
+/* Modern camera controls: a phone-camera style round shutter in the middle, a round switch-camera icon on the right,
+   and Retake / Use photo as icon pills either side once a shot is taken. Text stays as each button's accessible name. */
+.camera-capture-actions{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:14px 18px max(18px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#0b1220 0%,#05080f 100%)}
+.camera-capture-actions>button{grid-row:1}
+.camera-capture-actions .camera-capture-shutter{grid-column:2}
+.camera-capture-actions .camera-capture-flip,.camera-capture-actions .camera-capture-use{grid-column:3;justify-self:end}
+.camera-capture-actions .camera-capture-retake{grid-column:1;justify-self:start}
+.camera-capture-actions:has(.camera-capture-use:not([hidden])) .camera-capture-flip{display:none}
+/* Shutter: white ring with an inner disc (red for video; a rounded square while recording). */
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary.camera-capture-shutter,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary.camera-capture-shutter:hover,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary.camera-capture-shutter:focus{position:relative;width:74px;height:74px;min-height:0;padding:0;border:4px solid #fff;border-radius:50%;background:transparent;color:transparent;font-size:0;line-height:0;box-shadow:0 6px 20px #0008;transition:transform .15s ease}
+.camera-capture-shutter::after{content:'';position:absolute;inset:5px;border-radius:50%;background:#fff;transition:inset .2s ease,border-radius .2s ease,background-color .2s ease,transform .12s ease}
+.camera-capture-shutter:hover::after{background:#e9eef5}
+.camera-capture-shutter:active::after{transform:scale(.88)}
+.camera-capture-shutter.is-video::after{background:#ef4444}
+.camera-capture-shutter.is-video:hover::after{background:#f05252}
+.camera-capture-shutter.is-recording::after{inset:22px;border-radius:7px;background:#ef4444}
+.camera-capture-shutter.is-recording{animation:camera-recording 1.4s ease-in-out infinite}
+@keyframes camera-recording{50%{box-shadow:0 0 0 6px #ef444440,0 6px 20px #0008}}
+/* Round frosted icon button for switching cameras. */
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary.camera-capture-flip,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary.camera-capture-flip:hover{width:48px;height:48px;min-height:0;padding:0;border:1px solid #ffffff33;border-radius:50%;background:#ffffff1f;color:transparent;font-size:0;line-height:0;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary.camera-capture-flip:hover{background:#ffffff33}
+/* Retake / Use photo pills with leading icons. */
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-retake,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-use{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:10px 20px 10px 16px;border-radius:999px;font:600 15px/1 system-ui,sans-serif;transition:transform .15s ease,background-color .15s ease}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-retake{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-retake:hover{background:#ffffff2e}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-use{box-shadow:0 6px 18px color-mix(in srgb,var(--primary,#008cff) 45%,transparent)}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-use:active,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-retake:active,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-flip:active{transform:scale(.94)}
+.camera-capture-flip::before,.camera-capture-retake::before,.camera-capture-use::before{content:'';flex:none;width:18px;height:18px;background:#fff;-webkit-mask:var(--cam-icon) center/contain no-repeat;mask:var(--cam-icon) center/contain no-repeat}
+.camera-capture-flip::before{display:block;width:22px;height:22px;margin:auto}
+.camera-capture-flip{--cam-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 0 0-14.3-4.9L4 8'/%3E%3Cpath d='M4 4v4h4'/%3E%3Cpath d='M4 13a8 8 0 0 0 14.3 4.9L20 16'/%3E%3Cpath d='M20 20v-4h-4'/%3E%3C/svg%3E")}
+.camera-capture-retake{--cam-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 3-6.7L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3C/svg%3E")}
+.camera-capture-use{--cam-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E")}
+.camera-capture-use::before{background:var(--theme-on-primary,#fff)}
+dialog.camera-capture-dialog .camera-capture-actions button:disabled{opacity:.4}
+dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-shutter:focus-visible,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-flip:focus-visible{outline:3px solid #fff;outline-offset:4px}
+/* Frosted round close button in the header. */
+.camera-capture-head{background:linear-gradient(180deg,#0b1220 0%,#0b1220e6 100%)}
+dialog.camera-capture-dialog .camera-capture-close{width:38px;height:38px;border-radius:50%;background:#ffffff1f;border:1px solid #ffffff26;font-size:20px;transition:background-color .15s ease}
+dialog.camera-capture-dialog .camera-capture-close:hover{background:#ffffff33}
+@media(prefers-reduced-motion:reduce){.camera-capture-shutter,.camera-capture-shutter::after,dialog.camera-capture-dialog .camera-capture-actions button{transition:none;animation:none}}
+@media(forced-colors:active){dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary.camera-capture-shutter{border-color:ButtonText;forced-color-adjust:none}.camera-capture-shutter::after,.camera-capture-flip::before,.camera-capture-retake::before,.camera-capture-use::before{background:ButtonText}}
+dialog.camera-capture-dialog .camera-capture-actions button[hidden]{display:none!important}
+/* Full screen on every device: the camera covers the whole viewport (the app shell hides its bars meanwhile). */
+dialog.camera-capture-dialog{position:fixed;inset:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;box-shadow:none}
+.camera-capture-dialog .camera-capture-stage{flex:1 1 0;aspect-ratio:auto;max-height:none;min-height:120px}
+.camera-capture-head{padding-top:max(10px,env(safe-area-inset-top))}
+html:has(body.camera-capture-fullscreen){overflow:hidden}
+html body dialog.camera-capture-dialog,html body dialog.camera-capture-dialog[open]{position:fixed!important;inset:0!important;width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}

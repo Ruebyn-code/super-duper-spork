@@ -230,7 +230,7 @@ Checklist steps can use logic, set in each step's options under **Logic** (Ops c
 
 Photo / video steps (and corrective-action photos on failed checks) are captured with the device camera, not uploaded from files:
 
-- **Take photo** and **Record video** open the camera in the app (`public/camera-capture.js`). You can switch between front and back cameras, retake, then choose **Use photo** or **Use video**. Videos are capped at 60 seconds and 25 MB. Allowed media (photos, videos or both) decides which buttons appear.
+- **Take photo** and **Record video** open the camera in the app (`public/camera-capture.js`). You can switch between front and back cameras, retake, then choose **Use photo** or **Use video**. Videos are capped at 60 seconds and 25 MB. Allowed media (photos, videos or both) decides which buttons appear. The camera takes over the full screen on every device (the app's top bar and phone tabs hide while it is open and return on close), keeps its controls on screen whatever the camera's picture shape, and uses phone-camera style controls: a round centre shutter (a red disc for video that becomes a square while recording), a round switch-camera button, and Retake / Use photo icon buttons.
 - If the browser can't open the camera in the app, phones fall back to their own camera screen. Computers without a camera show a note to use a phone or tablet. There's no file picker for these steps.
 - File submission steps still accept uploaded files as before.
 - Captured files go through the same run media upload, size checks and private media access as before.

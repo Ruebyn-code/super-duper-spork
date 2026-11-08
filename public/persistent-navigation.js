@@ -67,12 +67,14 @@
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
   root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
   root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')));
+  // The camera takes over the whole screen: hide the shell's bars while it is open in the page or the phone roster.
+  root.classList.toggle('shell-camera-fullscreen',[current,rosterPopup].some(frame=>frame?.contentDocument?.body?.classList.contains('camera-capture-fullscreen')));
   // The phone roster is a page reader. Its sheet covers only the content
   // document, so users must still be able to leave through the shared bar.
   const modal=[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('dialog[open]:not(#phone-roster)'));
   root.classList.toggle('shell-feature-help-open',[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('.feature-help-dialog[open]')));
   root.classList.toggle('shell-wastage-open',[current,rosterPopup].some(frame=>frame?.contentDocument?.querySelector('.waste-dialog[open]')));
-  if(modal||root.classList.contains('shell-conversation-fullscreen')||root.classList.contains('shell-checklist-fullscreen')||root.classList.contains('shell-course-fullscreen'))window.appSearch?.close();
+  if(modal||root.classList.contains('shell-camera-fullscreen')||root.classList.contains('shell-conversation-fullscreen')||root.classList.contains('shell-checklist-fullscreen')||root.classList.contains('shell-course-fullscreen'))window.appSearch?.close();
   for(const control of document.querySelectorAll('#app-sidebar,#mobile-tabbar,.mobile-brand-header,#app-edit-indicator,#shift-clock-dock'))control.inert=modal;
  }
  function closePhoneRoster(focus=false){
