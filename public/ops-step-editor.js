@@ -1,7 +1,7 @@
 // Optional settings let other builders (for example in-store training) reuse this editor:
 // kinds limits the step types, selectionSources limits selection item sources and extraDetails adds a step's own settings.
 window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audienceOptions,kinds,selectionSources,extraDetails,logic:withLogic=false,articleLinks=false})=>{
- const model=opsStepModel,timing=opsStepTiming,opened=new Set(),kindList=kinds||model.kinds,kindName=type=>kindList[type]||model.kinds[type]||type;let items=[],drag=null,scrollFrame=0;
+ const model=opsStepModel,timing=opsStepTiming,opened=new Set(),logicOpen=new Set(),kindList=kinds||model.kinds,kindName=type=>kindList[type]||model.kinds[type]||type;let items=[],drag=null,scrollFrame=0;
  const el=(tag,cls)=>{const node=document.createElement(tag);if(cls)node.className=cls;return node;};
  const input=(type,value)=>{const node=el('input');node.type=type;node.value=value??'';return node;};
  const changed=()=>onChange(items);
@@ -73,6 +73,13 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   host.append(grid);
    // Score points sit at the top of the Logic panel so scoring and pass/fail settings are together.
   {const points=grid.querySelector(':scope>.ops-button-points'),logicBox=grid.querySelector(':scope>.ops-logic-fields');if(points&&logicBox)logicBox.insertBefore(points,logicBox.querySelector(':scope>legend')?.nextSibling||logicBox.firstChild);}
+  // Logic stays out of the way until the step uses it or the builder chooses Add logic on this step.
+  {const logicBox=grid.querySelector(':scope>.ops-logic-fields');if(logicBox){
+   const defaults=step.type==='buttons'?model.buttonSets[step.buttons]?.points:step.type==='yes-no-na'?[1,0]:null,customPoints=Array.isArray(step.points)&&defaults&&JSON.stringify(step.points)!==JSON.stringify(defaults);
+   const active=Boolean(step.showWhen||step.passRule||step.failAction||customPoints);
+   if(!active&&!logicOpen.has(step.id)){const add=el('button','ops-logic-add ops-wide');add.type='button';add.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';add.append(ui('span','Add logic'));add.title=typeof interfaceLabel==='function'?interfaceLabel('Show this step only after an earlier answer, add a pass/fail check or change score points'):'Show this step only after an earlier answer, add a pass/fail check or change score points';add.onclick=()=>{logicOpen.add(step.id);details(step,host);(host.querySelector('.ops-logic-fields input[type=number]')||host.querySelector('.ops-logic-fields select,.ops-logic-fields input,.ops-logic-fields button:not(.ops-logic-remove)'))?.focus();};logicBox.replaceWith(add);}
+   else{const remove=el('button','ops-logic-remove');remove.type='button';remove.append(ui('span','Remove logic'));remove.onclick=()=>{delete step.showWhen;delete step.passRule;delete step.failAction;if(defaults)step.points=[...defaults];logicOpen.delete(step.id);changed();refreshLogicBadge(step,host.closest('.ops-step-editor'));details(step,host);host.closest('.ops-step-editor')?.querySelector('.ops-logic-add')?.focus();};logicBox.append(remove);}
+  }}
  }
  // Logic: show this step only after a matching earlier answer, pass/fail the answer and ask for a corrective action.
  function logicSection(step,host){
