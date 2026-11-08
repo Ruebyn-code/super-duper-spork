@@ -31,10 +31,11 @@ const activitySources=[
  {id:'counts',name:'Stock counts',keys:['counts.view']},
  {id:'wastage',name:'Wastage',keys:['wastage.view']},
  {id:'labels',name:'Labels',keys:['prep.view']},
+ {id:'prep',name:'Prep list',keys:['prep.view']},
  {id:'training',name:'Training',keys:['learning.report']},
  {id:'equipment',name:'Equipment',keys:['equipment.view']}
 ];
-const typeSource={'checklist-step':'checklists','checklist-complete':'checklists','clock-in':'clock','clock-out':'clock','break-start':'clock','break-end':'clock',order:'orders','order-recorded':'orders',count:'counts',wastage:'wastage','wastage-void':'wastage',labels:'labels','training-complete':'training','equipment-fault':'equipment','equipment-resolved':'equipment','equipment-service':'equipment'};
+const typeSource={'checklist-step':'checklists','checklist-complete':'checklists','clock-in':'clock','clock-out':'clock','break-start':'clock','break-end':'clock',order:'orders','order-recorded':'orders',count:'counts',wastage:'wastage','wastage-void':'wastage',labels:'labels','prep-done':'prep','training-complete':'training','equipment-fault':'equipment','equipment-resolved':'equipment','equipment-service':'equipment'};
 const melbourne=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 function local(at){const parts=Object.fromEntries(melbourne.formatToParts(new Date(at)).map(part=>[part.type,part.value]));return{date:parts.year+'-'+parts.month+'-'+parts.day,time:parts.hour+':'+parts.minute};}
 async function activity(contexts,period,deps){
@@ -48,6 +49,7 @@ async function activity(contexts,period,deps){
    counts:async()=>(await deps.counts(actor)).filter(count=>count.locationId===actor.locationId).map(count=>({at:count.createdAt,userId:null,userName:count.counterName||'',type:'count',title:'Saved a stock count',detail:count.itemCount+' items · count date '+count.countDate})),
    wastage:async()=>{const result=await deps.wastage.list(actor,new URLSearchParams({from:period.start,to:period.end}));return result.records.flatMap(record=>[{at:record.createdAt,userId:record.createdBy?.id||null,userName:record.createdBy?.name||'',type:'wastage',title:'Recorded wastage',detail:(record.items||[]).length+((record.items||[]).length===1?' item':' items')},...(record.voidedAt?[{at:record.voidedAt,userId:record.voidedBy?.id||null,userName:record.voidedBy?.name||'',type:'wastage-void',title:'Voided wastage',detail:''}]:[])]);},
    labels:()=>deps.labels.batchActivity(actor,actor.locationId),
+   prep:()=>deps.prep?deps.prep.activity(actor,{start:period.start,end:period.end}):[],
    training:async()=>{if(!can(actor,'learning.view'))return[];const result=await deps.learning.report(actor,{locationId:actor.locationId});return result.rows.filter(row=>row.completedAt).map(row=>({at:row.completedAt,userId:row.userId||null,userName:row.username||'',type:'training-complete',title:'Completed training: '+(row.courseTitle||''),detail:row.assignmentTitle&&row.assignmentTitle!==row.courseTitle?row.assignmentTitle:''}));},
    equipment:async()=>{const result=await deps.equipment.list(actor);return(result.items||[]).flatMap(item=>[...(item.faults||[]).flatMap(fault=>[{at:fault.reportedAt,userId:fault.reportedBy?.id||null,userName:fault.reportedBy?.name||'',type:'equipment-fault',title:'Reported a problem: '+item.name,detail:fault.description||''},...(fault.resolvedAt?[{at:fault.resolvedAt,userId:fault.resolvedBy?.id||null,userName:fault.resolvedBy?.name||'',type:'equipment-resolved',title:'Resolved a problem: '+item.name,detail:''}]:[])]),...(item.services||[]).map(service=>({at:service.recordedAt,userId:service.recordedBy?.id||null,userName:service.recordedBy?.name||'',type:'equipment-service',title:'Logged a service: '+item.name,detail:service.notes||''}))]);}
   };

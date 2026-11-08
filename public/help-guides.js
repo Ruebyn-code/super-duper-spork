@@ -781,7 +781,7 @@
   'Fill any On Print or On Label fields, check ready/discard times and choose quantity.',
   'Review the complete label preview and selected media settings.',
   'Use the available print/download action and confirm the physical output on your printer.'
- ],{route:'/labels',permissions:['prep.view'],notes:['Creating a print batch does not prove a physical printer delivered it. Saved templates determine shelf-life rules; check them before use.'],related:['label-templates','label-history'],keywords:['prep','Zebra','print','expiry','food label']});
+ ],{route:'/labels',permissions:['prep.view'],notes:['Labels → Prep list shows each location’s daily prep items grouped by station. Tick items off as you finish them (your name and the time are saved); items linked to a label template show Print labels. Managers use Manage items to set the amount, unit, station and days for each item.','Creating a print batch does not prove a physical printer delivered it. Saved templates determine shelf-life rules; check them before use.'],related:['label-templates','label-history'],keywords:['prep','Zebra','print','expiry','food label']});
  add(c,'label-templates','Design label templates and printer settings','Build company templates using the actual paper size.',[
   'In Labels, choose Add label template or edit through a template’s menu.',
   'Choose its category, name and company-approved timing rules.',

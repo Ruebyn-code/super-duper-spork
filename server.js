@@ -47,6 +47,7 @@ const stockCounts=require('./stock-counts');
 const wastage=require('./wastage');
 const equipment=require('./equipment');
 const promotions=require('./promotions');
+const prepList=require('./prep-list');
 const stockCountGroups=require('./public/stock-count-groups');
 const stockCountUnits=require('./public/stock-count-units');
 const manualPar=require('./manual-par');
@@ -103,6 +104,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
   let defaultsMigration,orderNumbersMigration;
   async function communicationPeople(){const [accounts,stores,levels]=await Promise.all([auth.directory().then(photoStore.decorate),auth.levels.locations(),auth.levels.read()]),companyIds=[...new Set(stores.filter(store=>!store.archived).map(store=>store.companyId||'default'))];const people=accounts.map(account=>{const context=auth.levels.decorate(account,stores.find(store=>store.id===account.locationId)?.companyId||'default',levels,stores);return{id:account.id,username:account.username,photoUrl:account.photoUrl,companyIds:can(context,'network.access')?companyIds:[...new Set(stores.filter(store=>!store.archived&&locationIds(account).includes(store.id)).map(store=>store.companyId||'default'))]};});const operators=platformStore?(await platformStore.summary()).accounts.filter(account=>!account.disabled&&!account.pending):[];return[...people,...operators.map(account=>({id:'opstack-'+account.id,username:account.username+' (Opstack)',companyIds}))];}
   const prepLabelStore=prepLabels.createStore(dataDir,{locations:actor=>locationStore.accessible(actor),allLocations:()=>auth.levels.locations(),now:communicationsNow});
+  const prepListStore=prepList.createStore(dataDir,{now:communicationsNow,templates:async actor=>(await prepLabelStore.list(actor)).items});
   const opsStore=opsManagement.createStore(dataDir,{locations:actor=>locationStore.accessible(actor,{includeTradingHours:true}),people:()=>auth.directory(),roleLevels:async actor=>(await auth.permissionLevels(actor)).levels,now:communicationsNow});
   const libraryStore=knowledgeLibrary.createStore(dataDir,{roleLevels:async actor=>(await auth.permissionLevels(actor)).levels});
   const aiStore=aiAssistance.createStore(dataDir,{fetchImpl,now:communicationsNow,library:libraryStore});
@@ -342,6 +344,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       const detailedAction=actionPermission(req.url,req.method);if(detailedAction){if(!session)fail('Sign-in required.',401);if(!can(session,detailedAction))fail('Your permission level does not allow this action.',403);}
       if(await communicationRoutes.route({req,res,url:req.url,params:requestUrl.searchParams,session,store:communicationStore,body,json,fail}))return;
       if(await prepLabels.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepLabelStore,body,json}))return;
+      if(await prepList.route({req,url:req.url,params:requestUrl.searchParams,session,store:prepListStore,body,json}))return;
       if(await scheduledReports.route({req,url:req.url,session,store:reportStore,body,json}))return;
       if(req.url==='/api/invoices/intelligence'){
         if(!session)fail('Sign in to read invoices with intelligence.',401);
@@ -566,7 +569,7 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         if(contexts.some(actor=>!can(actor,'reporting.view')))fail('Reporting access is required in every selected company.',403);
         const kind=req.url.endsWith('/training')?'training':req.url.endsWith('/activity')?'activity':'checklists';
         if(session.kiosk&&(contexts.some(actor=>actor.companyId!==session.companyId)||kind!=='training'&&ids.some(id=>id!==session.locationId)))fail('This kiosk is assigned to another location.',403);
-        const result=kind==='activity'?await require('./reporting-operations').activity(contexts,period,{directory:()=>auth.directory(),ops:opsStore,rostering:rosteringStore,labels:prepLabelStore,wastage:wastageStore,equipment:equipmentStore,learning:learningStore,orders:()=>usageHistory(dataDir),counts:actor=>stockCounts.list(dataDir,actor)}):await require('./reporting-operations')[kind](contexts,period,kind==='training'?learningStore:opsStore);
+        const result=kind==='activity'?await require('./reporting-operations').activity(contexts,period,{directory:()=>auth.directory(),ops:opsStore,rostering:rosteringStore,labels:prepLabelStore,prep:prepListStore,wastage:wastageStore,equipment:equipmentStore,learning:learningStore,orders:()=>usageHistory(dataDir),counts:actor=>stockCounts.list(dataDir,actor)}):await require('./reporting-operations')[kind](contexts,period,kind==='training'?learningStore:opsStore);
         return json(200,{period,...result});
       }
       if(req.url==='/api/reporting'&&req.method==='GET'){
