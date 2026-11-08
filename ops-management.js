@@ -30,6 +30,11 @@ function normalize(input){
    result.options=step.options.map(option=>text(option,120,'a choice'));
    if(new Set(result.options).size!==result.options.length)fail('Choices must be different.');
   }
+  if(step.type==='buttons'){
+   // Button types take their buttons from the shared catalogue (the saved step keeps a copy for run snapshots).
+   if(typeof step.buttons!=='string'||step.buttons==='buttons'||!Object.hasOwn(stepModel.buttonSets,step.buttons))fail('Choose a valid button type for “'+result.title+'”.');
+   result.buttons=step.buttons;result.options=[...stepModel.buttonSets[step.buttons].options];
+  }
   if(step.type==='selection'){
    result.source=step.source||'custom';result.multiple=step.multiple??false;
    if(!['users','locations','custom'].includes(result.source)||typeof result.multiple!=='boolean')fail('Choose a valid selection source.');
@@ -340,6 +345,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(step.type==='check'&&typeof value!=='boolean')fail('Choose a valid checkbox answer.');
    if(step.type==='number'&&!stepModel.validNumber(step,value))fail('Enter a number matching the format and limits for '+step.title+'.');
    if(step.type==='yes-no-na'&&!['yes','no','na'].includes(value))fail('Choose Yes, No or N/A for '+step.title+'.');
+   if(step.type==='buttons'&&(typeof value!=='string'||!(step.options||[]).includes(value)))fail('Choose one of the buttons for '+step.title+'.');
    if(step.type==='yesno'&&!['yes','no'].includes(value)||step.type==='choice'&&!step.options.includes(value))fail('Choose an answer for '+step.title+'.');
    if(step.type==='multiple'&&(!Array.isArray(value)||value.length>100||new Set(value).size!==value.length||value.some(item=>!step.options.includes(item))))fail('Choose valid answers for '+step.title+'.');
    if(step.type==='selection'){

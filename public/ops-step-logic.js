@@ -7,8 +7,8 @@
 })(globalThis,model=>{
  const yesNoNa=[['yes','Yes'],['no','No'],['na','N/A']];
  const operatorNames={checked:'is ticked',unchecked:'is not ticked',is:'is',isNot:'is not',lt:'is below',gt:'is above',fails:'fails',passes:'passes'};
- const ruleTypes=['number','yes-no-na','selection'];
- const customSelection=step=>step?.type==='selection'&&(step.source||'custom')==='custom';
+ const ruleTypes=['number','yes-no-na','selection','buttons'];
+ const customSelection=step=>step?.type==='buttons'||step?.type==='selection'&&(step.source||'custom')==='custom';
  const canHaveRule=step=>step.type==='number'||step.type==='yes-no-na'||customSelection(step);
  const canHaveCondition=step=>!model.isSection(step);
  // Operators an earlier step offers as a source.

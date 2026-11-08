@@ -1,5 +1,5 @@
 (function(root){
- const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction','yes-no-na':'Yes / No / N/A'};
+ const kinds={check:'Checkbox',media:'Photo / video',file:'File submission',text:'Short text',textarea:'Long text',number:'Number entry',selection:'Selection',signature:'Signature',datetime:'Date and time',section:'Section','timed-section':'Timed section',instruction:'Instruction','yes-no-na':'Yes / No / N/A',buttons:'Buttons'};
  const formats={integer:'Whole number',decimal:'Decimal',currency:'Currency',percentage:'Percentage',temperature:'Temperature',weight:'Weight',volume:'Volume',length:'Length',duration:'Duration',custom:'Custom unit'};
  const units={temperature:['°C','°F'],weight:['kg','g','mg','lb','oz'],volume:['L','mL','gal'],length:['m','cm','mm','km','ft','in'],duration:['minutes','hours','seconds']};
  // Button steps: ready-made custom Selection steps answered by tapping one button. `buttons` is the saved style id;
@@ -17,10 +17,12 @@
   satisfaction:{label:'Satisfaction',icon:'smile',options:['Very dissatisfied','Dissatisfied','Neutral','Satisfied','Very satisfied']},
   buttons:{label:'Buttons',icon:'list',options:[]}
  };
- const buttonStyle=step=>step?.type==='selection'&&(step.source||'custom')==='custom'&&!step.multiple&&Object.hasOwn(buttonSets,step.buttons||'')?step.buttons:'';
+ // Button steps are their own `buttons` type (one preset per type choice); a plain custom single Selection may also show as generic buttons.
+ const buttonStyle=step=>step?.type==='buttons'&&Object.hasOwn(buttonSets,step.buttons||'')&&step.buttons!=='buttons'?step.buttons:step?.type==='selection'&&(step.source||'custom')==='custom'&&!step.multiple&&Object.hasOwn(buttonSets,step.buttons||'')?step.buttons:'';
+ const buttonTypeName=step=>step?.type==='buttons'&&Object.hasOwn(buttonSets,step.buttons||'')?buttonSets[step.buttons].label:'';
  const isSection=step=>['section','timed-section'].includes(step.type);
  const responseStep=step=>step.type!=='instruction'&&!isSection(step);
- function editable(value){const step={...value};if(step.type==='photo'){step.type='media';step.mediaKind='photo';}if(['choice','multiple','yesno'].includes(step.type)){step.multiple=step.type==='multiple';step.options=step.type==='yesno'?['Yes','No']:step.options;step.type='selection';step.source='custom';}if(['date','time'].includes(step.type)){step.dateMode=step.type;step.type='datetime';}if(step.type==='signature')step.signatureMode||='typed';return step;}
+ function editable(value){const step={...value};if(step.type==='selection'&&(step.source||'custom')==='custom'&&!step.multiple&&step.buttons&&step.buttons!=='buttons'&&Object.hasOwn(buttonSets,step.buttons)){step.type='buttons';delete step.source;delete step.multiple;}if(step.type==='photo'){step.type='media';step.mediaKind='photo';}if(['choice','multiple','yesno'].includes(step.type)){step.multiple=step.type==='multiple';step.options=step.type==='yesno'?['Yes','No']:step.options;step.type='selection';step.source='custom';}if(['date','time'].includes(step.type)){step.dateMode=step.type;step.type='datetime';}if(step.type==='signature')step.signatureMode||='typed';return step;}
  function decimals(step){return step.format==='integer'?0:step.decimals??(step.format==='currency'?2:step.format?2:null);}
  function validNumber(step,value){const places=decimals(step);return typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=1e12&&(step.min==null||value>=step.min)&&(step.max==null||value<=step.max)&&(places===null||Math.abs(value*10**places-Math.round(value*10**places))<=Math.max(1e-7,Math.abs(value*10**places)*Number.EPSILON*4));}
  function formatNumber(step,value){if(value===null||value===undefined||value==='')return '';const places=decimals(step),options={maximumFractionDigits:places??6,minimumFractionDigits:places??0};if(step.format==='currency'){options.style='currency';options.currency=step.currency||'AUD';}const number=new Intl.NumberFormat('en-AU',options).format(value);return number+(step.format==='percentage'?'%':step.unit?' '+step.unit:'');}
@@ -35,6 +37,7 @@
   if(step.type==='yes-no-na')return['yes','no','na'].includes(value);
   if(step.type==='choice')return step.options.includes(value);
   if(step.type==='multiple')return Array.isArray(value)&&value.length>0&&new Set(value).size===value.length&&value.every(item=>step.options.includes(item));
+  if(step.type==='buttons')return typeof value==='string'&&(step.options||[]).includes(value);
   if(step.type==='selection')return step.multiple?Array.isArray(value)&&value.length>0&&new Set(value).size===value.length&&value.every(nonempty):nonempty(value);
   if(step.type==='photo')return nonempty(value);
   if(['media','file'].includes(step.type))return Array.isArray(value)&&value.length>0&&value.length<=(step.maxFiles??1)&&new Set(value).size===value.length&&value.every(nonempty);
@@ -48,5 +51,5 @@
  // Moving a section carries its following steps up to the next section.
  function movingIds(steps,id){const index=steps.findIndex(step=>step.id===id);if(index<0)return[];let end=index+1;if(isSection(steps[index]))while(end<steps.length&&!isSection(steps[end]))end++;return steps.slice(index,end).map(step=>step.id);}
  function move(steps,id,beforeId){const ids=new Set(movingIds(steps,id));if(!ids.size||ids.has(beforeId))return steps;const moving=steps.filter(step=>ids.has(step.id)),remaining=steps.filter(step=>!ids.has(step.id)),at=beforeId===null?remaining.length:remaining.findIndex(step=>step.id===beforeId);if(at<0)return steps;return[...remaining.slice(0,at),...moving,...remaining.slice(at)];}
- const api={kinds,buttonSets,buttonStyle,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,allAnswered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
+ const api={kinds,buttonSets,buttonStyle,buttonTypeName,formats,units,isSection,responseStep,editable,decimals,validNumber,formatNumber,assetIds,answered,allAnswered,movingIds,move};if(typeof module==='object'&&module.exports)module.exports=api;else root.opsStepModel=api;
 })(globalThis);

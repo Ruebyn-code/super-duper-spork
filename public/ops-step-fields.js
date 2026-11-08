@@ -15,8 +15,8 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
   if(step.type==='datetime'){
    const control=accessible(input(step.dateMode==='date'?'date':step.dateMode==='time'?'time':'datetime-local',answer));host.append(control);if(step.dateMode==='datetime')host.append(ui('p','Dates and times use Australia/Melbourne.','ops-help'));read=()=>control.value||null;inspect=read;
   }
-  if(step.type==='selection'){
-   const values=Array.isArray(answer)?answer:answer?[answer]:[],available=(run.selectionOptions?.[step.id]||[]).map(option=>({...option})),saved=run.selectionLabels?.[step.id]||{};
+  if(step.type==='selection'||step.type==='buttons'){
+   const values=Array.isArray(answer)?answer:answer?[answer]:[],available=step.type==='buttons'?(step.options||[]).map(value=>({value,label:value})):(run.selectionOptions?.[step.id]||[]).map(option=>({...option})),saved=run.selectionLabels?.[step.id]||{};
    for(const value of values)if(!available.some(option=>option.value===value)&&saved[value])available.push({value,label:saved[value]});
    const style=model.buttonStyle(step);
    if(style){

@@ -616,3 +616,7 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.ops-options.ops-yes-no-na .ops-option{transition:none}.ops-options.ops-yes-no-na .ops-option:active{transform:none}}
 @media(forced-colors:active){.ops-options.ops-yes-no-na .ops-option{border:1px solid ButtonText}.ops-options.ops-yes-no-na .ops-option:has(input:checked){background:Highlight;color:HighlightText;forced-color-adjust:none}}
 .ops-options.ops-yes-no-na{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* Builder: a button type's step options list its fixed buttons. */
+.ops-button-type-preview{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.ops-button-type-label{margin-right:4px;font-size:.78rem;font-weight:600;color:var(--theme-muted,#5b6b7a)}
+.ops-button-type-chip{padding:4px 10px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff));font-size:.76rem;font-weight:600;color:var(--theme-text,#182b3a)}
