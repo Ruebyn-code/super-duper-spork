@@ -71,6 +71,8 @@ window.createOpsStepEditor=({host,ui,data,field,choices,onChange,announce,audien
   if(withLogic&&window.opsStepLogic)grid.append(logicSection(step,host));
   if(articleLinks&&!model.isSection(step)&&(step.article||window.knowledgeArticlePopup?.canLink()))grid.append(articleField(step,host));
   host.append(grid);
+   // Score points sit at the top of the Logic panel so scoring and pass/fail settings are together.
+  {const points=grid.querySelector(':scope>.ops-button-points'),logicBox=grid.querySelector(':scope>.ops-logic-fields');if(points&&logicBox)logicBox.insertBefore(points,logicBox.querySelector(':scope>legend')?.nextSibling||logicBox.firstChild);}
  }
  // Logic: show this step only after a matching earlier answer, pass/fail the answer and ask for a corrective action.
  function logicSection(step,host){

@@ -635,3 +635,78 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-page .ops-button-points-row{display:inline-flex;flex-direction:row;align-items:center;gap:5px;margin:0;font-size:inherit}
 .ops-page .ops-button-points-row input{width:64px;min-width:0;min-height:30px;margin:0;padding:3px 7px;text-align:right;font-variant-numeric:tabular-nums}
 @media(pointer:coarse){.ops-page .ops-button-points-row input{min-height:40px;width:72px}}
+/* Step options: compact, easier logic and score controls in the company gradient (brand sheen over the primary). */
+.ops-page .ops-step-editor .ops-logic-fields,.ops-page .ops-step-editor .ops-button-points{position:relative;border:1px solid transparent;border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff)),color-mix(in srgb,var(--primary) 2%,var(--theme-surface,#fff))) padding-box,linear-gradient(135deg,color-mix(in srgb,var(--primary) 70%,#fff),color-mix(in srgb,var(--primary) 25%,var(--theme-surface,#fff)) 60%,color-mix(in srgb,var(--primary) 55%,#000)) border-box}
+.ops-page .ops-step-editor .ops-logic-fields{padding:16px 10px 9px;margin-top:10px;gap:6px 10px}
+.ops-page .ops-step-editor .ops-logic-fields>legend{position:absolute;top:-9px;left:10px;padding:2px 9px;border-radius:999px;background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);font:700 .58rem/1.4 Arial,sans-serif;letter-spacing:.08em}
+.ops-page .ops-step-editor .ops-logic-fields>legend span{color:inherit}
+.ops-page .ops-step-editor .ops-logic-pass{gap:5px 6px}
+.ops-page .ops-step-editor .ops-logic-caption{flex-basis:100%;margin:2px 0 0;font-size:.68rem;font-weight:700;color:var(--theme-primary-text,var(--primary))}
+/* Tick options become one-line chips that fill with the company gradient when chosen. */
+.ops-page .ops-step-editor .ops-logic-pass .ops-option{position:relative;display:inline-flex;flex-direction:row;align-items:center;gap:6px;min-height:30px;margin:0;padding:4px 11px 4px 9px;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-size:.76rem;font-weight:600;line-height:1.2;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:14px;height:14px;min-height:0;margin:0;padding:0;border:1.5px solid color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dce5ed));border-radius:4px;background:var(--theme-surface,#fff);cursor:pointer}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option input[type=checkbox]:checked{border-color:#fff;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/10px no-repeat}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:checked){border-color:var(--primary);background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff)}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option span{color:inherit}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:hover{border-color:var(--primary)}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:focus-visible){outline:2px solid var(--primary);outline-offset:2px}
+/* Score points: one tidy row, each button's name joined to its points box. */
+.ops-page .ops-step-editor .ops-button-points{gap:5px;padding:7px 10px}
+.ops-page .ops-step-editor .ops-button-points-head{align-items:center;gap:2px 8px}
+.ops-page .ops-step-editor .ops-button-points-head .ops-button-type-label{font-size:.68rem;font-weight:700;color:var(--theme-primary-text,var(--primary))}
+.ops-page .ops-step-editor .ops-button-points-hint{font-size:.66rem}
+.ops-page .ops-step-editor .ops-button-points .ops-button-points-reset{min-height:24px;padding:1px 9px;font:600 .68rem/1.2 inherit;font-family:inherit;text-transform:none;letter-spacing:0}
+.ops-page .ops-step-editor .ops-button-points-list{gap:5px 6px}
+.ops-page .ops-step-editor .ops-button-points-row{gap:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:var(--theme-surface,#fff)}
+.ops-page .ops-step-editor .ops-button-points-row:focus-within{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 22%,transparent)}
+.ops-page .ops-step-editor .ops-button-points-row .ops-button-type-chip{padding:4px 9px;border:0;border-radius:0;background-color:var(--primary);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);font-size:.72rem}
+.ops-page .ops-step-editor .ops-button-points-row input{width:52px;min-height:26px;padding:2px 8px;border:0;border-radius:0;background:transparent;box-shadow:none;font-size:.78rem;font-weight:700;text-align:center;-moz-appearance:textfield}
+.ops-page .ops-step-editor .ops-button-points-row input::-webkit-outer-spin-button,.ops-page .ops-step-editor .ops-button-points-row input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ops-page .ops-step-editor .ops-button-points-row input:focus{outline:0}
+/* Smaller secondary buttons in step options (Link an article etc.) keep sentence case. */
+.ops-page .ops-step-editor .ops-step-article-field button{min-height:26px;padding:2px 10px;font-size:.72rem;text-transform:none;letter-spacing:0}
+.ops-page .ops-step-editor .ops-step-details>.small,.ops-page .ops-step-editor .ops-step-fields>.small{font-size:.66rem;margin:0}
+@media(pointer:coarse){.ops-page .ops-step-editor .ops-logic-pass .ops-option{min-height:38px}.ops-page .ops-step-editor .ops-button-points-row input{min-height:36px}}
+@media(prefers-reduced-motion:reduce){.ops-page .ops-step-editor .ops-logic-pass .ops-option{transition:none}}
+@media(forced-colors:active){.ops-page .ops-step-editor .ops-logic-fields,.ops-page .ops-step-editor .ops-button-points{border:1px solid CanvasText}.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:checked),.ops-page .ops-step-editor .ops-button-points-row .ops-button-type-chip{background:Highlight;color:HighlightText;forced-color-adjust:none}.ops-page .ops-step-editor .ops-logic-pass .ops-option input[type=checkbox]{appearance:auto;-webkit-appearance:auto}}
+/* Logic & score controls use the fixed OpStack gradient (the same for every company), not the company colour. */
+.ops-page .ops-step-editor{--ops-logic-gradient:linear-gradient(135deg,#0E7490 0%,#4F46E5 50%,#7C3AED 100%);--ops-logic-ink:#4338CA;--ops-logic-line:color-mix(in srgb,#4F46E5 32%,var(--theme-line,#dce5ed))}
+.ops-page .ops-step-editor .ops-logic-fields{background:linear-gradient(180deg,color-mix(in srgb,#4F46E5 7%,var(--theme-surface,#fff)),color-mix(in srgb,#7C3AED 3%,var(--theme-surface,#fff))) padding-box,var(--ops-logic-gradient) border-box}
+.ops-page .ops-step-editor .ops-logic-fields>legend{background:var(--ops-logic-gradient);color:#fff}
+.ops-page .ops-step-editor .ops-logic-caption,.ops-page .ops-step-editor .ops-button-points-head .ops-button-type-label{color:var(--ops-logic-ink)}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option{border-color:var(--ops-logic-line)}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:hover{border-color:#4F46E5}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option input[type=checkbox]{border-color:color-mix(in srgb,#4F46E5 55%,var(--theme-line,#dce5ed))}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:checked){border-color:transparent;background:var(--ops-logic-gradient);color:#fff}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:focus-visible){outline-color:#4F46E5}
+/* Score points now live inside the Logic panel as its first row (no separate panel). */
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;padding:0 0 7px;margin:0 0 2px;border:0;border-bottom:1px solid var(--ops-logic-line);border-radius:0;background:none}
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points-head{display:contents}
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points-head .ops-button-type-label{flex-basis:100%;margin:0;font-size:.68rem}
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points-hint{order:3;font-size:.64rem}
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points-list{order:1}
+.ops-page .ops-step-editor .ops-logic-fields .ops-button-points-reset{order:2;margin-left:0}
+.ops-page .ops-step-editor .ops-button-points-row{border-color:var(--ops-logic-line)}
+.ops-page .ops-step-editor .ops-button-points-row:focus-within{border-color:#4F46E5;box-shadow:0 0 0 2px color-mix(in srgb,#4F46E5 22%,transparent)}
+.ops-page .ops-step-editor .ops-button-points-row .ops-button-type-chip{background:var(--ops-logic-gradient);color:#fff}
+.ops-page .ops-step-editor .ops-button-points .ops-button-points-reset{color:var(--ops-logic-ink);border-color:var(--ops-logic-line)}
+.ops-page .ops-step-editor .ops-button-points:not(.ops-logic-fields *){background:linear-gradient(180deg,color-mix(in srgb,#4F46E5 7%,var(--theme-surface,#fff)),color-mix(in srgb,#7C3AED 3%,var(--theme-surface,#fff))) padding-box,var(--ops-logic-gradient) border-box}
+/* "Show this step" and the article link each sit on one line. */
+.ops-page .ops-step-editor .ops-logic-fields>label{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;gap:8px;margin:0;font-size:.72rem;font-weight:700;color:var(--ops-logic-ink)}
+.ops-page .ops-step-editor .ops-logic-fields>label>.location-picker{flex:0 1 240px;min-width:0;font-weight:400;color:var(--theme-text,#182b3a)}
+.ops-page .ops-step-editor .ops-logic-fields>p.small{font-size:.64rem;margin:0;color:var(--theme-muted,#5b6b7a)}
+.ops-page .ops-step-editor .ops-step-article-field{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.ops-page .ops-step-editor .ops-step-article-field>.ops-logic-caption{flex-basis:auto;margin:0;color:var(--theme-muted,#5b6b7a)}
+[data-theme=dark] .ops-page .ops-step-editor,:root:not([data-theme=light]) .ops-page .ops-step-editor{--ops-logic-ink-dark:#c4b5fd}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .ops-page .ops-step-editor{--ops-logic-ink:#c4b5fd}}
+:root[data-theme=dark] .ops-page .ops-step-editor{--ops-logic-ink:#c4b5fd}
+@media(forced-colors:active){.ops-page .ops-step-editor .ops-logic-pass .ops-option:has(input:checked),.ops-page .ops-step-editor .ops-button-points-row .ops-button-type-chip,.ops-page .ops-step-editor .ops-logic-fields>legend{background:Highlight;color:HighlightText;forced-color-adjust:none}}
+@media(min-width:760px){.ops-page .ops-step-editor .ops-logic-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-page .ops-step-editor .ops-logic-fields>.ops-logic-pass{grid-column:auto;align-content:start}.ops-page .ops-step-editor .ops-logic-fields>.ops-logic-pass:only-of-type{grid-column:1/-1}}
+/* Every logic marker (step header Conditional/Pass-fail badge, reader rule hints) uses the fixed OpStack gradient too. */
+.ops-step-top>.ops-step-logic-badge{background:linear-gradient(135deg,#0E7490 0%,#4F46E5 50%,#7C3AED 100%);color:#fff}
+.ops-logic-hint{color:#4338CA}
+.ops-logic-condition{background:color-mix(in srgb,#4F46E5 10%,var(--theme-surface,#fff));color:#4338CA}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .ops-logic-hint,:root:not([data-theme=light]) .ops-logic-condition{color:#c4b5fd}}
+:root[data-theme=dark] .ops-logic-hint,:root[data-theme=dark] .ops-logic-condition{color:#c4b5fd}
+.ops-page .ops-step-editor .ops-logic-pass .ops-option input[type=checkbox]:focus-visible{outline:none}
+@media(forced-colors:active){.ops-step-top>.ops-step-logic-badge{background:Highlight;color:HighlightText;forced-color-adjust:none}}
