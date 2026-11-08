@@ -11,12 +11,17 @@
   equipment:svg('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4Z"/>'),
   labels:svg('<path d="M3 12V4h8l10 10-8 8L3 12Z"/><g class="icon-detail"><circle cx="7.5" cy="8.5" r="1.5"/></g>'),
   message:svg('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><g class="icon-detail"><path d="M8 11h8M8 14h5"/></g>'),
+  hourly:svg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><g class="icon-detail"><circle cx="12" cy="13" r="3.5"/></g>'),
   bolt:svg('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>')
  };
  const can=key=>window.appAccess?.can(key);
  const managerHome=()=>window.homeProfile?.profile!=='staff'&&document.body.dataset.homeDashboard!=='staff';
+ // Hourly report scanning is Store Manager Home only (never Head Office or Staff Home), like the Daily sales scanner.
+ let actor=null;window.addEventListener('home-dashboard-access',event=>{if(event.detail?.actor)actor=event.detail.actor;});
+ const storeManager=()=>window.homeProfile?.profile==='manager';
  const actions=[
   {id:'invoice',label:'Scan invoice',detail:'Photo or upload a supplier invoice',allowed:()=>can('invoices.view'),run:()=>$('invoice-launcher').click()},
+  {id:'hourly',label:'Scan hourly sales',detail:'Take a photo of the hourly sales report',allowed:()=>Boolean(actor?.csrf&&window.hourlySalesUpload)&&storeManager()&&can('hourly.import')&&can('sales.view'),run:()=>window.hourlySalesUpload.open({actor,trigger:button,available:()=>storeManager()&&can('hourly.import')&&can('sales.view'),onSaved:()=>window.dispatchEvent(new CustomEvent('home-hourly-saved'))})},
   {id:'count',label:'Stock count',detail:'Start a new count',href:'/stock-count#new',allowed:()=>can('counts.view')},
   {id:'order',label:'Place an order',detail:'Open the ordering catalogue',href:'/',allowed:()=>can('orders.view')},
   {id:'sales',label:'Daily sales',detail:'Enter today’s sales',href:'/sales#entry',allowed:()=>can('sales.edit')&&managerHome()},
@@ -43,6 +48,6 @@
  window.addEventListener('pagehide',()=>close(false));
  // The invoice scanner keeps its own launcher for focus/state; return focus here when it closes.
  const scanner=$('invoice-scanner');scanner?.addEventListener('close',()=>setTimeout(()=>{if(document.activeElement===document.body||document.activeElement===$('invoice-launcher'))button.focus({preventScroll:true});}));
- (async()=>{try{await window.appAccess?.initialSession?.();}catch{}build();})();
+ (async()=>{try{actor||=await window.appAccess?.initialSession?.();}catch{}build();})();
  window.homeQuickActions={open:show,close:()=>close(false),refresh:build};
 })();

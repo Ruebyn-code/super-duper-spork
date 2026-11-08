@@ -118,6 +118,7 @@ The round button at the bottom right of Home (it replaced the invoice scanner bu
 | Action | Opens | Needs |
 | --- | --- | --- |
 | Scan invoice | the existing Invoice scanner popup | `invoices.view` |
+| Scan hourly sales | the shared hourly report uploader (with Take photo) | `hourly.import` + `sales.view` on Store Manager Home (never Staff or Head Office Home) |
 | Stock count | `/stock-count#new` | `counts.view` |
 | Place an order | `/` | `orders.view` |
 | Daily sales | `/sales#entry` | `sales.edit` on Manager Home (never Staff Home) |

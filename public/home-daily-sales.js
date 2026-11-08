@@ -43,7 +43,7 @@
  function close(){if(busy||dirty){message(busy?'Saving sales…':'Save daily sales or discard changes before closing.');return;}dialog.close();trigger.focus?.({preventScroll:true});}
  trigger.onclick=()=>{if(!active()||busy||!latest)return;if(!dialog.open)dialog.showModal();if(!panel.hidden)input.focus?.();};$('home-daily-sales-close').onclick=close;dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
  function guard(event){if(!active()||!busy&&!dirty)return;event.preventDefault();if(event.type==='beforeunload')event.returnValue='';message(busy?'Saving sales…':'Save daily sales or discard changes before leaving.');}
- window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)actor=event.detail.actor;if(!active()){panel.hidden=true;clearTimeout(wake);}else refresh();controls();});
+ window.addEventListener('home-hourly-saved',()=>refresh());window.addEventListener('home-dashboard-access',event=>{if(event.detail.actor)actor=event.detail.actor;if(!active()){panel.hidden=true;clearTimeout(wake);}else refresh();controls();});
  window.addEventListener('beforeunload',guard);window.addEventListener('before-location-switch',guard);
  window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
  window.addEventListener('storage',event=>{if(event.key==='souvlaki-sales-updated-'+(actor?.dataScope||actor?.id))refresh();});setInterval(refresh,30000);
