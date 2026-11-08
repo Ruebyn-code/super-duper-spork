@@ -124,8 +124,8 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 @media(prefers-reduced-motion:reduce){.home-personal-folder-icon{transition:none}}
 /* One-colour gradient on the personal panel. */
 @media screen{.home-personal{background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 15%,var(--theme-surface,#fff)) 0%,color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff)) 100%)}}
-/* Phones: a compact personal panel — smaller greeting, tighter Quick links tiles and denser Your work groups. */
-@media screen and (max-width:700px){
+/* Compact personal panel at every size — smaller greeting, tighter Quick links tiles and denser Your work groups. */
+@media screen{
 .home-personal{padding:10px 10px 8px}
 #home-personal .home-hero{padding:0 0 8px;margin:0 0 8px}
 #home-personal .home-hero>div:first-child{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
@@ -161,9 +161,9 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 .home-personal-more{padding:4px 3px;margin:2px 0 0}
 .home-personal-conversation{min-height:32px;padding:3px 4px}
 }
-/* Phones: Your work groups sit side by side as small cards, two per row. */
-@media screen and (max-width:700px){
-#home-personal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:6px;align-content:start}
+/* Your work groups are small cards: one per row in the desktop sidebar, two side by side on tablets and phones. */
+@media screen{
+#home-personal{display:grid;grid-template-columns:minmax(0,1fr);column-gap:6px;align-content:start}
 #home-personal>:not(.home-personal-group,#home-personal-content){grid-column:1/-1}
 #home-personal>#home-personal-content{display:contents}
 #home-personal .home-personal-group,#home-personal .home-personal-group+.home-personal-group,#home-personal .home-personal-approvals{min-width:0;margin:0 0 6px;padding:6px 7px;border:1px solid color-mix(in srgb,var(--primary) 14%,var(--theme-line,#dce5ed));border-radius:10px;background:color-mix(in srgb,var(--theme-surface,#fff) 70%,transparent)}
@@ -171,3 +171,4 @@ html:root body .home-page .home-section-quick-links .home-action.home-quick-add-
 #home-personal .home-personal-item{padding:4px 2px}
 #home-personal .home-personal-list{max-height:150px;overflow-y:auto;overscroll-behavior-y:contain}
 }
+@media screen and (max-width:1100px){#home-personal{grid-template-columns:repeat(2,minmax(0,1fr))}}
