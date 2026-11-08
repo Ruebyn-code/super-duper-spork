@@ -1,31 +1,32 @@
-/* Home → Promotions: a horizontal strip of promotion cards with cover images. */
-.home-promotions{margin:0 0 16px;color:var(--theme-text,#182b3a)}
-.home-promotions[hidden]{display:none}
-.home-promotions-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px}
+/* Home → Promotions: a vertical panel on the right of the desktop board (third column, scrolling on its own);
+   on tablets and phones it sits above the board as a sideways row. Display only. */
+.home-promotions{min-width:0;box-sizing:border-box;color:var(--theme-text,#182b3a)}
+.home-promotions[hidden]{display:none!important}
+.home-promotions-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px}
 .home-promotions-heading h2{margin:0;font-size:1rem}
-.home-promotions-heading a{font-size:.8rem;font-weight:600;color:var(--theme-primary-text,var(--primary));text-decoration:none}
+.home-promotions-heading a{font-size:.76rem;font-weight:600;color:var(--theme-primary-text,var(--primary));text-decoration:none;white-space:nowrap}
 .home-promotions-heading a:hover{text-decoration:underline}
-.home-promotions-list{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,320px);gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 8px;scrollbar-width:thin}
-.home-promotion{display:flex;flex-direction:column;min-width:0;overflow:hidden;scroll-snap-align:start;border:1px solid color-mix(in srgb,var(--theme-text,#182b3a) 12%,var(--theme-surface,#fff));border-radius:16px;background:var(--theme-surface,#fff);box-shadow:0 1px 2px #1634500a}
+.home-promotion{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--theme-text,#182b3a) 12%,var(--theme-surface,#fff));border-radius:14px;background:var(--theme-surface,#fff);box-shadow:0 1px 2px #1634500a}
 .home-promotion.is-running{border-color:color-mix(in srgb,var(--primary) 35%,transparent)}
 .home-promotion-media{aspect-ratio:16/9;background:color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff))}
 .home-promotion-media img{display:block;width:100%;height:100%;object-fit:cover}
 .home-promotion-media.is-empty{display:grid;place-items:center;color:var(--theme-on-primary,#fff);background-color:var(--primary);background-image:var(--brand-sheen,none)}
-.home-promotion-body{display:grid;gap:5px;padding:10px 12px 12px}
-.home-promotion-body h3{margin:0;font-size:.92rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.home-promotion-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0;font-size:.74rem;color:var(--theme-muted,#5b6b7a)}
+.home-promotion-media.is-empty svg{width:26px;height:26px}
+.home-promotion-body{display:grid;gap:6px;min-width:0;padding:9px 11px 11px}
+.home-promotion-body h3{margin:0;font-size:.88rem;line-height:1.3;overflow-wrap:anywhere}
+.home-promotion-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0;font-size:.72rem;color:var(--theme-muted,#5b6b7a)}
 .home-promotion-offer{padding:2px 8px;border-radius:999px;font-weight:700;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
-@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(220px,82%)}}
-@media(forced-colors:active){.home-promotion{border:1px solid CanvasText}}
-/* Compact fit: cards share the row width (scrolling sideways only when they no longer fit), with a 16:9 thumbnail beside the text. */
-.home-promotions{margin:0 0 12px}
-.home-promotions-heading{margin:0 0 6px}
-.home-promotions-list{grid-auto-columns:minmax(300px,1fr);gap:10px;padding:2px 2px 6px}
-.home-promotion{flex-direction:row;align-items:center;gap:12px;padding:8px;border-radius:14px}
-.home-promotion-media{flex:none;width:156px;aspect-ratio:16/9;border-radius:10px;overflow:hidden}
-.home-promotion-media.is-empty svg{width:24px;height:24px}
-.home-promotion-body{flex:1;min-width:0;padding:0 4px 0 0;gap:6px}
-.home-promotion-body h3{font-size:.9rem}
-@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(260px,88%)}.home-promotion-media{width:116px}}
-.home-promotion-media{width:clamp(140px,22%,220px)}
-@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(270px,1fr)}.home-promotion-media{width:116px}}
+.home-promotions-list{display:grid;gap:10px}
+@media screen and (min-width:1101px){
+ .home-dashboard-layout:has(>#home-promotions:not([hidden])){grid-template-columns:260px minmax(0,1fr) 270px}
+ .home-dashboard-layout>#home-promotions{grid-column:3;grid-row:1;align-self:start;padding:14px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));border-radius:16px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+ html.embedded-page .home-dashboard-layout>#home-promotions{height:100%;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin}
+}
+@media(max-width:1100px){
+ .home-dashboard-layout>#home-promotions{order:1}.home-dashboard-layout>#home-personal{order:0}.home-dashboard-layout>.home-dashboard-content{order:2}
+ .home-promotions-list{grid-auto-flow:column;grid-auto-columns:minmax(240px,300px);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 6px;scrollbar-width:thin}
+ .home-promotion{scroll-snap-align:start}
+}
+@media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(230px,82%)}}
+@media(forced-colors:active){.home-promotion,.home-dashboard-layout>#home-promotions{border:1px solid CanvasText}}
+@media screen and (min-width:1101px){.home-dashboard-layout>#home-promotions{padding-bottom:84px}}
