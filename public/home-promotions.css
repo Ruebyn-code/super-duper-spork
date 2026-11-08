@@ -18,7 +18,7 @@
 .home-promotion-offer{padding:2px 8px;border-radius:999px;font-weight:700;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
 .home-promotions-list{display:grid;gap:10px}
 @media screen and (min-width:1101px){
- .home-dashboard-layout:has(>#home-promotions:not([hidden])){grid-template-columns:260px minmax(0,1fr) 270px}
+ .home-dashboard-layout:has(>#home-promotions:not([hidden])){grid-template-columns:260px minmax(0,1fr) 230px}
  .home-dashboard-layout>#home-promotions{grid-column:3;grid-row:1;align-self:start;padding:14px;border:1px solid color-mix(in srgb,var(--primary) 18%,var(--theme-line,#dce5ed));border-radius:16px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
  html.embedded-page .home-dashboard-layout>#home-promotions{height:100%;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin}
 }
@@ -30,3 +30,4 @@
 @media(max-width:700px){.home-promotions-list{grid-auto-columns:minmax(230px,82%)}}
 @media(forced-colors:active){.home-promotion,.home-dashboard-layout>#home-promotions{border:1px solid CanvasText}}
 @media screen and (min-width:1101px){.home-dashboard-layout>#home-promotions{padding-bottom:84px}}
+@media screen and (min-width:1101px){.home-dashboard-layout>#home-promotions{padding-left:11px;padding-right:11px}.home-dashboard-layout>#home-promotions .home-promotion-body{padding:8px 10px 10px}}
