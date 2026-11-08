@@ -73,3 +73,15 @@ dialog.promo-dialog header.promo-dialog-head{display:flex;align-items:center;jus
 dialog.promo-dialog footer.promo-dialog-foot{box-sizing:border-box;width:100%;max-width:none;margin:0;position:static;background:none;justify-content:flex-end}
 .promo-row:has(>#promo-value-field[hidden]){grid-template-columns:minmax(0,1fr)}
 .promo-form-status:empty{display:none}
+/* Cover images. */
+.promo-card-cover{display:block;width:calc(100% + 28px);margin:-14px -14px 0;aspect-ratio:16/9;object-fit:cover;border-radius:13px 13px 0 0;background:var(--promo-soft)}
+.promo-card:has(>.promo-card-cover){padding-top:14px}
+.promo-cover-field{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.promo-cover-preview{display:grid;place-items:center;aspect-ratio:16/9;overflow:hidden;border:1px dashed var(--promo-field);border-radius:12px;background:var(--promo-soft)}
+.promo-cover-preview[data-empty=false]{border-style:solid;border-color:var(--promo-line)}
+.promo-cover-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.promo-cover-placeholder{font-size:.78rem;color:var(--theme-muted,#5b6b7a)}
+.promo-cover-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.promo-cover-choose{display:inline-flex;align-items:center;position:relative}
+.promo-cover-choose:focus-within{outline:2px solid var(--primary);outline-offset:2px}
+.promo-cover-hint{flex-basis:100%;margin:0;font-size:.7rem;color:var(--theme-muted,#5b6b7a)}

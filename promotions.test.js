@@ -50,3 +50,34 @@ test('promotions stay scoped to their locations and need access to every listed 
  assert.deepEqual((await store.list(viewer)).promotions.map(item=>item.id),[shared.id],'each location only sees its own promotions');assert.equal((await store.list(viewer)).locations.length,0,'only editors receive the location picker');
  await assert.rejects(store.performance(viewer,local.id),{status:404});await assert.rejects(store.list({...viewer,permissions:[]}),{status:403});
 });
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==','base64');
+test('cover images upload for editors, stay private and reach Home without sales results',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const saved=await f.api(f.office,'/api/promotions','POST',promo([f.location],{notes:'Internal margin note'}));
+ for(const bad of [{revision:1,data:Buffer.from('not an image').toString('base64')},{revision:1,data:'%%%'},{revision:1}])assert.equal((await f.request(f.office,'/api/promotions/'+saved.id+'/image','PUT',bad)).status,400);
+ assert.equal((await f.request(f.office,'/api/promotions/'+saved.id+'/image','PUT',{revision:0,data:png.toString('base64')})).status,409);
+ const withImage=await f.api(f.office,'/api/promotions/'+saved.id+'/image','PUT',{revision:1,data:png.toString('base64')});assert.equal(withImage.revision,2);assert.match(withImage.image.url,/^\/api\/promotions\/[a-f0-9-]+\/image\?v=/);
+ const read=await fetch(f.base+withImage.image.url,{headers:{...f.office.headers,'X-Location-Id':f.location}});assert.equal(read.status,200);assert.equal(read.headers.get('content-type'),'image/png');assert.match(read.headers.get('cache-control'),/private/);assert.deepEqual(Buffer.from(await read.arrayBuffer()),png);
+ assert.equal((await fetch(f.base+withImage.image.url)).status,401,'images need a signed-in session');
+ const home=await f.api(f.office,'/api/home-promotions');assert.equal(home.promotions.length,1);const card=home.promotions[0];
+ assert.deepEqual(Object.keys(card).sort(),['channels','endDate','id','image','name','offer','startDate','status']);assert.equal(card.status,'running');assert.equal(card.offer,'Buy one get one');assert(!JSON.stringify(home).includes('Internal margin note'),'Home never shows notes');
+ assert.equal((await f.request(f.staff,'/api/home-promotions')).status,200);
+ const later=await f.api(f.office,'/api/promotions','POST',promo([f.location],{name:'Next week',startDate:'2026-10-28',endDate:'2026-10-30'}));await f.api(f.office,'/api/promotions','POST',promo([f.location],{name:'Far away',startDate:'2026-12-01',endDate:'2026-12-02'}));
+ assert.deepEqual((await f.api(f.office,'/api/home-promotions')).promotions.map(item=>item.name),['Tuesday 2-for-1','Next week'],'Home shows running promotions and ones starting within a week');
+ const removed=await f.api(f.office,'/api/promotions/'+saved.id+'/image','DELETE',{revision:2});assert.equal(removed.image,null);assert.equal((await fetch(f.base+withImage.image.url,{headers:{...f.office.headers,'X-Location-Id':f.location}})).status,404);
+ assert.equal((await fetch(f.base+'/api/kiosk/promotions/'+later.id+'/image')).status,401,'kiosk images need a paired device');
+ assert.equal(f.calls(),0);
+});
+test('showcase and kiosk images follow location, running dates and the Sales feature switch',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'promotions-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));let salesOn=true;
+ const store=createStore(dir,{locations:async()=>[{id:'loc-a',name:'Richmond',companyId:'co'},{id:'loc-b',name:'Carlton',companyId:'co'}],now:()=>Date.parse('2026-10-23T02:00:00Z'),actuals:async()=>[],projection:async()=>({days:[]}),salesOn:async()=>salesOn});
+ const editor={id:'e',username:'e',role:'user',permissions:['sales.view','sales.edit'],companyId:'co',locationId:'loc-a',locationIds:['loc-a','loc-b']};
+ const running=await store.create(editor,promo(['loc-a'])),finished=await store.create(editor,promo(['loc-a'],{name:'Old',startDate:'2026-10-01',endDate:'2026-10-05'}));
+ await store.setImage(editor,running.id,{revision:1,data:png.toString('base64')});await store.setImage(editor,finished.id,{revision:1,data:png.toString('base64')});
+ const kiosk=await store.showcase({companyId:'co',locationId:'loc-a'},{imageBase:'/api/kiosk/promotions/'});assert.deepEqual(kiosk.map(item=>item.name),['Tuesday 2-for-1']);assert.match(kiosk[0].image.url,/^\/api\/kiosk\/promotions\//);
+ assert.equal((await store.showcase({companyId:'co',locationId:'loc-b'})).length,0,'other locations never see it');
+ assert.deepEqual((await store.imageFile({companyId:'co',locationId:'loc-a'},running.id,{current:true})).bytes,png);
+ await assert.rejects(store.imageFile({companyId:'co',locationId:'loc-a'},finished.id,{current:true}),{status:404},'kiosks only read current promotion images');
+ await assert.rejects(store.imageFile({companyId:'co',locationId:'loc-b'},running.id),{status:404});
+ salesOn=false;assert.equal((await store.showcase({companyId:'co',locationId:'loc-a'})).length,0,'switching Sales off hides promotions');await assert.rejects(store.imageFile({companyId:'co',locationId:'loc-a'},running.id),{status:404});
+});

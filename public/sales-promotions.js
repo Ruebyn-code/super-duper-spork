@@ -10,7 +10,7 @@
  const date=value=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
  const shortDate=value=>new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
  const icon='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>';
- let actor,state=null,filter='current',loading=false,generation=0,editing=null,saving=false,requestId=null;
+ let cover={changed:false,data:null,url:null},actor,state=null,filter='current',loading=false,generation=0,editing=null,saving=false,requestId=null;
  const performance=new Map();
  async function api(url,method='GET',body){const response=await fetch(url,{method,cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':actor?.csrf||'',...(actor?.locationId?{'X-Location-Id':actor.locationId}:{})},body:body===undefined?undefined:JSON.stringify(body)});if(response.status===401){location.href='/login';throw Error('Please sign in again.');}const value=await response.json().catch(()=>({}));if(!response.ok){if(response.status===428)window.appRequiredReading?.check?.();throw Object.assign(Error(value.error||'Unable to load promotions.'),{status:response.status});}return value;}
  const statusText={running:'Running',upcoming:'Upcoming',finished:'Finished'};
@@ -23,6 +23,7 @@
  }
  function card(item){
   const article=node('article',undefined,'promo-card is-'+item.status),head=node('div',undefined,'promo-card-head'),badge=node('span',undefined,'promo-icon');badge.innerHTML=icon;
+  if(item.image){const cover=node('img');cover.className='promo-card-cover';cover.src=item.image.url;cover.alt='';cover.loading='lazy';cover.decoding='async';article.append(cover);}
   const titles=node('div',undefined,'promo-card-titles'),name=data('h3',item.name),meta=node('div',undefined,'promo-chips');
   const offer=data('span',model.offer(item),'promo-chip promo-chip-offer'),status=ui('span',statusText[item.status],'promo-chip promo-chip-'+item.status);meta.append(status,offer);titles.append(name,meta);head.append(badge,titles);
   if(item.canEdit){const edit=ui('button','Edit','promo-edit');edit.type='button';edit.onclick=()=>openEditor(item,edit);head.append(edit);}
@@ -69,6 +70,17 @@
  function fillChoices(host,items,selected,name){host.replaceChildren();for(const item of items){const label=node('label','', 'promo-choice'),input=node('input');input.type='checkbox';input.name=name;input.value=item.id;input.checked=selected.includes(item.id);label.append(input,name==='promo-location'?data('span',item.name):ui('span',item.label));host.append(label);}}
  function syncKind(){const kind=model.kind($('promo-kind').value),field=$('promo-value-field'),input=$('promo-value'),label=$('promo-value-label');field.hidden=!kind?.value;input.disabled=!kind?.value;input.required=Boolean(kind?.value);if(kind?.value==='percent'){label.textContent='Discount (%)';input.min='1';input.max='100';input.step='1';}else if(kind?.value==='cents'){label.textContent=kind.id==='price'?'Special price ($)':'Amount off ($)';input.min='0.01';input.max='1000000';input.step='0.01';}}
  const values=()=>{const kind=model.kind($('promo-kind').value),raw=$('promo-value').value;return{name:$('promo-name').value,kind:$('promo-kind').value,value:!kind?.value||raw===''?null:kind.value==='percent'?Number(raw):Math.round(Number(raw)*100),channels:[...form.querySelectorAll('input[name=promo-channel]:checked')].map(input=>input.value),startDate:$('promo-start').value,endDate:$('promo-end').value,locationIds:[...form.querySelectorAll('input[name=promo-location]:checked')].map(input=>input.value),notes:$('promo-notes').value};};
+ // Cover image: shown immediately, centre-cropped to 16:9 in the browser (up to 1600 × 900 JPEG) and uploaded after Save.
+ function setCover(url,changed,data=null){if(cover.url?.startsWith('blob:'))URL.revokeObjectURL(cover.url);cover={changed,data,url};const preview=$('promo-cover-preview');preview.replaceChildren();preview.dataset.empty=String(!url);if(url){const image=node('img');image.src=url;image.alt=window.interfaceLabel?interfaceLabel('Cover image preview'):'Cover image preview';preview.append(image);}else preview.append(ui('span','No cover image','promo-cover-placeholder'));$('promo-cover-remove').hidden=!url;$('promo-cover-choose-label').textContent=url?(window.interfaceLabel?interfaceLabel('Change image'):'Change image'):(window.interfaceLabel?interfaceLabel('Add cover image'):'Add cover image');}
+ async function prepare(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('Choose a JPEG, PNG or WebP image.');if(file.size>25000000)throw Error('Choose an image smaller than 25 MB.');
+  // Every cover uses one 16:9 shape (up to 1600 × 900) so it fits the Sales card, Home and the kiosk alike; other shapes are centre-cropped.
+  const bitmap=await createImageBitmap(file),ratio=16/9,cropWidth=Math.min(bitmap.width,bitmap.height*ratio),cropHeight=cropWidth/ratio,width=Math.round(Math.min(1600,cropWidth)),height=Math.round(width/ratio),canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,width,height);context.drawImage(bitmap,(bitmap.width-cropWidth)/2,(bitmap.height-cropHeight)/2,cropWidth,cropHeight,0,0,width,height);bitmap.close?.();
+  for(const quality of [.86,.76,.66]){const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));if(blob&&blob.size<=1900000){const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(blob);});return{data,url:URL.createObjectURL(blob)};}}
+  throw Error('This image is too large. Try a smaller one.');
+ }
+ $('promo-cover-input').onchange=async()=>{const file=$('promo-cover-input').files[0];if(!file)return;$('promo-form-status').textContent='';try{const result=await prepare(file);setCover(result.url,true,result.data);}catch(error){$('promo-form-status').textContent=error.message;}finally{$('promo-cover-input').value='';}};
+ $('promo-cover-remove').onclick=()=>setCover(null,Boolean(editing?.image)||cover.changed&&Boolean(editing?.image));
  function openEditor(item,trigger){
   if(!state?.canEdit)return;editing=item||null;requestId=item?null:crypto.randomUUID();returnFocus=trigger||document.activeElement;fillKinds();
   $('promo-dialog-title').textContent=item?(window.interfaceLabel?interfaceLabel('Edit promotion'):'Edit promotion'):(window.interfaceLabel?interfaceLabel('Add promotion'):'Add promotion');
@@ -77,11 +89,12 @@
   const today=state.today;$('promo-start').value=item?.startDate||today;$('promo-end').value=item?.endDate||today;$('promo-notes').value=item?.notes||'';
   fillChoices($('promo-channels'),model.channels,item?.channels||['in-store'],'promo-channel');
   fillChoices($('promo-locations'),state.locations,item?.locationIds||[state.locationId],'promo-location');
+  setCover(item?.image?.url||null,false);$('promo-cover-input').value='';
   $('promo-delete').hidden=!item;$('promo-form-status').textContent='';syncKind();snapshot=JSON.stringify(values());
   dialog.showModal();$('promo-name').focus();
  }
- function close(){if(saving)return;if(JSON.stringify(values())!==snapshot&&!confirm(window.interfaceLabel?interfaceLabel('Discard changes to this promotion?'):'Discard changes to this promotion?'))return;dialog.close();}
- dialog.addEventListener('close',()=>{editing=null;if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});});
+ function close(){if(saving)return;if((JSON.stringify(values())!==snapshot||cover.changed)&&!confirm(window.interfaceLabel?interfaceLabel('Discard changes to this promotion?'):'Discard changes to this promotion?'))return;dialog.close();}
+ dialog.addEventListener('close',()=>{editing=null;setCover(null,false);if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});});
  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
  $('promo-close').onclick=close;$('promo-cancel').onclick=close;$('promo-kind').onchange=syncKind;
  const busy=value=>{saving=value;for(const control of form.querySelectorAll('button,input,select,textarea'))if(control.id!=='promo-close')control.disabled=value||control.id==='promo-value'&&$('promo-value-field').hidden;};
@@ -91,7 +104,11 @@
   if(!input.locationIds.length){$('promo-form-status').textContent=window.interfaceLabel?interfaceLabel('Choose at least one location.'):'Choose at least one location.';return;}
   if(input.endDate&&input.startDate&&input.endDate<input.startDate){$('promo-form-status').textContent=window.interfaceLabel?interfaceLabel('The end date must be on or after the start date.'):'The end date must be on or after the start date.';$('promo-end').focus();return;}
   busy(true);$('promo-form-status').textContent=window.interfaceLabel?interfaceLabel('Saving…'):'Saving…';
-  try{if(editing)await api('/api/promotions/'+editing.id,'PUT',{...input,revision:editing.revision});else await api('/api/promotions','POST',{...input,requestId});snapshot=JSON.stringify(input);busy(false);dialog.close();await load();}
+  try{let saved=editing&&JSON.stringify(input)===snapshot?editing:editing?await api('/api/promotions/'+editing.id,'PUT',{...input,revision:editing.revision}):await api('/api/promotions','POST',{...input,requestId});
+   // The promotion is saved; keep editing it (not creating another) if the image step fails.
+   editing=saved;requestId=null;snapshot=JSON.stringify(input);
+   if(cover.changed){$('promo-form-status').textContent=window.interfaceLabel?interfaceLabel('Saving image…'):'Saving image…';saved=cover.data?await api('/api/promotions/'+saved.id+'/image','PUT',{revision:saved.revision,data:cover.data}):await api('/api/promotions/'+saved.id+'/image','DELETE',{revision:saved.revision});editing=saved;cover.changed=false;}
+   busy(false);dialog.close();await load();}
   catch(error){busy(false);$('promo-form-status').textContent=error.message;}
  };
  $('promo-delete').onclick=async()=>{if(!editing||saving)return;if(!confirm((window.interfaceLabel?interfaceLabel('Delete this promotion?'):'Delete this promotion?')+' '+editing.name))return;busy(true);try{await api('/api/promotions/'+editing.id,'DELETE',{revision:editing.revision});snapshot=JSON.stringify(values());busy(false);dialog.close();await load();}catch(error){busy(false);$('promo-form-status').textContent=error.message;}};

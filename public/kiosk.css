@@ -215,3 +215,31 @@ button.kiosk-news-item .kiosk-news-meta::after{content:" · Tap to read";opacity
 @media (forced-colors:active){.kiosk-post{border:1px solid CanvasText}}
 .kiosk-post .kiosk-post-head,.kiosk-post .kiosk-post-foot{width:auto;max-width:none;margin:0;box-sizing:border-box}
 .kiosk-post .kiosk-post-foot{border:0;border-top:1px solid var(--k-line);margin-top:16px;background:transparent}
+/* Running promotions fill the logo area above the sign-in bar; display only. */
+.kiosk-promos{position:absolute;inset:0 0 var(--k-handle,84px);display:flex;flex-direction:column;padding:18px 18px 12px;z-index:0}
+.kiosk-promos[hidden]{display:none}
+.kiosk-stage.has-promos .kiosk-idle{display:none}
+.kiosk-promo-slides{position:relative;flex:1;min-height:0}
+.kiosk-promo{position:absolute;inset:0;overflow:hidden;border-radius:20px;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s .6s;box-shadow:0 18px 40px -24px rgba(15,35,70,.45);background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--k-surface,#fff))}
+.kiosk-promo.is-active{opacity:1;visibility:visible;transition:opacity .6s ease}
+.kiosk-promo-media{position:absolute;inset:0}
+.kiosk-promo-media img{width:100%;height:100%;object-fit:cover;display:block}
+.kiosk-promo-media.is-empty{display:grid;place-items:center;padding-bottom:22%;color:#fff;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none)}
+.kiosk-promo-caption{position:absolute;inset:auto 0 0;padding:48px 22px 20px;color:#fff;background:linear-gradient(to top,rgba(8,16,30,.82),rgba(8,16,30,.4) 60%,transparent)}
+.kiosk-promo-kicker{margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.kiosk-promo-caption h2{margin:0;font-size:clamp(22px,3.2vw,34px);line-height:1.15;color:#fff;overflow-wrap:anywhere}
+.kiosk-promo-meta{margin:6px 0 0;font-size:15px;font-weight:600;opacity:.92}
+.kiosk-promo-dots{display:flex;justify-content:center;gap:8px;padding-top:10px}
+.kiosk-promo-dot{width:10px;height:10px;min-height:0;padding:0;margin:0;border:0;border-radius:999px;background:color-mix(in srgb,var(--k-muted,#5b6b7a) 40%,transparent);cursor:pointer;transition:width .3s ease,background-color .3s ease}
+.kiosk-promo-dot[aria-pressed=true]{width:26px;background:var(--primary,#008cff)}
+.kiosk-promo-dot:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:3px}
+@media (max-width:600px){.kiosk-promos{padding:12px 12px 8px}.kiosk-promo-caption{padding:36px 16px 14px}.kiosk-promo-meta{font-size:13px}}
+@media (prefers-reduced-motion:reduce){.kiosk-promo,.kiosk-promo.is-active,.kiosk-promo-dot{transition:none}}
+@media (forced-colors:active){.kiosk-promo-dot[aria-pressed=true]{background:Highlight}}
+/* Covers are 16:9 everywhere: the photo sits in a 16:9 frame with the caption on a company-coloured panel below. */
+.kiosk-promo{display:flex;flex-direction:column}
+.kiosk-promo-media{position:relative;inset:auto;flex:none;width:100%;aspect-ratio:16/9;max-height:72%;overflow:hidden}
+.kiosk-promo-media .kiosk-promo-image{display:block;width:100%;height:100%;object-fit:cover}
+.kiosk-promo-media.is-empty{padding-bottom:0}
+.kiosk-promo-caption{position:static;flex:1;display:flex;flex-direction:column;justify-content:center;padding:16px 22px 18px;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none)}
+@media (max-width:600px){.kiosk-promo-caption{padding:12px 16px 14px}}

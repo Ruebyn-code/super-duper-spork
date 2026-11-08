@@ -25,10 +25,15 @@ function details(input){
  if(!Array.isArray(input.locationIds)||!input.locationIds.length||input.locationIds.length>500||new Set(input.locationIds).size!==input.locationIds.length||input.locationIds.some(id=>typeof id!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(id)))fail('Choose the locations running this promotion.');
  return{name,kind:type.id,value,channels,startDate:input.startDate,endDate:input.endDate,locationIds:[...input.locationIds],notes:text(input.notes,500,'Notes')};
 }
-function createStore(dir,{locations,now=Date.now,actuals,projection}){
+// Cover images: JPEG, PNG or WebP up to 2 MB, kept beside the company's promotions file.
+const imageTypes={jpeg:{mime:'image/jpeg',ext:'jpg',test:bytes=>bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff},png:{mime:'image/png',ext:'png',test:bytes=>bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))},webp:{mime:'image/webp',ext:'webp',test:bytes=>bytes.subarray(0,4).toString('latin1')==='RIFF'&&bytes.subarray(8,12).toString('latin1')==='WEBP'}};
+const maxImageBytes=2000000;
+function createStore(dir,{locations,now=Date.now,actuals,projection,salesOn=async()=>true}){
  const queues=new Map();
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now()));return['year','month','day'].map(key=>parts.find(part=>part.type===key).value).join('-');};
  const file=actor=>{if(!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.companyId||''))fail('Select a company first.',403);return path.join(dir,'promotions',actor.companyId+'.json');};
+ const imageFolder=companyId=>{if(!/^[a-zA-Z0-9-]{1,100}$/.test(companyId||''))fail('Select a company first.',403);return path.join(dir,'promotions',companyId+'-images');};
+ const imagePath=(companyId,image)=>path.join(imageFolder(companyId),image.id+'.'+imageTypes[image.type].ext);
  const requireView=actor=>{if(!actor)fail('Sign-in required.',401);if(!can(actor,'sales.view'))fail('Sales viewing permission required.',403);if(!actor.companyId||!actor.locationId)fail('Select a location first.',403);};
  const requireEdit=actor=>{requireView(actor);if(!can(actor,'sales.edit'))fail('Sales editing permission required.',403);};
  async function read(actor){try{const value=JSON.parse(await fs.readFile(file(actor),'utf8'));return Array.isArray(value?.promotions)?value:{promotions:[]};}catch(error){if(error.code==='ENOENT')return{promotions:[]};throw error;}}
@@ -38,7 +43,7 @@ function createStore(dir,{locations,now=Date.now,actuals,projection}){
  async function reachable(actor){return(await locations()).filter(location=>!location.archived&&location.active!==false&&(location.companyId||'default')===actor.companyId&&canAccessLocation(actor,location));}
  const visible=(promotion,actor)=>!promotion.deleted&&promotion.companyId===actor.companyId&&promotion.locationIds.includes(actor.locationId);
  function editable(promotion,actor,places){const ids=new Set(places.map(location=>location.id));return can(actor,'sales.edit')&&promotion.locationIds.every(id=>ids.has(id));}
- function present(promotion,actor,places){const names=new Map(places.map(location=>[location.id,location.name]));const{requestId,requestFingerprint,companyId,deleted,...rest}=promotion;return{...rest,locationNames:promotion.locationIds.map(id=>names.get(id)||'Another location'),status:model.status(promotion,today()),canEdit:editable(promotion,actor,places)};}
+ function present(promotion,actor,places){const names=new Map(places.map(location=>[location.id,location.name]));const{requestId,requestFingerprint,companyId,deleted,image,...rest}=promotion;return{...rest,image:image?{id:image.id,url:'/api/promotions/'+promotion.id+'/image?v='+image.id}:null,locationNames:promotion.locationIds.map(id=>names.get(id)||'Another location'),status:model.status(promotion,today()),canEdit:editable(promotion,actor,places)};}
  async function checkLocations(actor,ids){const places=await reachable(actor),allowed=new Set(places.map(location=>location.id));if(ids.some(id=>!allowed.has(id)))fail('You can only choose active locations you can access.',403);return places;}
  const author=actor=>({id:actor.id,name:actor.name||actor.username||''});
  async function list(actor,{from,to}={}){
@@ -79,6 +84,7 @@ function createStore(dir,{locations,now=Date.now,actuals,projection}){
    if(!editable(record,actor,places))fail('Access to every location running this promotion is needed to delete it.',403);
    if(record.revision!==input.revision)fail('This promotion changed since you opened it. Reload to see the latest version.',409);
    // Kept as a hidden record so a repeated delete stays harmless.
+   if(record.image){fs.rm(imagePath(record.companyId,record.image),{force:true}).catch(()=>{});delete record.image;}
    Object.assign(record,{deleted:true,revision:record.revision+1,deletedAt:new Date(now()).toISOString(),deletedBy:author(actor)});
    return{changed:true,value:{deleted:true,id}};
   });
@@ -102,19 +108,68 @@ function createStore(dir,{locations,now=Date.now,actuals,projection}){
   if(result.comparedDays){result.actualCents=actualCents;result.projectedCents=projectedCents;result.differenceCents=actualCents-projectedCents;result.differencePercent=projectedCents>0?Math.round((actualCents-projectedCents)/projectedCents*1000)/10:null;}
   return{...result,status:model.status(record,current)};
  }
- return{list,create,update,remove,performance};
+ // Replace or remove a promotion's cover image (sales editors with access to every listed location).
+ async function setImage(actor,id,input){
+  requireEdit(actor);if(!uuid(id))fail('Promotion not found.',404);if(!Number.isSafeInteger(input?.revision))fail('Reload the promotion before changing its image.');
+  let image=null,bytes=null;
+  if(input.data!==null){
+   if(typeof input.data!=='string'||!input.data.length||input.data.length>Math.ceil(maxImageBytes/3)*4+4||!/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))fail('Choose a JPEG, PNG or WebP image up to 2 MB.');
+   bytes=Buffer.from(input.data,'base64');const type=Object.keys(imageTypes).find(key=>imageTypes[key].test(bytes));
+   if(!type||bytes.length>maxImageBytes)fail('Choose a JPEG, PNG or WebP image up to 2 MB.');image={id:crypto.randomUUID(),type};
+  }
+  const places=await reachable(actor);
+  return mutate(actor,async state=>{
+   const record=state.promotions.find(item=>item.id===id&&!item.deleted&&item.companyId===actor.companyId);
+   if(!record||!visible(record,actor))fail('Promotion not found.',404);
+   if(!editable(record,actor,places))fail('Access to every location running this promotion is needed to change it.',403);
+   if(record.revision!==input.revision)fail('This promotion changed since you opened it. Reload to see the latest version.',409);
+   const previous=record.image;
+   if(image){const target=imagePath(actor.companyId,image),temp=target+'.'+crypto.randomUUID()+'.tmp';await fs.mkdir(path.dirname(target),{recursive:true});try{await fs.writeFile(temp,bytes,{mode:0o600});await fs.rename(temp,target);}finally{await fs.rm(temp,{force:true});}record.image={...image,updatedAt:new Date(now()).toISOString()};}
+   else delete record.image;
+   Object.assign(record,{revision:record.revision+1,updatedAt:new Date(now()).toISOString(),updatedBy:author(actor)});
+   if(previous)fs.rm(imagePath(actor.companyId,previous),{force:true}).catch(()=>{});
+   return{changed:true,value:present(record,actor,places)};
+  });
+ }
+ // Public-facing summary for Home and the kiosk: running promotions (and, when asked, ones starting soon) at one location.
+ // Never includes notes, authors or sales results.
+ async function showcase(place,{upcomingDays=0,imageBase='/api/promotions/'}={}){
+  if(!place?.companyId||!place?.locationId||!(await salesOn()))return[];
+  const current=today(),horizon=shift(current,upcomingDays),state=await read(place);
+  return state.promotions.filter(item=>!item.deleted&&item.companyId===place.companyId&&item.locationIds.includes(place.locationId)&&item.endDate>=current&&item.startDate<=horizon)
+   .sort((a,b)=>(a.startDate<=current?0:1)-(b.startDate<=current?0:1)||a.startDate.localeCompare(b.startDate)||a.name.localeCompare(b.name)).slice(0,12)
+   .map(item=>({id:item.id,name:item.name,offer:model.offer(item),channels:item.channels,startDate:item.startDate,endDate:item.endDate,status:model.status(item,current),image:item.image?{id:item.image.id,url:imageBase+item.id+'/image?v='+item.image.id}:null}));
+ }
+ // The stored cover image for a promotion that includes this location (and is still running or upcoming when `current` is set).
+ async function imageFile(place,id,{current=false}={}){
+  if(!uuid(id)||!place?.companyId||!place?.locationId||!(await salesOn()))fail('Image not found.',404);
+  const record=(await read(place)).promotions.find(item=>item.id===id&&!item.deleted&&item.companyId===place.companyId&&item.locationIds.includes(place.locationId));
+  if(!record?.image||current&&record.endDate<today())fail('Image not found.',404);
+  try{return{bytes:await fs.readFile(imagePath(place.companyId,record.image)),mime:imageTypes[record.image.type].mime,id:record.image.id};}catch(error){if(error.code==='ENOENT')fail('Image not found.',404);throw error;}
+ }
+ return{list,create,update,remove,performance,setImage,showcase,imageFile};
 }
-async function route({req,url,params,session,store,body,json}){
+function sendImage(res,image){res.writeHead(200,{'Content-Type':image.mime,'Content-Length':image.bytes.length,'Cache-Control':'private, max-age=86400','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'",'Cross-Origin-Resource-Policy':'same-origin'});res.end(image.bytes);}
+async function route({req,res,url,params,session,store,body,json}){
+ if(url==='/api/home-promotions'){
+  if(!session)fail('Sign-in required.',401);if(req.method!=='GET')fail('Use GET for Home promotions.',405);if(!can(session,'home.view'))fail('Home viewing permission required.',403);
+  res.setHeader('Cache-Control','no-store');json(200,{promotions:await store.showcase(session,{upcomingDays:7})});return true;
+ }
  if(url!=='/api/promotions'&&!url.startsWith('/api/promotions/'))return false;
- if(!session)fail('Sign-in required.',401);if(!can(session,'sales.view'))fail('Sales viewing permission required.',403);
+ if(!session)fail('Sign-in required.',401);
+ const imageRead=req.method==='GET'&&url.match(/^\/api\/promotions\/([a-f0-9-]{36})\/image$/i);
+ if(imageRead){if(!can(session,'sales.view')&&!can(session,'home.view'))fail('Image not found.',404);sendImage(res,await store.imageFile(session,imageRead[1]));return true;}if(!can(session,'sales.view'))fail('Sales viewing permission required.',403);
  if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  if(url==='/api/promotions'&&req.method==='GET'){json(200,await store.list(session,{from:params.get('from')||undefined,to:params.get('to')||undefined}));return true;}
  if(url==='/api/promotions'&&req.method==='POST'){json(201,await store.create(session,await body(req,32000)));return true;}
  let match=url.match(/^\/api\/promotions\/([a-f0-9-]{36})$/i);
  if(match&&req.method==='PUT'){json(200,await store.update(session,match[1],await body(req,32000)));return true;}
  if(match&&req.method==='DELETE'){json(200,await store.remove(session,match[1],await body(req,4000)));return true;}
+ match=url.match(/^\/api\/promotions\/([a-f0-9-]{36})\/image$/i);
+ if(match&&req.method==='PUT'){json(200,await store.setImage(session,match[1],await body(req,3000000)));return true;}
+ if(match&&req.method==='DELETE'){const input=await body(req,4000);json(200,await store.setImage(session,match[1],{...input,data:null}));return true;}
  match=url.match(/^\/api\/promotions\/([a-f0-9-]{36})\/performance$/i);
  if(match&&req.method==='GET'){json(200,await store.performance(session,match[1]));return true;}
  fail('Promotion endpoint not found.',404);
 }
-module.exports={createStore,route,details};
+module.exports={createStore,route,details,sendImage};
