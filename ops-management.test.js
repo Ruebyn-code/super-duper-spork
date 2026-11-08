@@ -384,3 +384,19 @@ test('sections and timed sections can start collapsed; only sections keep the se
  const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Folded',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
  const run=(await app.start(template.id,app.first,app.member,{plannerId:plan.id})).data;assert.equal(run.snapshot.steps[0].collapsed,true);assert.equal(run.snapshot.steps[2].collapsed,true);
 }finally{await app.close();}});
+test('the whole-day Checklists list keeps finished and completed checklists on their day and shows upcoming ones without letting them start',async()=>{const app=await fixture();try{
+ const make=async(title,from,until)=>{const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title,steps:[app.step('check',{title:title+' step'})]})).data;const plan=await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),title,templateId:template.id,type:'recurring',locationIds:[app.first],active:true,schedule:{kind:'daily',startDate:'2026-10-19'},startTime:from,dueTime:until,dueAfterDays:0,activeFrom:from,activeUntil:until});assert.equal(plan.status,201,JSON.stringify(plan.data));return{template,plan:plan.data};};
+ const morning=await make('Morning','09:00','11:00'),midday=await make('Midday','12:00','14:00'),evening=await make('Evening','15:00','17:00'),missed=await make('Missed','10:00','11:30');
+ app.setTime('2026-10-18T22:30:00Z');const started=await app.start(morning.template.id,app.first,app.member,{plannerId:morning.plan.id});assert.equal(started.status,201,JSON.stringify(started.data));
+ const done=await app.api(app.member,'/runs/'+started.data.id,'PUT',{revision:started.data.revision,complete:true,answers:{[started.data.snapshot.steps[0].id]:true}});assert.equal(done.status,200,JSON.stringify(done.data));
+ app.setTime('2026-10-19T02:00:00Z');
+ const plain=(await app.api(app.member,'?date=2026-10-19&location='+app.first)).data;assert.deepEqual(plain.tasks.map(task=>task.plannerName),['Midday'],'other lists keep only open windows');
+ const whole=(await app.api(app.member,'?date=2026-10-19&whole=1&location='+app.first)).data,by=name=>whole.tasks.find(task=>task.plannerName===name);
+ assert.equal(by('Morning').window,'closed');assert.equal(by('Morning').run.status,'completed','a completed checklist stays on its day');
+ assert.equal(by('Missed').window,'closed');assert.equal(by('Missed').run,null);assert.equal(by('Missed').availability.allowed,false);
+ assert.equal(by('Midday').window,'open');assert.equal(by('Midday').availability.allowed,true);
+ assert.equal(by('Evening').window,'upcoming');assert.equal(by('Evening').availability.allowed,false);assert.deepEqual(by('Evening').preview.steps.map(step=>step.title),['Evening step']);assert.equal(by('Morning').preview,undefined);
+ assert.equal((await app.start(evening.template.id,app.first,app.member,{plannerId:evening.plan.id})).status,400,'upcoming checklists still cannot start early');
+ assert.equal((await app.start(missed.template.id,app.first,app.member,{plannerId:missed.plan.id})).status,400,'finished windows cannot start');
+ assert.ok(Date.parse(whole.nextChangeAt)<=Date.parse('2026-10-19T03:00:00Z'),'refreshes when the next window opens or closes');
+}finally{await app.close();}});
