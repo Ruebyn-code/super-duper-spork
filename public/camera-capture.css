@@ -20,3 +20,14 @@
 dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary:focus,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-primary:hover{border:0;background:var(--brand-sheen,none) var(--primary,#008cff);color:var(--theme-on-primary,#fff)}
 dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary,dialog.camera-capture-dialog .camera-capture-actions button.camera-capture-secondary:hover{border:1px solid #ffffff4d;background:#ffffff14;color:#fff}
 dialog.camera-capture-dialog button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+/* Keep the shutter/Retake/Use buttons on screen: the preview fills only the space left over and never grows to the
+   camera's own (often tall, portrait) picture size, which used to push the buttons below the bottom of phones. */
+.camera-capture-dialog{max-height:calc(100dvh - 20px)}
+.camera-capture-dialog[open]{display:flex;flex-direction:column}
+.camera-capture-head,.camera-capture-status,.camera-capture-actions{flex:none}
+.camera-capture-stage{min-height:0;overflow:hidden}
+.camera-capture-stage>video,.camera-capture-stage>img{position:absolute;inset:0;width:100%;height:100%;max-height:none}
+.camera-capture-timer{z-index:1}
+.camera-capture-actions{padding-bottom:max(14px,env(safe-area-inset-bottom))}
+@media(max-width:700px){.camera-capture-dialog{max-height:100dvh}.camera-capture-stage{flex:1 1 0;min-height:120px}}
+@media(min-width:701px){.camera-capture-stage{flex:0 1 auto;max-height:min(70dvh,520px)}}
