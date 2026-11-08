@@ -5,3 +5,15 @@
 .hourly-import-dialog .ai-dialog-actions>.ai-message{flex:1 0 100%;margin:0 0 4px;font-size:.78rem;line-height:1.4;overflow-wrap:anywhere}.hourly-import-dialog .ai-dialog-actions>.ai-message:empty{display:none}
 
 .hourly-chart-column small{white-space:nowrap}.hourly-chart-column:has(small:not(:empty)){position:relative}.hourly-chart-column small:not(:empty){position:relative;left:50%;width:max-content;transform:translateX(-50%)}.hourly-chart-column:last-child small:not(:empty){left:auto;right:0;transform:none}
+/* Hourly report upload: Take photo sits beside the file picker (wraps underneath on narrow screens). */
+.hourly-import-dialog .hourly-source-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;min-width:0}
+.hourly-import-dialog .hourly-source-row>label{flex:1 1 220px;min-width:0}
+.hourly-import-dialog .hourly-camera{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:38px;margin:0;padding:7px 14px;border:1px solid color-mix(in srgb,var(--primary) 40%,var(--theme-line,#dce5ed));border-radius:9px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));font:inherit;font-weight:600;cursor:pointer}
+.hourly-import-dialog .hourly-camera::before{content:'';width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8h3l2-3h6l2 3h3v11H4z'/%3E%3Ccircle cx='12' cy='13' r='3.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8h3l2-3h6l2 3h3v11H4z'/%3E%3Ccircle cx='12' cy='13' r='3.5'/%3E%3C/svg%3E") center/contain no-repeat}
+.hourly-import-dialog .hourly-camera[hidden]{display:none}
+.hourly-import-dialog .hourly-camera:disabled{opacity:.55;cursor:default}
+.hourly-import-dialog .hourly-camera:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.hourly-import-dialog .hourly-camera-note{flex-basis:100%;margin:0;font-size:.75rem;color:var(--theme-muted,#5b6b7a)}
+.hourly-import-dialog .hourly-camera-note[hidden]{display:none}
+@media(max-width:540px){.hourly-import-dialog .hourly-camera{flex:1 1 100%;justify-content:center;min-height:42px}}
+@media(forced-colors:active){.hourly-import-dialog .hourly-camera::before{background:ButtonText}}
