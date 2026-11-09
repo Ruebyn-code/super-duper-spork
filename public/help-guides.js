@@ -800,7 +800,7 @@
   'In the system print dialog, select the installed printer, matching paper size, 100%/actual scale, no headers or footers and zero margins.',
   'For a Zebra-file workflow, download the ZPL and send it through your installed Zebra software or configured print service.',
   'Check the physical label for media calibration, resolution and margins. Ask your device administrator if no printer is available.'
- ],{notes:['Labels print only through Bluetooth. Make sure the printer is on, nearby and not connected to another device, then choose Connect again. The connection drops when the page reloads.','Phone printing needs a compatible system printer or print service. A saved batch or downloaded file does not itself confirm physical printing.'],related:['print-labels','label-templates','support-request']});
+ ],{notes:['Labels print only through Bluetooth. Make sure the printer is on, nearby and not connected to another device, then choose Connect again. The Bluetooth list shows every nearby device; a Zebra printer usually appears as its serial number. iPhone and iPad browsers cannot connect to Bluetooth printers. The connection drops when the page reloads.','Phone printing needs a compatible system printer or print service. A saved batch or downloaded file does not itself confirm physical printing.'],related:['print-labels','label-templates','support-request']});
  add(c,'order-not-sent','An order saved but the supplier email did not send','Check sender settings, recipient details and the actual outcome.',[
   'Open the saved order and read each supplier’s delivery message before placing anything again.',
   'Check the correct location’s Sending tab: sender, saved Resend key and Enable automatic supplier emails.',
