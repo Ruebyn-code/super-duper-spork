@@ -9,18 +9,20 @@ const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}
 const validDate=value=>typeof value==='string'&&/^\d{4}-\d\d-\d\d$/.test(value)&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
 const shift=(date,days)=>new Date(Date.parse(date+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
 const weekday=date=>(new Date(date+'T12:00:00Z').getUTCDay()+6)%7+1;
+const onDay=(item,date)=>item.basis==='sales'||item.days.includes(weekday(date));
 const fingerprint=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const text=(value,max,label,required=false)=>{if(value===undefined||value===null)value='';if(typeof value!=='string'||value.length>max)fail(label+' may contain up to '+max+' characters.');value=value.trim();if(required&&!value)fail('Enter the '+label.toLowerCase()+'.');return value;};
 function details(input,templates){
  if(!input||typeof input!=='object')fail('Enter the prep item details.');
  const name=text(input.name,80,'Item name',true);
  if(typeof input.amount!=='number'||!Number.isFinite(input.amount)||input.amount<=0||input.amount>100000||Math.round(input.amount*1000)!==input.amount*1000)fail('Enter an amount above 0 with up to three decimal places.');
- if(!Array.isArray(input.days)||!input.days.length||input.days.some(day=>!Number.isInteger(day)||day<1||day>7)||new Set(input.days).size!==input.days.length)fail('Choose at least one day.');
  // Sales-based items: `amount` per `salesPer` whole dollars of the day's projected sales, optionally rounded up to `roundTo`.
  const basis=input.basis===undefined||input.basis===null?'fixed':input.basis;if(!['fixed','sales'].includes(basis))fail('Choose a fixed amount or an amount per projected sales.');
  let salesPer=null,roundTo=null;if(basis==='sales'){if(!Number.isSafeInteger(input.salesPer)||input.salesPer<1||input.salesPer>1000000)fail('Enter the projected sales amount (whole dollars from $1 to $1,000,000).');salesPer=input.salesPer;if(input.roundTo!==undefined&&input.roundTo!==null&&input.roundTo!==''){if(typeof input.roundTo!=='number'||!Number.isFinite(input.roundTo)||input.roundTo<=0||input.roundTo>10000||Math.round(input.roundTo*1000)!==input.roundTo*1000)fail('Round up to a number above 0 with up to three decimal places, or leave it blank.');roundTo=input.roundTo;}}
+ // Sales-based items follow the projection every day, so they have no day choice.
+ const days=basis==='sales'?[1,2,3,4,5,6,7]:input.days;if(!Array.isArray(days)||!days.length||days.some(day=>!Number.isInteger(day)||day<1||day>7)||new Set(days).size!==days.length)fail('Choose at least one day.');
  let labelTemplateId=null;if(input.labelTemplateId!==null&&input.labelTemplateId!==undefined&&input.labelTemplateId!==''){if(!uuid(input.labelTemplateId)||!templates.some(item=>item.id===input.labelTemplateId))fail('Choose a label template from this company, or none.');labelTemplateId=input.labelTemplateId;}
- return{name,amount:input.amount,...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...input.days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
+ return{name,amount:input.amount,...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
 }
 // The amount to prep for a sales-based item: amount × projected dollars ÷ salesPer, rounded up to roundTo (or to 0.001). Unknown projections stay unknown.
 function salesAmount(item,projectedCents){
@@ -47,10 +49,10 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   const ticks=record.ticks||{},names=new Map(labels.map(item=>[item.id,item])),manage=can(actor,'prep.manage');
   const live=state.items.filter(item=>!item.deleted);
   // A day's projected sales come from the normal daily projection (Monday–Sunday week). Only sales viewers see the figures behind it.
-  const salesView=can(actor,'sales.view'),needsSales=live.some(item=>item.active&&item.basis==='sales'&&item.days.includes(weekday(day)));let projected=null;
+  const salesView=can(actor,'sales.view'),needsSales=live.some(item=>item.active&&item.basis==='sales');let projected=null;
   if(needsSales){try{const value=await projection(actor,shift(day,1-weekday(day)));projected=Number.isSafeInteger(value?.days?.[weekday(day)-1])?value.days[weekday(day)-1]:null;}catch{projected=null;}}
   const shown=item=>{const base=present(item);if(item.basis!=='sales')return base;const{salesPer,roundTo,...rest}=base,amount=salesAmount(item,projected);return{...rest,amount,basis:'sales',...(amount===null?{amountReason:'No sales projection for this day yet.'}:{}),...(salesView?{salesPer,...(roundTo?{roundTo}:{}),ratio:item.amount,projectedSalesCents:projected}:{})};};
-  const rows=live.filter(item=>item.active&&item.days.includes(weekday(day))).map(item=>({...shown(item),label:item.labelTemplateId&&names.get(item.labelTemplateId)?.active?{id:item.labelTemplateId,name:names.get(item.labelTemplateId).name}:null}));
+  const rows=live.filter(item=>item.active&&onDay(item,day)).map(item=>({...shown(item),label:item.labelTemplateId&&names.get(item.labelTemplateId)?.active?{id:item.labelTemplateId,name:names.get(item.labelTemplateId).name}:null}));
   // Items ticked that day but since removed or rescheduled still show, from the tick's snapshot.
   for(const [itemId,tick] of Object.entries(ticks))if(tick.done&&!rows.some(row=>row.id===itemId))rows.push({id:itemId,...tick.snapshot,label:null,removed:true});
   rows.sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name));
@@ -93,7 +95,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   need(actor);const current=today();
   if(input?.date!==current)fail('Prep items can only be ticked off for today. Reload the list.',409);
   if(!uuid(input?.itemId)||typeof input.done!=='boolean'||!Number.isSafeInteger(input.revision))fail('Reload the prep list before ticking items off.');
-  const item=(await readItems(actor)).items.find(entry=>entry.id===input.itemId&&!entry.deleted&&entry.active&&entry.days.includes(weekday(current)));
+  const item=(await readItems(actor)).items.find(entry=>entry.id===input.itemId&&!entry.deleted&&entry.active&&onDay(entry,current));
   // Sales-based items freeze the amount shown today into the tick.
   let amount=item?.amount;if(item?.basis==='sales')amount=(await list(actor,{date:current})).rows.find(row=>row.id===item.id)?.amount??null;
   return mutate(dayFile(actor,current),{ticks:{}},state=>{

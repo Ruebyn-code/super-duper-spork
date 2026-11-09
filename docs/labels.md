@@ -1,6 +1,6 @@
 # Labels
 
-Open **Labels** in the main navigation, or **More → Labels** on a phone. It is a separate page. Each company has its own label templates and label settings. Label history is limited to the selected location and the user's current access.
+Open **Prep & labels** in the main navigation, or **More → Prep & labels** on a phone (the page was called Labels; its `/labels` address, IDs and permissions are unchanged). It is a separate page. Each company has its own label templates and label settings. Label history is limited to the selected location and the user's current access.
 
 Head Office can manage company label templates/settings by default. All signed-in built-in staff roles can view and print labels. Settings → Permission levels has separate **Labels**, **Print prep labels** and **Manage prep labels** grants. Existing customised roles keep their permissions; grant the new controls explicitly where needed. Managing the shared company library/settings also requires access to all of that company's active locations.
 

@@ -28,7 +28,7 @@ const pages=[
  ['learning','Learning centre','Training courses assignments knowledge checks','/learning-centre',['learning.view']],
  ['ops','Ops management','Active checklists jobs tasks','/ops-management#checklists',['ops.view']],
  ['builder','Checklist builder','Templates planners schedules','/ops-management#templates',['ops.manage']],
- ['labels','Labels','Food prep label templates printing Zebra','/labels',['prep.view']],
+ ['labels','Prep & labels','Prep list and food prep label templates printing Zebra','/labels',['prep.view']],
  ['invoices','Invoices','Scanner uploads weekly bundles price updates','/home?invoices=1',['home.view','invoices.view'],'all'],
  ['stock','Stock items','Manage catalogue minimum order rounding SKU prices','/admin#stock',['stock.manage']],
  ['suppliers','Suppliers','Ordering email SMS Twilio Resend Fresho ALB Connect','/admin#suppliers',['suppliers.manage']],

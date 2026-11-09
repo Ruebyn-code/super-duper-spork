@@ -75,3 +75,4 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 .prep-basis-badge{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font-weight:600}
 .prep-sales-row[hidden],.prep-sales-hint[hidden]{display:none}
 .prep-sales-hint{margin:-2px 0 4px;font-size:.72rem;line-height:1.4;color:var(--theme-muted,#64748b)}
+.prep-days[hidden]{display:none}

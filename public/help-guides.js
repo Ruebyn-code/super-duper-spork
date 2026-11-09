@@ -13,7 +13,7 @@
   ['reporting','Reporting','Understand performance and compare locations.','bars'],
   ['intelligence','OpStack intelligence','Set up intelligence and review its suggestions.','sparkles'],
   ['administration','Locations & settings','Manage locations, users, permissions and appearance.','settings'],
-  ['labels','Labels','Design, prepare and print prep labels.','label'],
+  ['labels','Prep & labels','Plan prep lists and design, prepare and print prep labels.','label'],
   ['troubleshooting','Troubleshooting & support','Resolve common problems and prepare a support request.','help']
  ].map(([id,title,description,icon])=>({id,title,description,icon}));
  const articles=[];

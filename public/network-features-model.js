@@ -13,7 +13,7 @@
   {id:'knowledge',name:'Knowledge centre',description:'Company and network policies and information articles.',permissions:[...model.knowledgeKeys]},
   {id:'comms',name:'Comms',description:'Posts, groups, direct messages and required reading.',permissions:[...model.communicationKeys]},
   {id:'equipment',name:'Equipment',description:'Equipment register, service history and problem reports.',permissions:[...model.equipmentKeys]},
-  {id:'labels',name:'Labels',description:'Food preparation label templates and printing.',permissions:[...model.prepKeys]},
+  {id:'labels',name:'Prep & labels',description:'Prep lists, food preparation label templates and printing.',permissions:[...model.prepKeys]},
   {id:'intelligence',name:'OpStack intelligence',description:'All OpStack intelligence tools, search and settings.',permissions:[...model.aiKeys],actions:actionsFor('ai.')},
   {id:'kiosks',name:'Kiosk devices',description:'Pairing and managing shared kiosk devices.',permissions:[...model.deviceKeys]}
  ];

@@ -45,7 +45,7 @@ test('prep items can scale with the day\'s projected sales without showing sales
  for(const bad of [{salesPer:0},{salesPer:1.5},{salesPer:'1000'},{salesPer:1000,roundTo:0},{salesPer:1000,roundTo:0.0001}])await assert.rejects(store.create(manager,item({basis:'sales',...bad})),/projected sales|Round up/);
  await assert.rejects(store.create(manager,item({basis:'weekly'})),/fixed amount or an amount per projected sales/);
  const tzatziki=await store.create(manager,item({basis:'sales',amount:2,salesPer:1000,unit:'kg'})),chips=await store.create(manager,item({name:'Chips',basis:'sales',amount:1,salesPer:1000,roundTo:0.5,unit:'bags'})),fixed=await store.create(manager,item({name:'Lemons',amount:3}));
- assert.equal(tzatziki.basis,'sales');assert.equal(tzatziki.salesPer,1000);assert.equal(fixed.basis,undefined,'fixed items keep the old shape');
+ assert.equal(tzatziki.basis,'sales');assert.deepEqual(tzatziki.days,[1,2,3,4,5,6,7],'sales-based items apply every day');assert.deepEqual((await store.create(manager,item({name:'No days',basis:'sales',salesPer:500,days:[]}))).days,[1,2,3,4,5,6,7],'no day choice needed');assert.equal(tzatziki.salesPer,1000);assert.equal(fixed.basis,undefined,'fixed items keep the old shape');
  let list=await store.list(manager);const row=id=>list.rows.find(entry=>entry.id===id);
  assert.equal(weeks.at(-1),'2026-10-19','Monday of the list week');
  assert.equal(row(tzatziki.id).amount,8.4,'2 kg per $1,000 of $4,200');assert.equal(row(chips.id).amount,4.5,'4.2 bags round up to 4.5');assert.equal(row(fixed.id).amount,3);
