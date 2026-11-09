@@ -19,7 +19,7 @@
   const ordered=[...state.rows.filter(row=>!row.done),...state.rows.filter(row=>row.done)],shown=showAll?ordered:ordered.slice(0,6);
   list.replaceChildren(...shown.map(row=>{const item=el('div',undefined,'home-prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'home-prep-check'),text=el('div',undefined,'home-prep-text');
    check.type='button';check.setAttribute('aria-pressed',String(row.done));check.setAttribute('aria-label',(row.done?word('Mark not done: '):word('Mark done: '))+row.name);check.disabled=pending.has(row.id);check.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';check.onclick=()=>toggle(row);
-   text.append(data('strong',row.name),data('span',[amount(row.amount)+(row.unit?' '+row.unit:''),row.station].filter(Boolean).join(' · ')));item.append(check,text);
+   text.append(data('strong',row.name),data('span',[row.amount===null||row.amount===undefined?(typeof interfaceLabel==='function'?interfaceLabel('Amount not available'):'Amount not available'):amount(row.amount)+(row.unit?' '+row.unit:''),row.station].filter(Boolean).join(' · ')));item.append(check,text);
    if(row.done&&row.label&&state.canPrint){const print=el('a',word('Labels'),'home-prep-print');print.href='/labels?print='+encodeURIComponent(row.label.id)+'#print';print.title=word('Print labels with {template}',{template:row.label.name});item.append(print);}
    return item;}));
   more.hidden=ordered.length<=6;more.textContent=showAll?word('Show fewer'):word('Show all {count}',{count:ordered.length});

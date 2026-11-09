@@ -37,3 +37,23 @@ test('prep items can link to the company\'s label templates only',async t=>{
  assert.equal((await store.list({...manager,locationId:'loc-b'})).rows.length,0,'each location keeps its own list');
  await assert.rejects(store.list({...manager,permissions:[]}),{status:403});
 });
+test('prep items can scale with the day\'s projected sales without showing sales to staff who cannot view them',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-prep-sales-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ let projected=[420000,null,250000,0,310050,500000,600000];const weeks=[];
+ const store=createStore(dir,{now:()=>Date.parse('2026-10-19T01:00:00Z'),projection:async(actor,weekStart)=>{weeks.push(weekStart);return{weekStart,days:projected};}});
+ const base={id:'manager-1',username:'Manager',companyId:'default',locationId:'store-1'},manager={...base,permissions:['prep.view','prep.manage','sales.view']},staff={...base,id:'staff-1',username:'Staff',permissions:['prep.view']};
+ for(const bad of [{salesPer:0},{salesPer:1.5},{salesPer:'1000'},{salesPer:1000,roundTo:0},{salesPer:1000,roundTo:0.0001}])await assert.rejects(store.create(manager,item({basis:'sales',...bad})),/projected sales|Round up/);
+ await assert.rejects(store.create(manager,item({basis:'weekly'})),/fixed amount or an amount per projected sales/);
+ const tzatziki=await store.create(manager,item({basis:'sales',amount:2,salesPer:1000,unit:'kg'})),chips=await store.create(manager,item({name:'Chips',basis:'sales',amount:1,salesPer:1000,roundTo:0.5,unit:'bags'})),fixed=await store.create(manager,item({name:'Lemons',amount:3}));
+ assert.equal(tzatziki.basis,'sales');assert.equal(tzatziki.salesPer,1000);assert.equal(fixed.basis,undefined,'fixed items keep the old shape');
+ let list=await store.list(manager);const row=id=>list.rows.find(entry=>entry.id===id);
+ assert.equal(weeks.at(-1),'2026-10-19','Monday of the list week');
+ assert.equal(row(tzatziki.id).amount,8.4,'2 kg per $1,000 of $4,200');assert.equal(row(chips.id).amount,4.5,'4.2 bags round up to 4.5');assert.equal(row(fixed.id).amount,3);
+ assert.equal(row(tzatziki.id).projectedSalesCents,420000);assert.equal(row(tzatziki.id).ratio,2);
+ list=await store.list(staff);assert.equal(row(tzatziki.id).amount,8.4);for(const key of ['projectedSalesCents','ratio','salesPer','roundTo'])assert(!Object.hasOwn(row(tzatziki.id),key),'staff never see the sales behind it: '+key);
+ assert.equal((await store.summary(staff)).rows.find(entry=>entry.id===tzatziki.id).amount,8.4);
+ const ticked=await store.tick(staff,{date:'2026-10-19',itemId:tzatziki.id,done:true,revision:0});assert.equal(ticked.done,true);
+ projected=[null,null,null,null,null,null,null];list=await store.list(staff,{date:'2026-10-20'});assert.equal(row(tzatziki.id).amount,null,'a missing projection stays unknown');assert.match(row(tzatziki.id).amountReason,/No sales projection/);assert.equal(row(fixed.id).amount,3);
+ const events=await store.activity(staff,{start:'2026-10-19',end:'2026-10-19'});assert.match(events[0].detail,/^8\.4 kg/,'the tick froze the amount shown');
+ const{salesAmount}=require('./prep-list');assert.equal(salesAmount({amount:1,salesPer:1000},0),0,'zero sales means zero');assert.equal(salesAmount({amount:1.5,salesPer:300},100000),5);assert.equal(salesAmount({amount:1,salesPer:3},100),0.334,'rounds up to 0.001');
+});

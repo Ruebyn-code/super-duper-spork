@@ -27,3 +27,9 @@ When an item has a label template and the person can print labels (`prep.print`)
 - **Staff activity**: Reporting → Team → Staff activity includes a **Prep list** source (“Prepped …” with amount and station), under `prep.view` and `reporting.view`.
 
 Prep lists follow the Labels feature switch, because they use the Labels permissions.
+
+## Amounts per projected sales
+
+An item's **How much to prep** is either **Fixed amount each day** (the original behaviour, stored without a `basis`) or **Amount per projected sales**. Sales-based items save `basis: 'sales'`, the `amount` per `salesPer` whole dollars ($1–$1,000,000) and an optional `roundTo` step (up to three decimals). Each day's amount is `amount × projected sales ÷ salesPer`, rounded up to `roundTo` (or to 0.001), using that location's normal daily sales projection (the same `dailyProjection`/`sales.rosterProjection` forecast as Daily sales, with its holiday adjustments; past weeks never look ahead). The projection is read only when a sales-based item is on that day's list, and never when the network's Sales feature is off.
+
+A missing projection keeps the amount unknown (staff see **Amount not available** with the reason); a known zero projection means zero. Everyone sees the worked-out amount and a **Based on projected sales** badge; only people with `sales.view` also see the ratio and the projected sales figure, and the API leaves `ratio`, `salesPer`, `roundTo` and `projectedSalesCents` out of rows for everyone else. Managers editing items (`prep.manage`) see the saved ratio. Ticking freezes the amount shown that day into the tick snapshot, so history and Staff activity keep it. Reads never write or change sales, forecasts or budgets.

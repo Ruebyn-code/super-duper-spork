@@ -69,3 +69,9 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 @media(max-width:700px){.prep-dialog{width:calc(100vw - 12px)}.prep-dialog-body{grid-template-columns:minmax(0,1fr);overflow:auto}.prep-manage-list{border-right:0;border-bottom:1px solid var(--prep-line);max-height:none;overflow:visible}.prep-editor{overflow:visible}.prep-field :is(input,select,textarea){height:44px;min-height:44px;font-size:16px}.prep-field textarea{height:auto}.prep-check{width:40px;height:40px}.prep-controls{width:100%}.prep-controls .prep-manage{margin-left:auto}.prep-item{flex-wrap:wrap}.prep-print{margin-left:52px}}
 @media(prefers-reduced-motion:reduce){.prep-check{transition:none}}
 @media(forced-colors:active){.prep-check[aria-pressed=true]{background:Highlight;border-color:Highlight}.prep-ring{border:2px solid CanvasText}}
+/* Sales-based prep amounts */
+.prep-item-amount.is-unknown{color:var(--theme-muted,#64748b);font-weight:600}
+.prep-item-basis{margin:2px 0 0;font-size:.72rem;line-height:1.35;color:var(--theme-muted,#64748b)}
+.prep-basis-badge{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font-weight:600}
+.prep-sales-row[hidden],.prep-sales-hint[hidden]{display:none}
+.prep-sales-hint{margin:-2px 0 4px;font-size:.72rem;line-height:1.4;color:var(--theme-muted,#64748b)}

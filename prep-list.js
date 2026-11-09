@@ -16,10 +16,19 @@ function details(input,templates){
  const name=text(input.name,80,'Item name',true);
  if(typeof input.amount!=='number'||!Number.isFinite(input.amount)||input.amount<=0||input.amount>100000||Math.round(input.amount*1000)!==input.amount*1000)fail('Enter an amount above 0 with up to three decimal places.');
  if(!Array.isArray(input.days)||!input.days.length||input.days.some(day=>!Number.isInteger(day)||day<1||day>7)||new Set(input.days).size!==input.days.length)fail('Choose at least one day.');
+ // Sales-based items: `amount` per `salesPer` whole dollars of the day's projected sales, optionally rounded up to `roundTo`.
+ const basis=input.basis===undefined||input.basis===null?'fixed':input.basis;if(!['fixed','sales'].includes(basis))fail('Choose a fixed amount or an amount per projected sales.');
+ let salesPer=null,roundTo=null;if(basis==='sales'){if(!Number.isSafeInteger(input.salesPer)||input.salesPer<1||input.salesPer>1000000)fail('Enter the projected sales amount (whole dollars from $1 to $1,000,000).');salesPer=input.salesPer;if(input.roundTo!==undefined&&input.roundTo!==null&&input.roundTo!==''){if(typeof input.roundTo!=='number'||!Number.isFinite(input.roundTo)||input.roundTo<=0||input.roundTo>10000||Math.round(input.roundTo*1000)!==input.roundTo*1000)fail('Round up to a number above 0 with up to three decimal places, or leave it blank.');roundTo=input.roundTo;}}
  let labelTemplateId=null;if(input.labelTemplateId!==null&&input.labelTemplateId!==undefined&&input.labelTemplateId!==''){if(!uuid(input.labelTemplateId)||!templates.some(item=>item.id===input.labelTemplateId))fail('Choose a label template from this company, or none.');labelTemplateId=input.labelTemplateId;}
- return{name,amount:input.amount,unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...input.days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
+ return{name,amount:input.amount,...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...input.days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
 }
-function createStore(dir,{now=Date.now,templates=async()=>[]}){
+// The amount to prep for a sales-based item: amount × projected dollars ÷ salesPer, rounded up to roundTo (or to 0.001). Unknown projections stay unknown.
+function salesAmount(item,projectedCents){
+ if(!Number.isSafeInteger(projectedCents)||projectedCents<0)return null;
+ const raw=item.amount*projectedCents/(item.salesPer*100),step=item.roundTo||0.001,steps=Math.ceil(Math.round(raw/step*1e6)/1e6);
+ return Math.round(steps*step*1000)/1000;
+}
+function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=>null}){
  const queues=new Map();
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now()));return['year','month','day'].map(key=>parts.find(part=>part.type===key).value).join('-');};
  const folder=actor=>{if(!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.locationId||'')||!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.companyId||''))fail('Select a location first.',403);return path.join(dir,'prep-lists',actor.locationId);};
@@ -37,7 +46,11 @@ function createStore(dir,{now=Date.now,templates=async()=>[]}){
   const [state,record,labels]=await Promise.all([readItems(actor),readJson(dayFile(actor,day),{ticks:{}}),companyTemplates(actor)]);
   const ticks=record.ticks||{},names=new Map(labels.map(item=>[item.id,item])),manage=can(actor,'prep.manage');
   const live=state.items.filter(item=>!item.deleted);
-  const rows=live.filter(item=>item.active&&item.days.includes(weekday(day))).map(item=>({...present(item),label:item.labelTemplateId&&names.get(item.labelTemplateId)?.active?{id:item.labelTemplateId,name:names.get(item.labelTemplateId).name}:null}));
+  // A day's projected sales come from the normal daily projection (Monday–Sunday week). Only sales viewers see the figures behind it.
+  const salesView=can(actor,'sales.view'),needsSales=live.some(item=>item.active&&item.basis==='sales'&&item.days.includes(weekday(day)));let projected=null;
+  if(needsSales){try{const value=await projection(actor,shift(day,1-weekday(day)));projected=Number.isSafeInteger(value?.days?.[weekday(day)-1])?value.days[weekday(day)-1]:null;}catch{projected=null;}}
+  const shown=item=>{const base=present(item);if(item.basis!=='sales')return base;const{salesPer,roundTo,...rest}=base,amount=salesAmount(item,projected);return{...rest,amount,basis:'sales',...(amount===null?{amountReason:'No sales projection for this day yet.'}:{}),...(salesView?{salesPer,...(roundTo?{roundTo}:{}),ratio:item.amount,projectedSalesCents:projected}:{})};};
+  const rows=live.filter(item=>item.active&&item.days.includes(weekday(day))).map(item=>({...shown(item),label:item.labelTemplateId&&names.get(item.labelTemplateId)?.active?{id:item.labelTemplateId,name:names.get(item.labelTemplateId).name}:null}));
   // Items ticked that day but since removed or rescheduled still show, from the tick's snapshot.
   for(const [itemId,tick] of Object.entries(ticks))if(tick.done&&!rows.some(row=>row.id===itemId))rows.push({id:itemId,...tick.snapshot,label:null,removed:true});
   rows.sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name));
@@ -81,22 +94,24 @@ function createStore(dir,{now=Date.now,templates=async()=>[]}){
   if(input?.date!==current)fail('Prep items can only be ticked off for today. Reload the list.',409);
   if(!uuid(input?.itemId)||typeof input.done!=='boolean'||!Number.isSafeInteger(input.revision))fail('Reload the prep list before ticking items off.');
   const item=(await readItems(actor)).items.find(entry=>entry.id===input.itemId&&!entry.deleted&&entry.active&&entry.days.includes(weekday(current)));
+  // Sales-based items freeze the amount shown today into the tick.
+  let amount=item?.amount;if(item?.basis==='sales')amount=(await list(actor,{date:current})).rows.find(row=>row.id===item.id)?.amount??null;
   return mutate(dayFile(actor,current),{ticks:{}},state=>{
    state.ticks||={};const existing=state.ticks[input.itemId];
    if(!item&&!existing)fail('This prep item is not on today\'s list.',404);
    if(existing&&existing.done===input.done)return{changed:false,value:{itemId:input.itemId,done:existing.done,doneAt:existing.done?existing.doneAt:null,doneBy:existing.done?existing.doneBy:null,tickRevision:existing.revision}};
    if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
-   const stamp=new Date(now()).toISOString(),snapshot=existing?.snapshot||{name:item.name,amount:item.amount,unit:item.unit,station:item.station};
+   const stamp=new Date(now()).toISOString(),snapshot=existing?.snapshot||{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{})};
    const next={done:input.done,snapshot,revision:(existing?.revision||0)+1,doneAt:input.done?stamp:existing?.doneAt||null,doneBy:input.done?person(actor):existing?.doneBy||null,history:[...(existing?.history||[]),{done:input.done,at:stamp,by:person(actor)}].slice(-20)};
    state.ticks[input.itemId]=next;return{changed:true,value:{itemId:input.itemId,done:next.done,doneAt:next.done?next.doneAt:null,doneBy:next.done?next.doneBy:null,tickRevision:next.revision}};
   });
  }
  // Today's progress for Home: counts and the remaining items, read-only.
- async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,unit,station,done,tickRevision,label})=>({id,name,amount,unit,station,done,tickRevision,label})),canPrint:result.canPrint};}
+ async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,unit,station,done,tickRevision,label,basis})=>({id,name,amount,unit,station,done,tickRevision,label,...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
  // Staff activity: who finished which prep item, for recent days at this location.
  async function activity(actor,{start,end}){
   need(actor);const from=start&&validDate(start)?start:shift(today(),-31),to=end&&validDate(end)?end:today(),events=[];
-  for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
+  for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount===null||tick.snapshot.amount===undefined?'':tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
   return events;
  }
  return{list,create,update,remove,tick,summary,activity};
@@ -113,4 +128,4 @@ async function route({req,url,params,session,store,body,json}){
  if(match&&req.method==='DELETE'){json(200,await store.remove(session,match[1],await body(req,4000)));return true;}
  fail('Prep list endpoint not found.',404);
 }
-module.exports={createStore,route,details};
+module.exports={createStore,route,details,salesAmount};
