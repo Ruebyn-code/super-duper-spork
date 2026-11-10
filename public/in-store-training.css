@@ -107,3 +107,57 @@
 .instore-step[hidden]{display:none!important}
 .instore-step-rule{margin:0 0 4px}
 .instore-rule-result{align-self:flex-start;margin-top:2px}
+/* Modern checklist steps (assessment reader and builder phone preview). Styling only. */
+#learning-main .instore-checklist{gap:10px}
+#learning-main .instore-progress{position:relative;display:flex;align-items:center;gap:8px;margin:2px 0 12px;padding:0 0 10px;font-size:12px;font-weight:700;color:var(--theme-text,#182b3a)}
+#learning-main .instore-progress::after{content:'';position:absolute;left:0;right:0;bottom:0;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--primary,#008cff) 0 var(--instore-progress,0%),color-mix(in srgb,var(--primary,#008cff) 12%,var(--theme-surface,#fff)) var(--instore-progress,0%) 100%);transition:background .3s}
+#learning-main .instore-progress-done{color:#15803d}#learning-main .instore-progress-done::after{background:#22c55e}
+#learning-main .instore-step{position:relative;gap:8px;padding:12px 14px 12px 16px;border:1px solid color-mix(in srgb,var(--theme-line,#e2e8f0) 80%,transparent);border-radius:14px;background:var(--theme-surface,#fff);box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.04);transition:border-color .2s,box-shadow .2s}
+#learning-main .instore-step::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:color-mix(in srgb,var(--primary,#008cff) 30%,transparent);transition:background .2s}
+#learning-main .instore-step:focus-within{border-color:color-mix(in srgb,var(--primary,#008cff) 45%,var(--theme-line,#e2e8f0));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary,#008cff) 12%,transparent),0 4px 14px rgba(15,23,42,.06)}
+#learning-main .instore-step:has(.learning-badge.completed),#learning-main .instore-step-check:has(input:checked){border-color:color-mix(in srgb,#22c55e 40%,var(--theme-line,#e2e8f0))}
+#learning-main .instore-step:has(.learning-badge.completed)::before,#learning-main .instore-step:has(.instore-step-check input:checked)::before{background:#22c55e}
+#learning-main .instore-step:has(.learning-badge.awaiting-signoff)::before{background:#f59e0b}
+#learning-main .instore-step-section{padding:14px 2px 0;border:0;background:none;box-shadow:none}#learning-main .instore-step-section::before{display:none}
+#learning-main .instore-step-section h4{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--theme-primary-text,var(--primary,#008cff))}
+#learning-main .instore-step-section h4::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--primary,#008cff) 35%,transparent),transparent)}
+#learning-main .instore-step-instruction{background:color-mix(in srgb,var(--primary,#008cff) 7%,var(--theme-surface,#fff));border-color:transparent;box-shadow:none}#learning-main .instore-step-instruction::before{background:var(--primary,#008cff)}
+#learning-main .instore-step-course{background:linear-gradient(135deg,color-mix(in srgb,var(--primary,#008cff) 6%,var(--theme-surface,#fff)),var(--theme-surface,#fff) 60%)}
+#learning-main .instore-step>label,#learning-main .instore-course-head strong{font-size:14px;font-weight:650;line-height:1.35;color:var(--theme-text,#182b3a)}
+#learning-main .instore-step-help{font-size:12.5px;line-height:1.45}
+#learning-main .instore-step input[type=text],#learning-main .instore-step input[type=number],#learning-main .instore-step select,#learning-main .instore-step textarea{border-radius:10px;font-weight:400}
+/* Checkbox steps: the whole row is a large tap target with a rounded tick box. */
+#learning-main .instore-step>label.instore-step-check{gap:12px;cursor:pointer}
+#learning-main .instore-step-check input[type=checkbox]{flex:none;display:grid;place-content:center;width:24px;height:24px;min-height:0;margin:0;padding:0;border:2px solid color-mix(in srgb,var(--theme-muted,#64748b) 55%,transparent);border-radius:8px;background:var(--theme-surface,#fff);appearance:none;-webkit-appearance:none;cursor:pointer;transition:background .15s,border-color .15s}
+#learning-main .instore-step-check input[type=checkbox]::after{content:'';width:6px;height:11px;margin-top:-2px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);transition:transform .15s}
+#learning-main .instore-step-check input[type=checkbox]:checked{border-color:#22c55e;background:#22c55e}#learning-main .instore-step-check input[type=checkbox]:checked::after{transform:rotate(45deg) scale(1)}
+#learning-main .instore-step-check input[type=checkbox]:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}
+#learning-main .instore-step-check:has(input:checked){color:var(--theme-muted,#64748b)}
+/* Choice pills: the radio stays for keyboards and screen readers but the pill carries the look. */
+#learning-main .instore-choice-row{gap:8px}
+#learning-main .instore-choice-row label.instore-choice{position:relative;padding:8px 14px;border:1px solid var(--theme-line,#dce5ed);border-radius:99px;background:var(--theme-surface,#fff);font-size:13px;font-weight:600;color:var(--theme-text,#182b3a);transition:background .15s,border-color .15s,color .15s}
+#learning-main .instore-choice-row label.instore-choice:hover{border-color:color-mix(in srgb,var(--primary,#008cff) 45%,var(--theme-line,#dce5ed))}
+#learning-main .instore-choice-row input[type=radio]{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+#learning-main .instore-choice-row label.instore-choice:has(input:checked){border-color:transparent;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none);color:#fff;box-shadow:0 2px 8px color-mix(in srgb,var(--primary,#008cff) 30%,transparent)}
+#learning-main .instore-choice-row label.instore-choice:has(input:focus-visible){outline:2px solid var(--primary,#008cff);outline-offset:2px}
+#learning-main .instore-choice-row label.instore-choice:has(input:disabled){cursor:default;opacity:.75}
+/* Stepper: minus, count and plus joined into one control. */
+#learning-main .instore-counter{gap:8px}
+#learning-main .instore-step-attempts .instore-counter-button{border-radius:10px 0 0 10px}#learning-main .instore-step-attempts .instore-counter-button+input+.instore-counter-button{border-radius:0 10px 10px 0}
+#learning-main .instore-step-attempts .instore-counter{gap:0}#learning-main .instore-step-attempts .instore-counter input{border-radius:0;border-left:0;border-right:0;min-height:36px}#learning-main .instore-step-attempts .instore-counter .instore-unit{margin-left:10px}
+#learning-main .instore-counter-button{min-width:38px;min-height:36px;background:color-mix(in srgb,var(--primary,#008cff) 8%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));transition:background .15s}
+#learning-main .instore-counter-button:hover:not(:disabled){background:color-mix(in srgb,var(--primary,#008cff) 16%,var(--theme-surface,#fff))}
+#learning-main .instore-expected{padding:8px 12px;border-radius:10px;border:1px dashed color-mix(in srgb,var(--secondary,#45efc3) 60%,transparent)}
+#learning-main .instore-options{gap:8px}#learning-main .instore-options label{padding:6px 12px;border:1px solid var(--theme-line,#dce5ed);border-radius:99px;cursor:pointer}#learning-main .instore-options label:has(input:checked){border-color:var(--primary,#008cff);background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff))}
+/* Status badges become soft pills with a dot. */
+#learning-main .instore-step .learning-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+#learning-main .instore-step .learning-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+#learning-main .instore-step-rule{display:inline-flex;align-self:flex-start;margin:0;padding:2px 9px;border-radius:99px;background:linear-gradient(135deg,rgba(14,116,144,.08),rgba(79,70,229,.08),rgba(124,58,237,.08));font-size:11.5px;font-weight:600}
+#learning-main .instore-phone-body .instore-step{padding:10px 11px 10px 13px;border-radius:12px}
+#learning-main .instore-phone-body .instore-choice-row label.instore-choice{padding:6px 11px;font-size:12px}
+@media(max-width:600px){#learning-main .instore-choice-row label.instore-choice{min-height:40px}#learning-main .instore-counter-button{min-width:42px;min-height:40px}#learning-main .instore-step-attempts .instore-counter input{min-height:40px}}
+@media(prefers-reduced-motion:reduce){#learning-main .instore-step,#learning-main .instore-step::before,#learning-main .instore-progress::after,#learning-main .instore-choice-row label.instore-choice,#learning-main .instore-step-check input::after{transition:none}}
+@media(forced-colors:active){#learning-main .instore-step::before,#learning-main .instore-progress::after{background:CanvasText}#learning-main .instore-choice-row label.instore-choice:has(input:checked){background:Highlight;color:HighlightText}#learning-main .instore-step-check input[type=checkbox]{appearance:auto}}
+#learning-main .instore-step .learning-badge.completed{background:#dcfce7;color:#15803d}#learning-main .instore-step .learning-badge.awaiting-signoff{background:#fef3c7;color:#b45309}#learning-main .instore-step .learning-badge.scheduled{background:color-mix(in srgb,var(--theme-muted,#64748b) 12%,var(--theme-surface,#fff));color:var(--theme-muted,#64748b)}
+:root[data-theme=dark] #learning-main .instore-step .learning-badge.completed{background:rgba(34,197,94,.18);color:#86efac}:root[data-theme=dark] #learning-main .instore-step .learning-badge.awaiting-signoff{background:rgba(245,158,11,.18);color:#fcd34d}:root[data-theme=dark] #learning-main .instore-progress-done{color:#86efac}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) #learning-main .instore-step .learning-badge.completed{background:rgba(34,197,94,.18);color:#86efac}:root:not([data-theme=light]) #learning-main .instore-step .learning-badge.awaiting-signoff{background:rgba(245,158,11,.18);color:#fcd34d}:root:not([data-theme=light]) #learning-main .instore-progress-done{color:#86efac}}
