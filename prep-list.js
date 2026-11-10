@@ -34,7 +34,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
  const queues=new Map();
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now()));return['year','month','day'].map(key=>parts.find(part=>part.type===key).value).join('-');};
  const folder=actor=>{if(!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.locationId||'')||!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.companyId||''))fail('Select a location first.',403);return path.join(dir,'prep-lists',actor.locationId);};
- const need=(actor,key='prep.view')=>{if(!actor)fail('Sign-in required.',401);if(!can(actor,'prep.view')||!can(actor,key))fail('Prep list permission required.',403);folder(actor);};
+ const need=(actor,key='prep.view')=>{if(!actor)fail('Sign-in required.',401);if(actor.disabledFeatures?.includes('prep'))fail('Prep lists are switched off for this network.',403);if(!can(actor,'prep.view')||!can(actor,key))fail('Prep list permission required.',403);folder(actor);};
  async function readJson(file,fallback){try{return JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code==='ENOENT')return fallback;throw error;}}
  const itemsFile=actor=>path.join(folder(actor),'items.json'),dayFile=(actor,date)=>path.join(folder(actor),'days',date+'.json');
  async function readItems(actor){const state=await readJson(itemsFile(actor),{items:[]});state.items=(state.items||[]).filter(item=>item.companyId===actor.companyId);return state;}

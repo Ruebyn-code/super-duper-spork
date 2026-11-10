@@ -35,3 +35,4 @@ button.labels-primary:hover:not(:disabled){background:var(--brand-sheen,none) co
 #labels-item-dialog .labels-photo-actions button[hidden]{display:none}
 #labels-item-dialog .labels-photo-note{margin:0;font-size:.7rem;color:var(--theme-muted,#64748b)}
 .labels-item-card{display:flex;flex-direction:column}.labels-item-card .labels-card-open{flex:1 1 auto}.labels-item-card .labels-card-stage{flex:1 1 auto}
+#labels-sidebar [hidden],.labels-sidebar-group[hidden]{display:none!important}

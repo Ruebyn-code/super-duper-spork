@@ -57,3 +57,9 @@ test('prep items can scale with the day\'s projected sales without showing sales
  const events=await store.activity(staff,{start:'2026-10-19',end:'2026-10-19'});assert.match(events[0].detail,/^8\.4 kg/,'the tick froze the amount shown');
  const{salesAmount}=require('./prep-list');assert.equal(salesAmount({amount:1,salesPer:1000},0),0,'zero sales means zero');assert.equal(salesAmount({amount:1.5,salesPer:300},100000),5);assert.equal(salesAmount({amount:1,salesPer:3},100),0.334,'rounds up to 0.001');
 });
+test('prep lists refuse while the Prep list feature is switched off',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'opstack-prep-off-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ const store=createStore(dir,{now:()=>Date.parse('2026-10-19T01:00:00Z')}),actor={id:'m',username:'M',companyId:'default',locationId:'store-1',permissions:['prep.view','prep.manage']};
+ await store.create(actor,item());await assert.rejects(store.list({...actor,disabledFeatures:['prep']}),/switched off/);await assert.rejects(store.summary({...actor,disabledFeatures:['prep']}),/switched off/);
+ assert.equal((await store.list({...actor,disabledFeatures:['labels']})).rows.length,1,'Labels being off does not stop the prep list');
+});

@@ -55,7 +55,7 @@
    {existing:'hub-awards'}]},
   {id:'operations',title:'Operations & training',items:[
    {title:'Checklist builder',detail:'Checklists, plans, locations and assignees.',href:'/ops-management#templates',keys:['ops.manage'],icon:'checklist'},
-   {title:'Label settings',detail:'Printer media size, resolution and label templates.',href:'/labels#settings',keys:['prep.manage'],icon:'label'},
+   {title:'Label settings',detail:'Printer media size, resolution and label templates.',href:'/labels#settings',keys:['prep.manage'],feature:'labels',icon:'label'},
    {title:'Equipment',detail:'Company and network equipment lists and each location’s equipment.',href:'/equipment',keys:['equipment.manage'],icon:'tool'},
    {title:'In-store training',detail:'Training checklists, sessions and sign-offs.',href:'/learning-centre#in-store',keys:['learning.assign'],icon:'training'}]},
   {id:'intelligence',title:'Intelligence & reports',items:[
@@ -74,7 +74,7 @@
  function build(){
   const used=new Set(),sections=[];
   for(const group of groups){const section=document.createElement('section');section.className='settings-group';section.dataset.group=group.id;const heading=document.createElement('h2');heading.className='settings-group-title';heading.textContent=group.title;const list=document.createElement('div');list.className='settings-group-grid';
-   for(const item of group.items){if(item.existing){const article=document.getElementById(item.existing)?.closest('.settings-option');if(article){used.add(article);const icon=article.querySelector('.settings-option-icon');if(icon&&!icon.querySelector('svg')&&existingIcons[item.existing])icon.innerHTML=svg(icons[existingIcons[item.existing]]);list.append(article);}continue;}if(item.keys&&!any(item.keys))continue;list.append(card(item));}
+   for(const item of group.items){if(item.existing){const article=document.getElementById(item.existing)?.closest('.settings-option');if(article){used.add(article);const icon=article.querySelector('.settings-option-icon');if(icon&&!icon.querySelector('svg')&&existingIcons[item.existing])icon.innerHTML=svg(icons[existingIcons[item.existing]]);list.append(article);}continue;}if(item.keys&&!any(item.keys)||item.feature&&appAccess.featureOn?.(item.feature)===false)continue;list.append(card(item));}
    section.append(heading,list);sections.push(section);}
   // Any static card not placed above stays visible in a final group.
   const rest=[...grid.querySelectorAll(':scope>.settings-option')].filter(article=>!used.has(article));if(rest.length){const section=document.createElement('section');section.className='settings-group';const heading=document.createElement('h2');heading.className='settings-group-title';heading.textContent='More settings';const list=document.createElement('div');list.className='settings-group-grid';list.append(...rest);section.append(heading,list);sections.push(section);}

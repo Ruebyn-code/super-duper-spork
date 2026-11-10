@@ -43,7 +43,7 @@ const pages=[
 const normalize=value=>String(value??'').normalize('NFKD').replace(/\p{M}/gu,'').toLocaleLowerCase('en-AU').replace(/\s+/g,' ').trim();
 const termsFor=query=>normalize(query).split(' ').filter(Boolean);
 const matches=(value,terms)=>terms.every(term=>normalize(value).includes(term));
-const pagesFor=actor=>pages.filter(([, , , ,permissions,mode])=>mode==='all'?permissions.every(key=>can(actor,key)):any(actor,permissions)).map(([id,title,text,url])=>({id:'page:'+id,type:'Pages',title,text,url}));
+const pagesFor=actor=>pages.filter(([, , , ,permissions,mode])=>mode==='all'?permissions.every(key=>can(actor,key)):any(actor,permissions)).filter(([id])=>id!=='labels'||!(actor.disabledFeatures?.includes('prep')&&actor.disabledFeatures?.includes('labels'))).map(([id,title,text,url])=>({id:'page:'+id,type:'Pages',title:id==='labels'?require('./public/network-features-model').prepLabelsName(actor.disabledFeatures||[]):title,text,url}));
 function snippet(value,terms){const text=String(value??'').replace(/\s+/g,' ').trim(),folded=normalize(text),positions=terms.map(term=>folded.indexOf(term)).filter(index=>index>=0),start=positions.length?Math.max(0,Math.min(...positions)-45):0;return(start?'…':'')+text.slice(start,start+170)+(text.length>start+170?'…':'');}
 async function search(actor,query,providers={}){
  if(typeof query!=='string'||query.length>120||/[\x00-\x1f\x7f]/.test(query))throw Object.assign(Error('Enter a search of up to 120 characters.'),{status:400});
