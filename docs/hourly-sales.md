@@ -58,3 +58,12 @@ saved actuals/history are never rewritten. Hourly profiles use these same source
 dates. The prior-year matching-holiday method remains in place, but its growth
 comparison excludes pairs where either date is a public holiday. No surcharge is
 added, removed or inferred from saved revenue.
+
+## Reading difficult reports
+
+- **Photos:** before anything is sent, the browser converts a photo to greyscale and stretches its contrast (1–99% levels), which makes faint thermal print darker and the paper whiter. A tall receipt (more than about 1.6 times taller than wide) is sent as up to three overlapping top-to-bottom slices at full resolution instead of one shrunken image; the instructions tell OpStack intelligence to treat the slices as one report and list rows repeated in the overlap once, and identical repeated days collapse on the server.
+- **Columns:** the hourly amount column may be called Sales, Total, Net sales, Gross sales, Amount, Revenue, Takings or $. When a report has both GST-inclusive and GST-exclusive amounts, the GST-inclusive one is used and named in a warning. Count columns (transactions, customers, items) are ignored.
+- **Part-hour rows:** 30- and 15-minute rows are copied as printed and added into their hour on the server only when the printed ranges cover the whole hour exactly once (e.g. 11:00–11:30 + 11:30–12:00). A partial set, or repeats with different amounts, leaves that hour unrecorded with a warning.
+- **Time formats:** besides 11:00, 11 AM and ranges such as 11:01–12, the server also reads 11.00am, 1100–1200 and 11h.
+- **No printed date:** the read request includes `fallbackDate` (the date being viewed on Hourly sales, or today in Melbourne from Home). OpStack intelligence uses it only when the report prints no date, and adds a warning; the date can be checked before Submit.
+- **Partly unreadable reports:** a day without a readable date, an unreadable row or amount, or a day with no readable amounts is skipped with a warning; the rest of the read is kept. Only a read with nothing usable fails, with advice to use a clearer photo or a closer crop.
