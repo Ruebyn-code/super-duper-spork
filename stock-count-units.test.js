@@ -52,3 +52,19 @@ test('count unit settings retain stock management, scope, validation and omitted
   assert.equal((await f.api(f.staff,'/api/stock-counts/'+saved.id)).items[0].quantity,0.5);
  }finally{await f.close();}
 });
+
+test('stock can be counted by weight (kg/g) or volume (L/mL) with decimal amounts per ordered unit',async()=>{
+ const kg={name:'kg',perUnit:2.5,measure:'weight'},ml={name:'mL',perUnit:5000,measure:'volume'};
+ assert.equal(units.valid(kg),true);assert.equal(units.quantity(6.25,kg),2.5);assert.equal(units.quantity(2500,ml),0.5);assert.equal(units.quantity(1.1,{name:'L',perUnit:0.75,measure:'volume'}),1.467);
+ for(const bad of [{name:'kg',perUnit:2.5},{name:'L',perUnit:2,measure:'weight'},{name:'lb',perUnit:2,measure:'weight'},{name:'kg',perUnit:0,measure:'weight'},{name:'kg',perUnit:0.0005,measure:'weight'},{name:'kg',perUnit:'2',measure:'weight'},{name:'kg',perUnit:2,measure:'length'}])assert.equal(units.valid(bad),false,JSON.stringify(bad));
+ assert.deepEqual(units.normalize({...kg,extra:1}),kg);assert.equal(units.equal(kg,{...kg}),true);assert.equal(units.equal(kg,{name:'kg',perUnit:2.5}),false);assert.equal(units.equal({name:'Sleeves',perUnit:20},{name:'Sleeves',perUnit:20,measure:null}),true);
+ const f=await fixture({fetchImpl:()=>{throw Error('Unexpected provider request');}});
+ try{
+  const input={name:'Chicken thigh',supplierId:'packaging',unitAmount:'2.5 kg bag',price:30,category:'Meat',countUnit:kg};
+  const product=await f.api(f.office,'/api/products','POST',input);assert.deepEqual(product.countUnit,kg);
+  assert.equal((await f.request(f.office,'/api/products','POST',{...input,name:'Bad',countUnit:{name:'kg',perUnit:2.5}})).status,400,'kg needs the weight measure');
+  const count=await f.api(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-18',items:[{id:product.id,quantity:6.25,countUnit:kg}]});
+  assert.equal(count.items[0].quantity,2.5,'6.25 kg is 2.5 bags');assert.equal(count.items[0].countedQuantity,6.25);assert.deepEqual(count.items[0].countUnit,kg);
+  assert.equal((await f.request(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-18',items:[{id:product.id,quantity:6.25,countUnit:{name:'g',perUnit:2500,measure:'weight'}}]})).status,409,'a stale conversion is rejected');
+ }finally{await f.close();}
+});

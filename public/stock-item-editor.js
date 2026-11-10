@@ -19,15 +19,22 @@
    select(tabs[next].dataset.stockTab,true);
   });
  }
+ // Count by: ordered units, smaller packs (name + whole number) or a weight/volume measure (decimal amount per ordered unit).
+ const kind=form.elements.countUnitKind,measureNames={kg:'Kilograms',g:'Grams',L:'Litres',mL:'Millilitres'};
  function refresh(){
-  const hasName=Boolean(name.value.trim()),hasRatio=Boolean(ratio.value.trim());
-  name.setCustomValidity(!hasName&&hasRatio?wording('Enter a counting unit name, such as Sleeves.'):'');
-  ratio.setCustomValidity(hasName&&!hasRatio?wording('Enter how many counting units are in one ordered unit.'):'');
-  const unit=stockCountUnits.normalize({name:name.value,perUnit:Number(ratio.value)});
-  const text=unit?'1 ordered unit = {quantity} {unit}. Counting {half} {unit} records 0.5 ordered units.':!hasName&&!hasRatio?'Count using the ordered unit. For sleeves or smaller packs, fill in both fields above.':'Enter a counting unit name and a whole number per ordered unit.';
-  const values={quantity:unit?.perUnit??'',unit:unit?.name||'',half:unit?new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(unit.perUnit/2):''};
+  const value=kind?kind.value:(name.value.trim()||ratio.value.trim()?'pack':''),measure=value.includes(':')?value.split(':'):null,pack=value==='pack',hasName=Boolean(name.value.trim()),hasRatio=Boolean(ratio.value.trim());
+  const nameField=document.getElementById('stock-count-name-field'),ratioField=document.getElementById('stock-count-ratio-field'),ratioLabel=document.getElementById('stock-count-ratio-label');
+  if(nameField)nameField.hidden=!pack;if(ratioField)ratioField.hidden=!value;
+  ratio.step=measure?'0.001':'1';ratio.min=measure?'0.001':'1';ratio.placeholder=measure?(measure[1]==='g'||measure[1]==='mL'?'e.g. 5000':'e.g. 5'):'e.g. 20';
+  if(ratioLabel)ratioLabel.textContent=measure?wording('{unit} in one ordered unit',{unit:wording(measureNames[measure[1]])}):wording('Counting units per ordered unit');
+  name.setCustomValidity(pack&&!hasName&&hasRatio?wording('Enter a counting unit name, such as Sleeves.'):'');
+  ratio.setCustomValidity(pack&&hasName&&!hasRatio?wording('Enter how many counting units are in one ordered unit.'):measure&&!hasRatio?wording('Enter how much is in one ordered unit, such as 5 for a 5 kg bag.'):'');
+  const unit=measure?stockCountUnits.normalize({name:measure[1],perUnit:Number(ratio.value),measure:measure[0]}):pack?stockCountUnits.normalize({name:name.value,perUnit:Number(ratio.value)}):null;
+  const text=unit?'1 ordered unit = {quantity} {unit}. Counting {half} {unit} records 0.5 ordered units.':!value?'Count using the ordered unit. To count by weight, volume or smaller packs, choose Count by above.':measure?'Enter an amount above 0 with up to three decimals.':'Enter a counting unit name and a whole number per ordered unit.';
+  const format=new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}),values={quantity:unit?format.format(unit.perUnit):'',unit:unit?.name||'',half:unit?format.format(unit.perUnit/2):''};
   preview.dataset.appTemplate=text;preview.dataset.appValues=JSON.stringify(values);preview.textContent=wording(text,values);
  }
+ kind?.addEventListener('change',refresh);
  for(const input of [name,ratio])input.addEventListener('input',refresh);
  // Reveal only the first invalid field; later validation events must not hide it.
  form.addEventListener('invalid',event=>{

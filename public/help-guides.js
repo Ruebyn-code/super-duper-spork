@@ -102,7 +102,7 @@
   'Keep Unit amount as the ordered pack, such as “Box of 1,000 cups”. Set Count in smaller packs to Sleeves and 20 per ordered unit.',
   'Save changes, then enter sleeves in Stock count. For example, 10 sleeves is 0.5 of that box.',
   'Check the conversion shown beside the count before saving.'
- ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Targets, prices, recommendations and supplier orders remain in ordered packs. A changed conversion must be reviewed before an older count draft is saved.'],related:['stock-count','stock-settings'],keywords:['selves','sleeves','cups','20 x 50','pack conversion']});
+ ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Items can also be counted by weight (kg or g) or volume (L or mL): choose it under How to count this item → Count by and enter how much is in one ordered unit, for example 2.5 for a 2.5 kg bag. Staff then enter what they weigh or measure.','Targets, prices, recommendations and supplier orders remain in ordered packs. A changed conversion must be reviewed before an older count draft is saved.'],related:['stock-count','stock-settings'],keywords:['selves','sleeves','cups','20 x 50','pack conversion']});
  add(c,'count-history','Review count history and usage','Understand saved stock snapshots and completed usage cycles.',[
   'Open Stock count → History and View count. Choose Group by → Area or Supplier to review the saved quantities and units using their original names.',
   'Open Weekly usage to inspect the Sunday–Saturday cycles and storage groups.',
