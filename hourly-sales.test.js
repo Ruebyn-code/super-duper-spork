@@ -62,3 +62,12 @@ test('a read with one bad day keeps the readable days, and an undated read expla
  assert.throws(()=>model.normalize({...draft,days:[{date:'',rows:[{timeLabel:'9:00 AM',salesCents:1}],reportedTotalCents:null}]}),e=>e.status===502&&/with a date/.test(e.message));
  assert.equal(model.source({sourceText:'x',images:[],fallbackDate:'2026-10-12'}).fallbackDate,'2026-10-12');assert.equal(model.source({sourceText:'x',images:[],fallbackDate:'nope'}).fallbackDate,null);
 });
+test('the printed sales date is read the Australian way and wins over a misread date, and gross sales are requested',()=>{
+ const row=[{timeLabel:'9:00 AM',salesCents:500}],read=(date,dateText)=>model.normalize({...draft,days:[{date,dateText,rows:row,reportedTotalCents:null}]});
+ let result=read('2026-10-11','10/11/2026');assert.equal(result.days[0].date,'2026-11-10','10/11/2026 is 10 November, not 11 October');assert(result.warnings.some(w=>w.includes('Used the printed sales date')));
+ result=read('2026-10-12','Mon 12 Oct 2026');assert.equal(result.days[0].date,'2026-10-12');assert(!result.warnings.some(w=>w.includes('Used the printed')),'matching dates need no warning');
+ result=read('2026-10-12','');assert.equal(result.days[0].date,'2026-10-12','no printed text keeps the read date');
+ assert.equal(read('','12/10/2026').days[0].date,'2026-10-12','a printed date fills a missing read date');
+ assert.equal(model.printedDate('12/10/26 06:00 - 13/10/26 05:59'),'2026-10-12','an overnight range keeps its opening date');
+ assert.match(model.instruction,/GROSS sales/);assert.match(model.instruction,/never the time the report was printed/);assert(model.schema.properties.days.items.required.includes('dateText'));
+});
