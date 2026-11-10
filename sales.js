@@ -177,4 +177,10 @@ function createStore(){
  async function totals(dir,session,{orders=[],now=new Date(),transfers=[]}={}){return homeTotals(await history(dir,session),orders,session,{now,transfers});}
  return {save,saveDay,report,totals,history};
 }
-module.exports={read,projectionRecords,calculate,orderingProjection,rosterProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};
+// Which completed days of one week feed projections (unusual days left out); read-only markers for Daily sales.
+async function projectionDays(dir,session,weekStart,{now=new Date()}={}){
+ week(weekStart);if(!session.locationId||!session.companyId)return{weekStart,unusualPercent:null,days:[]};
+ const years=[...new Set([shift(weekStart,-63),shift(weekStart,6)].map(date=>Number(date.slice(0,4))))],calendars=await require('./australian-public-holidays').locationCalendars(dir,session,years);
+ return require('./projection-exclusions').weekDays(dir,session,{weekStart,today:dateLabel(dayNumber(now,calendar(defaultTimeZone))),readRevenue:starts=>projectionRecords(dir,session,starts),holidays:new Set(calendars.flatMap(item=>(item.dates||[]).map(day=>day.date)))});
+}
+module.exports={projectionDays,read,projectionRecords,calculate,orderingProjection,rosterProjection,allTimeTotals,homeTotals,completedWeekAverages,createStore,validate,maximumDailyCents,currentWeek,currentQuarter};

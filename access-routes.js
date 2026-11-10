@@ -17,7 +17,7 @@ function apiPermission(url,method){
  if(url.startsWith('/api/stock-counts')||url==='/api/stock-usage')return[read?'counts.view':'counts.edit'];
  if(url.startsWith('/api/weekly-sales-import/'))return['finances.edit'];
  if(url.startsWith('/api/hourly-sales'))return[read?'sales.view':'sales.edit'];
- if(url==='/api/sales')return[read?'sales.view':'sales.edit'];
+ if(url==='/api/sales'||url==='/api/sales/projection-settings')return[read?'sales.view':'sales.edit'];
  if(['/api/weekly-sales-reports','/api/weekly-sales-overview','/api/operating-expense-types','/api/operating-expense-schedule'].includes(url))return[read?'finances.view':'finances.edit'];
  if(url.startsWith('/api/order-history'))return[read?'orders.view':'orders.place'];
  if(url.startsWith('/api/orders'))return[read?'orders.view':'orders.place'];

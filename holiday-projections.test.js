@@ -81,7 +81,8 @@ test('Sales and roster APIs share the holiday forecast while projection viewers 
 });
 
 test('normal weekdays replace holiday samples with distinct older normal weekdays without changing actual history or adding a surcharge',async t=>{
- const f=await fixture(t);f.state.companies[0].holidayCalendars[0].dates.push({date:'2026-03-16',name:'Local holiday'},{date:'2026-03-02',name:'Another local holiday'});await f.calendars();await f.day('2026-03-16',990000);await f.day('2026-03-02',880000);await f.day('2026-02-23',15000);
+ const f=await fixture(t);await require('./projection-exclusions').saveSettings(f.dir,actor,{unusualPercent:100,revision:0});// this test covers holidays only, so its 50%-high Monday stays in
+ f.state.companies[0].holidayCalendars[0].dates.push({date:'2026-03-16',name:'Local holiday'},{date:'2026-03-02',name:'Another local holiday'});await f.calendars();await f.day('2026-03-16',990000);await f.day('2026-03-02',880000);await f.day('2026-02-23',15000);
  const report=await f.report(),monday=report.projection.dailyProjections[0];assert.equal(monday.amountCents,12000);assert.deepEqual(monday.normalSourceDates,['2026-03-23','2026-03-09','2026-02-23','2026-02-16']);assert.equal(report.projection.history[1].days[0],990000);assert.equal(report.projection.projectedSalesCents,12000+55000+Math.round(200000*(346*11000+4000)/(346*10000)));
  const roster=await sales.rosterProjection(f.dir,actor,anchor,{now});assert.equal(roster.daily[0].salesCents,12000);assert.equal(roster.projectedSalesCents,report.projection.projectedSalesCents);
  const sunday=await f.report(new Date('2026-04-04T14:00:00Z'));assert.equal(sunday.orderingProjection.dailyProjections[0].holiday.status,'adjusted');assert.equal(sunday.orderingProjection.dailyProjections[0].holiday.previousDate,'2025-04-21');assert.equal(sunday.orderingProjection.dailyProjections[2].amountCents,11000);assert.deepEqual(sunday.orderingProjection.dailyProjections[0].normalSourceDates,monday.normalSourceDates);
@@ -91,4 +92,23 @@ test('normal weekdays replace holiday samples with distinct older normal weekday
 
 test('hourly profiles use the same replacement weekdays as the daily forecast',()=>{
  const {forecast}=require('./hourly-sales'),dates=['2026-03-23','2026-03-09','2026-02-23','2026-02-16'],state={days:Object.fromEntries(dates.map(date=>[date,{hours:[100,...Array(23).fill(0)]}]))},projection={history:[],daily:[{date:anchor,salesCents:12000,normalSourceDates:dates}]};const result=forecast(state,anchor,projection);assert.equal(result.hours[0],12000);assert.equal(result.hours.reduce((a,b)=>a+b,0),12000);
+});
+
+test('unusual days (more than the company limit above or below usual) are left out of projections unless they are the new normal',async t=>{
+ const exclusions=require('./projection-exclusions');
+ let f=await fixture(t);await f.day('2026-03-23',20000);
+ let report=await f.report(),monday=report.projection.dailyProjections[0];
+ assert.deepEqual(monday.normalSourceDates,['2026-03-16','2026-03-09','2026-03-02','2026-02-23'],'a Monday 82% above usual is replaced by an older normal Monday');assert.equal(monday.amountCents,11000);assert.deepEqual(monday.unusualDates,['2026-03-23']);assert.equal(report.projection.unusualDayExclusion,true);assert.equal(report.projection.unusualPercent,30);
+ assert.equal((await sales.rosterProjection(f.dir,actor,anchor,{now})).daily[0].salesCents,11000,'rosters use the same forecast');
+ assert.equal((await sales.read(f.dir,actor,'2026-03-23')).days[0],20000,'saved sales are unchanged');
+ const marks=await sales.projectionDays(f.dir,actor,'2026-03-23',{now});assert.equal(marks.days[0].status,'left-out');assert.equal(marks.days[0].reason,'high');assert.equal(marks.days[0].changePercent,82);assert.equal(marks.days[0].usualCents,11000);assert.equal(marks.days[1].status,'used');
+ await f.day('2026-03-24',5000);report=await f.report();assert.equal(report.projection.dailyProjections[1].normalSourceDates.includes('2026-03-24'),false,'a day 55% below usual is left out too');assert.equal(report.projection.dailyProjections[1].amountCents,11000);
+ await f.day('2026-03-16',20000);report=await f.report();monday=report.projection.dailyProjections[0];
+ assert.deepEqual(monday.normalSourceDates,['2026-03-23','2026-03-16','2026-03-09','2026-03-02'],'two high Mondays in the last four are the new normal');assert.equal(monday.amountCents,15500);
+ await f.day('2026-03-16',11000);
+ assert.equal((await exclusions.readSettings(f.dir,actor)).unusualPercent,30,'30% by default');
+ for(const bad of [9,101,30.5,'40'])await assert.rejects(exclusions.saveSettings(f.dir,actor,{unusualPercent:bad,revision:0}),/whole percentage/);
+ const saved=await exclusions.saveSettings(f.dir,actor,{unusualPercent:90,revision:0});assert.equal(saved.revision,1);await assert.rejects(exclusions.saveSettings(f.dir,actor,{unusualPercent:50,revision:0}),/changed since/);
+ report=await f.report();assert.equal(report.projection.dailyProjections[0].amountCents,13250,'an 82% rise is inside a 90% company limit, so the plain average is used');assert.equal(report.projection.unusualDayExclusion,undefined);
+ assert.equal((await exclusions.readSettings(f.dir,{...actor,locationId:'other-shop'})).unusualPercent,90,'the limit belongs to the company');
 });

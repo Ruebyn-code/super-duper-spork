@@ -1,5 +1,6 @@
 const {shift}=require('./stock-usage');
 const publicHolidays=require('./australian-public-holidays');
+const exclusions=require('./projection-exclusions');
 const nameKey=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 const monday=date=>shift(date,-(new Date(date+'T00:00:00Z').getUTCDay()+6)%7);
 const valid=value=>Number.isSafeInteger(value)&&value>=0;
@@ -56,16 +57,20 @@ async function adjustments(dir,session,{weekStarts,anchor,asOf=anchor,readRevenu
 // Retain actual source history; only replace the derived forecast's holiday samples.
 async function normalForecast(dir,session,projection,{anchor,records,readRevenue,dailyKey='dailyProjections',amountKey='amountCents'}){
  if(!session.locationId||!session.companyId)return projection;
- const oldest=shift(anchor,-364),years=[];for(let year=Number(oldest.slice(0,4));year<=Number(anchor.slice(0,4));year++)years.push(year);
+ const oldest=shift(anchor,-364-63),years=[];for(let year=Number(oldest.slice(0,4));year<=Number(anchor.slice(0,4));year++)years.push(year);
  const calendars=await publicHolidays.locationCalendars(dir,session,years),holidays=new Set(calendars.flatMap(c=>(c.dates||[]).map(d=>d.date)));
+ // Public holidays and unusual days (more than the company's limit, default 30%, above or below usual) are replaced
+ // by the next older normal same weekday; saved sales themselves are never changed.
+ const settings=await exclusions.readSettings(dir,session),check=exclusions.classifier({holidays,percent:settings.unusualPercent,records,readRevenue});
+ await check.load(Array.from({length:12},(_,index)=>shift(anchor,-7*(index+1))));
+ const skipped=new Map(),leftOut=async date=>{if(!skipped.has(date)){const result=await check.status(date,anchor);skipped.set(date,result.used?null:result.reason);}return skipped.get(date);};
  const base=Array.from({length:7},(_,day)=>[1,2,3,4].map(n=>shift(anchor,day-7*n)));
- if(!base.flat().some(date=>holidays.has(date)))return projection;
- const samples=base.map((dates,day)=>{const selected=[];for(let n=1;n<=52&&selected.length<4;n++){const date=shift(anchor,day-7*n);if(!holidays.has(date))selected.push(date);}return selected;});
- const known=new Map(records.map(r=>[r.weekStart,r])),needed=[...new Set(samples.flat().map(monday))].filter(start=>!known.has(start));
- for(const record of await readRevenue(needed))known.set(record.weekStart,record);
- const values=samples.map(dates=>dates.length===4?dates.map(date=>known.get(monday(date))?.days[(new Date(date+'T00:00:00Z').getUTCDay()+6)%7]):[]),complete=values.every(days=>days.length===4&&days.every(valid));
- const daily=projection[dailyKey].map((day,index)=>({...day,[amountKey]:values[index].length===4&&values[index].every(valid)?Math.round(values[index].reduce((a,b)=>a+b,0)/4):null,normalSourceDates:samples[index]}));
- const total=complete?Math.round(values.flat().reduce((a,b)=>a+b,0)/4):null,result={...projection,[dailyKey]:daily,projectedSalesCents:total,normalHolidayExclusion:true};
+ let any=false;for(const date of base.flat())if(await leftOut(date))any=true;if(!any)return projection;
+ const samples=[];for(let day=0;day<7;day++){const selected=[];for(let n=1;n<=52&&selected.length<4;n++){const date=shift(anchor,day-7*n);if(!await leftOut(date))selected.push(date);}samples.push(selected);}
+ await check.load(samples.flat());
+ const values=samples.map(dates=>dates.length===4?dates.map(check.value):[]),complete=values.every(days=>days.length===4&&days.every(valid));
+ const daily=projection[dailyKey].map((day,index)=>({...day,[amountKey]:values[index].length===4&&values[index].every(valid)?Math.round(values[index].reduce((a,b)=>a+b,0)/4):null,normalSourceDates:samples[index],...(base[index].some(date=>skipped.get(date)&&skipped.get(date)!=='holiday')?{unusualDates:base[index].filter(date=>skipped.get(date)&&skipped.get(date)!=='holiday')}:{})}));
+ const total=complete?Math.round(values.flat().reduce((a,b)=>a+b,0)/4):null,result={...projection,[dailyKey]:daily,projectedSalesCents:total,normalHolidayExclusion:true,...([...skipped.values()].some(reason=>reason&&reason!=='holiday')?{unusualDayExclusion:true,unusualPercent:settings.unusualPercent}:{})};
  if(Object.hasOwn(result,'budgetCents')){result.budgetCents=total===null?null:Math.round(total*result.budgetPercent/100);result.remainingCents=result.budgetCents===null||result.pricePending?null:result.budgetCents-result.spentCents;}
  return result;
 }

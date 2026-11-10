@@ -634,7 +634,16 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
       if(req.url==='/api/sales'&&req.method==='GET'){
         const history=await usageHistory(dataDir);
         const result=await salesStore.report(dataDir,session,requestUrl.searchParams.get('week'),{orders:history.orders,transfers:history.transfers,now:new Date(salesNow())});
-        return json(200,{...result,dailyProjection:await dailyProjection(session,requestUrl.searchParams.get('week')||sales.currentWeek(new Date(salesNow())))});
+        const shownWeek=requestUrl.searchParams.get('week')||sales.currentWeek(new Date(salesNow()));
+        return json(200,{...result,dailyProjection:await dailyProjection(session,shownWeek),projectionDays:await sales.projectionDays(dataDir,session,shownWeek,{now:new Date(salesNow())}).catch(()=>null)});
+      }
+      // Company limit for unusual days (default 30%): read with sales viewing; saving needs sales editing and every location.
+      if(req.url==='/api/sales/projection-settings'){
+        if(!can(session,'sales.view'))fail('Sales viewing permission required.',403);
+        const exclusions=require('./projection-exclusions');
+        if(req.method==='GET')return json(200,{...await exclusions.readSettings(dataDir,session),canEdit:can(session,'sales.edit')&&can(session,'locations.all')});
+        if(req.method==='PUT'){if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);if(!can(session,'sales.edit')||!can(session,'locations.all'))fail('Sales editing and access to every location are required to change this company setting.',403);return json(200,{...await exclusions.saveSettings(dataDir,session,await body(req,2000),{now:salesNow}),canEdit:true});}
+        fail('Use GET or PUT for projection settings.',405);
       }
       if(req.url==='/api/operating-expense-schedule'){
         if(req.method==='GET')return json(200,await operatingExpenseSchedule.read(dataDir,session));

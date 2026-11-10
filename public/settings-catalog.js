@@ -48,6 +48,7 @@
    {existing:'hub-order-email'}]},
   {id:'sales',title:'Sales & finance',items:[
    {title:'Projection & budget',detail:'Sales projections and the ordering budget percentage.',href:'/sales#projection',keys:['sales.view'],icon:'chart'},
+   {title:'Unusual sales days',detail:'How far above or below usual a day can be before projections leave it out (default 30%).',href:'/sales#projection',keys:['sales.view'],icon:'chart'},
    {title:'Operating expenses',detail:'Recurring expenses used in weekly reports.',href:'/sales#expense-operating-expenses',keys:['finances.view'],icon:'wallet'}]},
   {id:'rostering',title:'Rostering & pay',items:[
    {title:'Labour settings',detail:'Positions, shift colours, hourly rates and labour budgets.',href:'/rostering#settings',keys:['rostering.manage'],icon:'calendar'},
