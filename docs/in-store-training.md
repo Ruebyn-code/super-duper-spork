@@ -68,6 +68,8 @@ Assessment and phone-preview steps use modern cards (styling only, end of `publi
 
 ### Builder page and phone preview
 
+
+The desktop phone preview never moves while the builder scrolls: it is pinned (sticky) at the position where it first appears, and the phone is scaled (0.40–0.72) so the whole frame fits between that point and the bottom of the window, leaving room for the page's bottom padding. It refits when the window or the top bar/status above it changes size.
 The training checklist builder opens as a full page inside In-store training (not a dialog), with a sticky header holding ← In-store training, Cancel and Save checklist. On desktop a 340 px phone preview sits beside the editor, using the shared phone frame and `.ops-preview-*` styles from the Checklist builder. It renders the steps with the same `stepList` renderer the assessment screen uses, so staff-facing layout matches real sessions; its answers are throwaway and never saved, and its controls are out of the tab order. The preview hides below 1100 px. Unsaved builder changes are guarded on leave, and background reloads never replace an open builder.
 
 
