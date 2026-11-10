@@ -33,3 +33,29 @@ html.learning-split-open,html.learning-split-open body{height:100%;overflow:hidd
 
 /* Lesson paragraphs inherit the authored size instead of the dialog caption size. */
 @media screen{.learning-main .formatted-content :is(p,li,ul,ol,blockquote,td,th,summary){font-size:inherit}}
+/* Streamlined course builder: readiness checklist, quick-add outline buttons, one intelligence menu, labelled canvas adds. */
+.learning-main .learning-readiness{margin:0 0 10px;padding:10px 12px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.learning-main .learning-readiness.ready{border-color:color-mix(in srgb,#22c55e 40%,var(--theme-line,#dce5ed));background:color-mix(in srgb,#22c55e 6%,var(--theme-surface,#fff))}
+.learning-main .learning-readiness-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.learning-main .learning-readiness-head strong{font-size:13px}
+.learning-main .learning-readiness-count{padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-size:11px;font-weight:700}
+.learning-main .learning-readiness ul{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.learning-main .learning-readiness li{display:grid;grid-template-columns:18px auto minmax(0,1fr);align-items:baseline;gap:6px;font-size:12px;color:var(--theme-text,#21384a)}
+.learning-main .learning-readiness-mark{font-weight:800;color:var(--theme-muted,#94a3b8);text-align:center}.learning-main .learning-readiness li.done .learning-readiness-mark{color:#16a34a}
+.learning-main .learning-readiness-name{font-weight:650}.learning-main .learning-readiness-detail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--theme-muted,#64748b);text-align:right}
+.learning-main .learning-outline-choice{min-height:36px;font-size:13px}
+.learning-main .learning-outline-add{display:flex;align-items:center;width:100%;min-height:32px;margin:2px 0 6px;padding:5px 9px;border:1px dashed color-mix(in srgb,var(--primary) 35%,var(--theme-line,#dce5ed));border-radius:8px;background:transparent;color:var(--theme-primary-text,var(--primary));font-size:12px;font-weight:600;text-align:left;cursor:pointer}
+.learning-main .learning-outline-add:hover,.learning-main .learning-outline-add:focus-visible{background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));border-style:solid}
+.learning-main .learning-outline-add-section{justify-content:center;margin-top:8px;min-height:36px;font-size:13px}
+.learning-main .learning-ai-menu{position:relative}.learning-main .learning-ai-menu[hidden]{display:none}
+.learning-main .learning-ai-menu-toggle::after{content:'';display:inline-block;width:6px;height:6px;margin-left:8px;border:solid currentColor;border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg)}
+.learning-main .learning-ai-menu-list{position:absolute;z-index:30;top:calc(100% + 6px);right:0;display:grid;gap:6px;min-width:230px;padding:8px;border-radius:12px;background:var(--theme-surface,#fff);box-shadow:0 12px 32px rgba(15,23,42,.16)}
+.learning-main .learning-ai-menu-list[hidden]{display:none}.learning-main .learning-ai-menu-list>button{justify-content:flex-start;width:100%;text-align:left}
+.learning-main .learning-canvas-insertion .learning-canvas-add{transition:width .15s,background .15s}
+.learning-main .learning-canvas-insertion .learning-canvas-add:hover::after,.learning-main .learning-canvas-insertion .learning-canvas-add:focus-visible::after{content:attr(title);margin-left:5px;font-size:12px;font-weight:600;white-space:nowrap}
+.learning-main .learning-canvas-insertion .learning-canvas-add:hover,.learning-main .learning-canvas-insertion .learning-canvas-add:focus-visible{display:inline-flex;align-items:center;width:auto;padding:0 12px;border-radius:99px}
+#learning-builder .text-editor-toolbar .text-style-button{width:auto;min-width:max-content;padding-inline:8px}
+@media(prefers-reduced-motion:reduce){.learning-main .learning-canvas-insertion .learning-canvas-add{transition:none}}
+.learning-main .learning-readiness li{grid-template-columns:16px minmax(0,1fr);row-gap:0}
+.learning-main .learning-readiness-detail{grid-column:2;text-align:left;white-space:normal;font-size:11.5px}
+.learning-main .learning-readiness-count{flex:none;white-space:nowrap}
+@media(max-width:720px){.learning-main .learning-ai-menu-list{left:0;right:auto;min-width:min(260px,calc(100vw - 40px))}}

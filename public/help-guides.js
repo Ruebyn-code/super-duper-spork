@@ -462,7 +462,7 @@
   'Write lessons, insert supported media or select a Knowledge centre article, and configure section formatting, transitions and reading time.',
   'Use Test course to walk through the learner flow without recording training.',
   'Check autosave, then publish a reviewed version separately.'
- ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],notes:['Refreshing Knowledge centre content explicitly updates a draft; later article edits do not rewrite assigned course content.'],related:['course-questions','assign-training','intelligence-questions']});
+ ],{route:'/learning-centre#builder',permissions:['learning.view','learning.manage'],notes:['The outline shows a readiness checklist (title, content, optional questions and whether changes are published), with + Add block under each section and + Add section at the bottom. OpStack intelligence actions (Draft a course and OpStack intelligence questions) share one menu in the top bar. Section formatting stays folded until you open it.','Refreshing Knowledge centre content explicitly updates a draft; later article edits do not rewrite assigned course content.'],related:['course-questions','assign-training','intelligence-questions']});
  add(c,'course-questions','Use all training question types','Configure answers, marking and answer shuffling.',[
   'In Course builder, add a Knowledge check block.',
   'Choose Multiple choice, Multiple answers, True / false, Dropdown, Short answer, Fill in the blanks, Number, Matching or Put in order.',
