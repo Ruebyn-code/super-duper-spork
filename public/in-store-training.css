@@ -55,18 +55,25 @@
 .instore-builder-status:empty{display:none}
 .instore-builder-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 .instore-builder-layout>.instore-builder{padding:12px;border:1px solid var(--theme-line,#e2e8f0);border-radius:12px;background:var(--theme-surface,#fff)}
-.instore-builder-preview{position:sticky;top:56px;display:flex;flex-direction:column;align-items:center;padding:6px 0 10px;border:1px solid var(--theme-line,#e2e8f0);border-radius:12px;background:var(--theme-surface,#fff);--phone-scale:.72}
+/* Fixed phone preview panel on the right; the builder page keeps clear of it. */
+.instore-builder-layout{--instore-preview-width:540px}
+.instore-builder-page:has(.instore-builder-preview){padding-right:calc(var(--instore-preview-width,540px) + 16px)}
+.instore-builder-layout{grid-template-columns:minmax(0,1fr)}
+.instore-builder-preview{position:fixed;top:8px;right:8px;bottom:8px;z-index:6;align-self:stretch;justify-self:stretch;box-sizing:border-box;width:var(--instore-preview-width,540px);display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 12px 12px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;--phone-scale:1;border:1px solid var(--theme-line,#e2e8f0);border-radius:16px;background:var(--theme-surface,#fff);box-shadow:0 8px 28px rgba(15,23,42,.08)}
+.instore-builder-preview .ops-preview-toolbar{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%}
+.instore-preview-size{font-size:11px;color:var(--theme-muted,#64748b)}
+.instore-builder-preview .ops-preview-device.instore-device{flex:none;margin:6px auto 0}
+.instore-device-screen{display:block;width:100%;height:100%;border:0;background:var(--theme-canvas,#f5f8fc)}
+.instore-builder-preview .ops-preview-note{margin:0;font-size:11px;color:var(--theme-muted,#64748b)}
 .instore-builder-preview .ops-preview-toolbar h3{margin:0;font-size:13px}
-.instore-phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--theme-canvas,#f5f8fc);color:var(--theme-text,#182b3a);font-size:12px;overflow:hidden}
+.instore-phone{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--theme-canvas,#f5f8fc);color:var(--theme-text,#182b3a);overflow:hidden}
 .instore-phone-system{flex:none;display:flex;align-items:center;justify-content:space-between;height:40px;padding:8px 26px 0;box-sizing:border-box;background:var(--theme-surface,#fff);font:600 12px Arial,sans-serif}
 .instore-phone-signal{letter-spacing:-1px;font-size:8px}
 .instore-phone-head{flex:none;display:flex;flex-direction:column;gap:2px;padding:6px 12px 8px;background:var(--theme-surface,#fff);border-bottom:1px solid var(--theme-line,#dce5ed)}
-.instore-phone-head strong{font-size:14px;overflow-wrap:anywhere}.instore-phone-meta{font-size:11px;color:var(--theme-muted,#64748b)}
+.instore-phone-head strong{font-size:17px;overflow-wrap:anywhere}.instore-phone-meta{font-size:13px;color:var(--theme-muted,#64748b)}
 .instore-phone-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:8px 10px}
-.instore-phone-body .instore-step{padding:7px 8px}
 .instore-phone-foot{flex:none;padding:8px 10px 22px;background:var(--theme-surface,#fff);border-top:1px solid var(--theme-line,#dce5ed)}.instore-phone-foot button{width:100%}
-#learning-main .instore-phone label{font-size:12px}
-@media(max-width:1100px){.instore-builder-layout{grid-template-columns:minmax(0,1fr)}.instore-builder-preview{display:none}}
+@media(max-width:1260px){.instore-builder-layout{grid-template-columns:minmax(0,1fr)}.instore-builder-preview{display:none}.instore-builder-page:has(.instore-builder-preview){padding-right:0}}
 @media(max-width:600px){.instore-builder-top{flex-wrap:wrap}.instore-builder-top h2{flex-basis:100%;order:-1;font-size:16px}.instore-builder-actions{margin-left:auto}.instore-builder-actions button,.instore-builder-back{min-height:40px}.instore-builder-layout>.instore-builder{padding:8px}}
 #learning-main .instore-builder-top{justify-content:flex-start;border:0}
 #learning-main .instore-builder-top h2{flex:1;text-align:left;margin:0;padding:0;border:0;font-size:18px}
@@ -153,8 +160,6 @@
 #learning-main .instore-step .learning-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
 #learning-main .instore-step .learning-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
 #learning-main .instore-step-rule{display:inline-flex;align-self:flex-start;margin:0;padding:2px 9px;border-radius:99px;background:linear-gradient(135deg,rgba(14,116,144,.08),rgba(79,70,229,.08),rgba(124,58,237,.08));font-size:11.5px;font-weight:600}
-#learning-main .instore-phone-body .instore-step{padding:10px 11px 10px 13px;border-radius:12px}
-#learning-main .instore-phone-body .instore-choice-row label.instore-choice{padding:6px 11px;font-size:12px}
 @media(max-width:600px){#learning-main .instore-choice-row label.instore-choice{min-height:40px}#learning-main .instore-counter-button{min-width:42px;min-height:40px}#learning-main .instore-step-attempts .instore-counter input{min-height:40px}}
 @media(prefers-reduced-motion:reduce){#learning-main .instore-step,#learning-main .instore-step::before,#learning-main .instore-progress::after,#learning-main .instore-choice-row label.instore-choice,#learning-main .instore-step-check input::after{transition:none}}
 @media(forced-colors:active){#learning-main .instore-step::before,#learning-main .instore-progress::after{background:CanvasText}#learning-main .instore-choice-row label.instore-choice:has(input:checked){background:Highlight;color:HighlightText}#learning-main .instore-step-check input[type=checkbox]{appearance:auto}}
