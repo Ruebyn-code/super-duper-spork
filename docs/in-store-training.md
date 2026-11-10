@@ -54,6 +54,14 @@ Each training checklist has a **Checklist settings** panel in the builder, saved
 - **Collapse finished steps** (`collapseDone`) folds done steps to their title in assessments and the phone preview; tapping one opens it again.
 - **Assign linked courses automatically** (`assignCourses`, unchanged behaviour) now sits in the same panel.
 
+### Trainer-only steps
+
+Any non-section step can be switched to **Hide from the trainee** (`trainerOnly: true`). Trainers, managers and reporters see it with a dashed border and a "Trainer only" chip. The trainee's own session never includes the step, its answer or its course state; a step whose show-when rule depends on a trainer-only step is either left out or shown without the rule, based on the trainee's own saved answers, so trainee and trainer see the same visible steps. Trainer-only steps still count toward sign-off.
+
+### Supervised attempts
+
+The −/count/+ stepper is unchanged and still saves the number of attempts. Underneath, each recorded attempt gets its own card ("Attempt 2 recorded · 2 more attempts to go until it passes"), the attempt that reaches the target turns green ("Passed — all 4 attempts done"), and a dashed card shows the next attempt still needed. Display only.
+
 ### Step appearance
 
 Assessment and phone-preview steps use modern cards (styling only, end of `public/in-store-training.css`): rounded shadowed cards with a left status stripe (green once passed/ticked, amber when Not yet), section headings with a primary rule, a progress bar under the required-steps count, a large rounded tick box for checkbox steps, company-primary choice pills (the radios stay for keyboards and screen readers), a joined −/count/+ stepper and soft Passed / Not yet pills. Light/dark, reduced-motion and forced-colour fallbacks are included; behaviour and saved data are unchanged.

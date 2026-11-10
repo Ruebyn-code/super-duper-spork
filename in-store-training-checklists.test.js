@@ -97,3 +97,17 @@ test('training checklist settings are validated, kept on older saves, frozen int
  progress=await save(1,'Confident and careful.');assert.ok(progress.completedAt);assert.equal(progress.validUntil,training.validUntil(progress.completedAt,12));assert.equal(progress.expired,false);
  const listed=(await a.api(a.office,base)).sessions.find(s=>s.id===session.id).participants[0];assert.equal(listed.validUntil,progress.validUntil);assert.equal(listed.expired,false);
 });
+test('trainer-only steps and their answers are never sent to the trainee',async t=>{
+ const secret={id:id(),type:'competency',title:'TRAINER ONLY rating',required:true,trainerOnly:true},follow={id:id(),type:'check',title:'Extra practice',required:true,showWhen:{stepId:secret.id,operator:'fails'}},open={id:id(),type:'check',title:'Wash hands',required:true};
+ assert.equal(training.normalizeSteps([{...open,trainerOnly:true}],courses)[0].trainerOnly,true);assert.equal(Object.hasOwn(training.normalizeSteps([{id:id(),type:'section',title:'S',trainerOnly:true},open],courses)[0],'trainerOnly'),false,'sections cannot be hidden');
+ assert.throws(()=>training.normalizeSteps([{...open,trainerOnly:'yes'}],courses));
+ const a=await setup(t),template=await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Private',description:'',steps:[open,secret,follow]});
+ const session=await a.api(a.office,base,'POST',{requestId:id(),title:'Private session',description:'',locationId:a.location,trainerId:a.trainer.session.id,userIds:[a.staff.session.id],date:'2026-10-21',time:'09:00',minutes:30,templateId:template.id});
+ const url=base+'/'+session.id+'/assess/'+a.staff.session.id;
+ await a.api(a.trainer,url,'POST',{revision:0,requestId:id(),answers:{[open.id]:true,[secret.id]:'developing'},notes:''});
+ let mine=await a.api(a.staff,base+'/'+session.id);assert(!JSON.stringify(mine).includes('TRAINER ONLY'),'no trainer-only step');assert.equal(Object.hasOwn(mine.participants[0].progress.answers,secret.id),false,'no trainer-only answer');
+ const shown=mine.steps.find(s=>s.id===follow.id);assert.ok(shown,'the follow-up appears while the hidden rating fails');assert.equal(Object.hasOwn(shown,'showWhen'),false,'its rule no longer points at the hidden step');
+ const trainerView=await a.api(a.trainer,base+'/'+session.id);assert.deepEqual(trainerView.steps.map(s=>s.id),[open.id,secret.id,follow.id]);assert.equal(trainerView.participants[0].progress.answers[secret.id],'developing');
+ await a.api(a.trainer,url,'POST',{revision:1,requestId:id(),answers:{[open.id]:true,[secret.id]:'competent'},notes:''});
+ mine=await a.api(a.staff,base+'/'+session.id);assert.deepEqual(mine.steps.map(s=>s.id),[open.id],'the follow-up stays hidden once the hidden rating passes');assert.ok(mine.participants[0].progress.completedAt,'trainer-only steps still count toward sign-off');
+});
