@@ -161,3 +161,19 @@
 #learning-main .instore-step .learning-badge.completed{background:#dcfce7;color:#15803d}#learning-main .instore-step .learning-badge.awaiting-signoff{background:#fef3c7;color:#b45309}#learning-main .instore-step .learning-badge.scheduled{background:color-mix(in srgb,var(--theme-muted,#64748b) 12%,var(--theme-surface,#fff));color:var(--theme-muted,#64748b)}
 :root[data-theme=dark] #learning-main .instore-step .learning-badge.completed{background:rgba(34,197,94,.18);color:#86efac}:root[data-theme=dark] #learning-main .instore-step .learning-badge.awaiting-signoff{background:rgba(245,158,11,.18);color:#fcd34d}:root[data-theme=dark] #learning-main .instore-progress-done{color:#86efac}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) #learning-main .instore-step .learning-badge.completed{background:rgba(34,197,94,.18);color:#86efac}:root:not([data-theme=light]) #learning-main .instore-step .learning-badge.awaiting-signoff{background:rgba(245,158,11,.18);color:#fcd34d}:root:not([data-theme=light]) #learning-main .instore-progress-done{color:#86efac}}
+/* Checklist settings panel in the builder and settings effects in assessments. */
+#learning-main .instore-settings{display:grid;gap:10px;margin:12px 0;padding:12px 14px;border:1px solid var(--theme-line,#e2e8f0);border-radius:14px;background:color-mix(in srgb,var(--primary,#008cff) 4%,var(--theme-surface,#fff))}
+#learning-main .instore-settings legend{padding:0 6px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-primary-text,var(--primary,#008cff))}
+#learning-main .instore-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#learning-main .instore-settings-grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+#learning-main .instore-setting-switch{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+#learning-main .instore-setting-switch>span{display:flex;flex-direction:column;gap:1px}#learning-main .instore-setting-switch strong{font-size:13px}#learning-main .instore-setting-switch small{font-size:12px;color:var(--theme-muted,#64748b)}
+#learning-main .instore-setting-switch input{flex:none;margin-top:2px;accent-color:var(--primary,#008cff)}
+@media(max-width:600px){#learning-main .instore-settings-grid{grid-template-columns:1fr}}
+#learning-main .instore-step.instore-step-done::before{background:#22c55e}
+#learning-main .instore-collapse .instore-step-done:not(.instore-step-open):not(:focus-within){cursor:pointer;padding-top:9px;padding-bottom:9px}
+#learning-main .instore-collapse .instore-step-done:not(.instore-step-open):not(:focus-within)>:not(.instore-course-head):not(label){display:none}
+#learning-main .instore-collapse .instore-step-done:not(.instore-step-open):not(:focus-within)>label:not(.instore-step-check)>:is(input,select,textarea,.instore-number,.instore-options){display:none}
+#learning-main .instore-validity{margin:4px 0 0;padding:6px 10px;border-radius:10px;background:#dcfce7;color:#15803d;font-size:12.5px;font-weight:600}
+#learning-main .instore-validity.expired{background:#fef3c7;color:#b45309}
+:root[data-theme=dark] #learning-main .instore-validity{background:rgba(34,197,94,.18);color:#86efac}:root[data-theme=dark] #learning-main .instore-validity.expired{background:rgba(245,158,11,.18);color:#fcd34d}

@@ -44,6 +44,16 @@ Training checklist steps can use the shared checklist logic (`public/ops-step-lo
 
 The server validates rules when templates are saved and sessions freeze them with the steps. Hidden steps aren't counted or required; a required step with a pass rule counts as done only once it passes, so sign-off waits for every visible required step to pass. Answers to steps that become hidden are kept. The assessment reader and phone preview hide steps live, show the rule under each step and a Passed / Not yet badge for pass checks, and update the required-step count as answers change.
 
+### Checklist settings
+
+Each training checklist has a **Checklist settings** panel in the builder, saved as `settings` on the template and copied into every new session (later edits never change existing sessions; saves that omit `settings` keep the saved values):
+
+- **Default session length** (`minutes`, 5–480, default 30) prefills Duration when the checklist is chosen in New in-store training, unless the duration was already edited.
+- **Require assessment notes to sign off** (`requireNotes`) keeps the sign-off open until the trainer writes assessment notes; answers still save.
+- **Sign-off valid for** (`validMonths`: never, 3, 6, 12, 24 or 36 months). Completed records get `validUntil` (Melbourne date, clamped to shorter months) and `expired`; the assessment shows Valid until / Expired, and the session list shows Sign-off expired. Display only — records never change.
+- **Collapse finished steps** (`collapseDone`) folds done steps to their title in assessments and the phone preview; tapping one opens it again.
+- **Assign linked courses automatically** (`assignCourses`, unchanged behaviour) now sits in the same panel.
+
 ### Step appearance
 
 Assessment and phone-preview steps use modern cards (styling only, end of `public/in-store-training.css`): rounded shadowed cards with a left status stripe (green once passed/ticked, amber when Not yet), section headings with a primary rule, a progress bar under the required-steps count, a large rounded tick box for checkbox steps, company-primary choice pills (the radios stay for keyboards and screen readers), a joined −/count/+ stepper and soft Passed / Not yet pills. Light/dark, reduced-motion and forced-colour fallbacks are included; behaviour and saved data are unchanged.

@@ -79,3 +79,21 @@ test('training checklist logic validates rules, hides steps and requires pass ch
  progress=await save(3,{[rating.id]:'competent',[temp.id]:75,[retrain.id]:true});
  assert.ok(progress.completedAt,'sign-off once every visible required step passes');assert.equal(progress.answers[retrain.id],true,'answers to steps that became hidden are kept');
 });
+test('training checklist settings are validated, kept on older saves, frozen into sessions and applied to sign-off',async t=>{
+ assert.deepEqual(training.normalizeSettings({validMonths:12}),{minutes:30,requireNotes:false,validMonths:12,collapseDone:false});
+ for(const bad of [{minutes:2},{minutes:500},{validMonths:5},{requireNotes:'yes'},{collapseDone:1},{other:true}])assert.throws(()=>training.normalizeSettings(bad),undefined,JSON.stringify(bad));
+ assert.equal(training.validUntil('2026-01-31T03:00:00Z',1),'2026-02-28','short months clamp to their last day');assert.equal(training.validUntil('2026-11-30T14:30:00Z',12),'2027-12-01','dates follow Melbourne time');assert.equal(training.validUntil('2026-01-01T00:00:00Z',0),null);
+ const a=await setup(t),check={id:id(),type:'check',title:'Clean the slicer',required:true},settings={minutes:45,requireNotes:true,validMonths:12,collapseDone:true};
+ const created=await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Slicer',description:'',steps:[check],settings});assert.deepEqual(created.settings,settings);
+ assert.deepEqual((await a.api(a.office,base)).templates[0].settings,settings,'the library lists settings for the session form');
+ const kept=await a.api(a.office,base+'/templates/'+created.id,'PUT',{requestId:id(),revision:1,title:'Slicer',description:'',steps:[check]});assert.deepEqual(kept.settings,settings,'older writers that omit settings keep them');
+ assert.deepEqual((await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Plain',description:'',steps:[{...check,id:id()}]})).settings,{minutes:30,requireNotes:false,validMonths:0,collapseDone:false});
+ assert.equal((await a.request(a.office,base+'/templates','POST',{requestId:id(),title:'Bad',description:'',steps:[{...check,id:id()}],settings:{validMonths:7}})).status,400);
+ const session=await a.api(a.office,base,'POST',{requestId:id(),title:'Slicer session',description:'',locationId:a.location,trainerId:a.trainer.session.id,userIds:[a.staff.session.id],date:'2026-10-21',time:'09:00',minutes:45,templateId:created.id});
+ await a.api(a.office,base+'/templates/'+created.id,'PUT',{requestId:id(),revision:2,title:'Slicer',description:'',steps:[check],settings:{...settings,requireNotes:false}});
+ assert.equal((await a.api(a.office,base+'/'+session.id)).settings.requireNotes,true,'sessions keep the settings they were created with');
+ const url=base+'/'+session.id+'/assess/'+a.staff.session.id,save=async(revision,notes)=>(await a.api(a.trainer,url,'POST',{revision,requestId:id(),answers:{[check.id]:true},notes})).participants[0].progress;
+ let progress=await save(0,'');assert.equal(progress.completedAt,null,'sign-off waits for assessment notes');
+ progress=await save(1,'Confident and careful.');assert.ok(progress.completedAt);assert.equal(progress.validUntil,training.validUntil(progress.completedAt,12));assert.equal(progress.expired,false);
+ const listed=(await a.api(a.office,base)).sessions.find(s=>s.id===session.id).participants[0];assert.equal(listed.validUntil,progress.validUntil);assert.equal(listed.expired,false);
+});
