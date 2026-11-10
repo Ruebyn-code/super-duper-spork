@@ -59,3 +59,36 @@ html.learning-split-open,html.learning-split-open body{height:100%;overflow:hidd
 .learning-main .learning-readiness-detail{grid-column:2;text-align:left;white-space:normal;font-size:11.5px}
 .learning-main .learning-readiness-count{flex:none;white-space:nowrap}
 @media(max-width:720px){.learning-main .learning-ai-menu-list{left:0;right:auto;min-width:min(260px,calc(100vw - 40px))}}
+/* Course canvas inside the iPhone frame (desktop): the screen keeps a real 402 × 874 layout and the phone scales to fit. */
+.learning-canvas-phone .learning-preview-pane{background:color-mix(in srgb,var(--primary) 3%,var(--theme-canvas,#f5f8fc))}
+.learning-canvas-phone .learning-canvas-fit{position:relative;flex:none;box-sizing:content-box;margin:6px auto 0}
+.learning-canvas-phone .learning-canvas-device{flex:none;margin-top:0;margin-bottom:0}
+.learning-canvas-phone .learning-canvas-screen{overflow:hidden}
+.learning-canvas-phone .learning-canvas-screen>.learning-preview-scroll{position:absolute;left:0;top:0;box-sizing:border-box;width:402px;height:884px;padding:56px 12px 28px;transform-origin:0 0;background:var(--theme-canvas,#f5f8fc)}
+.learning-canvas-frame{display:none}.learning-canvas-phone .learning-canvas-frame{display:block}
+.learning-main:not(:has(.learning-canvas-phone)) .learning-canvas-fit,.learning-main:not(:has(.learning-canvas-phone)) .learning-canvas-device,.learning-main:not(:has(.learning-canvas-phone)) .learning-canvas-screen{display:contents}
+/* Add a block: a small popover beside the + that opened it. */
+.learning-main .learning-toolbox-dialog{position:fixed;inset:auto;margin:0;z-index:60;box-sizing:border-box;width:300px;max-height:min(440px,calc(100dvh - 16px));padding:0;border:1px solid var(--line);border-radius:14px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);box-shadow:0 14px 36px rgba(15,23,42,.2);overflow:auto;overscroll-behavior:contain}
+.learning-main .learning-toolbox-dialog .learning-block-toolbox{margin:0;padding:8px 10px 10px;border:0;border-radius:0;background:none}
+.learning-main .learning-toolbox-dialog .learning-toolbox-heading strong{font-size:13px}
+.learning-main .learning-toolbox-dialog .learning-block-toolbox h4{font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin:8px 0 4px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option{min-height:34px;padding:5px 7px;font-size:12px;border-radius:8px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option>svg{width:16px;height:16px}
+/* Give the phone the whole pane height: the canvas heading floats in the corner instead of taking a row. */
+.learning-canvas-phone .learning-preview-pane{position:relative;justify-content:center}
+.learning-canvas-phone .learning-preview-pane>.learning-preview-pane-header{position:absolute;z-index:2;top:8px;left:10px;width:auto;min-height:0;padding:5px 10px;border:1px solid var(--line);border-radius:99px;background:color-mix(in srgb,var(--theme-surface,#fff) 92%,transparent);flex-direction:column;align-items:flex-start;gap:0}
+.learning-canvas-phone .learning-canvas-fit{margin:0 auto}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option.ai-create-button{grid-column:1/-1;justify-content:center;min-height:34px}
+
+/* Compact popover rows. */
+.learning-main .learning-toolbox-dialog{max-height:min(380px,calc(100dvh - 16px));border-radius:12px}
+.learning-main .learning-toolbox-dialog .learning-block-toolbox{padding:6px 8px 8px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-heading strong{font-size:12px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-heading button{min-height:24px;width:24px;padding:0}
+.learning-main .learning-toolbox-dialog .learning-block-toolbox h4{font-size:9px;margin:6px 0 3px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices{gap:3px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option{min-height:28px;padding:3px 6px;gap:5px;font-size:11px;line-height:1.2;border-radius:7px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option>svg{width:14px;height:14px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option.ai-create-button{min-height:28px;font-size:11px}
+.learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option{white-space:normal;text-align:left}
