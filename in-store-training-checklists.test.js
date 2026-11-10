@@ -59,3 +59,23 @@ test('training-only steps validate their settings and only sign off when each st
  result=(await save(1,{[competency.id]:'competent',[attempts.id]:3,[question.id]:'correct',[timed.id]:300,[confirm.id]:'  '+name.toUpperCase()+' '})).data.participants[0].progress;
  assert(result.completedAt,'all training steps passing signs the staff member off');assert.equal(result.done,5);assert.equal(result.answers[confirm.id],name.toUpperCase(),'the typed confirmation is kept as entered (trimmed)');
 });
+test('training checklist logic validates rules, hides steps and requires pass checks before sign-off',async t=>{
+ const rating={id:id(),type:'competency',title:'Grill technique',required:true},retrain={id:id(),type:'check',title:'Retrain on the grill',required:true,showWhen:{stepId:rating.id,operator:'fails'}},temp={id:id(),type:'number',title:'Patty temperature',required:true,format:'temperature',decimals:1,passRule:{min:72,max:null}},station={id:id(),type:'selection',title:'Station',source:'custom',options:['Grill','Fryer'],multiple:false,required:false,showWhen:{stepId:temp.id,operator:'gt',value:80}};
+ const list=()=>structuredClone([rating,retrain,temp,station]);
+ const valid=training.normalizeSteps(list(),courses);assert.deepEqual(valid[1].showWhen,{stepId:rating.id,operator:'fails'});assert.deepEqual(valid[2].passRule,{min:72,max:null});assert.deepEqual(valid[3].showWhen,{stepId:temp.id,operator:'gt',value:80});
+ assert.deepEqual(training.normalizeSteps([{...rating},{...retrain,showWhen:{stepId:rating.id,operator:'is',value:'developing'}}],courses)[1].showWhen.value,'developing');
+ for(const change of [s=>s[1].showWhen.stepId=s[3].id,s=>s[1].showWhen.operator='lt',s=>s[0].passRule={min:1},s=>s[2].failAction={note:true,photo:false},s=>s[2].passRule={min:null,max:null},s=>s[3].passRule={options:['Oven']},s=>s[1].showWhen={stepId:rating.id,operator:'is',value:'expert'},s=>s[0].showWhen={stepId:s[1].id,operator:'checked'}]){const steps=list();change(steps);assert.throws(()=>training.normalizeSteps(steps,courses),undefined,String(change));}
+ const a=await setup(t),template=await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Grill logic',description:'',steps:list()});
+ assert.deepEqual(template.steps[1].showWhen,{stepId:rating.id,operator:'fails'},'templates keep their logic');
+ const session=await a.api(a.office,base,'POST',{requestId:id(),title:'Grill logic session',description:'',locationId:a.location,trainerId:a.trainer.session.id,userIds:[a.staff.session.id],date:'2026-10-21',time:'09:00',minutes:30,templateId:template.id});
+ assert.deepEqual(session.steps[2].passRule,{min:72,max:null},'sessions freeze the logic');
+ const url=base+'/'+session.id+'/assess/'+a.staff.session.id,save=async(revision,answers)=>(await a.api(a.trainer,url,'POST',{revision,requestId:id(),answers,notes:''})).participants[0].progress;
+ let progress=await save(0,{[rating.id]:'competent',[temp.id]:65});
+ assert.equal(progress.total,2,'the hidden retraining step is not required');assert.equal(progress.done,1,'a failing temperature does not count');assert.equal(progress.completedAt,null);
+ progress=await save(1,{[rating.id]:'developing',[temp.id]:75});
+ assert.equal(progress.total,3,'a failed rating shows the retraining step');assert.equal(progress.done,1);assert.equal(progress.completedAt,null);
+ progress=await save(2,{[rating.id]:'developing',[temp.id]:75,[retrain.id]:true});
+ assert.equal(progress.completedAt,null,'the failed competency still blocks sign-off');
+ progress=await save(3,{[rating.id]:'competent',[temp.id]:75,[retrain.id]:true});
+ assert.ok(progress.completedAt,'sign-off once every visible required step passes');assert.equal(progress.answers[retrain.id],true,'answers to steps that became hidden are kept');
+});

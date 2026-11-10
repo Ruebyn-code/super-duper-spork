@@ -34,6 +34,16 @@ Training checklists also offer step types that only exist for in-store training.
 - **Timed task** — the trainer records minutes and seconds against a saved target (5 seconds–2 hours); passes at the target or faster.
 - **Staff confirmation** — the staff member types their own name in the trainer's presence; passes when it matches their account name (case and spacing insensitive). This is a recorded confirmation, not an electronic signature.
 
+### Step logic
+
+Training checklist steps can use the shared checklist logic (`public/ops-step-logic.js`) through the builder's Add logic pill:
+
+- **Show this step** only when an earlier answer matches: a checkbox is (not) ticked, a number is above/below a value, a custom selection is (not) an item, a competency rating is (not) a level, a knowledge question is (not) Correct, or a competency/attempts/question/timed step passes or fails its built-in rule. A missing, later or hidden source hides the step.
+- **Pass/fail check** on Number entry (lowest/highest passing value) and custom Selection (passing items).
+- No corrective actions, photos or score points; the server rejects `failAction` and `points` on training steps.
+
+The server validates rules when templates are saved and sessions freeze them with the steps. Hidden steps aren't counted or required; a required step with a pass rule counts as done only once it passes, so sign-off waits for every visible required step to pass. Answers to steps that become hidden are kept. The assessment reader and phone preview hide steps live, show the rule under each step and a Passed / Not yet badge for pass checks, and update the required-step count as answers change.
+
 ### Builder page and phone preview
 
 The training checklist builder opens as a full page inside In-store training (not a dialog), with a sticky header holding ← In-store training, Cancel and Save checklist. On desktop a 340 px phone preview sits beside the editor, using the shared phone frame and `.ops-preview-*` styles from the Checklist builder. It renders the steps with the same `stepList` renderer the assessment screen uses, so staff-facing layout matches real sessions; its answers are throwaway and never saved, and its controls are out of the tab order. The preview hides below 1100 px. Unsaved builder changes are guarded on leave, and background reloads never replace an open builder.

@@ -103,3 +103,7 @@
 :root[data-theme=dark] #learning-main .instore-folder-badge[data-tone=good]{color:#86efac}:root[data-theme=dark] #learning-main .instore-folder-badge[data-tone=warn]{color:#fcd34d}
 @media(max-width:600px){#learning-main .instore-folder-row{grid-template-columns:minmax(0,1fr) auto}#learning-main .instore-folder-row>button{grid-column:1/-1;justify-self:start}}
 @media(prefers-reduced-motion:reduce){#learning-main .instore-folder-chevron{transition:none}}
+/* Step logic: rule hints use the shared Ops logic ink; pass-check results sit under the answer. */
+.instore-step[hidden]{display:none!important}
+.instore-step-rule{margin:0 0 4px}
+.instore-rule-result{align-self:flex-start;margin-top:2px}

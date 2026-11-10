@@ -1,5 +1,5 @@
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
-const {can,canAccessLocation}=require('./permissions'),clock=require('./public/ops-planner-model'),stepModel=require('./public/ops-step-model');
+const {can,canAccessLocation}=require('./permissions'),clock=require('./public/ops-planner-model'),stepModel=require('./public/ops-step-model'),stepLogic=require('./public/ops-step-logic');
 const queues=new Map(),uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 function text(value,max,label,optional=false){if(typeof value!=='string'||value.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)||!optional&&!value.trim())fail('Enter '+label+'.');return value.trim();}
@@ -11,9 +11,23 @@ function references(value,max,label){if(!Array.isArray(value)||!value.length||va
 const competencyLevels=['not-yet','developing','competent','highly-competent'],trainingOnly=['competency','attempts','question','timed','acknowledgement'];
 const stepKinds=['section','instruction','check','text','textarea','number','selection','course',...trainingOnly],numberFormats=['integer','decimal','currency','percentage','temperature','weight','volume','length','duration','custom'];
 const responseKind=type=>!['section','instruction'].includes(type);
+// Optional step logic shared with Ops checklists: a show-when rule on an earlier answer and a pass rule on numbers or
+// custom selections. Training checklists have no corrective actions or score points.
+function logic(step,raw,earlier){
+ if(raw.failAction!=null||raw.points!=null)fail('Training checklists don’t use corrective actions or score points.');
+ if(raw.passRule!=null){const rule=raw.passRule;if(!stepLogic.canHaveRule(step)||!rule||typeof rule!=='object'||Array.isArray(rule))fail('Choose a valid pass rule for “'+step.title+'”.');
+  if(step.type==='number'){const limits={};for(const key of ['min','max']){const value=rule[key]===undefined||rule[key]===''?null:rule[key];if(value!==null&&!stepModel.validNumber({...step,min:null,max:null},value))fail('Enter valid pass limits for “'+step.title+'”.');limits[key]=value;}if(limits.min===null&&limits.max===null)fail('Enter a lowest or highest passing value for “'+step.title+'”.');if(limits.min!==null&&limits.max!==null&&limits.min>limits.max)fail('The lowest passing value must not exceed the highest for “'+step.title+'”.');step.passRule=limits;}
+  else{if(!Array.isArray(rule.options)||!rule.options.length||rule.options.length>50||new Set(rule.options).size!==rule.options.length||rule.options.some(value=>!step.options.includes(value)))fail('Choose the passing items for “'+step.title+'”.');step.passRule={options:[...rule.options]};}}
+ if(raw.showWhen!=null){const condition=raw.showWhen,source=earlier.find(item=>item.id===condition?.stepId);
+  if(!stepLogic.canHaveCondition(step)||!condition||typeof condition!=='object'||Array.isArray(condition)||!source||!stepLogic.operators(source).includes(condition.operator))fail('Choose an earlier step and rule for when “'+(step.title||'this step')+'” shows.');
+  const value={stepId:source.id,operator:condition.operator};
+  if(['is','isNot'].includes(condition.operator)){if(!stepLogic.valueOptions(source).some(([option])=>option===condition.value))fail('Choose the answer that shows “'+(step.title||'this step')+'”.');value.value=condition.value;}
+  if(['lt','gt'].includes(condition.operator)){if(!stepModel.validNumber({...source,min:null,max:null},condition.value))fail('Enter the number that shows “'+(step.title||'this step')+'”.');value.value=condition.value;}
+  step.showWhen=value;}
+}
 function normalizeSteps(value,courses){
  if(!Array.isArray(value)||!value.length||value.length>100)fail('Add 1–100 checklist steps.');
- const ids=new Set(),steps=value.map(raw=>{
+ const ids=new Set(),earlier=[],steps=value.map(raw=>{
   if(!raw||typeof raw!=='object'||Array.isArray(raw)||!uuid(raw.id)||ids.has(raw.id)||!stepKinds.includes(raw.type))fail('Choose valid checklist steps.');ids.add(raw.id);
   const step={id:raw.id,type:raw.type,title:text(raw.title??'',200,'a title for every step',['instruction','course'].includes(raw.type)),help:text(raw.help??'',2000,'step instructions',true),required:responseKind(raw.type)&&(raw.type==='course'||raw.required===true)};
   if(raw.type==='number'){const format=raw.format??'decimal';if(!numberFormats.includes(format))fail('Choose a valid number format.');step.format=format;if(raw.decimals!=null){if(!Number.isInteger(raw.decimals)||raw.decimals<0||raw.decimals>6)fail('Choose 0–6 decimal places.');step.decimals=raw.decimals;}
@@ -25,6 +39,7 @@ function normalizeSteps(value,courses){
   if(raw.type==='question'){step.expectedAnswer=text(raw.expectedAnswer??'',1000,'an expected answer');}
   if(raw.type==='course'){const course=uuid(raw.courseId)&&courses.get(raw.courseId);if(!course)fail('Choose a published course for each course step.');step.courseId=raw.courseId;if(!step.title)step.title=course.title;}
   if(!step.title&&raw.type!=='instruction')fail('Enter a title for every step.');
+  logic(step,raw,earlier);earlier.push(step);
   return step;
  });
  if(!steps.some(step=>responseKind(step.type)))fail('Add at least one step to complete.');
@@ -63,8 +78,11 @@ function createStore(dir,{people,locations,now=Date.now,courses:courseSource=asy
  const answered=(step,value,name='')=>step.type==='check'?value===true:step.type==='number'?typeof value==='number':step.type==='selection'&&step.multiple?Array.isArray(value)&&value.length>0
   :step.type==='competency'?competencyLevels.indexOf(value)>=2:step.type==='attempts'?Number.isInteger(value)&&value>=step.target:step.type==='question'?value==='correct'
   :step.type==='timed'?Number.isInteger(value)&&value<=step.targetSeconds:step.type==='acknowledgement'?typeof value==='string'&&nameKey(value)!==''&&nameKey(value)===nameKey(name):typeof value==='string'&&value.trim()!=='';
+ // Steps hidden by show-when rules aren't required; a required step with a pass rule counts only once it passes.
+ const passed=(step,value,name)=>answered(step,value,name)&&(!step.passRule||stepLogic.outcome(step,value)==='pass');
+ const countedSteps=(steps,answers)=>{const off=stepLogic.hidden(steps,answers);return steps.filter(step=>!off.has(step.id)&&(step.required||step.type==='course'));};
  const courseState=(value,userId,lookup)=>Object.fromEntries((value.steps||[]).filter(step=>step.type==='course').map(step=>{const record=value.assessments[userId],frozen=record?.coursePasses?.[step.id],passedAt=frozen||lookup?.passed.get(userId+'|'+step.courseId)||null;return[step.id,{passed:Boolean(passedAt),passedAt}];}));
- function checklistProgress(value,userId,lookup){const record=value.assessments[userId],answers=record?.answers||{},courseSteps=courseState(value,userId,lookup),counted=value.steps.filter(step=>step.required||step.type==='course'),name=value.participants.find(p=>p.userId===userId)?.username||'',done=counted.filter(step=>step.type==='course'?courseSteps[step.id].passed:answered(step,answers[step.id],name)).length;return{answers:structuredClone(answers),courses:courseSteps,done,total:counted.length,percent:counted.length?Math.round(done/counted.length*100):0};}
+ function checklistProgress(value,userId,lookup){const record=value.assessments[userId],answers=record?.answers||{},courseSteps=courseState(value,userId,lookup),counted=countedSteps(value.steps,answers),name=value.participants.find(p=>p.userId===userId)?.username||'',done=counted.filter(step=>step.type==='course'?courseSteps[step.id].passed:passed(step,answers[step.id],name)).length;return{answers:structuredClone(answers),courses:courseSteps,done,total:counted.length,percent:counted.length?Math.round(done/counted.length*100):0};}
  function progress(value,userId,lookup){const record=value.assessments[userId],completed=Boolean(record?.completedAt);
   if(Array.isArray(value.steps)){const checklist=checklistProgress(value,userId,lookup);return{revision:record?.revision||0,skillIds:[],...checklist,notes:record?.notes||'',startedAt:record?.startedAt||null,completedAt:record?.completedAt||null,updatedAt:record?.updatedAt||null,assessorName:record?.assessorName||null,status:completed?'completed':value.status==='cancelled'?'cancelled':record?'in-progress':Date.parse(value.endsAt)<now()?'awaiting-signoff':'scheduled'};}return{revision:record?.revision||0,skillIds:[...(record?.skillIds||[])],notes:record?.notes||'',startedAt:record?.startedAt||null,completedAt:record?.completedAt||null,updatedAt:record?.updatedAt||null,assessorName:record?.assessorName||null,status:completed?'completed':value.status==='cancelled'?'cancelled':record?'in-progress':Date.parse(value.endsAt)<now()?'awaiting-signoff':'scheduled',percent:Math.round((record?.skillIds.length||0)/value.skills.length*100)};}
  function view(value,actor,ctx,detail=false,lookup=null){
@@ -131,7 +149,7 @@ function createStore(dir,{people,locations,now=Date.now,courses:courseSource=asy
    const person=ctx.staff.find(p=>p.id===userId);if(!value.userIds.includes(userId)||!member(person,value.locationId,ctx)||!can(person,'learning.complete'))fail('This staff member is no longer eligible for this training.',403);
    const answers=cleanAnswers(value.steps,input.answers),lookup=await courseSource(actor.companyId),fingerprint=JSON.stringify({userId,answers,notes}),prior=value.requests.find(r=>r.id===input.requestId);if(prior){if(prior.actorId!==actor.id||prior.fingerprint!==fingerprint)fail('This assessment reference was already used.',409);return view(value,actor,ctx,true,lookup);}
    const old=value.assessments[userId];if(value.status!=='active')fail('This training session has been cancelled.',409);if(old?.completedAt)fail('This completed sign-off is kept as a permanent record.',409);if(input.revision!==(old?.revision||0))fail('This assessment changed. Reload it before saving.',409);if(now()<Date.parse(value.startsAt))fail('Wait until the session starts before recording an assessment.');
-   const courses=courseState(value,userId,lookup),name=value.participants.find(p=>p.userId===userId)?.username||'',complete=value.steps.every(step=>step.type==='course'?courses[step.id].passed:!step.required||answered(step,answers[step.id],name));
+   const courses=courseState(value,userId,lookup),name=value.participants.find(p=>p.userId===userId)?.username||'',complete=countedSteps(value.steps,answers).every(step=>step.type==='course'?courses[step.id].passed:passed(step,answers[step.id],name));
    const record={revision:(old?.revision||0)+1,skillIds:[],answers,notes,startedAt:old?.startedAt||stamp(),updatedAt:stamp(),completedAt:complete?stamp():null,...(complete?{coursePasses:Object.fromEntries(Object.entries(courses).map(([stepId,state])=>[stepId,state.passedAt]))}:{}),assessorId:actor.id,assessorName:ctx.person.username};value.assessments[userId]=record;value.requests.push({id:input.requestId,actorId:actor.id,fingerprint,at:stamp(),assessment:structuredClone(record)});return view(value,actor,ctx,true,lookup);
   });
  }

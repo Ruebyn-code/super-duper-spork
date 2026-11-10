@@ -11,16 +11,31 @@
  const customSelection=step=>step?.type==='buttons'||step?.type==='selection'&&(step.source||'custom')==='custom';
  const canHaveRule=step=>step.type==='number'||step.type==='yes-no-na'||customSelection(step);
  const canHaveCondition=step=>!model.isSection(step);
+ // In-store training steps with built-in pass rules (competency at Competent or above, enough supervised attempts,
+ // a correct knowledge answer, a timed task at or under target). They can drive show-when rules in training checklists.
+ const competencyLevels=[['not-yet','Not yet competent'],['developing','Developing'],['competent','Competent'],['highly-competent','Highly competent']];
+ const questionAnswers=[['correct','Correct'],['incorrect','Not yet']];
+ const trainingRule=step=>['competency','attempts','question','timed'].includes(step?.type);
+ function builtIn(step,value){
+  if(step.type==='competency'){const at=competencyLevels.findIndex(([id])=>id===value);return at<0?null:at>=2?'pass':'fail';}
+  if(step.type==='question')return value==='correct'?'pass':value==='incorrect'?'fail':null;
+  if(!Number.isInteger(value))return null;
+  if(step.type==='attempts')return value>=step.target?'pass':'fail';
+  return value<=step.targetSeconds?'pass':'fail';
+ }
+ const answeredValue=(source,value)=>trainingRule(source)?builtIn(source,value)!==null:model.answered(source,value);
  // Operators an earlier step offers as a source.
  function operators(source){
   if(!source||!model.responseStep(source))return[];
+  if(trainingRule(source))return source.type==='competency'||source.type==='question'?['is','isNot','fails','passes']:['fails','passes'];
   const list=source.type==='check'?['checked','unchecked']:source.type==='yes-no-na'||customSelection(source)?['is','isNot']:source.type==='number'?['lt','gt']:[];
   return source.passRule?[...list,'fails','passes']:list;
  }
  const needsValue=operator=>['is','isNot','lt','gt'].includes(operator);
- function valueOptions(source){return source?.type==='yes-no-na'?yesNoNa:customSelection(source)?(source.options||[]).map(value=>[value,value]):[];}
+ function valueOptions(source){return source?.type==='competency'?competencyLevels:source?.type==='question'?questionAnswers:source?.type==='yes-no-na'?yesNoNa:customSelection(source)?(source.options||[]).map(value=>[value,value]):[];}
  // 'pass', 'fail', 'na' (Yes/No/N/A answered N/A) or null (no rule or not answered yet).
  function outcome(step,value){
+  if(trainingRule(step))return builtIn(step,value);
   const rule=step?.passRule;if(!rule)return null;
   if(step.type==='yes-no-na'){if(value==='na')return'na';if(value!=='yes'&&value!=='no')return null;return value===rule.pass?'pass':'fail';}
   if(step.type==='number'){if(typeof value!=='number'||!Number.isFinite(value))return null;return(rule.min==null||value>=rule.min)&&(rule.max==null||value<=rule.max)?'pass':'fail';}
@@ -32,7 +47,7 @@
    case'checked':return value===true;
    case'unchecked':return value!==true;
    case'is':return Array.isArray(value)?value.includes(condition.value):value===condition.value;
-   case'isNot':return model.answered(source,value)&&(Array.isArray(value)?!value.includes(condition.value):value!==condition.value);
+   case'isNot':return answeredValue(source,value)&&(Array.isArray(value)?!value.includes(condition.value):value!==condition.value);
    case'lt':return typeof value==='number'&&value<condition.value;
    case'gt':return typeof value==='number'&&value>condition.value;
    case'fails':return outcome(source,value)==='fail';
@@ -88,8 +103,8 @@
  }
  const numberText=(step,value)=>model.formatNumber(step,value);
  // Plain-language rule text for the builder, preview and reader.
- function conditionText(step,steps){const condition=step.showWhen;if(!condition)return'';const source=(steps||[]).find(item=>item.id===condition.stepId),name=source?.title||'an earlier step';let value='';if(['is','isNot'].includes(condition.operator))value=' '+(source?.type==='yes-no-na'?(yesNoNa.find(([key])=>key===condition.value)?.[1]||condition.value):condition.value);if(['lt','gt'].includes(condition.operator))value=' '+numberText(source||{},condition.value);return'Shown when “'+name+'” '+operatorNames[condition.operator]+value;}
+ function conditionText(step,steps){const condition=step.showWhen;if(!condition)return'';const source=(steps||[]).find(item=>item.id===condition.stepId),name=source?.title||'an earlier step';let value='';if(['is','isNot'].includes(condition.operator))value=' '+(['yes-no-na','competency','question'].includes(source?.type)?(valueOptions(source).find(([key])=>key===condition.value)?.[1]||condition.value):condition.value);if(['lt','gt'].includes(condition.operator))value=' '+numberText(source||{},condition.value);return'Shown when “'+name+'” '+operatorNames[condition.operator]+value;}
  function ruleText(step){const rule=step.passRule;if(!rule)return'';if(step.type==='yes-no-na')return'Passes when '+(rule.pass==='yes'?'Yes':'No')+' · N/A doesn’t count';if(step.type==='number'){if(rule.min!=null&&rule.max!=null)return'Passes from '+numberText(step,rule.min)+' to '+numberText(step,rule.max);if(rule.min!=null)return'Passes at '+numberText(step,rule.min)+' or more';return'Passes at '+numberText(step,rule.max)+' or less';}return'Passes when '+(rule.options||[]).join(', ');}
  function actionText(step){const action=step.failAction;if(!action)return'';const parts=[action.note&&'a note',action.photo&&'a photo'].filter(Boolean);return parts.length?'If it fails, add '+parts.join(' and ')+' explaining what was done':'';}
- return{score,stepPoints,yesNoNa,operatorNames,ruleTypes,canHaveRule,canHaveCondition,customSelection,operators,needsValue,valueOptions,outcome,matches,hidden,actionNeed,actionMissing,evaluate,complete,sanitize,conditionText,ruleText,actionText};
+ return{score,stepPoints,competencyLevels,trainingRule,yesNoNa,operatorNames,ruleTypes,canHaveRule,canHaveCondition,customSelection,operators,needsValue,valueOptions,outcome,matches,hidden,actionNeed,actionMissing,evaluate,complete,sanitize,conditionText,ruleText,actionText};
 });
