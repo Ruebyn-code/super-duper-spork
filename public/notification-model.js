@@ -9,6 +9,7 @@
   ['roster','Roster','Published rosters and today’s shifts','Rosters'],
   ['leave','Leave','Leave decisions and requests to review','Rosters'],
   ['checklists','Checklists','Checklists ready or due soon at this location','Checklists'],
+  ['checklist-alerts','Checklist alerts','Missed checklists, failed checks, assigned issues and redo requests','Checklist alerts'],
   ['equipment','Equipment','Reported problems and services due','Equipment'],
   ['promotions','Promotions','Promotions running today at this location','Promotions'],
   ['transfers','Stock transfers','Incoming stock transfers to receive','Stock transfers'],

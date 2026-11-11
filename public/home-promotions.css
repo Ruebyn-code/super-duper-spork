@@ -59,3 +59,10 @@
 .home-prep-status{margin:6px 0 0;font-size:.74rem;color:var(--theme-danger-text,#b91c1c)}.home-prep-status:empty{display:none}
 @media(prefers-reduced-motion:reduce){.home-prep-bar span{transition:none}}
 @media(max-width:700px){.home-prep-check{width:34px;height:34px}}
+/* Head Office checklist score leaderboard (home-checklist-scores.js). */
+.home-checklist-scores[hidden]{display:none!important}
+.home-cx-rank{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--theme-text,#182b3a) 8%,var(--theme-surface,#fff));font-size:.74rem;font-weight:800}
+.home-cx-rank.is-gold{background:linear-gradient(135deg,#fde68a,#d4a017);color:#3b2a00}.home-cx-rank.is-silver{background:linear-gradient(135deg,#f1f5f9,#94a3b8);color:#1e293b}.home-cx-rank.is-bronze{background:linear-gradient(135deg,#fed7aa,#b45309);color:#fff}
+.home-cx-score.is-gold{background:color-mix(in srgb,#eab308 9%,var(--theme-surface,#fff))}.home-cx-score.is-silver{background:color-mix(in srgb,#94a3b8 10%,var(--theme-surface,#fff))}.home-cx-score.is-bronze{background:color-mix(in srgb,#c2410c 8%,var(--theme-surface,#fff))}
+.home-cx-value{flex:none;font-size:.86rem}
+@media (forced-colors:active){.home-cx-rank{border:1px solid CanvasText}}

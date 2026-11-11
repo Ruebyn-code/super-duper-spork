@@ -48,6 +48,7 @@
    {existing:'hub-order-email'}]},
   {id:'sales',title:'Sales & finance',items:[
    {title:'Projection & budget',detail:'Sales projections and the ordering budget percentage.',href:'/sales#projection',keys:['sales.view'],icon:'chart'},
+   {title:'Promotion settings',detail:'Turn optional promotion features on or off: results, uplift, products, staff awareness, leaderboard, repeats and redemptions.',href:'/sales#promotions',keys:['sales.edit'],icon:'chart'},
    {title:'Unusual sales days',detail:'How far above or below usual a day can be before projections leave it out (default 30%).',href:'/sales#projection',keys:['sales.view'],icon:'chart'},
    {title:'Operating expenses',detail:'Recurring expenses used in weekly reports.',href:'/sales#expense-operating-expenses',keys:['finances.view'],icon:'wallet'}]},
   {id:'rostering',title:'Rostering & pay',items:[
@@ -55,6 +56,7 @@
    {existing:'hub-awards'}]},
   {id:'operations',title:'Operations & training',items:[
    {title:'Checklist builder',detail:'Checklists, plans, locations and assignees.',href:'/ops-management#templates',keys:['ops.manage'],icon:'checklist'},
+   {title:'Checklist features',detail:'Turn issue follow-ups, alerts, reviews, logs, roster assignment, QR codes, handover notes, starter templates and score trends on or off.',href:'/ops-management#features',keys:['ops.manage'],icon:'checklist'},
    {title:'Label settings',detail:'Printer media size, resolution and label templates.',href:'/labels#settings',keys:['prep.manage'],feature:'labels',icon:'label'},
    {title:'Equipment',detail:'Company and network equipment lists and each location’s equipment.',href:'/equipment',keys:['equipment.manage'],icon:'tool'},
    {title:'In-store training',detail:'Training checklists, sessions and sign-offs.',href:'/learning-centre#in-store',keys:['learning.assign'],icon:'training'}]},

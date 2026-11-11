@@ -224,6 +224,15 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const history=state.runs.filter(run=>allowed(run,actor,selected,state)&&(!query||(run.snapshot.title+' '+(run.plannerName||'')).toLowerCase().includes(query))).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||b.id.localeCompare(a.id)),page=Math.max(1,Math.min(Number(params.page)||1,Math.max(1,Math.ceil(history.length/25))));if(!Number.isInteger(page))fail('Choose a valid page.');
   return{companyName:actor.companyName,today:today(),date:day,now:stamp(),nextChangeAt,pins:(state.pins||[]).filter(item=>item.companyId===actor.companyId&&planners.some(plan=>plan.id===item.plannerId)).map(item=>item.plannerId),locations:stores,permissionLevels:can(actor,'ops.manage')?await levelOptions(actor):[],templates,planners,tasks,runs:history.slice((page-1)*25,page*25).map(item=>summary(item,actor)),page,pages:Math.max(1,Math.ceil(history.length/25)),total:history.length,canManage:can(actor,'ops.manage'),canComplete:can(actor,'ops.complete'),stepTypes:Object.keys(stepModel.kinds)};
  }
+ // Read-only run facts for checklist extras (issues, reviews, logs, trends and printing): runs the actor may open,
+ // with only the steps (and answers) they can see.
+ async function runFacts(actor,{from,to,ids,locationId}={}){
+  const stores=await access(actor),state=await read(),day=run=>run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
+  return state.runs.filter(run=>allowed(run,actor,stores,state)&&(!ids||ids.includes(run.id))&&(!locationId||run.locationId===locationId)&&(!from||day(run)>=from)&&(!to||day(run)<=to)).map(run=>{
+   const steps=visibleSteps(run.snapshot.steps,run.locationId,actor),keep=new Set(steps.map(step=>step.id)),pick=value=>Object.fromEntries(Object.entries(value||{}).filter(([key])=>keep.has(key)));
+   return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
+  });
+ }
  // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
  function reportSteps(list,run,locationId,actor,current){
   const timing=run?stepTiming.evaluate(run):{byStep:{},sections:[]},windows=new Map(timing.sections.map(item=>[item.id,item.window])),mine=visibleSteps(list,locationId,actor),visible=new Set(mine.map(step=>step.id)),off=stepLogic.hidden(mine,run?.answers||{}),result=[];let section=null;
@@ -457,7 +466,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(run.status==='completed'&&!attached)fail('File not found.',404);
   return{record:await media.info(id),bytes:await media.bytes(id)};
  }
- return{list,report,saveTemplate,setTemplateStatus,setPin,savePlanner,keepPlanner,start,get,saveRun,upload,download,activity};
+ return{runFacts,list,report,saveTemplate,setTemplateStatus,setPin,savePlanner,keepPlanner,start,get,saveRun,upload,download,activity};
 }
 async function route({req,res,url,params,session,store,body,json,fail}){
  if(url!=='/api/ops-management'&&!url.startsWith('/api/ops-management/'))return false;if(!session)fail('Sign-in required.',401);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);

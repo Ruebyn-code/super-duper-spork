@@ -32,6 +32,8 @@ function createStore(dir,{sources,now=Date.now}){
    for(const t of data.tasks||[]){const done=t.run&&(t.run.status==='completed'||t.run.completedAt);if(done||t.locationId!==a.locationId||!t.availability?.allowed)continue;const opens=Date.parse(t.availability.opensAt||t.activeWindow?.opensAt||''),due=Date.parse(t.dueAt||'');if(Number.isFinite(opens)&&opens>instant)continue;
     const soon=Number.isFinite(due)&&due-instant<=Math.max(30,t.reminderMinutes||0)*60000;items.push({id:'checklist:'+t.plannerId+':'+t.locationId+':'+t.periodKey+(soon?':due':''),category:'checklists',title:(soon?'Checklist due soon: ':'Checklist ready: ')+t.title,detail:t.locationName||'',href:'/ops-management#active',at:Number.isFinite(opens)?new Date(opens).toISOString():null,priority:soon||t.priority==='high'?'high':'normal'});}
    return items;}},
+  // Optional checklist features: missed/failed alerts, redo requests, assigned issues and roster assignments.
+  {name:'Checklist alerts',enabled:a=>Boolean(sources.checklistExtras)&&can(a,'ops.view'),run:async a=>sources.checklistExtras(a)},
   // Promotions on today at this location (name, offer and dates only; empty when staff awareness is switched off).
   {name:'Promotions',enabled:a=>Boolean(sources.promotions)&&can(a,'home.view'),run:async a=>(await sources.promotions(a)).map(p=>({id:'promotion:'+p.id+':'+(p.weekdays?p.date:p.startDate),category:'promotions',title:'Promotion on today: '+p.name,detail:[p.offer,p.startDate===p.endDate?'':'Until '+dateText(p.endDate)].filter(Boolean).join(' · '),href:can(a,'sales.view')?'/sales#promotions':'/home',priority:'normal'}))},
   {name:'Equipment',enabled:a=>can(a,'equipment.manage'),run:async a=>{const data=await sources.equipment(a),items=[];
