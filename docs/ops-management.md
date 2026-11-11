@@ -294,3 +294,7 @@ Staff can add notes to any response step while filling in a checklist. The note 
 - The server records who wrote each note and when. Only the author or someone with checklist management (`ops.manage`) can edit or delete a note; edits keep the original author/time and add `editedAt`/`editedBy`.
 - Notes on steps limited to other locations/permission levels are kept and never shown to people who can't see the step. Section, instruction and unknown steps are rejected, and notes can't change after the checklist is completed. Older single notes read as a one-item list.
 - Notes are not answers: they don't complete a step, change scores or pass rules, or appear in list/History summaries. Completed runs and History show the list read-only through the same icon, and the printable run (Logs and PDF export) includes them.
+
+## Compact run steps
+
+In the checklist reader each response step is kept short: option and button labels have no extra top margin, help text and rule hints sit close under the title, and the Saved/timing line sits at the end of the answer row (it is hidden when there is nothing to show). On desktop with a mouse, button choices are 38 px tall; phones and touch screens keep their larger touch sizes and satisfaction faces keep their size. This is styling only.

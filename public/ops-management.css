@@ -791,3 +791,19 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-answer .ops-note-composer textarea{max-width:none}
 .ops-answer .ops-note-composer .ops-note-save{border:0;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);box-shadow:0 2px 6px color-mix(in srgb,var(--primary,#008cff) 35%,transparent)}
 .ops-answer .ops-note-composer .ops-note-save:not(:disabled){opacity:1}
+/* Compact response steps in the run reader: no stray label margins, tighter help text, and the
+   saved/timing footer sits at the end of the answer row instead of adding an empty line. */
+#ops-run-dialog .ops-answer .ops-option{margin:0}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction){display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:10px;row-gap:5px;padding:8px 10px}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>*{flex:1 1 100%;min-width:0;margin-top:0;margin-bottom:0}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>:is(.ops-options:not(.ops-yes-no-na),input,select,.ops-number-entry){flex:0 1 auto}
+#ops-run-dialog .ops-answer>.ops-answer-heading{margin-bottom:0}
+#ops-run-dialog .ops-answer>.ops-help{margin-top:-3px}
+#ops-run-dialog .ops-answer>.ops-step-activity{order:1;flex:1 1 auto;width:auto;min-height:0;margin-left:auto;justify-items:end;text-align:right}
+#ops-run-dialog .ops-answer>:is(.ops-step-note,.ops-corrective){order:2}
+#ops-run-dialog .ops-answer>.ops-step-activity:not(.ops-step-timed):has(>.ops-step-stamp:empty){display:none}
+#ops-run-dialog .ops-answer>.ops-step-note:empty{display:none}
+@media(max-width:580px){#ops-run-dialog .ops-step-activity.ops-step-timed{grid-template-rows:auto;grid-template-columns:auto;gap:2px}#ops-run-dialog .ops-step-timed .ops-timing-badge{grid-row:auto}}
+#ops-run-dialog .ops-answer :is(.ops-button-choice,.ops-option){margin:0}
+#ops-run-dialog .ops-answer .ops-button-set{margin:0}
+@media(min-width:581px) and (pointer:fine){#ops-run-dialog .ops-answer .ops-button-set:not(.ops-button-set-satisfaction) .ops-button-choice,#ops-run-dialog .ops-options.ops-yes-no-na .ops-option{min-height:38px;padding-top:6px;padding-bottom:6px}}
