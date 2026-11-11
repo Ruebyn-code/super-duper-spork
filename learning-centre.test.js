@@ -132,3 +132,18 @@ test('section quiz retries keep saved answers and completed course history immut
  result=await app.training(app.member,base+'/section','POST',{revision:result.data.revision,sectionId:sections[1].id,requestId:crypto.randomUUID(),answers:[0]});assert.equal(result.data.status,'completed');assert.equal(result.data.attemptCount,2);const revision=result.data.revision;await app.training(app.member,base+'/section','POST',{revision,sectionId:sections[1].id,requestId:crypto.randomUUID(),answers:[1]});assert.equal((await app.training(app.member,base)).data.progress.draftAnswers[q.id],0);const state=JSON.parse(await fs.readFile(path.join(app.dir,'learning-centre.json')));assert.deepEqual(state.progress[0].attempts.map(a=>a.answers),[[1],[0]]);
  }finally{await app.close();}
 });
+test('course settings: completion expiry and default due date are validated, kept, published and shown on completions',async()=>{
+ assert.equal(learning.validUntil('2026-01-31T03:00:00Z',1),'2026-02-28');assert.equal(learning.validUntil('2026-11-30T14:30:00Z',12),'2027-12-01');assert.equal(learning.validUntil('2026-01-01T00:00:00Z',0),null);
+ for(const bad of [{validMonths:5},{validMonths:'12'},{dueDays:0},{dueDays:400},{dueDays:2.5}])assert.throws(()=>learning.normalize(courseInput(bad)),undefined,JSON.stringify(bad));
+ const n=learning.normalize(courseInput({validMonths:12,dueDays:14}));assert.equal(n.validMonths,12);assert.equal(n.dueDays,14);assert.equal(Object.hasOwn(learning.normalize(courseInput()),'validMonths'),false);
+ const app=await fixture();try{
+  const only=lesson('Only'),course=await publish(app,{lessons:[only],quiz:[],validMonths:12,dueDays:14});
+  const listed=(await app.training(app.office,'')).data.courses.find(c=>c.id===course.id);assert.equal(listed.validMonths,12);assert.equal(listed.dueDays,14);
+  const saved=(await app.training(app.office,'/courses/'+course.id)).data;const resaved=await app.training(app.office,'/courses/'+course.id,'PUT',{requestId:crypto.randomUUID(),revision:saved.revision,title:'Food safety',description:'',category:'',minutes:10,passPercent:80,lessons:saved.draft.lessons,quiz:[]});assert.equal(resaved.status,200,JSON.stringify(resaved.data));
+  const after=(await app.training(app.office,'/courses/'+course.id)).data;assert.equal(after.draft.validMonths,12,'older writers that omit settings keep them');assert.equal(after.draft.dueDays,14);
+  const a=await assigned(app,course),done=(await app.training(app.member,'/assignments/'+a.id+'/lesson','POST',{revision:0,lessonId:only.id})).data;
+  assert.ok(done.progress?.completedAt||done.completedAt,'single-lesson course completes');const progress=(await app.training(app.member,'/assignments/'+a.id)).data.progress;
+  assert.equal(progress.validUntil,learning.validUntil(progress.completedAt,12));assert.equal(progress.expired,false);
+  const plain=await publish(app,{lessons:[lesson('Plain')],quiz:[]}),b=await assigned(app,plain);assert.equal(Object.hasOwn((await app.training(app.member,'/assignments/'+b.id)).data.progress,'validUntil'),false);
+ }finally{await app.close();}
+});

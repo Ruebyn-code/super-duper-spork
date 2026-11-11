@@ -98,3 +98,17 @@ html.learning-split-open,html.learning-split-open body{height:100%;overflow:hidd
 .learning-main .learning-readiness-go .learning-readiness-detail{grid-column:2;color:var(--theme-primary-text,var(--primary));text-decoration:underline;text-underline-offset:2px}
 .learning-main .learning-readiness li:has(.learning-readiness-go){display:block}
 .learning-main .learning-readiness-go,.learning-main .learning-readiness-go *{letter-spacing:normal;font-weight:inherit}.learning-main .learning-readiness-go .learning-readiness-name{font-weight:650}
+/* Course settings: a clear button in the outline opening a popup. */
+.learning-main .learning-settings-open{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin:0 0 10px;padding:9px 12px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);text-align:left;cursor:pointer;letter-spacing:normal}
+.learning-main .learning-settings-open strong{font-size:13px;color:var(--theme-primary-text,var(--primary))}.learning-main .learning-settings-open small{font-size:11.5px;color:var(--theme-muted,#64748b);font-weight:400}
+.learning-main .learning-settings-open:hover,.learning-main .learning-settings-open:focus-visible{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.learning-main .learning-course-settings-dialog{box-sizing:border-box;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:0;border-radius:16px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);box-shadow:0 24px 60px rgba(15,23,42,.25);overflow:auto}
+.learning-main .learning-course-settings-dialog::backdrop{background:rgba(15,23,42,.35)}
+.learning-main .learning-course-settings-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--theme-line,#e2e8f0);background:var(--theme-surface,#fff)}
+.learning-main .learning-course-settings-head h3{margin:0;font-size:16px}
+.learning-main .learning-course-settings-dialog .learning-course-config{display:grid;gap:8px;padding:14px 18px 18px}
+.learning-main .learning-course-settings-dialog .learning-course-config label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600}
+.learning-main .learning-course-settings-dialog .learning-course-config label.learning-shuffle-setting{flex-direction:row;align-items:center;gap:8px}
+.learning-main .learning-course-settings-dialog .learning-note{margin:-4px 0 4px;font-size:11.5px;color:var(--theme-muted,#64748b)}
+.learning-validity{margin:4px 0 0;padding:4px 9px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:600}.learning-validity.expired{background:#fef3c7;color:#b45309}
+:root[data-theme=dark] .learning-validity{background:rgba(34,197,94,.18);color:#86efac}:root[data-theme=dark] .learning-validity.expired{background:rgba(245,158,11,.18);color:#fcd34d}
