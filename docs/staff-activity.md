@@ -63,3 +63,11 @@ When the Activity rows are filtered to one person (choose them in People, or cli
 - **Charts:** what they did (actions by source), day by day (up to 92 days), when they work (weekday × hour heatmap) and locations (when more than one).
 - **Lists:** shifts (latest 60), checklists and training completed (latest 30) and latest actions (15). The full timeline stays below.
 - **Everyone** clears the person filter; **Print** opens a printable copy.
+
+## By person chart
+
+Above the By person table, each person gets one horizontal bar split by activity type (Checklists, Orders, Labels…), with a colour legend and their total. It uses the same filtered rows as the table (no extra reads or writes), shows the 20 most active people (the rest stay in the table), and clicking a name filters to that person like the table does.
+
+## Timeline charts
+
+Above the timeline list, two stacked column charts split by activity type show actions by day (by Monday week when the shown range is longer than 62 days; days inside the range with nothing recorded show zero) and by hour of the day (Melbourne time). They use the same filtered rows as the list, with no extra reads or writes.

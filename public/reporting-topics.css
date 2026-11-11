@@ -113,3 +113,32 @@
 @media (max-width:700px){.report-chart-columns{height:140px}.report-chart-bar{grid-template-columns:minmax(60px,100px) minmax(0,1fr) auto}.report-chart-ring{width:120px;height:120px}}
 @media (forced-colors:active){.report-chart-column-bar,.report-chart-bar-fill{background:CanvasText}.report-chart-ring{border:2px solid CanvasText}}
 .report-chart-card.is-empty{align-self:start;align-content:center;min-height:0;background:color-mix(in srgb,var(--theme-text,#182b3a) 2%,var(--theme-surface,#fff));border-style:dashed}
+/* Activity → By person chart: one stacked bar per person split by activity type (display only). */
+.report-activity-person-chart{display:grid;gap:8px;margin:4px 0 12px}
+.report-activity-person-legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0;padding:0;list-style:none;font-size:.72rem;color:var(--theme-muted,#5b6b7a)}
+.report-activity-person-legend li{display:inline-flex;align-items:center;gap:5px}
+.report-activity-person-swatch{width:10px;height:10px;border-radius:3px;flex:none}
+.report-activity-person-bars{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.report-activity-person-bar{display:grid;grid-template-columns:minmax(90px,170px) 1fr 44px;align-items:center;gap:10px}
+.report-activity-person-bar .report-activity-person-link{justify-self:start;font-size:.84rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.report-activity-person-track{height:18px;border-radius:6px;background:color-mix(in srgb,var(--theme-text,#182b3a) 6%,var(--theme-surface,#fff));overflow:hidden}
+.report-activity-person-fill{display:flex;height:100%;min-width:3px;border-radius:6px;overflow:hidden}
+.report-activity-person-part{flex-basis:0;min-width:2px;height:100%}
+.report-activity-person-part+.report-activity-person-part{box-shadow:inset 1px 0 0 var(--theme-surface,#fff)}
+.report-activity-person-total{text-align:right;font-size:.8rem;font-variant-numeric:tabular-nums}
+.report-activity-person-table td:nth-last-child(-n+2){white-space:nowrap}
+@media screen and (max-width:700px){.report-activity-person-bar{grid-template-columns:minmax(70px,110px) 1fr 36px;gap:8px}}
+@media (forced-colors:active){.report-activity-person-part{forced-color-adjust:none;border-right:1px solid CanvasText}}
+/* Activity → Timeline charts: stacked columns per day/week and per hour of the day (display only). */
+.report-activity-timeline-chart{display:grid;gap:8px;margin:4px 0 12px}
+.report-activity-timeline-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}
+.report-activity-timeline-card{min-width:0;padding:10px 12px;border:1px solid color-mix(in srgb,var(--theme-text,#182b3a) 10%,var(--theme-surface,#fff));border-radius:12px}
+.report-activity-timeline-card h3{margin:0 0 8px;font-size:.8rem}
+.report-activity-columns-plot{display:flex;align-items:stretch;gap:2px;height:140px}
+.report-activity-column{flex:1 1 0;min-width:0;max-width:64px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.report-activity-column-stack{display:flex;flex-direction:column-reverse;min-height:0;border-radius:3px 3px 0 0;overflow:hidden}
+.report-activity-column-stack span{flex-basis:0;min-height:1px}
+.report-activity-column-label{height:12px;overflow:visible;font-size:.6rem;line-height:12px;white-space:nowrap;color:var(--theme-muted,#5b6b7a)}
+.report-activity-column:hover .report-activity-column-stack{filter:brightness(1.1)}
+@media screen and (max-width:900px){.report-activity-timeline-grid{grid-template-columns:1fr}}
+@media (forced-colors:active){.report-activity-column-stack span{forced-color-adjust:none;border-top:1px solid CanvasText}}

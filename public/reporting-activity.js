@@ -20,6 +20,52 @@
  function peopleUi(){const list=$('report-activity-people-list'),q=$('report-activity-people-search').value.trim().toLowerCase();list.replaceChildren();if(!result)return;const counts=new Map();for(const row of result.rows)counts.set(row.userKey,(counts.get(row.userKey)||0)+1);for(const person of result.people.filter(person=>!q||person.name.toLowerCase().includes(q))){const label=el('label',undefined,'report-activity-person'),box=el('input');box.type='checkbox';box.checked=!chosen||chosen.has(person.key);box.onchange=()=>{if(!chosen)chosen=new Set(result.people.map(p=>p.key));if(box.checked)chosen.add(person.key);else chosen.delete(person.key);peopleLabel();page=1;draw();};const avatar=data('span',person.name.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join('').toUpperCase(),'report-activity-avatar');avatar.setAttribute('aria-hidden','true');label.append(box,avatar,data('span',person.name),el('small',String(counts.get(person.key)||0)));list.append(label);}if(!list.children.length)list.append(el('p','No people match.','small'));}
  function filtered(){if(!result)return[];const q=($('report-search')?.value||'').trim().toLowerCase();return result.rows.filter(row=>(!chosen||chosen.has(row.userKey))&&(!sources||sources.has(row.source))&&inWindow(row.time)&&(!q||(row.userName+' '+row.title+' '+row.detail+' '+row.locationName).toLowerCase().includes(q)));}
  function metric(label,value,note){const card=el('div',undefined,'management report-metric');card.append(el('span',label),data('strong',value),el('span',note,'small'));$('report-activity-summary').append(card);}
+ // By person chart: one stacked bar per person split by activity type, drawn from the same filtered rows (display only).
+ const chartColours=['var(--primary,#008cff)','color-mix(in srgb,var(--secondary,#45efc3) 75%,#0f766e)','#f59e0b','#8b5cf6','#ef4444','#14b8a6','#64748b','#ec4899','#84cc16','#0ea5e9','#a16207','#be185d'];
+ function personChart(people,shown){
+  const host=$('report-activity-person-chart');host.replaceChildren();const list=[...people].sort((a,b)=>b[1].total-a[1].total||a[1].name.localeCompare(b[1].name));
+  if(!list.length){host.hidden=true;return;}host.hidden=false;
+  const colour=new Map(shown.map((source,index)=>[source.id,chartColours[index%chartColours.length]]));
+  const used=shown.filter(source=>list.some(([,item])=>item.bySource[source.id]));
+  const legend=el('ul',undefined,'report-activity-person-legend');for(const source of used){const item=el('li'),swatch=el('span',undefined,'report-activity-person-swatch');swatch.style.background=colour.get(source.id);item.append(swatch,el('span',source.name));legend.append(item);}
+  const max=list[0][1].total||1,limit=20,chart=el('ol',undefined,'report-activity-person-bars');chart.setAttribute('aria-label','Actions by person');
+  for(const [key,item] of list.slice(0,limit)){
+   const row=el('li',undefined,'report-activity-person-bar'),name=data('button',item.name,'report-activity-person-link');name.type='button';name.title='Show only '+item.name;name.onclick=()=>{chosen=new Set([key]);peopleLabel();peopleUi();page=1;draw();$('report-activity-title').scrollIntoView({behavior:'smooth',block:'start'});};
+   const track=el('div',undefined,'report-activity-person-track'),fill=el('div',undefined,'report-activity-person-fill');fill.style.width=(item.total/max*100).toFixed(2)+'%';
+   const parts=[];for(const source of used){const count=item.bySource[source.id];if(!count)continue;const part=el('span',undefined,'report-activity-person-part');part.style.background=colour.get(source.id);part.style.flexGrow=String(count);part.title=source.name+': '+count;fill.append(part);parts.push(source.name+' '+count);}
+   track.append(fill);track.setAttribute('role','img');track.setAttribute('aria-label',item.name+': '+item.total+' actions'+(parts.length?' ('+parts.join(', ')+')':''));
+   row.append(name,track,el('strong',String(item.total),'report-activity-person-total'));chart.append(row);
+  }
+  host.append(legend,chart);if(list.length>limit)host.append(el('p',(list.length-limit)+' more '+(list.length-limit===1?'person is':'people are')+' in the table below.','small'));
+ }
+ // Timeline charts: actions per day (or per week for long periods) and per hour of the day, stacked by activity type.
+ // Drawn from the same filtered rows as the list; days inside the shown range with nothing recorded are zero.
+ function stackedColumns(title,buckets,used,colour,labelEvery){
+  const card=el('div',undefined,'report-activity-timeline-card');card.append(el('h3',title));
+  const max=Math.max(1,...buckets.map(b=>b.total)),plot=el('div',undefined,'report-activity-columns-plot');plot.setAttribute('role','img');
+  plot.setAttribute('aria-label',title+': '+buckets.filter(b=>b.total).map(b=>b.label+' '+b.total).join(', ')||'no actions');
+  buckets.forEach((bucket,index)=>{
+   const column=el('div',undefined,'report-activity-column');column.title=bucket.label+': '+bucket.total+(bucket.total===1?' action':' actions')+used.filter(s=>bucket.by[s.id]).map(s=>'\n'+s.name+': '+bucket.by[s.id]).join('');
+   const stack=el('div',undefined,'report-activity-column-stack');stack.style.height=(bucket.total/max*100).toFixed(2)+'%';
+   for(const source of used){const count=bucket.by[source.id];if(!count)continue;const part=el('span');part.style.background=colour.get(source.id);part.style.flexGrow=String(count);stack.append(part);}
+   const label=el('span',index%labelEvery===0?bucket.short:'','report-activity-column-label');column.append(stack,label);plot.append(column);
+  });
+  card.append(plot);return card;
+ }
+ function timelineChart(shown){
+  const host=$('report-activity-timeline-chart');host.replaceChildren();if(!rows.length){host.hidden=true;return;}host.hidden=false;
+  const colour=new Map(shown.map((source,index)=>[source.id,chartColours[index%chartColours.length]])),used=shown.filter(source=>rows.some(row=>row.source===source.id));
+  const legend=el('ul',undefined,'report-activity-person-legend');for(const source of used){const item=el('li'),swatch=el('span',undefined,'report-activity-person-swatch');swatch.style.background=colour.get(source.id);item.append(swatch,el('span',source.name));legend.append(item);}
+  const day=date=>Date.UTC(+date.slice(0,4),+date.slice(5,7)-1,+date.slice(8,10)),iso=ms=>new Date(ms).toISOString().slice(0,10);
+  const dates=rows.map(row=>row.date).sort(),from=day(dates[0]),to=day(dates[dates.length-1]),span=Math.round((to-from)/864e5)+1,weekly=span>62;
+  const keyOf=date=>{if(!weekly)return date;const ms=day(date),back=(new Date(ms).getUTCDay()+6)%7;return iso(ms-back*864e5);};
+  const buckets=new Map();const start=weekly?day(keyOf(dates[0])):from;for(let ms=start;ms<=to;ms+=(weekly?7:1)*864e5){const key=iso(ms),label=dayLabel(key);buckets.set(key,{label:weekly?'Week of '+label:label,short:new Date(ms).getUTCDate()+'/'+(new Date(ms).getUTCMonth()+1),total:0,by:{}});}
+  const hours=[...Array(24)].map((_,h)=>({label:hour(String(h).padStart(2,'0')+':00'),short:hour(String(h).padStart(2,'0')+':00').replace(':00','').replace(/\s/g,''),total:0,by:{}}));
+  for(const row of rows){const bucket=buckets.get(keyOf(row.date));if(bucket){bucket.total++;bucket.by[row.source]=(bucket.by[row.source]||0)+1;}const h=hours[Number(row.time.slice(0,2))];if(h){h.total++;h.by[row.source]=(h.by[row.source]||0)+1;}}
+  const list=[...buckets.values()],grid=el('div',undefined,'report-activity-timeline-grid');
+  grid.append(stackedColumns(weekly?'Actions by week':'Actions by day',list,used,colour,Math.max(1,Math.ceil(list.length/12))),stackedColumns('Actions by time of day',hours,used,colour,3));
+  host.append(legend,grid);
+ }
  function draw(){
   rows=filtered();const summary=$('report-activity-summary');summary.replaceChildren();if(!result)return;
   const people=new Map();for(const row of rows){const item=people.get(row.userKey)||{name:row.userName,total:0,bySource:{},first:row.at,last:row.at};item.total++;item.bySource[row.source]=(item.bySource[row.source]||0)+1;if(row.at<item.first)item.first=row.at;if(row.at>item.last)item.last=row.at;people.set(row.userKey,item);}
@@ -29,7 +75,9 @@
   const shown=result.sources.filter(source=>result.included.includes(source.name)&&(!sources||sources.has(source.id))),head=$('report-activity-person-head'),hr=el('tr');const visible=shown.filter(source=>showColumn(source.id));for(const label of ['Person',...(showColumn('total')?['Actions']:[]),...visible.map(source=>source.name),...(showColumn('first')?['First']:[]),...(showColumn('last')?['Last']:[])])hr.append(Object.assign(el('th',label),{scope:'col'}));head.replaceChildren(hr);columnsLabel();
   const body=$('report-activity-person-rows');body.replaceChildren();const fmt=at=>{const row=rows.find(r=>r.at===at);return row?dayLabel(row.date)+' '+hour(row.time):'—';};
   for(const [key,item] of [...people].sort((a,b)=>b[1].total-a[1].total||a[1].name.localeCompare(b[1].name))){const tr=el('tr'),name=el('td',undefined,'report-activity-person-cell'),button=data('button',item.name,'report-activity-person-link');button.type='button';button.title='Show only '+item.name;button.onclick=()=>{chosen=new Set([key]);peopleLabel();peopleUi();page=1;draw();$('report-activity-title').scrollIntoView({behavior:'smooth',block:'start'});};name.append(button);tr.append(name);if(showColumn('total'))tr.append(el('td',String(item.total),'report-amount'));for(const source of visible)tr.append(el('td',item.bySource[source.id]?String(item.bySource[source.id]):'—','report-amount'));if(showColumn('first'))tr.append(el('td',fmt(item.first)));if(showColumn('last'))tr.append(el('td',fmt(item.last)));body.append(tr);}
+  personChart(people,shown);
   $('report-activity-people-count').textContent=people.size+(people.size===1?' person':' people');
+  timelineChart(shown);
   // Timeline.
   const pages=Math.max(1,Math.ceil(rows.length/50));page=Math.min(Math.max(1,page),pages);const list=$('report-activity-rows');list.replaceChildren();let lastDate='';
   for(const row of rows.slice((page-1)*50,page*50)){if(row.date!==lastDate){lastDate=row.date;const day=el('tr',undefined,'report-activity-day'),cell=el('th',dayLabel(row.date));cell.colSpan=4;cell.scope='colgroup';day.append(cell);list.append(day);}const tr=el('tr');tr.dataset.source=row.source;const when=el('td',hour(row.time),'report-activity-time'),who=el('td',undefined,'report-activity-who'),avatar=data('span',row.userName.split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join('').toUpperCase(),'report-activity-avatar');avatar.setAttribute('aria-hidden','true');who.append(avatar,data('span',row.userName));const what=el('td'),box=el('div',undefined,'report-activity-what'),tag=el('span',(result.sources.find(source=>source.id===row.source)||{}).name||row.source,'report-activity-tag');tag.dataset.source=row.source;box.append(tag,data('strong',row.title));if(row.detail)box.append(data('small',row.detail));what.append(box);const where=data('td',row.locationName);tr.append(when,who,what,where);list.append(tr);}
