@@ -1,0 +1,58 @@
+/* Reporting top area, redesigned compact (styling only): a one-line heading (topic chip, title, scope) with a
+   one-line report summary, then one toolbar row holding the topic tabs, Locations, Period and the report actions,
+   and the Activity filters as a matching inline row. Phones keep 40 px touch controls. */
+.reporting-page .report-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:0 0 8px;padding:0}
+.reporting-page .report-header>div{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:2px;min-width:0;flex:1}
+.reporting-page .report-header .eyebrow{order:0;margin:0;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font-size:.62rem;font-weight:700;letter-spacing:.04em;line-height:1.4;text-transform:uppercase}
+.reporting-page .report-header h1{order:1;margin:0;font-size:1.3rem;line-height:1.15}
+.reporting-page .report-header .feature-help-button{order:1}
+.reporting-page #report-location{order:2;margin:0;font-size:.74rem;line-height:1.3;color:var(--theme-muted,#5b6b7a)}
+.reporting-page #report-location:not(:empty)::before{content:'·';margin-right:8px}
+.reporting-page .report-view-summary{order:3;flex:0 0 100%;max-width:100%;margin:0;overflow:hidden;font-size:.76rem;line-height:1.35;color:var(--theme-muted,#5b6b7a);text-overflow:ellipsis;white-space:nowrap}
+.reporting-page .report-view-summary strong{color:var(--theme-text,#182b3a)}
+.reporting-page .report-period{flex:none;margin:0;padding:3px 9px;border-radius:999px;font-size:.72rem}
+/* One toolbar row. */
+.reporting-page #report-controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 4px;padding:6px 0 8px;border:0;border-bottom:1px solid color-mix(in srgb,var(--theme-text,#182b3a) 10%,var(--theme-surface,#fff));border-radius:0;background:transparent;box-shadow:none}
+.reporting-page #report-controls>.report-topic-tabs{margin:0;display:block}
+.reporting-page #report-controls .report-topic-tablist{padding:2px;border-radius:9px}
+.reporting-page #report-controls .report-topic-tab{min-height:28px;padding:3px 11px;border-radius:7px;font-size:.76rem}
+.reporting-page #report-controls .report-filter-field{display:flex;flex-direction:row;align-items:center;gap:6px;flex:none;width:auto;margin:0}
+.reporting-page #report-controls .report-filter-field>:is(label,.report-control-label){margin:0;font-size:.72rem;font-weight:600;letter-spacing:0;text-transform:none;color:var(--theme-muted,#5b6b7a);white-space:nowrap}
+.reporting-page #report-controls :is(select,input,.app-select-trigger,.report-locations-toggle,.report-refresh,.report-export,.ai-action){min-height:32px;height:32px;padding-top:4px;padding-bottom:4px;font-size:.78rem}
+.reporting-page #report-controls .app-select{min-height:32px;height:32px}
+.reporting-page #report-controls :is(.report-locations-toggle,.app-select,select){min-width:128px;width:auto;max-width:220px}
+.reporting-page #report-controls .search-toggle{display:inline-grid;place-items:center;width:32px;min-width:32px;height:32px;min-height:32px;padding:0}
+.reporting-page #report-controls :is(.search-toggle,.report-refresh) svg{width:16px;height:16px}
+.reporting-page #report-controls .report-refresh{display:inline-grid;place-items:center;width:32px;min-width:32px;padding:0}
+.reporting-page #report-controls .ai-action{margin-left:auto;padding-left:12px;padding-right:12px}
+.reporting-page #report-controls .ai-action[hidden]+.report-refresh{margin-left:auto}
+.reporting-page #report-controls .report-export{padding-left:12px;padding-right:12px}
+.reporting-page #report-status{margin:4px 0 6px;font-size:.72rem;color:var(--theme-muted,#5b6b7a)}
+/* Activity filters: the same inline style. */
+.reporting-page .report-activity-filters{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 8px;padding:0 0 8px;border:0;border-bottom:1px solid color-mix(in srgb,var(--theme-text,#182b3a) 10%,var(--theme-surface,#fff));border-radius:0;background:transparent;box-shadow:none}
+.reporting-page .report-activity-filter{display:flex;align-items:center;gap:6px;flex:1 1 200px;min-width:0;margin:0}
+.reporting-page .report-activity-label{flex:none;margin:0;font-size:.72rem;font-weight:600;letter-spacing:0;text-transform:none;color:var(--theme-muted,#5b6b7a)}
+.reporting-page .report-activity-filters :is(select,button,input,.app-select-trigger){min-height:32px;height:32px;padding-top:4px;padding-bottom:4px;font-size:.78rem}
+.reporting-page .report-activity-filters .app-select{flex:1;min-width:0;min-height:32px;height:32px}
+.reporting-page .report-activity-filter>:is(button,select){flex:1;min-width:0}
+@media screen and (max-width:700px){
+ .reporting-page .report-header{flex-wrap:wrap}
+ .reporting-page .report-header>div{flex:1 1 100%}
+ .reporting-page .report-period{order:2}
+ .reporting-page #report-location:not(:empty)::before{content:none}
+ .reporting-page #report-location{flex-basis:100%}
+ .reporting-page #report-controls :is(.report-locations-toggle,.app-select,select){max-width:none}
+ .reporting-page #report-controls .ai-action{order:10;flex:1 1 100%;margin-left:0;white-space:nowrap}
+ .reporting-page #report-controls .report-export{flex:1}
+ .reporting-page .report-header h1{font-size:1.2rem}
+ .reporting-page .report-view-summary{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+ .reporting-page #report-controls>.report-topic-tabs{flex-basis:100%}
+ .reporting-page #report-controls .report-topic-tablist{display:flex;flex-wrap:nowrap;width:100%;overflow-x:auto}
+ .reporting-page #report-controls .report-filter-field{flex:1 1 100%}
+ .reporting-page #report-controls .report-filter-field>:is(label,.report-control-label){min-width:68px}
+ .reporting-page #report-controls .report-filter-field>:is(select,button,.app-select){flex:1}
+ .reporting-page :is(#report-controls,.report-activity-filters) :is(input,select,button,.app-select-trigger,.app-select,.report-topic-tab){min-height:40px;height:auto}
+ .reporting-page #report-controls :is(.search-toggle,.report-refresh){width:40px;min-width:40px;height:40px}
+ .reporting-page .report-activity-filter{flex-basis:100%}
+ .reporting-page .report-activity-label{min-width:68px}
+}

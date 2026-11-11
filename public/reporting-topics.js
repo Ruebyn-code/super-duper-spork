@@ -22,6 +22,9 @@
   const row=node('div',undefined,'report-topic-tablist');row.setAttribute('role','group');row.setAttribute('aria-label',word('Reports in {topic}',{topic:group.label}));
   for(const option of options){const tab=node('a',word(short[option.value]||option.textContent),'report-topic-tab');tab.href='#'+option.value;tab.title=option.textContent;if(option.value===view)tab.setAttribute('aria-current','page');if(option.disabled){tab.setAttribute('aria-disabled','true');tab.classList.add('is-disabled');tab.title=word('Additional permission is required in every selected company.');tab.addEventListener('click',event=>event.preventDefault());}row.append(tab);}
   tabs.append(row);
+  // Compact layout: the tabs sit at the start of the filter toolbar, and the one-line summary keeps its full text on hover.
+  const toolbar=document.getElementById('report-controls');if(toolbar&&tabs.parentElement!==toolbar)toolbar.prepend(tabs);
+  const summaryLine=document.getElementById('report-view-summary');if(summaryLine)setTimeout(()=>{summaryLine.title=summaryLine.textContent;});
  }
  let lastReports=null;
  window.reportTopics={last,update(view,reports){lastReports=reports;renderTabs();window.reportCharts?.update(view,reports);}};
