@@ -15,25 +15,33 @@ const step=(type,extra={})=>({id:crypto.randomUUID(),type,title:type+' step',hel
 async function checklist(app,steps){return(await app.ops(app.office,'/templates','POST',{requestId:crypto.randomUUID(),title:'Fridge checks',description:'',locationIds:[app.first],active:true,schedule:{kind:'manual',startDate:'2026-10-19'},steps})).data;}
 async function complete(app,template,answers,actor=app.member){const run=(await app.ops(actor,'/runs','POST',{templateId:template.id,locationId:app.first,requestId:crypto.randomUUID()})).data;const saved=await app.ops(actor,'/runs/'+run.id,'PUT',{answers,complete:true,revision:run.revision});assert.equal(saved.status,200,JSON.stringify(saved.data));return saved.data;}
 
-test('staff step notes save with who/when, survive omitted writes and stay off completed runs',async()=>{const app=await fixture();try{
+test('staff step notes are lists with who/when; only authors or managers edit or delete them',async()=>{const app=await fixture();try{
  const check=step('check'),text=step('text',{required:false}),section=step('section',{required:false});
  const template=await checklist(app,[section,check,text]);
- const started=await app.ops(app.member,'/runs','POST',{templateId:template.id,locationId:app.first,requestId:crypto.randomUUID()});assert.equal(started.status,201,JSON.stringify(started.data)+JSON.stringify(template));const run=started.data;
- let saved=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{},complete:false,revision:run.revision,notes:{[check.id]:'  Seal on door 2 is loose  '}});
+ const started=await app.ops(app.member,'/runs','POST',{templateId:template.id,locationId:app.first,requestId:crypto.randomUUID()});assert.equal(started.status,201,JSON.stringify(started.data));const run=started.data;
+ const put=(actor,revision,body)=>app.ops(actor,'/runs/'+run.id,'PUT',{answers:{},complete:false,revision,...body});
+ let saved=await put(app.member,run.revision,{notes:{[check.id]:[{id:'note-a',note:'  Seal on door 2 is loose  '}]}});
  assert.equal(saved.status,200,JSON.stringify(saved.data));
- const note=saved.data.notes[check.id];assert.equal(note.note,'Seal on door 2 is loose');assert.equal(note.by,'Member');assert.ok(note.at&&note.byId);
- // Omitted notes keep what was saved; the unchanged note keeps its original author/time.
+ const first=saved.data.notes[check.id][0];assert.equal(first.note,'Seal on door 2 is loose');assert.equal(first.by,'Member');assert.ok(first.at&&first.byId);
+ // Omitted steps keep their notes; resending unchanged text keeps the author and time; a second note is added.
  app.setTime('2026-10-19T03:00:00Z');
- saved=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:false,revision:saved.data.revision});assert.deepEqual(saved.data.notes[check.id],note);
- saved=await app.ops(app.office,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:false,revision:saved.data.revision,notes:{[check.id]:'Seal on door 2 is loose'}});assert.deepEqual(saved.data.notes[check.id],note);
- // Invalid notes are rejected: sections, unknown steps, too long or not text.
- for(const notes of [{[section.id]:'x'},{nope:'x'},{[check.id]:'x'.repeat(1001)},{[check.id]:5},[]]){const bad=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:false,revision:saved.data.revision,notes});assert.equal(bad.status,400,JSON.stringify(notes));}
- // Clearing removes it; notes are not answers and do not count toward completion.
- saved=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:false,revision:saved.data.revision,notes:{[check.id]:'',[text.id]:'Ran out of sanitiser'}});
- assert.equal(saved.data.notes[check.id],undefined);assert.equal(saved.data.notes[text.id].note,'Ran out of sanitiser');assert.equal(saved.data.answers[text.id],undefined);
+ saved=await put(app.member,saved.data.revision,{answers:{[check.id]:true}});assert.deepEqual(saved.data.notes[check.id],[first]);
+ saved=await put(app.office,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'note-a',note:'Seal on door 2 is loose'},{id:'note-b',note:'Called the technician'}]}});
+ assert.equal(saved.status,200,JSON.stringify(saved.data));assert.deepEqual(saved.data.notes[check.id][0],first);assert.equal(saved.data.notes[check.id][1].by,'Office');
+ // Staff cannot edit or delete someone else's note; the author and managers can.
+ const theirs=await put(app.member,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'note-a',note:'Seal on door 2 is loose'},{id:'note-b',note:'Changed'}]}});assert.equal(theirs.status,403);
+ const removeTheirs=await put(app.member,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'note-a',note:'Seal on door 2 is loose'}]}});assert.equal(removeTheirs.status,403);
+ saved=await put(app.member,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'note-a',note:'Seal on door 2 replaced'},{id:'note-b',note:'Called the technician'}]}});
+ assert.equal(saved.status,200,JSON.stringify(saved.data));assert.equal(saved.data.notes[check.id][0].note,'Seal on door 2 replaced');assert.ok(saved.data.notes[check.id][0].editedAt);assert.equal(saved.data.notes[check.id][0].at,first.at);
+ saved=await put(app.office,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'note-b',note:'Called the technician'}]}});assert.equal(saved.status,200);assert.deepEqual(saved.data.notes[check.id].map(item=>item.id),['note-b']);
+ // Invalid notes are rejected: sections, unknown steps, blanks, too long, duplicates, bad ids, more than 20 or not lists.
+ for(const notes of [{[section.id]:[{id:'x',note:'x'}]},{nope:[]},{[check.id]:[{id:'x',note:'   '}]},{[check.id]:[{id:'x',note:'x'.repeat(1001)}]},{[check.id]:[{id:'x',note:'a'},{id:'x',note:'b'}]},{[check.id]:[{id:'bad id!',note:'a'}]},{[check.id]:Array.from({length:21},(_,i)=>({id:'n'+i,note:'a'}))},{[check.id]:'text'},[]]){const bad=await put(app.member,saved.data.revision,{answers:{[check.id]:true},notes});assert.ok([400,403].includes(bad.status),JSON.stringify(notes)+bad.status);}
+ // An empty list removes the step's notes; notes are not answers.
+ saved=await put(app.office,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[],[text.id]:[{id:'note-c',note:'Ran out of sanitiser'}]}});
+ assert.equal(saved.data.notes[check.id],undefined);assert.equal(saved.data.notes[text.id][0].note,'Ran out of sanitiser');assert.equal(saved.data.answers[text.id],undefined);
  saved=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:true,revision:saved.data.revision});assert.equal(saved.status,200);
- const read=await app.ops(app.office,'/runs/'+run.id);assert.equal(read.data.notes[text.id].note,'Ran out of sanitiser');
- const late=await app.ops(app.member,'/runs/'+run.id,'PUT',{answers:{[check.id]:true},complete:false,revision:saved.data.revision,notes:{[check.id]:'Too late'}});assert.equal(late.status,409);
+ const read=await app.ops(app.office,'/runs/'+run.id);assert.equal(read.data.notes[text.id][0].note,'Ran out of sanitiser');
+ const late=await put(app.office,saved.data.revision,{answers:{[check.id]:true},notes:{[check.id]:[{id:'late',note:'Too late'}]}});assert.equal(late.status,409);
  // Lists and history summaries never carry the note text.
  const history=await app.ops(app.office,'?location=all');assert.equal(history.status,200);assert.ok(JSON.stringify(history.data).includes(run.id),'the run is listed');assert.ok(!JSON.stringify(history.data).includes('Ran out of sanitiser'));
 }finally{await app.close();}});

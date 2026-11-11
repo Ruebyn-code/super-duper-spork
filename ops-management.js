@@ -190,6 +190,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   }
   const view=structuredClone(run),hidden=new Set(run.snapshot.steps.filter(step=>!stepApplies(step,run.locationId,actor)).map(step=>step.id));
   if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];if(view.actions)delete view.actions[id];if(view.notes)delete view.notes[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
+  if(view.notes)view.notes=Object.fromEntries(Object.entries(view.notes).map(([key,value])=>[key,noteList(key,value)]));
   const options=await selectionOptions(actor,stores,run);for(const id of hidden)delete options[id];
   return{...view,selectionOptions:options,resources};
  }
@@ -230,7 +231,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const stores=await access(actor),state=await read(),day=run=>run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
   return state.runs.filter(run=>allowed(run,actor,stores,state)&&(!ids||ids.includes(run.id))&&(!locationId||run.locationId===locationId)&&(!from||day(run)>=from)&&(!to||day(run)<=to)).map(run=>{
    const steps=visibleSteps(run.snapshot.steps,run.locationId,actor),keep=new Set(steps.map(step=>step.id)),pick=value=>Object.fromEntries(Object.entries(value||{}).filter(([key])=>keep.has(key)));
-   return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),notes:pick(run.notes),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
+   return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),notes:Object.fromEntries(Object.entries(pick(run.notes)).map(([key,value])=>[key,noteList(key,value)])),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
   });
  }
  // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
@@ -420,19 +421,33 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(complete)for(const step of mine){if(hiddenIds.has(step.id))continue;const gaps=stepLogic.actionMissing(step,values[step.id],result[step.id]);if(gaps.length)fail('Add '+(gaps.length>1?'a note and photo':'a '+gaps[0])+' explaining the corrective action for '+step.title+'.');}
   return result;
  }
- // Staff notes on response steps: free text kept separately from answers, with who/when recorded on the server.
- // Omitted notes keep what was saved; notes on steps this person can't see are kept; an empty note removes it.
+ // Staff notes on response steps: a list per step, kept separately from answers, with who/when recorded on the server.
+ // Each save sends a step's whole list; omitted steps keep their notes, notes on steps this person can't see are kept,
+ // and only the author or a checklist manager may edit or delete a note. Older single notes read as a one-item list.
+ const noteList=(stepId,value)=>Array.isArray(value)?value:value&&typeof value.note==='string'?[{id:'note-'+stepId,...value}]:[];
  function stepNotes(run,input,mine,actor,at){
-  if(input===undefined)return run.notes;
+  const saved=run.notes||{};if(input===undefined)return Object.keys(saved).length?saved:undefined;
   if(input===null||typeof input!=='object'||Array.isArray(input))fail('Enter valid step notes.');
   const allowed=new Map(mine.filter(stepModel.responseStep).map(step=>[step.id,step]));
   for(const key of Object.keys(input))if(!allowed.has(key))fail('Enter valid step notes.');
-  const result={};for(const [key,saved] of Object.entries(run.notes||{}))if(!allowed.has(key))result[key]=saved;
+  const mayChange=note=>note.byId===actor.id||can(actor,'ops.manage'),result={};
+  for(const [key,value] of Object.entries(saved))if(!allowed.has(key)||input[key]===undefined){const list=noteList(key,value);if(list.length)result[key]=list;}
   for(const [key,step] of allowed){
-   const value=input[key];if(value===undefined||value===null)continue;
-   if(typeof value!=='string'||value.length>1000)fail('Notes can be up to 1000 characters ('+step.title+').');
-   const note=value.trim();if(!note)continue;const previous=run.notes?.[key];
-   result[key]=previous?.note===note?previous:{note,by:actor.username,byId:actor.id,at};
+   const value=input[key];if(value===undefined)continue;const previous=noteList(key,saved[key]),given=value===null?[]:value;
+   if(!Array.isArray(given)||given.length>20)fail('Each step can have up to 20 notes ('+step.title+').');
+   const ids=new Set(),list=[];
+   for(const item of given){
+    if(!item||typeof item!=='object'||typeof item.id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(item.id)||ids.has(item.id))fail('Enter valid step notes.');ids.add(item.id);
+    if(typeof item.note!=='string'||item.note.length>1000)fail('Notes can be up to 1000 characters ('+step.title+').');
+    const note=item.note.trim();if(!note)fail('Enter a note or delete it ('+step.title+').');
+    const before=previous.find(entry=>entry.id===item.id);
+    if(!before){list.push({id:item.id,note,by:actor.username,byId:actor.id,at});continue;}
+    if(before.note===note){list.push(before);continue;}
+    if(!mayChange(before))fail('Only the person who wrote a note or a checklist manager can edit it.',403);
+    list.push({...before,note,editedAt:at,editedBy:actor.username});
+   }
+   for(const before of previous)if(!ids.has(before.id)&&!mayChange(before))fail('Only the person who wrote a note or a checklist manager can delete it.',403);
+   if(list.length)result[key]=list;
   }
   return Object.keys(result).length?result:undefined;
  }
