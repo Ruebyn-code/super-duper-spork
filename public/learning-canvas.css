@@ -92,3 +92,9 @@ html.learning-split-open,html.learning-split-open body{height:100%;overflow:hidd
 .learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option>svg{width:14px;height:14px}
 .learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option.ai-create-button{min-height:28px;font-size:11px}
 .learning-main .learning-toolbox-dialog .learning-toolbox-choices .learning-step-option{white-space:normal;text-align:left}
+/* Readiness steps that still need doing are buttons that take you there. */
+.learning-main .learning-readiness-go{display:grid;grid-template-columns:16px minmax(0,1fr);align-items:baseline;gap:0 6px;width:100%;margin:-2px -4px;padding:2px 4px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.learning-main .learning-readiness-go:hover,.learning-main .learning-readiness-go:focus-visible{background:color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff))}
+.learning-main .learning-readiness-go .learning-readiness-detail{grid-column:2;color:var(--theme-primary-text,var(--primary));text-decoration:underline;text-underline-offset:2px}
+.learning-main .learning-readiness li:has(.learning-readiness-go){display:block}
+.learning-main .learning-readiness-go,.learning-main .learning-readiness-go *{letter-spacing:normal;font-weight:inherit}.learning-main .learning-readiness-go .learning-readiness-name{font-weight:650}
