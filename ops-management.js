@@ -189,11 +189,11 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    resources[asset.id]={id:asset.id,name:record.name,mime:record.mime,size:record.size,url:'/api/ops-management/media/'+asset.id};
   }
   const view=structuredClone(run),hidden=new Set(run.snapshot.steps.filter(step=>!stepApplies(step,run.locationId,actor)).map(step=>step.id));
-  if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];if(view.actions)delete view.actions[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
+  if(hidden.size){view.snapshot.steps=view.snapshot.steps.filter(step=>!hidden.has(step.id));for(const id of hidden){delete view.answers[id];if(view.stepActivity)delete view.stepActivity[id];if(view.selectionLabels)delete view.selectionLabels[id];if(view.actions)delete view.actions[id];if(view.notes)delete view.notes[id];}for(const asset of state.assets)if(asset.runId===run.id&&hidden.has(asset.stepId))delete resources[asset.id];}
   const options=await selectionOptions(actor,stores,run);for(const id of hidden)delete options[id];
   return{...view,selectionOptions:options,resources};
  }
- const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length,...(snapshot.scoring?{score:stepLogic.score(steps,answers)}:{})};};
+ const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,notes,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length,...(snapshot.scoring?{score:stepLogic.score(steps,answers)}:{})};};
  async function list(actor,params={}){
   const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const whole=params.whole==='1'||params.whole===true,location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
@@ -230,7 +230,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const stores=await access(actor),state=await read(),day=run=>run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
   return state.runs.filter(run=>allowed(run,actor,stores,state)&&(!ids||ids.includes(run.id))&&(!locationId||run.locationId===locationId)&&(!from||day(run)>=from)&&(!to||day(run)<=to)).map(run=>{
    const steps=visibleSteps(run.snapshot.steps,run.locationId,actor),keep=new Set(steps.map(step=>step.id)),pick=value=>Object.fromEntries(Object.entries(value||{}).filter(([key])=>keep.has(key)));
-   return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
+   return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),notes:pick(run.notes),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
   });
  }
  // Step facts for reports: done/not done, when, by whom and timed-section timing. Never answer values.
@@ -420,6 +420,22 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   if(complete)for(const step of mine){if(hiddenIds.has(step.id))continue;const gaps=stepLogic.actionMissing(step,values[step.id],result[step.id]);if(gaps.length)fail('Add '+(gaps.length>1?'a note and photo':'a '+gaps[0])+' explaining the corrective action for '+step.title+'.');}
   return result;
  }
+ // Staff notes on response steps: free text kept separately from answers, with who/when recorded on the server.
+ // Omitted notes keep what was saved; notes on steps this person can't see are kept; an empty note removes it.
+ function stepNotes(run,input,mine,actor,at){
+  if(input===undefined)return run.notes;
+  if(input===null||typeof input!=='object'||Array.isArray(input))fail('Enter valid step notes.');
+  const allowed=new Map(mine.filter(stepModel.responseStep).map(step=>[step.id,step]));
+  for(const key of Object.keys(input))if(!allowed.has(key))fail('Enter valid step notes.');
+  const result={};for(const [key,saved] of Object.entries(run.notes||{}))if(!allowed.has(key))result[key]=saved;
+  for(const [key,step] of allowed){
+   const value=input[key];if(value===undefined||value===null)continue;
+   if(typeof value!=='string'||value.length>1000)fail('Notes can be up to 1000 characters ('+step.title+').');
+   const note=value.trim();if(!note)continue;const previous=run.notes?.[key];
+   result[key]=previous?.note===note?previous:{note,by:actor.username,byId:actor.id,at};
+  }
+  return Object.keys(result).length?result:undefined;
+ }
  function recordStepActivity(run,values,actor,at){
   const activity={...run.stepActivity};
   for(const step of run.snapshot.steps){
@@ -438,7 +454,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
    if(run.status==='completed')fail('Completed checklists cannot be changed.',409);
    if(input?.revision!==run.revision)fail('Someone updated this checklist. Reload before saving.',409);
    if(typeof input.complete!=='boolean')fail('Choose a draft or completed checklist.');
-   const saved=await answers(state,run,input.answers,input.complete,actor,stores),savedActions=actions(state,run,input.actions,saved.values,saved.hidden,saved.mine,input.complete,actor);run.stepActivity=recordStepActivity(run,saved.values,actor,stamp());run.answers=saved.values;run.selectionLabels=saved.labels;if(Object.keys(savedActions).length||run.actions)run.actions=savedActions;
+   const saved=await answers(state,run,input.answers,input.complete,actor,stores),savedActions=actions(state,run,input.actions,saved.values,saved.hidden,saved.mine,input.complete,actor);run.stepActivity=recordStepActivity(run,saved.values,actor,stamp());run.answers=saved.values;run.selectionLabels=saved.labels;if(Object.keys(savedActions).length||run.actions)run.actions=savedActions;{const notes=stepNotes(run,input.notes,saved.mine,actor,stamp());if(notes)run.notes=notes;else delete run.notes;}
    run.revision++;run.updatedAt=stamp();run.updatedBy=actor.username;
    if(input.complete){run.status='completed';run.completedAt=stamp();run.completedBy=actor.username;run.completedById=actor.id;}
    return presentRun(state,actor,stores,run);

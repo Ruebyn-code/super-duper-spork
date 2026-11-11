@@ -284,3 +284,13 @@ Logic is opt-in per step. A step with no show-when rule, pass rule, corrective a
 ## Phone preview size
 
 The Checklist builder's phone preview is a fixed panel on the right. The iPhone frame and its 402 × 874 screen (a same-origin iframe that lays out at real phone width) scale together as one picture to the largest size that fits the window height without scrolling, up to 100%, while leaving the builder at least 520 px. The panel width, the reserved space beside the headings and toolbar (`--preview-width`, `--ops-preview-reserve`) and the "shown at N%" label follow that scale. Collapsing still narrows it to the 42 px rail.
+
+## Step notes
+
+Staff can add a short note to any response step while filling in a checklist: the note icon in the step's heading (named **Add note** for screen readers and on hover) opens a text box under the step (plain text steps don't show the button, since they're already free text). Notes save with the normal automatic save and are kept separately from answers in `run.notes` as `{stepId: {note, by, byId, at}}`.
+
+- Up to 1,000 characters; surrounding spaces are trimmed and an empty note removes it.
+- The server records who wrote the note and when; re-sending the same text keeps the original author and time.
+- Saves that omit `notes` keep the saved notes. Notes on steps limited to other locations/permission levels are kept and never shown to people who can't see the step.
+- Section, instruction and unknown steps are rejected, and notes can't change after the checklist is completed.
+- Notes are not answers: they don't complete a step, change scores or pass rules, or appear in list/History summaries. Completed runs and History show them read-only with the author and time, and the printable run (Logs and PDF export) includes them.

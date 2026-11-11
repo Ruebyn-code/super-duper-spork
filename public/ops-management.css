@@ -752,3 +752,15 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-filter-menu .ops-upcoming-toggle input:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}
 @media(forced-colors:active){.ops-filter-menu .ops-upcoming-toggle input{appearance:auto;-webkit-appearance:auto}.ops-filter-menu .ops-upcoming-toggle input::after{display:none}}
 .ops-task-pin.ops-task-pin-static,.ops-task-pin.ops-task-pin-static:hover{opacity:1;cursor:default;background:transparent;pointer-events:none}
+/* Staff step notes in the run reader. */
+.ops-step-note{display:grid;gap:6px;margin-top:8px}
+.ops-answer-heading>.ops-step-note-add{margin:-6px -6px -6px auto}
+.ops-step-note-add{flex:none;display:inline-grid;place-items:center;width:32px;height:32px;min-height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--theme-muted,#5b6b7a);cursor:pointer}
+.ops-step-note-add:hover,.ops-step-note-add:focus-visible{background:color-mix(in srgb,var(--primary,#008cff) 10%,transparent);color:var(--theme-primary-text,var(--primary,#008cff))}
+.ops-step-note-add[hidden],.ops-answer-collapsed .ops-step-note-add{display:none}
+.ops-step-note-editor{display:grid;gap:4px}
+.ops-step-note-editor textarea{width:100%;min-height:56px;resize:vertical}
+.ops-step-note>strong{font-size:.78rem}
+.ops-step-note-text{margin:0;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--primary,#008cff) 7%,var(--theme-surface,#fff));white-space:pre-wrap;overflow-wrap:anywhere}
+.ops-step-note-meta{color:var(--theme-muted,#5b6b7a);font-size:.72rem}
+@media screen and (max-width:700px){.ops-step-note-add{width:40px;height:40px}.ops-answer-heading>.ops-step-note-add{margin:-10px -8px -10px auto}}
