@@ -10,6 +10,7 @@
   ['leave','Leave','Leave decisions and requests to review','Rosters'],
   ['checklists','Checklists','Checklists ready or due soon at this location','Checklists'],
   ['equipment','Equipment','Reported problems and services due','Equipment'],
+  ['promotions','Promotions','Promotions running today at this location','Promotions'],
   ['transfers','Stock transfers','Incoming stock transfers to receive','Stock transfers'],
   ['sales','Daily sales','Today’s sales entry reminder','Daily sales'],
   ['reports','Reports','New OpStack intelligence reports in your inbox','Reports']

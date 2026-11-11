@@ -1,7 +1,7 @@
 const {can,canAccessLocation}=require('./permissions'),reporting=require('./reporting'),details=require('./reporting-details'),operations=require('./reporting-operations'),finance=require('./public/reporting-model'),progress=require('./public/reporting-progress-model'),schedule=require('./public/report-schedule-model');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const selected=(person,spec)=>spec.userIds.includes(person.id)||spec.roleIds.includes(person.role);
-function createSources({dir,auth,locations,companies,catalogues,history,sales,weekly,learning,ops,now=Date.now}){
+function createSources({dir,auth,locations,companies,catalogues,history,sales,weekly,learning,ops,promotions=null,now=Date.now}){
  async function contexts(actor,spec){
   if(!can(actor,'reporting.view'))fail('Reporting permission required.',403);
   const available=await locations.accessible(actor),ids=reporting.selectLocations(spec.locationIds.join(','),available);
@@ -30,6 +30,8 @@ function createSources({dir,auth,locations,companies,catalogues,history,sales,we
      add('performance',shop,'Financial weeks ending in period',total.weeks);add('performance',shop,'Weekly report sales days recorded',total.recordedDays);add('performance',shop,'Weekly report sales days expected',total.expectedDays);add('performance',shop,'Financial dates',report.details.financialFrom?report.details.financialFrom+' to '+report.details.financialThrough:'No financial weeks ending in this period','text');
     }
    }
+   // Promotions overlapping the period (when the company keeps Leaderboard and reports on): lift over the normal projection.
+   if(promotions&&(spec.topics.includes('sales')||spec.topics.includes('performance'))){let any=false;for(const context of entries){let board;try{board=await promotions().leaderboard(context);}catch{continue;}if(!board.enabled)continue;const shop=shops.find(s=>s.id===context.locationId);for(const row of board.rows.filter(row=>row.startDate<=range.end&&row.endDate>=range.start).slice(0,5)){any=true;add('sales',shop,'Promotion lift over normal projection: '+row.name+' ('+row.startDate+' to '+row.endDate+')',row.differencePercent,'percent');add('sales',shop,'Promotion days compared: '+row.name,row.comparedDays);}}if(any)notes.push('Promotion lift compares saved sales with the normal projection on promotion days up to today; days without both values are left out, and a missing lift means it could not be compared.');}
    if(spec.topics.includes('rankings'))for(const row of progress.financeRankings(reports,'profitCents'))add('rankings',shops.find(shop=>shop.id===row.id),'Profit ranking (complete figures only)',row.rank);
    notes.push('Daily sales and placed order costs use the exact selected dates. Sunday orders are allocated to the following Monday. Financial sales and profit use saved complete Monday–Sunday weeks ending within the selected dates; missing sales or costs remain unknown. Cost of goods uses saved invoice totals including GST for each bundle week, plus net cost transfers; no invoices means zero and missing invoice totals mean unknown costs. Placed orders are separate, and platform fees do not change profit.');
    if(spec.topics.includes('stock'))notes.push('Stock usage uses complete Sunday–Saturday cycles and the next Sunday count; only the first ten stock items and suppliers in the normal report order are included. Missing or negative cycles need checking.');

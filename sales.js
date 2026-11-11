@@ -52,8 +52,9 @@ async function projectionRecords(dir,session,starts,dailyRecords){
  const valid=value=>Number.isSafeInteger(value)&&value>=0&&value<=maximumDailyCents;
  return starts.map((start,index)=>{
   const original=daily[index],candidate=reports[index],report=candidate&&candidate.weekStart===start&&(!candidate.locationId||candidate.locationId===session.locationId)&&(!candidate.companyId||!session.companyId||candidate.companyId===session.companyId)?candidate:null,sources=[];
-  const days=Array.from({length:7},(_,day)=>{const values=['tillSales','uberEats','doorDash'].map(field=>Array.isArray(report?.breakdown?.[field])&&report.breakdown[field].length===7?report.breakdown[field][day]:null);if(values.every(valid)){sources.push('weekly-report');return values.reduce((sum,value)=>sum+value,0);}const value=belongs(original,session)&&Array.isArray(original.days)?original.days[day]:null;sources.push(valid(value)?'daily-sales':null);return valid(value)?value:null;});
-  return{weekStart:start,days,sources,...(session.locationId?{locationId:session.locationId}:{accountId:session.id})};
+  const channels=[];
+  const days=Array.from({length:7},(_,day)=>{const values=['tillSales','uberEats','doorDash'].map(field=>Array.isArray(report?.breakdown?.[field])&&report.breakdown[field].length===7?report.breakdown[field][day]:null);if(values.every(valid)){sources.push('weekly-report');channels.push({tillSales:values[0],uberEats:values[1],doorDash:values[2]});return values.reduce((sum,value)=>sum+value,0);}channels.push(null);const value=belongs(original,session)&&Array.isArray(original.days)?original.days[day]:null;sources.push(valid(value)?'daily-sales':null);return valid(value)?value:null;});
+  return{weekStart:start,days,sources,channels,...(session.locationId?{locationId:session.locationId}:{accountId:session.id})};
  });
 }
 function calculate(records,orders,session,{now=new Date(),transfers=[]}={}){
@@ -89,10 +90,16 @@ function orderingProjection(projection,orders,session,{transfers=[]}={}){
  const committed=isUpcoming?committedSpend(orders,session,weekStart,transfers):{spentCents:projection.spentCents,pricePending:projection.pricePending,orderCount:projection.orderCount,transferCostCents:projection.transferCostCents};
  return {...forecast,...committed,weekStart,weekEnd:shift(weekStart,6),isUpcoming,dailyProjections:projection.dailyProjections.map((day,index)=>({...day,date:shift(weekStart,index)})),remainingCents:projection.budgetCents===null||committed.pricePending?null:projection.budgetCents-committed.spentCents};
 }
-async function rosterProjection(dir,session,weekStart,{now=new Date()}={}){
+// Promotion expected uplift on top of the normal (holiday-adjusted) projection; promotions:false keeps the normal figure.
+async function promotionUplift(dir,session,projection,options={}){
+ if(options.promotions===false)return projection;const days=projection?.[options.dailyKey||'dailyProjections'];if(!Array.isArray(days))return projection;
+ const {upliftFor,applyUplift}=require('./promotions');let uplifts;try{uplifts=await upliftFor(dir,session,days.map(day=>day?.date).filter(Boolean));}catch{return projection;}
+ return applyUplift(projection,uplifts,options);
+}
+async function rosterProjection(dir,session,weekStart,{now=new Date(),promotions=true}={}){
  const current=currentWeek(now),anchor=weekStart<current?weekStart:current,records=await projectionRecords(dir,session,[1,2,3,4].map(index=>shift(anchor,-7*index))),base=require('./public/rostering-model').project(records,weekStart,now.valueOf()),projection=await holidayProjections.normalForecast(dir,session,base,{anchor,records,readRevenue:starts=>projectionRecords(dir,session,starts),dailyKey:'daily',amountKey:'salesCents'});
  const changes=await holidayProjections.adjustments(dir,session,{weekStarts:[weekStart],anchor,asOf:weekStart<current?weekStart:dateLabel(dayNumber(now,calendar(defaultTimeZone))),readRevenue:starts=>projectionRecords(dir,session,starts)});
- return holidayProjections.apply(projection,changes,{dailyKey:'daily',amountKey:'salesCents'});
+ return promotionUplift(dir,session,holidayProjections.apply(projection,changes,{dailyKey:'daily',amountKey:'salesCents'}),{promotions,dailyKey:'daily',amountKey:'salesCents'});
 }
 function allTimeTotals(records,orders,session){
  let salesCents=0,recordedDays=0,placedOrdersCents=0,orderCount=0,pricePending=false;
@@ -161,9 +168,9 @@ function createStore(){
   const records=await Promise.all(starts.map(start=>read(dir,session,start)));
   const previousStarts=[1,2,3,4].map(index=>shift(current,-7*index)),forecast=await projectionRecords(dir,session,previousStarts,records),baseProjection=calculate([...forecast,...records.filter(record=>!previousStarts.includes(record.weekStart))],orders,session,{now,transfers}),projection=await holidayProjections.normalForecast(dir,session,baseProjection,{anchor:current,records:forecast,readRevenue:starts=>projectionRecords(dir,session,starts)});
   if(projection!==baseProjection)projection.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:projection.dailyProjections,today:projection.today});
-  const ordering=orderingProjection(projection,orders,session,{transfers}),changes=await holidayProjections.adjustments(dir,session,{weekStarts:[...new Set([current,ordering.weekStart])],anchor:current,asOf:projection.today,readRevenue:starts=>projectionRecords(dir,session,starts)}),adjusted=holidayProjections.apply(projection,changes);
+  const ordering=orderingProjection(projection,orders,session,{transfers}),changes=await holidayProjections.adjustments(dir,session,{weekStarts:[...new Set([current,ordering.weekStart])],anchor:current,asOf:projection.today,readRevenue:starts=>projectionRecords(dir,session,starts)}),adjusted=await promotionUplift(dir,session,holidayProjections.apply(projection,changes));
   if(adjusted!==projection)adjusted.performance=compare(records.find(record=>record.weekStart===current)?.days||Array(7).fill(null),{dailyProjections:adjusted.dailyProjections,today:adjusted.today});
-  const [revenue]=await projectionRecords(dir,session,[current],records),orderingAdjusted=holidayProjections.apply(ordering,changes);
+  const [revenue]=await projectionRecords(dir,session,[current],records),orderingAdjusted=await promotionUplift(dir,session,holidayProjections.apply(ordering,changes));
   return {record:records.find(record=>record.weekStart===(selectedWeek||current)),projection:{...adjusted,salesOutlook:outlook(adjusted,adjusted,revenue)},orderingProjection:{...orderingAdjusted,salesOutlook:outlook(orderingAdjusted,adjusted,revenue)}};
  }
  async function history(dir,session){

@@ -1,0 +1,7 @@
+/* Promotion chips on Ordering/Stock count items and the Promotions on today line in checklists. */
+/* Stock items on promotion (Ordering cards and Stock count rows). */
+.promotion-item-flag{display:inline-flex;align-items:center;gap:4px;max-width:100%;margin:3px 0 0;padding:2px 8px 2px 6px;border-radius:7px;background:color-mix(in srgb,var(--primary,#008cff) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#006fd0));font-size:.68rem;font-weight:700;line-height:1.35}
+.promotion-item-flag span{overflow:hidden;text-overflow:ellipsis}.promotion-item-flag svg{flex:none}
+/* Promotions on today, in the checklist reader. */
+.promotions-today{display:grid;gap:2px;margin:0 0 9px;padding:8px 10px;border-radius:8px;border-left:3px solid var(--primary,#008cff);background:color-mix(in srgb,var(--primary,#008cff) 7%,var(--theme-surface,#fff))}
+.promotions-today strong{font-size:.72rem}.promotions-today span{font-size:.78rem;overflow-wrap:anywhere}

@@ -9,7 +9,7 @@
  async function mark(element,date){
   if(!element||!/^\d{4}-\d\d-\d\d$/.test(date||''))return;element.dataset.promotionDate=date;
   if(!window.appAccess?.can?.('sales.view')){element.querySelector(':scope > .promotion-marker')?.remove();return;}
-  const items=(await week(monday(date))).filter(item=>item.startDate<=date&&date<=item.endDate);
+  const covers=window.promotionsModel?.covers||((item,day)=>item.startDate<=day&&day<=item.endDate),items=(await week(monday(date))).filter(item=>covers(item,date));
   if(element.dataset.promotionDate!==date)return;
   let marker=element.querySelector(':scope > .promotion-marker');
   if(!items.length){marker?.remove();return;}
