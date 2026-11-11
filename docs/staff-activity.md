@@ -53,3 +53,13 @@ Every other report type has a **By person** section above its table (`public/rep
 Choosing a person in the dropdown, or clicking their card, filters the table, summary and export to their rows; rows with no recorded person group under "Not recorded". Reports that combine records (supplier totals, usage, bundles, platform fees, daily sales) say they don't record a person and link to the report that does.
 
 A short **Highlights** strip above it calls out the best/largest/top values for the selected rows and how many entries need attention.
+
+## Person report
+
+When the Activity rows are filtered to one person (choose them in People, or click their name in the people table), a **Person report** appears above the table (`public/reporting-person.js`). It is built only from the activity rows already loaded and filtered, so it shows exactly what the viewer may see, never reads anything else and never writes.
+
+- **Headline numbers:** actions and days active. Hours clocked and usual start time appear when that person has clock-ins. Checklists completed and steps done, training completed, and orders, stock counts, wastage, label batches, prep items and equipment reports appear only for sources the viewer can see.
+- **Hours:** clock-ins and clock-outs are paired in time order. Unpaid meal breaks are taken off; paid rest breaks are not. A shift with no clock-out shows "Still clocked in" and isn't counted. The time-of-day and activity filters also apply, so choose All day and all activity for full shifts.
+- **Charts:** what they did (actions by source), day by day (up to 92 days), when they work (weekday × hour heatmap) and locations (when more than one).
+- **Lists:** shifts (latest 60), checklists and training completed (latest 30) and latest actions (15). The full timeline stays below.
+- **Everyone** clears the person filter; **Print** opens a printable copy.
