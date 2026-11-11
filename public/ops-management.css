@@ -807,3 +807,15 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 #ops-run-dialog .ops-answer :is(.ops-button-choice,.ops-option){margin:0}
 #ops-run-dialog .ops-answer .ops-button-set{margin:0}
 @media(min-width:581px) and (pointer:fine){#ops-run-dialog .ops-answer .ops-button-set:not(.ops-button-set-satisfaction) .ops-button-choice,#ops-run-dialog .ops-options.ops-yes-no-na .ops-option{min-height:38px;padding-top:6px;padding-bottom:6px}}
+/* Shorter still: the title keeps its own line; the rule hint, small answers (tick boxes) and the
+   saved/timing line share the next line, and larger answers follow underneath. Styling only. */
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction){padding:6px 10px;margin-bottom:4px;row-gap:4px;align-items:center}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>.ops-answer-heading{order:0;flex:1 1 100%}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>:is(.ops-help,.ops-step-article,.ops-logic-condition){order:1;flex:1 1 100%;margin:-2px 0 0}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>.ops-logic-hint:not(.ops-logic-condition){order:2;flex:0 1 auto;margin:0;font-size:.7rem}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction).check>.ops-options{order:2;flex:0 0 auto}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>.ops-step-activity{order:3;flex:0 1 auto;margin-left:auto}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction):not(.check)>:is(.ops-options,.ops-step-control,input,select,textarea,.ops-number-entry,.ops-photo){order:4}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>:is(.ops-step-note,.ops-corrective){order:5}
+#ops-run-dialog .ops-answer.check .ops-option{min-height:28px;padding:3px 9px}
+@media(min-width:581px) and (pointer:fine){#ops-run-dialog .ops-answer .ops-button-set:not(.ops-button-set-satisfaction) .ops-button-choice,#ops-run-dialog .ops-options.ops-yes-no-na .ops-option{min-height:34px;padding-top:4px;padding-bottom:4px}}
