@@ -298,3 +298,9 @@ Staff can add notes to any response step while filling in a checklist. The note 
 ## Compact run steps
 
 In the checklist reader each response step is kept short. The step title stays on its own line, with any help text underneath. The pass-rule hint (such as Passes when Yes), tick-box answers and the Saved/timing line share the next line, and the Saved/timing line is hidden when there is nothing to show. Larger answers such as buttons, number fields and photos follow on their own line, then notes and corrective actions. Option and button labels have no extra top margin, and cards use tighter padding and spacing. On desktop with a mouse, button choices are 34 px tall; phones and touch screens keep their larger touch sizes and satisfaction faces keep their size. This is styling only.
+
+## Active checklist cards
+
+Checklist cards show their details as small icons: how often it repeats (a clock for hourly, sun for daily, calendar for weekly/fortnightly/monthly, star for yearly, play for on-demand), its status (empty circle to do, half-filled in progress, green tick completed, red cross missed) and any priority (flag for high, warning triangle for urgent). Hovering or long-pressing an icon shows its name, and screen readers still read the words. Opens at…, Due soon and Overdue keep their text with an icon, and the location and due date have pin and calendar icons. Progress is a thin vertical bar on the right of the card that fills from the bottom (green once completed); the steps count and percentage stay at the bottom. This is display only.
+
+Cards that are due soon have an orange tinted fill and border, and overdue cards a red one, in the same style as the green completed cards. They follow the card's live Due soon / Overdue badge, so the colour changes on its own as the time passes, and completed checklists stay green.
