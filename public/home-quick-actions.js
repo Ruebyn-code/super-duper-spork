@@ -12,7 +12,7 @@
   labels:svg('<path d="M3 12V4h8l10 10-8 8L3 12Z"/><g class="icon-detail"><circle cx="7.5" cy="8.5" r="1.5"/></g>'),
   message:svg('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><g class="icon-detail"><path d="M8 11h8M8 14h5"/></g>'),
   hourly:svg('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><g class="icon-detail"><circle cx="12" cy="13" r="3.5"/></g>'),
-  bolt:svg('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>')
+  bolt:svg('<path d="M12 5v14M5 12h14"/>')
  };
  const can=key=>window.appAccess?.can(key);
  const managerHome=()=>window.homeProfile?.profile!=='staff'&&document.body.dataset.homeDashboard!=='staff';

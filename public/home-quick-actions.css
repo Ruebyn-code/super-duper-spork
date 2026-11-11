@@ -34,3 +34,5 @@
 @media(prefers-reduced-motion:reduce){.quick-actions-button,.quick-actions-button svg,.quick-actions-close,.quick-actions-menu,.quick-action,.quick-actions-backdrop{transition:none!important}.quick-actions.is-open .quick-actions-button{transform:none}}
 @media(forced-colors:active){.quick-actions-button,.quick-actions-menu{border:1px solid CanvasText}.quick-action:focus-visible{outline:2px solid Highlight}}
 @media print{.quick-actions,.quick-actions-backdrop{display:none!important}}
+/* Inside the app's content frame the phone navigation bar is outside the frame, so don't add its height again. */
+@media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){html.embedded-page .quick-actions{bottom:calc(14px + env(safe-area-inset-bottom))}}

@@ -128,3 +128,8 @@ The round button at the bottom right of Home (it replaced the invoice scanner bu
 | Messages | `/communications` | `comms.view` |
 
 The button is hidden when no action is allowed. Opening the menu only shows links: it never saves, starts work or calls a provider; destinations keep their own server checks. Arrow keys, Home/End move through the menu, and Escape, the backdrop or the button close it with focus returned. Closing the invoice scanner returns focus to the button. Reduced motion removes the animation. Code: `public/home-quick-actions.js`/`.css`; the original `#invoice-launcher` stays in the page (hidden) as the scanner's own trigger and `#invoices` deep link.
+
+
+### Quick actions button position and icon
+
+The floating Quick actions button shows a + (it turns into × while the menu is open). On phones it sits 14 px above the bottom of the Home content frame; because the persistent shell's phone navigation bar is outside that frame, the button no longer adds the navigation height again (`html.embedded-page` rule in `public/home-quick-actions.css`). Pages opened outside the shell still clear the navigation bar.
