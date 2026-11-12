@@ -82,3 +82,7 @@ Home → Your work → In-store training uses the same idea: items carry a read-
 ## Session screen on tablets and phones
 
 Opening a session (View session) shows it as a popup on desktop. On tablets and phones (up to 1100 px wide, or any touch-first device) it takes over the whole screen: the session dialog gets `instore-session-full`, the Learning centre body gets `instore-session-fullscreen`, and the persistent shell treats it like an open course reader (`shell-course-fullscreen`), hiding the top bar, phone tab bar and subpage rail. The heading and the Cancel session / Close / Save assessment actions stay fixed while the steps scroll. Closing the session (or resizing back to desktop) restores the navigation. This is display only; saving, sign-off and drafts are unchanged.
+
+## Session title
+
+In New session, choosing a training checklist fills **Session title** with that checklist's title, and choosing a different checklist updates it. Once someone types their own title, changing the checklist leaves it alone. Clear the title to let the checklist name fill it again. The title is still saved with the session as before.
