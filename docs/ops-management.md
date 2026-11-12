@@ -330,3 +330,15 @@ The include stays linked rather than copied into the builder. When a run starts,
 In the run reader (and the builder's phone preview) an included checklist shows as a single card with its name, a done/total count and **Open checklist**. Its steps open in a popup: a modal on desktop and full screen on phones. **Done** or Escape closes only the popup and returns focus to the card, and the popup opens itself if a step inside needs attention when completing. The steps are the run's own answer cards, moved into the popup, so autosave, notes, corrective actions and automatic completion work exactly as they do for other steps. Copied steps carry `embeddedIn` (the ID of the top-level include) so readers can group them.
 
 The included checklist's card is styled like an ordinary step rather than a section heading: its title and done/total count, a sideways arrow, a progress bar of the included steps answered so far (green once all are done; an accessible progress bar with "n of m steps done") and an **Open checklist** button.
+
+## Timed sections that follow trading hours
+
+A timed section's options include **Follow trading hours** (Ops checklists only). Turn it on to set **Starts** and **Ends** as At/Before/After opening or closing plus a number of minutes, for example from opening until 30 minutes before closing. These are saved as `tradingHours: {start, end}` points (`{anchor: 'opening'|'closing', offsetMinutes}`, up to 720 minutes either way). The section title shows the rule, e.g. "Opening – 30 min before closing".
+
+The fixed start and end times stay on the step as the fallback (shown as **No trading hours: starts/ends**). When a run starts, `opsStepTiming.resolveSteps` turns each trading-hour section into the store's actual clock times for the run's work date, using that location's Monday–Sunday trading hours:
+
+- Overnight trading (closing at or before opening) is handled; when a window begins after midnight the frozen section records `startDayOffset: 1` so timing checks use the next day.
+- If the store is closed or has no hours that day, or the resulting window would be empty or a day or longer, the section keeps its fallback times and records `tradingFallback: true`.
+- The frozen section keeps the original rule as `fromTradingHours`; its title becomes the resolved times.
+
+Each store therefore gets its own window, and changing a location's trading hours later never rewrites runs already started. Upcoming previews use the same resolution.

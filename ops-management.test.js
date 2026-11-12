@@ -473,3 +473,19 @@ test('a Checklist step includes another unscheduled checklist, copied into each 
  const latest=(await app.api(app.office)).data.templates.find(item=>item.id===inner.id);assert.equal((await app.api(app.office,'/templates/'+inner.id,'PUT',{...latest,contentOnly:true,steps:[clean,note,app.step('check',{title:'Wipe bench'})]})).status,200);
  const next=(await app.start(outer.id,app.first,app.member,{plannerId:outerPlan.id})).data;assert.equal(next.snapshot.steps.length,5);assert.equal((await app.api(app.member,'/runs/'+run.id)).data.snapshot.steps.length,4);
  }finally{await app.close();}});
+
+test('timed sections can follow each store’s trading hours, frozen into runs with a fixed-time fallback',async()=>{const app=await fixture();try{
+ // Monday 19 Oct 2026: first store 14:00–22:00, second store closed Mondays.
+ const open=Array.from({length:7},()=>({open:'14:00',close:'22:00'})),closedMonday=[{closed:true},...open.slice(1)];
+ assert.equal((await app.request(app.office,'/api/locations/'+app.first,'PUT',{name:'Office',tradingHours:open})).status,200);assert.equal((await app.request(app.office,'/api/locations/'+app.second,'PUT',{name:'Second store',tradingHours:closedMonday})).status,200);
+ const section={id:crypto.randomUUID(),type:'timed-section',title:'',help:'',required:false,startTime:'09:00',endTime:'10:00',tradingHours:{start:{anchor:'closing',offsetMinutes:-60},end:{anchor:'closing',offsetMinutes:0}}},check=app.step('check',{title:'Mop floors'});
+ assert.equal((await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Bad',steps:[{...section,tradingHours:{start:{anchor:'lunch',offsetMinutes:0},end:{anchor:'closing',offsetMinutes:0}}},check]})).status,400);
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Closing',steps:[section,check]})).data;assert.equal(template.steps[0].title,'1 h before closing – Closing');assert.deepEqual(template.steps[0].tradingHours,section.tradingHours);
+ const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Closing',active:true,type:'on-demand',locationIds:[app.first,app.second],schedule:{kind:'manual',startDate:'2026-10-19'}})).data;
+ const first=(await app.start(template.id,app.first,app.office,{plannerId:plan.id})).data,frozen=first.snapshot.steps[0];
+ assert.equal(frozen.startTime,'21:00');assert.equal(frozen.endTime,'22:00');assert.equal(frozen.title,'9:00 pm – 10:00 pm');assert.deepEqual(frozen.fromTradingHours,section.tradingHours);assert.equal(frozen.tradingHours,undefined);
+ const second=(await app.start(template.id,app.second,app.office,{plannerId:plan.id})).data.snapshot.steps[0];assert.equal(second.startTime,'09:00');assert.equal(second.endTime,'10:00');assert.equal(second.tradingFallback,true);
+ // Later trading-hour changes leave started runs alone.
+ assert.equal((await app.request(app.office,'/api/locations/'+app.first,'PUT',{name:'Office',tradingHours:Array.from({length:7},()=>({open:'10:00',close:'18:00'}))})).status,200);
+ assert.equal((await app.api(app.office,'/runs/'+first.id)).data.snapshot.steps[0].startTime,'21:00');
+ }finally{await app.close();}});

@@ -920,3 +920,9 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-answer.ops-embed-card .ops-embed-open{width:auto;flex:none;align-self:flex-start;margin-top:6px}
 #ops-run-dialog .ops-answer.ops-embed-card>.ops-embed-open,.ops-preview-body .ops-answer.ops-embed-card>.ops-embed-open{flex:0 0 auto;flex-basis:auto;width:auto;max-width:100%;align-self:flex-start}
 #ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>.ops-embed-open{flex:0 0 auto;width:auto;max-width:100%;margin-top:6px}
+/* Timed sections that follow trading hours: start/end points beneath the fixed fallback times. */
+.ops-page .ops-trading-section{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--primary,#008cff) 6%,var(--theme-surface,#fff))}
+.ops-page .ops-trading-point-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px}
+.ops-page .ops-trading-point-row input:disabled{opacity:.55}
+.ops-page .ops-trading-section .feature-instruction{margin:0}
+.ops-page .ops-trading-section .ops-trading-help{margin:0;color:var(--theme-muted,#64748b);font-size:.72rem}
