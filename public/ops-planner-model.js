@@ -40,7 +40,7 @@
  }
  function due(plan,slot,hours){
   if(!slot)return{dueDate:null,dueTime:null,dueAt:null};
-  if(slot.hourEndsAt){const wall=local(Date.parse(slot.hourEndsAt));return{dueAt:slot.hourEndsAt,dueDate:wall.slice(0,10),dueTime:wall.slice(11,16)};}
+  if(slot.hourEndsAt){const minutes=plan.hourlyDueMinutes,start=slot.hourStartsAt?Date.parse(slot.hourStartsAt):NaN,dueAt=minutes>0&&minutes<60&&Number.isFinite(start)?new Date(Math.min(start+minutes*60000,Date.parse(slot.hourEndsAt))).toISOString():slot.hourEndsAt,wall=local(Date.parse(dueAt));return{dueAt,dueDate:wall.slice(0,10),dueTime:wall.slice(11,16)};}
   if(!plan.tradingHours?.due)return{dueDate:slot.dueDate,dueTime:plan.dueTime||null,dueAt:deadline(slot.dueDate,plan.dueTime)};
   const dueAt=tradingPoint(plan.tradingHours.due,slot.dueDate,hours),wall=dueAt?local(Date.parse(dueAt)):null;
   return{dueAt,dueDate:wall?wall.slice(0,10):slot.dueDate,dueTime:wall?wall.slice(11,16):null};
