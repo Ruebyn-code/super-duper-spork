@@ -250,7 +250,7 @@ function createStore(dir,{locations,now=Date.now,actuals,projection,salesOn=asyn
    return{changed:true,value:{date:input.date,count:input.count}};
   });
  }
- // Promotions on today at a location (name, offer and dates only) for staff awareness: notifications and checklists.
+ // Promotions on today at a location (name, offer and dates only) for staff awareness notifications.
  async function todayList(place){
   if(!place?.companyId||!place?.locationId||!companyOk(place.companyId)||!(await salesOn())||!(await features(place)).staff)return[];
   const current=today(),state=await read(place);
