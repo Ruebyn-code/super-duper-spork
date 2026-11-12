@@ -310,3 +310,7 @@ Cards that are due soon have an orange tinted fill and border, and overdue cards
 Hourly plans have a **Due** choice in Plans → Available hours & deadline: After 5, 10, 15, 20, 30 or 45 minutes, or End of hour (the default). Each hour's checklist is then due that many minutes after the hour opens (never later than that hour's finish), which drives its Due soon / Overdue badge and colour. The choice is saved as `hourlyDueMinutes` only when it isn't the end of the hour, older app versions that don't send it keep the saved value, and each run freezes the due time it started with. Other recurring plans keep their existing Due time and Due day fields.
 
 On the Checklists page an hourly checklist shows only its latest hour: as soon as the next hour opens, the previous hour's card disappears, whether it was completed, started or missed. Those runs stay in History and reports, and anything started can still be finished from History. Upcoming hours still appear only with Show upcoming.
+
+## Negative numbers (freezer temperatures)
+
+Number steps with a format (temperature, decimal, weight…) open the phone's number keypad, which has no minus key. When a step allows negative values (no minimum, or a minimum below zero), a **±** button sits beside the field: tap it before or after typing to make the number negative or positive again. Typing a minus sign that some keyboards insert as a long dash (−, –, —) is also accepted. Pass rules such as "Passes from −25 °C to −15 °C" work as normal.

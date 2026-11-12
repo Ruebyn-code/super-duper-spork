@@ -6,9 +6,12 @@ window.createOpsStepFields=({ui,data,field,input,choices,onChange,upload,status,
   const accessible=node=>{node.id='ops-answer-'+step.id;node.setAttribute('aria-label',step.title);node.disabled=readonly;return node;};
   if(step.type==='number'){
    const control=accessible(input('text')),wrap=el('div','ops-number-entry');let value=answer??null,invalid=false;control.inputMode=step.format==='integer'?'numeric':'decimal';control.placeholder=model.formatNumber(step,0);
-   function parse(){const raw=control.value.trim().replace(/,/g,'');invalid=raw!==''&&!/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw);value=raw===''?null:invalid?null:Number(raw);if(value!==null&&!model.validNumber(step,value))invalid=true;control.setAttribute('aria-invalid',String(invalid));}
+   function parse(){const raw=control.value.trim().replace(/,/g,'').replace(/^[\u2212\u2013\u2014\uFE63\uFF0D]/,'-');invalid=raw!==''&&!/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw);value=raw===''?null:invalid?null:Number(raw);if(value!==null&&!model.validNumber(step,value))invalid=true;control.setAttribute('aria-invalid',String(invalid));}
    function format(){if(!invalid)control.value=model.formatNumber(step,value);}
-   control.onfocus=()=>{if(!invalid)control.value=value===null?'':String(value);};control.oninput=()=>{parse();onChange();};control.onblur=format;format();wrap.append(control);host.append(wrap);
+   control.onfocus=()=>{if(!invalid)control.value=value===null?'':String(value);};control.oninput=()=>{parse();onChange();};control.onblur=format;format();wrap.append(control);
+   // Phone number keypads have no minus key, so steps that allow negatives (e.g. freezer temperatures) get a ± button.
+   if(!readonly&&(step.min==null||step.min<0)){const sign=el('button','ops-number-sign');sign.type='button';sign.textContent='±';const name=window.interfaceLabel?interfaceLabel('Switch between plus and minus'):'Switch between plus and minus';sign.setAttribute('aria-label',name+': '+step.title);sign.title=name;sign.onmousedown=event=>event.preventDefault();sign.onclick=()=>{const focused=document.activeElement===control;if(value!==null&&!invalid){value=-value||0;control.value=String(value);parse();if(!focused)format();}else{const raw=control.value.trim();control.value=raw.startsWith('-')?raw.slice(1):'-'+raw;parse();control.focus();}onChange();};wrap.append(sign);wrap.classList.add('has-sign');}
+   host.append(wrap);
    const limits=[];if(step.min!=null)limits.push('Min '+model.formatNumber(step,step.min));if(step.max!=null)limits.push('Max '+model.formatNumber(step,step.max));if(limits.length)host.append(data('p',limits.join(' · '),'ops-help'));
    inspect=()=>invalid?NaN:value;read=({focus=false}={})=>{if(invalid){if(focus)control.focus();throw Error('Enter a number matching the format and limits for '+step.title+'.');}return value;};
   }

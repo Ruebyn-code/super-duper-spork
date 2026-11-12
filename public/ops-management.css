@@ -869,3 +869,9 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-task-card:not(.ops-task-completed):has(.ops-timing.due-soon:not([hidden])) .ops-task-vbar-fill{background:#f59e0b}
 .ops-task-card:not(.ops-task-completed):has(.ops-timing.overdue:not([hidden])) .ops-task-vbar-fill{background:#ef4444}
 @media(forced-colors:active){.ops-task-card:has(.ops-timing:is(.due-soon,.overdue):not([hidden])){border:2px solid Highlight}}
+/* ± button beside number answers that allow negatives (phone keypads have no minus key). */
+.ops-number-entry.has-sign{display:flex;align-items:stretch;gap:6px}
+.ops-number-entry.has-sign input{flex:1;min-width:0}
+.ops-number-sign{flex:none;min-width:40px;padding:0 10px;border:1px solid var(--theme-line,#e2e8f0);border-radius:8px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-size:1.05rem;font-weight:700;line-height:1;cursor:pointer}
+.ops-number-sign:hover,.ops-number-sign:focus-visible{border-color:var(--primary,#008cff);color:var(--theme-primary-text,var(--primary,#008cff))}
+@media(pointer:coarse){.ops-number-sign{min-width:44px;min-height:44px}}
