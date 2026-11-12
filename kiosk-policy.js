@@ -1,7 +1,7 @@
 // Kiosks use the normal app's permission checks; pairing fixes the active context.
-const features=[{id:'app',name:'All app features',description:'Users have the same features and permissions as their normal account.'},{id:'training',name:'Training only',description:'Staff only get the Learning centre: their online courses and in-store training. Everything else is hidden on this kiosk, whatever their permission level.'}];
+const features=[{id:'app',name:'All app features',description:'Users have the same features and permissions as their normal account.'},{id:'training',name:'Training only',description:'Staff only get the Learning centre to do their training: their online courses and in-store sessions. Nothing can be built or assigned. Everything else is hidden on this kiosk, whatever their permission level.'}];
 // Training-only kiosks keep just these of the person's own grants (never adding any they lack).
-const trainingKeys=['learning.view','learning.complete','learning.signoff','learning.assign'];
+const trainingKeys=['learning.view','learning.complete','learning.signoff'];
 const trainingPages=['/learning-centre','/help'];
 const legacyFeatures=['clock','checklists','labels','roster','library'];
 function trainingOnly(actor){if(!actor)return actor;const model=require('./public/permission-model'),keep=list=>(list||[]).filter(key=>trainingKeys.includes(key)),actions={...(actor.actionPermissions||{})};

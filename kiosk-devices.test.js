@@ -165,6 +165,10 @@ test('training-only kiosks give staff just the Learning centre, whatever their p
   kiosk.session=(await app.request(kiosk,'/api/session')).data;const token={'X-CSRF-Token':kiosk.session.csrf};
   // The office account is a full admin, but on this kiosk only its training grants remain.
   assert.ok(kiosk.session.permissions.length>0);assert.ok(kiosk.session.permissions.every(key=>policy.trainingKeys.includes(key)),kiosk.session.permissions.join(','));assert.ok(kiosk.session.permissions.includes('learning.view'));
+  // Nothing can be built, scheduled or assigned on a training kiosk.
+  for(const key of ['learning.manage','learning.assign','learning.report'])assert.ok(!kiosk.session.permissions.includes(key),key);
+  const inStore=await app.request(kiosk,'/api/learning-centre/in-store','GET',undefined,token);assert.equal(inStore.status,200,JSON.stringify(inStore.data));assert.equal(inStore.data.canManage,false);assert.deepEqual(inStore.data.templates,[]);
+  for(const [url,method,body] of [['/api/learning-centre/courses','POST',{title:'Kiosk course'}],['/api/learning-centre/assignments','POST',{}],['/api/learning-centre/report','GET']])assert.equal((await app.request(kiosk,url,method,body,token)).status,403,url);
   assert.equal((await app.request(kiosk,'/learning-centre')).status,200);const learning=await app.request(kiosk,'/api/learning-centre','GET',undefined,token);assert.equal(learning.status,200,JSON.stringify(learning.data));
   for(const page of ['/home','/','/sales','/ops-management','/settings'])assert.equal((await app.request(kiosk,page)).redirect,'/learning-centre',page);
   for(const url of ['/api/accounts','/api/ops-management','/api/prep-labels','/api/rostering/dashboard'])assert.equal((await app.request(kiosk,url,'GET',undefined,token)).status,403,url);
