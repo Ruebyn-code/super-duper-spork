@@ -586,7 +586,7 @@
   'Describe the checklist and review any reference notes you paste.',
   'Generate and inspect the proposed instructions and response steps.',
   'Choose Open draft in builder to create an ordinary editable draft, then review its planners and audience before activation.'
- ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Generation is a preview. It does not start work or activate schedules.','You can add up to three reference photos, such as an old paper checklist or a sign, to build the checklist from. They are only sent when you generate and are not saved; avoid photos showing people or personal details.'],related:['checklist-builder','intelligence-planners','intelligence-setup']});
+ ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],ai:true,notes:['Generation is a preview. It does not start work or activate schedules.','You can add up to three reference photos or PDF pages (Add photos or PDF turns the first pages of a PDF into pictures on your device), such as an old paper or PDF checklist or a sign, to build the checklist from. They are only sent when you generate and are not saved; avoid photos showing people or personal details.'],related:['checklist-builder','intelligence-planners','intelligence-setup']});
  add(c,'intelligence-planners','Generate a checklist plan','Ask for one repeating plan or a plan around trading hours.',[
   'Open a checklist’s Plans stage and choose OpStack intelligence plan.',
   'Describe the plan, such as “repeat hourly from opening until closing”. Each checklist has one planner.',

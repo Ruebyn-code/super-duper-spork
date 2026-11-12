@@ -38,6 +38,7 @@ The checklist builder's **Create checklist with OpStack intelligence** dialog ha
 
 - Photos are shrunk in the browser to JPEG (up to 1,600 px, under 1.4 MB) and sent only with that Generate request; they are not saved anywhere. The server accepts only `kind: 'checklist'` drafts with up to three JPEG/PNG images under 1.5 MB and 2,000 px per side (the same checks as invoice pages), includes a hash of each image in the request fingerprint so retries stay idempotent, and reserves budget for each image like invoice and hourly-sales reads.
 - OpStack intelligence is told to turn what the photos show into practical steps, keep sensible order/wording, follow the written requirements when they differ, and never copy personal details, signatures or names.
+- **PDFs:** Add photos or PDF also accepts PDF files. The browser opens the PDF with the bundled PDF reader (`/vendor/invoice/pdf.min.mjs`), renders its first pages (as many as there are free slots, up to three pictures in total) to JPEG pictures up to 1,600 px, and adds them like photos with a note when later pages were left out. The PDF file and its text are never uploaded; only those page pictures go with Generate, through the same server checks and budget.
 - Generating still only creates a preview; Open draft in builder creates an ordinary checklist draft through the normal API.
 
 ## Platform search
