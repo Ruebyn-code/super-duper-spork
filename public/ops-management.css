@@ -926,3 +926,6 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-page .ops-trading-point-row input:disabled{opacity:.55}
 .ops-page .ops-trading-section .feature-instruction{margin:0}
 .ops-page .ops-trading-section .ops-trading-help{margin:0;color:var(--theme-muted,#64748b);font-size:.72rem}
+/* Switch/tick labels are only as wide as their text and box, so clicking empty space beside them never toggles them. */
+.ops-page .ops-step-editor .ops-toggle,.ops-page .ops-config .ops-toggle,.ops-page .ops-trading-follow{width:fit-content;max-width:100%;justify-self:start;align-self:flex-start}
+.ops-page .ops-config.ops-builder-config>label.ops-toggle{width:fit-content}
