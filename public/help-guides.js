@@ -435,7 +435,7 @@
   'Open Assignees and choose any permission-level or individual-user filters.',
   'Review the combined audience and save the planner.',
   'Check active work with the intended location and account context.'
- ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Planner audiences also apply to managers and checklist reporting. Authoring requires authority over the affected locations.','New plans start on All current and future locations, so locations added later get the checklist automatically; untick it to choose locations, and use Search locations to find one quickly. Plans for every location need all-location access to edit.'],related:['checklist-planners','permissions','checklist-history']});
+ ],{route:'/ops-management#templates',permissions:['ops.view','ops.manage'],notes:['Planner audiences also apply to managers and checklist reporting. Authoring requires authority over the affected locations.','Add step → Checklist includes another checklist with an Unscheduled plan inside this one; its current steps are added each time this checklist starts and open in a popup from one card in the checklist.','New plans start on All current and future locations, so locations added later get the checklist automatically; untick it to choose locations, and use Search locations to find one quickly. Plans for every location need all-location access to edit.'],related:['checklist-planners','permissions','checklist-history']});
  add(c,'checklist-history','Review checklist history and progress','Find saved responses, completion and overdue work.',[
   'Open Checklists → History and filter the saved records you can access.',
   'Open a record to review progress and completion attribution.',

@@ -10,7 +10,7 @@
  const ruleTypes=['number','yes-no-na','selection','buttons'];
  const customSelection=step=>step?.type==='buttons'||step?.type==='selection'&&(step.source||'custom')==='custom';
  const canHaveRule=step=>step.type==='number'||step.type==='yes-no-na'||customSelection(step);
- const canHaveCondition=step=>!model.isSection(step);
+ const canHaveCondition=step=>!model.isSection(step)&&step.type!=='checklist';
  // In-store training steps with built-in pass rules (competency at Competent or above, enough supervised attempts,
  // a correct knowledge answer, a timed task at or under target). They can drive show-when rules in training checklists.
  const competencyLevels=[['not-yet','Not yet competent'],['developing','Developing'],['competent','Competent'],['highly-competent','Highly competent']];

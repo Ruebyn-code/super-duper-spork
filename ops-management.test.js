@@ -451,3 +451,25 @@ test('plans for every current and future location cover new locations and need a
  const chosen=await app.api(app.office,'/planners/'+plan.id,'PUT',{...kept.data,allLocations:false,locationIds:[app.first]});assert.equal(chosen.status,200,JSON.stringify(chosen.data));assert.equal(chosen.data.allLocations,undefined);assert.deepEqual(chosen.data.locationIds,[app.first]);
  assert.equal((await app.api(app.office,'/planners/'+plan.id,'PUT',{...chosen.data,allLocations:'yes'})).status,400);
  }finally{await app.close();}});
+
+test('a Checklist step includes another unscheduled checklist, copied into each new run with its own step IDs',async()=>{const app=await fixture();try{
+ const content=(title,steps)=>app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title,steps});
+ const plan=(template,type,kind)=>app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:template.title,active:true,type,locationIds:[app.first],schedule:{kind,startDate:'2026-10-19'}});
+ const clean=app.step('check',{title:'Clean fryer'}),note=app.step('text',{title:'Oil changed?',showWhen:{stepId:clean.id,operator:'checked'}});
+ const inner=(await content('Fryer clean',[clean,note])).data;assert.equal((await plan(inner,'unscheduled','unscheduled')).status,201);
+ const scheduled=(await content('Daily check',[app.step()])).data;assert.equal((await plan(scheduled,'recurring','daily')).status,201);
+ const first=app.step('check',{title:'Open store'}),include={id:crypto.randomUUID(),type:'checklist',title:'Fryer clean',help:'',required:false,checklistId:inner.id};
+ // Only unscheduled checklists can be included, and the step cannot carry its own logic.
+ assert.equal((await content('Bad include',[first,{...include,checklistId:scheduled.id}])).status,400);
+ assert.equal((await content('Bad logic',[first,{...include,showWhen:{stepId:first.id,operator:'checked'}}])).status,400);
+ const outer=(await content('Closing',[first,include])).data;assert.ok(outer.id,JSON.stringify(outer));
+ assert.equal((await app.api(app.office,'/templates/'+outer.id,'PUT',{...outer,contentOnly:true,steps:[first,{...include,id:crypto.randomUUID(),checklistId:outer.id}]})).status,400,'cannot include itself');
+ const outerPlan=(await plan(outer,'on-demand','manual')).data;
+ const run=(await app.start(outer.id,app.first,app.member,{plannerId:outerPlan.id})).data,ids=run.snapshot.steps.map(step=>step.id);
+ assert.deepEqual(run.snapshot.steps.map(step=>step.type),['check','section','check','text']);assert.equal(run.snapshot.steps[1].title,'Fryer clean');assert.equal(run.snapshot.steps[1].id,include.id);
+ assert.equal(new Set(ids).size,4);assert.ok(!ids.includes(clean.id)&&!ids.includes(note.id),'copied steps get their own IDs');assert.equal(run.snapshot.steps[3].showWhen.stepId,ids[2],'show-when rules point at the copies');
+ const saved=await app.api(app.member,'/runs/'+run.id,'PUT',{revision:run.revision,complete:true,answers:{[ids[0]]:true,[ids[2]]:true,[ids[3]]:'Yes'}});assert.equal(saved.status,200,JSON.stringify(saved.data));assert.equal(saved.data.status,'completed');
+ // Later edits to the included checklist reach new runs only.
+ const latest=(await app.api(app.office)).data.templates.find(item=>item.id===inner.id);assert.equal((await app.api(app.office,'/templates/'+inner.id,'PUT',{...latest,contentOnly:true,steps:[clean,note,app.step('check',{title:'Wipe bench'})]})).status,200);
+ const next=(await app.start(outer.id,app.first,app.member,{plannerId:outerPlan.id})).data;assert.equal(next.snapshot.steps.length,5);assert.equal((await app.api(app.member,'/runs/'+run.id)).data.snapshot.steps.length,4);
+ }finally{await app.close();}});

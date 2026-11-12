@@ -892,3 +892,20 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-task-card .ops-quick-complete svg{width:14px;height:14px}
 .ops-task-card .ops-quick-step-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;line-height:1.2}
 @media(pointer:coarse){.ops-task-card .ops-quick-complete{min-height:32px;height:32px}}
+/* The Add step picker never grows past the screen; it scrolls inside instead (phones showed the last options off-screen). */
+.ops-step-picker{max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain}
+/* Checklist steps: the included-checklist chooser sits first in the step options. */
+.ops-embed-help{margin:0;color:var(--theme-muted,#64748b);font-size:.72rem}
+/* Included checklists (Checklist steps) show as one card in the run; their steps open in a popup. */
+.ops-embed-card{cursor:pointer}
+.ops-embed-card .ops-answer-heading{cursor:pointer}
+.ops-embed-open{margin-top:6px;min-height:32px;padding:5px 12px;border:1px solid var(--theme-line,#cbd5e1);border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary,#008cff));font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+.ops-embed-open:hover,.ops-embed-open:focus-visible{background:color-mix(in srgb,var(--primary,#008cff) 10%,var(--theme-surface,#fff))}
+.ops-embed-dialog{width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:0;border:1px solid var(--theme-line,#e2e8f0);border-radius:16px;background:var(--theme-surface,#fff);color:var(--theme-text,#0f172a);box-shadow:0 24px 60px rgba(15,23,42,.25);display:none;flex-direction:column}
+.ops-embed-dialog[open]{display:flex}
+.ops-embed-dialog::backdrop{background:rgba(15,23,42,.45)}
+.ops-embed-dialog-head{flex:none;display:flex;justify-content:flex-start;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--theme-line,#e2e8f0)}
+.ops-embed-dialog-head h2{flex:1;min-width:0;margin:0;font-size:1rem;overflow-wrap:anywhere}
+.ops-embed-done{min-height:34px;padding:6px 16px}
+.ops-embed-dialog-body{flex:1 1 auto;min-height:0;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:10px 12px 14px;display:flex;flex-direction:column;gap:4px}
+@media(max-width:700px){.ops-embed-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}.ops-embed-done{min-height:40px}.ops-embed-open{min-height:40px}}
