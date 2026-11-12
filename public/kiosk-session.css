@@ -40,3 +40,5 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:200px}
 :root[data-theme=dark] .kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout,:root[data-theme=dark].kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{color:#fca5a5}
 @media(forced-colors:active){.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{border-color:ButtonText;color:ButtonText}}
 @media(max-width:720px){.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{width:46px;padding:0;justify-content:center}.kiosk-signout span{display:none}}
+/* Training-only kiosks: the Learning centre is the only destination, so Home links are hidden. */
+.kiosk-training a[href="/home"],.kiosk-training a[href="/"]{display:none!important}

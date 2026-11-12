@@ -157,3 +157,22 @@ test('each company chooses its kiosk auto sign out time; only company-wide kiosk
   list=(await app.request(app.office,'/api/kiosk-devices')).data;assert.equal(list.settings.find(s=>s.companyId===company.companyId).idleMinutes,10);
  }finally{await app.close();}
 });
+
+test('training-only kiosks give staff just the Learning centre, whatever their permission level',async()=>{
+ const app=await fixture();try{
+  const issued=await app.create(['training']);assert.deepEqual(issued.device.features,['training']);
+  const kiosk=await app.pair(issued),opened=await app.request(kiosk,'/api/kiosk/unlock','POST',{pin:'9876'});assert.equal(opened.status,200,JSON.stringify(opened.data));assert.equal(opened.data.url,'/learning-centre');
+  kiosk.session=(await app.request(kiosk,'/api/session')).data;const token={'X-CSRF-Token':kiosk.session.csrf};
+  // The office account is a full admin, but on this kiosk only its training grants remain.
+  assert.ok(kiosk.session.permissions.length>0);assert.ok(kiosk.session.permissions.every(key=>policy.trainingKeys.includes(key)),kiosk.session.permissions.join(','));assert.ok(kiosk.session.permissions.includes('learning.view'));
+  assert.equal((await app.request(kiosk,'/learning-centre')).status,200);const learning=await app.request(kiosk,'/api/learning-centre','GET',undefined,token);assert.equal(learning.status,200,JSON.stringify(learning.data));
+  for(const page of ['/home','/','/sales','/ops-management','/settings'])assert.equal((await app.request(kiosk,page)).redirect,'/learning-centre',page);
+  for(const url of ['/api/accounts','/api/ops-management','/api/prep-labels','/api/rostering/dashboard'])assert.equal((await app.request(kiosk,url,'GET',undefined,token)).status,403,url);
+  assert.equal((await app.request(kiosk,'/kiosk')).redirect,'/learning-centre');
+  // Switching the device back to all app features restores normal access after the next sign-in.
+  const record=(await app.request(app.office,'/api/kiosk-devices')).data.devices.find(d=>d.id===issued.device.id);const saved=await app.request(app.office,'/api/kiosk-devices/'+record.id,'PUT',{name:record.name,locationId:record.locationId,features:['app'],revision:record.revision});assert.equal(saved.status,200,JSON.stringify(saved.data));assert.deepEqual(saved.data.device.features,['app']);
+  assert.equal((await app.request(kiosk,'/api/session')).status,401,'changing the device signs staff out');assert.equal((await app.request(kiosk,'/api/kiosk/unlock','POST',{pin:'9876'})).data.url,'/home');
+  // Older writers that omit features keep the saved choice.
+  const again=(await app.request(app.office,'/api/kiosk-devices')).data.devices.find(d=>d.id===issued.device.id);assert.deepEqual((await app.request(app.office,'/api/kiosk-devices/'+again.id,'PUT',{name:'Renamed',revision:again.revision})).data.device.features,['app']);
+ }finally{await app.close();}
+});
