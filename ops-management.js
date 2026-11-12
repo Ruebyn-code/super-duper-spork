@@ -145,7 +145,8 @@ function normalizePlanner(input){
  const roleIds=input.roleIds??null;if(roleIds!==null&&(!Array.isArray(roleIds)||!roleIds.length||roleIds.length>100||roleIds.some(id=>typeof id!=='string'||!id||id.length>80)||new Set(roleIds).size!==roleIds.length))fail('Choose at least one permission level or allow all permission levels.');
  const priority=input.priority||'normal';if(!['normal','high','urgent'].includes(priority))fail('Choose a valid priority.');
  const frequency=s.frequency??(frequencies.includes(s.kind)?s.kind:'daily');if(!frequencies.includes(frequency))fail('Choose a valid repeat frequency.');
- return{title,templateId:input.templateId,locationIds:[...input.locationIds],active:input.active,...(modern?{type}:{}),schedule:{kind:s.kind,startDate,endDate,weekday,...(anchor?{anchor}:{}),...(modern?{frequency}:{}),...(days?{days:[...days].sort()}: {})},dueTime,startTime,activeFrom,activeUntil,tradingHours,roleIds:roleIds===null?null:[...roleIds],...(dueAfterDays===undefined?{}:{dueAfterDays}),...(hourly&&hourlyDueMinutes!==60?{hourlyDueMinutes}:{}),reminderMinutes,priority,instructions};
+ if(input.allLocations!==undefined&&typeof input.allLocations!=='boolean')fail('Choose whether the planner covers every location.');
+ return{title,templateId:input.templateId,...(input.allLocations?{allLocations:true}:{}),locationIds:[...input.locationIds],active:input.active,...(modern?{type}:{}),schedule:{kind:s.kind,startDate,endDate,weekday,...(anchor?{anchor}:{}),...(modern?{frequency}:{}),...(days?{days:[...days].sort()}: {})},dueTime,startTime,activeFrom,activeUntil,tradingHours,roleIds:roleIds===null?null:[...roleIds],...(dueAfterDays===undefined?{}:{dueAfterDays}),...(hourly&&hourlyDueMinutes!==60?{hourlyDueMinutes}:{}),reminderMinutes,priority,instructions};
 }
 function upgrade(state){
  state.planners||=[];
@@ -166,12 +167,14 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  const stepApplies=(step,locationId,actor)=>(!Array.isArray(step.locationIds)||step.locationIds.includes(locationId))&&(!Array.isArray(step.roleIds)||step.roleIds.includes(actor.role));
  const visibleSteps=(steps,locationId,actor)=>steps.filter(step=>stepApplies(step,locationId,actor));
  const assignments=(state,template)=>[...new Set(state.planners.filter(plan=>!plan.retired&&plan.templateId===template.id&&plan.companyId===template.companyId).flatMap(plan=>plan.locationIds))];
- const editable=(template,actor,stores,state)=>can(actor,'ops.manage')&&company(template,actor)&&assignments(state,template).every(id=>stores.some(item=>item.id===id));
+ const editable=(template,actor,stores,state)=>can(actor,'ops.manage')&&company(template,actor)&&(can(actor,'locations.all')||!state.planners.some(plan=>!plan.retired&&plan.allLocations&&plan.templateId===template.id&&company(plan,actor)))&&assignments(state,template).every(id=>stores.some(item=>item.id===id));
  // Deleted checklists keep their tombstone for history; inactive ones stay editable but create no new work.
  const templateLive=item=>!item?.status||item.status==='active';
  const visibleTemplate=(state,item,actor,stores)=>item.status!=='deleted'&&company(item,actor)&&(can(actor,'ops.manage')&&(!assignments(state,item).length||assignments(state,item).some(id=>stores.some(store=>store.id===id)))||state.planners.some(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&audience(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))));
- const editablePlan=(plan,actor,stores)=>can(actor,'ops.manage')&&company(plan,actor)&&plan.locationIds.every(id=>stores.some(store=>store.id===id));
+ const editablePlan=(plan,actor,stores)=>can(actor,'ops.manage')&&company(plan,actor)&&(!plan.allLocations||can(actor,'locations.all'))&&plan.locationIds.every(id=>stores.some(store=>store.id===id));
  const runPlanner=run=>run.plannerId||run.templateId;
+ // Plans for every current and future location cover each active company location, including ones added later.
+ function spread(state,actor,stores){for(const plan of state.planners)if(plan.allLocations&&company(plan,actor)){const ids=new Set(plan.locationIds);for(const store of stores)ids.add(store.id);plan.locationIds=[...ids];}return state;}
  function findRun(state,actor,stores,id){const run=state.runs.find(item=>item.id===id&&allowed(item,actor,stores,state));if(!run)fail('Checklist record not found.',404);return run;}
  async function selectionOptions(actor,stores,run){
   const options={};let directory;
@@ -198,7 +201,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  const summary=(run,actor)=>{const{answers,snapshot,stepActivity,requestId,actions,notes,...result}=run,steps=actor?visibleSteps(snapshot.steps,run.locationId,actor):snapshot.steps,logic=stepLogic.evaluate(steps,answers,actions||{});return{...result,title:snapshot.title,stepCount:logic.responses.length,answered:logic.answered,failed:logic.fails.length,...(snapshot.scoring?{score:stepLogic.score(steps,answers)}:{})};};
  async function list(actor,params={}){
-  const stores=await access(actor),state=await read(),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const whole=params.whole==='1'||params.whole===true,location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
+  const stores=await access(actor),state=spread(await read(),actor,stores),day=date(params.date||today());if(day>today())fail('Choose today or an earlier date.');const whole=params.whole==='1'||params.whole===true,location=actor.kiosk?actor.locationId:params.location||'all';if(actor.kiosk&&params.location&&params.location!=='all'&&params.location!==actor.locationId)fail('This kiosk is assigned to another location.',403);if(location!=='all'&&!stores.some(item=>item.id===location))fail('Location access required.',403);const query=text(params.q||'',180,'a search',true).toLowerCase(),selected=stores.filter(item=>location==='all'||item.id===location);
   const templates=state.templates.filter(item=>visibleTemplate(state,item,actor,stores)).map(item=>({...item,locationIds:assignments(state,item).filter(id=>stores.some(store=>store.id===id)),locationCount:assignments(state,item).length,plannerCount:state.planners.filter(plan=>!plan.retired&&plan.templateId===item.id&&company(plan,actor)&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).length,canManage:editable(item,actor,stores,state)}));
   const planners=state.planners.filter(plan=>!plan.retired&&company(plan,actor)&&state.templates.find(item=>item.id===plan.templateId)?.status!=='deleted'&&(can(actor,'ops.manage')||audience(plan,actor))&&plan.locationIds.some(id=>stores.some(store=>store.id===id))).map(plan=>({...plan,templateTitle:state.templates.find(item=>item.id===plan.templateId&&company(item,actor))?.title||'',locationCount:plan.locationIds.length,locationIds:plan.locationIds.filter(id=>stores.some(store=>store.id===id)),canManage:editablePlan(plan,actor,stores)&&state.planners.filter(other=>!other.retired&&other.templateId===plan.templateId&&company(other,actor)).every(other=>editablePlan(other,actor,stores))}));
   const tasks=[];let nextChangeAt=plannerModel.deadline(shift(today(),1),'00:00');
@@ -232,7 +235,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  // Read-only run facts for checklist extras (issues, reviews, logs, trends and printing): runs the actor may open,
  // with only the steps (and answers) they can see.
  async function runFacts(actor,{from,to,ids,locationId}={}){
-  const stores=await access(actor),state=await read(),day=run=>run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
+  const stores=await access(actor),state=spread(await read(),actor,stores),day=run=>run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
   return state.runs.filter(run=>allowed(run,actor,stores,state)&&(!ids||ids.includes(run.id))&&(!locationId||run.locationId===locationId)&&(!from||day(run)>=from)&&(!to||day(run)<=to)).map(run=>{
    const steps=visibleSteps(run.snapshot.steps,run.locationId,actor),keep=new Set(steps.map(step=>step.id)),pick=value=>Object.fromEntries(Object.entries(value||{}).filter(([key])=>keep.has(key)));
    return{id:run.id,plannerId:runPlanner(run),templateId:run.templateId||null,title:run.snapshot.title,plannerName:run.plannerName||'',locationId:run.locationId,locationName:stores.find(store=>store.id===run.locationId)?.name||'',workDate:day(run),status:run.status,createdAt:run.createdAt,createdBy:run.createdBy||'',createdById:run.createdById||null,completedAt:run.completedAt||null,completedBy:run.completedBy||'',completedById:run.completedById||null,steps,answers:pick(run.answers),actions:pick(run.actions),notes:Object.fromEntries(Object.entries(pick(run.notes)).map(([key,value])=>[key,noteList(key,value)])),selectionLabels:pick(run.selectionLabels),stepActivity:pick(run.stepActivity),scoring:Boolean(run.snapshot.scoring)};
@@ -253,7 +256,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  async function report(actor,{start,end,locationId}){
   const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
   if(!selected.length||actor.kiosk&&locationId!==actor.locationId)fail('Location access required.',403);
-  date(start);date(end);const state=await read(),rows=[],current=now();
+  date(start);date(end);const state=spread(await read(),actor,stores),rows=[],current=now();
   for(const run of state.runs.filter(run=>run.locationId===locationId&&allowed(run,actor,selected,state))){
    const workDate=run.workDate||plannerModel.local(Date.parse(run.createdAt)).slice(0,10);
    if(workDate<start||workDate>end)continue;
@@ -270,7 +273,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  async function activity(actor,{start,end,locationId}){
   const stores=await access(actor),selected=stores.filter(store=>store.id===locationId);
   if(!selected.length||actor.kiosk&&locationId!==actor.locationId)fail('Location access required.',403);
-  date(start);date(end);const state=await read(),events=[],inside=value=>{const day=plannerModel.local(Date.parse(value)).slice(0,10);return day>=start&&day<=end;};
+  date(start);date(end);const state=spread(await read(),actor,stores),events=[],inside=value=>{const day=plannerModel.local(Date.parse(value)).slice(0,10);return day>=start&&day<=end;};
   for(const run of state.runs.filter(run=>run.locationId===locationId&&allowed(run,actor,selected,state))){
    const title=summary(run).title;
    for(const step of visibleSteps(run.snapshot.steps||[],run.locationId,actor)){if(!stepModel.responseStep(step))continue;const item=run.stepActivity?.[step.id];if(item?.completedAt&&inside(item.completedAt))events.push({at:item.completedAt,userId:item.completedById||null,userName:item.completedBy||'',type:'checklist-step',title:step.title||'Checklist step',detail:title});}
@@ -280,7 +283,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  function templateResult(state,item,actor,stores){const ids=assignments(state,item);return{...item,locationIds:ids.filter(id=>stores.some(store=>store.id===id)),locationCount:ids.length,canManage:editable(item,actor,stores,state)};}
  async function saveTemplate(actor,input,id){
-  need(actor,'ops.manage');const stores=await access(actor);return mutate(async state=>{
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(async state=>{spread(state,actor,stores);
    const previous=id?state.templates.find(item=>item.id===id&&company(item,actor)&&item.status!=='deleted'):null;if(id&&!previous)fail('Checklist not found.',404);
    if(previous&&!editable(previous,actor,stores,state))fail('You need access to every assigned location to edit this checklist.',403);
    if(previous&&input?.revision!==previous.revision)fail('This checklist changed. Reload before saving.',409);
@@ -301,7 +304,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  // Pinned checklists are shared by the whole company: managers pin a plan and it sits at the top of everyone's Checklists page.
  async function setPin(actor,input){
   need(actor,'ops.manage');if(!input||typeof input!=='object'||typeof input.plannerId!=='string'||typeof input.pinned!=='boolean')fail('Choose a checklist to pin or unpin.');const stores=await access(actor);
-  return mutate(state=>{
+  return mutate(state=>{spread(state,actor,stores);
    const plan=state.planners.find(item=>item.id===input.plannerId&&!item.retired&&company(item,actor)&&item.locationIds.some(id=>stores.some(store=>store.id===id)));if(!plan)fail('Checklist not found.',404);
    state.pins=(state.pins||[]).filter(item=>!(item.companyId===actor.companyId&&item.plannerId===plan.id));
    if(input.pinned){if(state.pins.filter(item=>item.companyId===actor.companyId).length>=100)fail('Up to 100 checklists can be pinned.');state.pins.push({companyId:actor.companyId,plannerId:plan.id,pinnedAt:stamp(),pinnedById:actor.id||null,pinnedBy:actor.username||actor.name||''});}
@@ -309,7 +312,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   });
  }
  async function setTemplateStatus(actor,id,input){
-  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{
+  need(actor,'ops.manage');const stores=await access(actor);return mutate(state=>{spread(state,actor,stores);
    const template=state.templates.find(item=>item.id===id&&company(item,actor)&&item.status!=='deleted');if(!template)fail('Checklist not found.',404);
    if(!editable(template,actor,stores,state))fail('You need access to every assigned location to change this checklist.',403);
    if(!input||typeof input!=='object'||!['active','inactive','deleted'].includes(input.status))fail('Choose active, inactive or delete.');
@@ -321,10 +324,11 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   });
  }
  async function savePlanner(actor,input,id){
-  need(actor,'ops.planners');const stores=await access(actor);return mutate(async state=>{
+  need(actor,'ops.planners');const stores=await access(actor);return mutate(async state=>{spread(state,actor,stores);
    const previous=id?state.planners.find(plan=>plan.id===id&&company(plan,actor)):null;if(id&&!previous)fail('Planner not found.',404);if(previous?.retired)fail('This planner was replaced. Open the checklist’s current Plans.',409);
    if(previous&&!editablePlan(previous,actor,stores))fail('You need access to every assigned location to edit this planner.',403);
-   const value=normalizePlanner({...input,...(input?.tradingHours===undefined&&previous?.tradingHours?{tradingHours:previous.tradingHours}:{}),...(input?.hourlyDueMinutes===undefined&&previous?.hourlyDueMinutes&&input?.schedule?.kind==='hourly'?{hourlyDueMinutes:previous.hourlyDueMinutes}:{})}),levels=await levelOptions(actor);if(value.roleIds?.some(id=>!levels.some(role=>role.id===id)&&!previous?.roleIds?.includes(id)))fail('Choose permission levels in this company.',403);const template=state.templates.find(item=>item.id===value.templateId&&visibleTemplate(state,item,actor,stores));if(!template)fail('Checklist not found in this company.',404);
+   const everywhere=input?.allLocations===undefined?previous?.allLocations===true:input.allLocations===true;if(everywhere&&!can(actor,'locations.all')&&!(previous?.allLocations&&input?.allLocations===undefined))fail('You need access to every location to use this checklist at every current and future location.',403);
+   const value=normalizePlanner({...input,...(everywhere?{allLocations:true,locationIds:[...new Set([...(input?.allLocations===undefined&&Array.isArray(input?.locationIds)?input.locationIds:[]),...stores.map(store=>store.id)])]}:typeof input?.allLocations!=="boolean"?{}:{allLocations:false}),...(input?.tradingHours===undefined&&previous?.tradingHours?{tradingHours:previous.tradingHours}:{}),...(input?.hourlyDueMinutes===undefined&&previous?.hourlyDueMinutes&&input?.schedule?.kind==='hourly'?{hourlyDueMinutes:previous.hourlyDueMinutes}:{})}),levels=await levelOptions(actor);if(value.roleIds?.some(id=>!levels.some(role=>role.id===id)&&!previous?.roleIds?.includes(id)))fail('Choose permission levels in this company.',403);const template=state.templates.find(item=>item.id===value.templateId&&visibleTemplate(state,item,actor,stores));if(!template)fail('Checklist not found in this company.',404);
    if(value.locationIds.some(id=>!stores.some(store=>store.id===id)))fail('Choose locations you can access in this company.',403);
    if(previous&&previous.templateId!==value.templateId&&state.runs.some(run=>runPlanner(run)===id))fail('This planner has checklist records. Create a new planner to use another checklist.');
    if(!previous&&!uuid(input.requestId))fail('Invalid request reference.');
@@ -339,12 +343,12 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  async function keepPlanner(actor,id,input){
   need(actor,'ops.planners');if(!uuid(id)||!input||!uuid(input.requestId)||!Array.isArray(input.planners)||!input.planners.length||input.planners.length>100)fail('Reload Plans before choosing the planner to keep.');const selected=input.planners.map(item=>{if(!item||!uuid(item.id)||!Number.isInteger(item.revision)||item.revision<1)fail('Reload Plans before continuing.');return{id:item.id,revision:item.revision};}).sort((a,b)=>a.id.localeCompare(b.id));if(new Set(selected.map(item=>item.id)).size!==selected.length||!selected.some(item=>item.id===id))fail('Choose a valid planner to keep.');const fingerprint=JSON.stringify([id,selected]),stores=await access(actor);
-  return mutate(state=>{const plan=state.planners.find(item=>item.id===id&&company(item,actor)),template=plan&&state.templates.find(item=>item.id===plan.templateId&&company(item,actor));if(!plan||!template)fail('Planner not found.',404);const prior=(state.plannerConsolidations||[]).find(entry=>entry.requestId===input.requestId);if(prior){if(prior.actorId!==actor.id||prior.companyId!==actor.companyId||prior.locationId!==actor.locationId||prior.fingerprint!==fingerprint||plan.retired||plan.revision!==prior.revision||!editablePlan(plan,actor,stores))fail('This planner selection changed. Reload Plans.',409);return{...plan,canManage:true};}
+  return mutate(state=>{spread(state,actor,stores);const plan=state.planners.find(item=>item.id===id&&company(item,actor)),template=plan&&state.templates.find(item=>item.id===plan.templateId&&company(item,actor));if(!plan||!template)fail('Planner not found.',404);const prior=(state.plannerConsolidations||[]).find(entry=>entry.requestId===input.requestId);if(prior){if(prior.actorId!==actor.id||prior.companyId!==actor.companyId||prior.locationId!==actor.locationId||prior.fingerprint!==fingerprint||plan.retired||plan.revision!==prior.revision||!editablePlan(plan,actor,stores))fail('This planner selection changed. Reload Plans.',409);return{...plan,canManage:true};}
    const current=state.planners.filter(item=>!item.retired&&item.templateId===template.id&&company(item,actor));if(plan.retired||!editable(template,actor,stores,state)||current.some(item=>!editablePlan(item,actor,stores)))fail('You need access to every assigned location to choose the checklist’s planner.',403);if(JSON.stringify(current.map(item=>({id:item.id,revision:item.revision})).sort((a,b)=>a.id.localeCompare(b.id)))!==JSON.stringify(selected))fail('These planners changed. Reload Plans before choosing one.',409);
    const at=stamp();for(const item of current)if(item.id!==id)Object.assign(item,{retired:true,active:false,replacementPlannerId:id,retiredAt:at,retiredById:actor.id,retiredBy:actor.username,revision:item.revision+1});plan.schedule={...plan.schedule,endDate:null};plan.revision++;plan.updatedAt=at;plan.updatedBy=actor.username;(state.plannerConsolidations||=[]).push({requestId:input.requestId,actorId:actor.id,companyId:actor.companyId,locationId:actor.locationId,fingerprint,plannerId:id,revision:plan.revision,at});return{...plan,canManage:true};
   });
  }
- async function start(actor,input){need(actor,'ops.complete');if(actor.kiosk&&input.locationId!==actor.locationId)fail('Checklist not found.',404);const stores=await access(actor);return mutate(async state=>{
+ async function start(actor,input){need(actor,'ops.complete');if(actor.kiosk&&input.locationId!==actor.locationId)fail('Checklist not found.',404);const stores=await access(actor);return mutate(async state=>{spread(state,actor,stores);
   const available=state.planners.filter(plan=>!plan.retired&&plan.templateId===input?.templateId&&company(plan,actor)&&plan.locationIds.includes(input.locationId));
   const plan=input?.plannerId?state.planners.find(plan=>plan.id===input.plannerId&&company(plan,actor)):available.find(plan=>plan.legacy)||available.length===1&&available[0];
   const template=plan&&state.templates.find(item=>item.id===plan.templateId&&company(item,actor));
@@ -361,7 +365,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   const due=plannerModel.due(plan,slot,store.tradingHours);
   const run={id:crypto.randomUUID(),requestId:input.requestId,templateId:template.id,templateRevision:template.revision,plannerId:plan.id,plannerRevision:plan.revision,plannerName:plan.title,companyId:actor.companyId,locationId:input.locationId,locationName:stores.find(item=>item.id===input.locationId).name,periodKey:slot.key,workDate:slot.tradingDate||(plan.schedule.kind==='daily'?slot.startDate:day),dueDate:due.dueDate,dueAt:due.dueAt,activeWindow:{opensAt:availability.opensAt,closesAt:availability.closesAt},snapshot:{title:template.title,description:template.description,steps:structuredClone(template.steps),...(template.autoCollapse?{autoCollapse:true}:{}),...(template.scoring?{scoring:true}:{}),schedule:structuredClone(plan.schedule),planner:plannerSnapshot},answers:{},stepActivity:{},status:'draft',revision:1,createdAt:stamp(),createdBy:actor.username,updatedAt:stamp(),updatedBy:actor.username,completedAt:null,completedBy:null};state.runs.push(run);return presentRun(state,actor,stores,run);
  });}
- async function get(actor,id){const stores=await access(actor);const state=await read();return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
+ async function get(actor,id){const stores=await access(actor);const state=spread(await read(),actor,stores);return presentRun(state,actor,stores,findRun(state,actor,stores,id));}
  async function answers(state,run,input,complete,actor,stores){
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!run.snapshot.steps.some(step=>step.id===key&&stepModel.responseStep(step)&&stepApplies(step,run.locationId,actor))))fail('Choose valid checklist answers.');
   const result={},labels={},choices=await selectionOptions(actor,stores,run);
@@ -468,7 +472,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  async function saveRun(actor,id,input){
   need(actor,'ops.complete');const stores=await access(actor);
-  return mutate(async state=>{
+  return mutate(async state=>{spread(state,actor,stores);
    const run=findRun(state,actor,stores,id);
    if(run.status==='completed')fail('Completed checklists cannot be changed.',409);
    if(input?.revision!==run.revision)fail('Someone updated this checklist. Reload before saving.',409);
@@ -481,7 +485,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
  }
  async function upload(actor,id,input){
   need(actor,'ops.complete');const stores=await access(actor);
-  return mutate(async state=>{
+  return mutate(async state=>{spread(state,actor,stores);
    const run=findRun(state,actor,stores,id);
    if(run.status!=='draft')fail('Completed checklists cannot be changed.',409);
    if(typeof input?.name!=='string')fail('Choose a supported file.');
@@ -495,7 +499,7 @@ function createStore(dir,{locations,people=async()=>[],roleLevels=async()=>requi
   });
  }
  async function download(actor,id){
-  const stores=await access(actor),state=await read(),asset=state.assets.find(item=>item.id===id);
+  const stores=await access(actor),state=spread(await read(),actor,stores),asset=state.assets.find(item=>item.id===id);
   if(!asset)fail('File not found.',404);
   const run=findRun(state,actor,stores,asset.runId),assetStep=run.snapshot.steps.find(step=>step.id===asset.stepId);if(assetStep&&!stepApplies(assetStep,run.locationId,actor))fail('File not found.',404);const attached=run.snapshot.steps.some(step=>stepModel.assetIds(step,run.answers[step.id]).includes(id))||Object.values(run.actions||{}).some(action=>action?.photos?.includes(id));
   if(run.status==='completed'&&!attached)fail('File not found.',404);

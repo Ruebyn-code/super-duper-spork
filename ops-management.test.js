@@ -434,3 +434,20 @@ test('pinned checklists are shared by the company and only checklist managers ca
  assert.deepEqual((await app.api(app.outside,'?whole=1')).data.pins,[],'other companies do not');
  assert.deepEqual((await app.api(app.office,'/pins','PUT',{plannerId:plan.id,pinned:false})).data.pins,[]);
 }finally{await app.close();}});
+
+test('plans for every current and future location cover new locations and need all-location access',async()=>{const app=await fixture();try{
+ const template=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Everywhere',steps:[app.step()]})).data;
+ const created=await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),templateId:template.id,title:'Everywhere',active:true,allLocations:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}});assert.equal(created.status,201,JSON.stringify(created.data));assert.equal(created.data.allLocations,true);assert.deepEqual(new Set(created.data.locationIds),new Set([app.first,app.second]));
+ const third=(await app.request(app.office,'/api/locations','POST',{name:'Third store'})).data.id;
+ const plan=(await app.api(app.office)).data.planners.find(item=>item.id===created.data.id);assert.ok(plan.locationIds.includes(third),'a later location joins the plan');assert.equal(plan.canManage,true);
+ assert.equal((await app.start(template.id,third,app.office)).status,201);
+ // Limited managers see the plan for their own location but cannot edit it or create another everywhere plan.
+ const franchiseePlan=(await app.api(app.franchisee)).data.planners.find(item=>item.id===created.data.id);assert.deepEqual(franchiseePlan.locationIds,[app.first]);assert.equal(franchiseePlan.canManage,false);
+ const other=(await app.api(app.franchisee,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Limited',steps:[app.step()]})).data;
+ assert.equal((await app.api(app.franchisee,'/planners','POST',{requestId:crypto.randomUUID(),templateId:other.id,title:'Limited',active:true,allLocations:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).status,403);
+ assert.equal((await app.api(app.franchisee,'/planners','POST',{requestId:crypto.randomUUID(),templateId:other.id,title:'Limited',active:true,locationIds:[app.first],schedule:{kind:'manual',startDate:'2026-10-19'}})).status,201);
+ // Older writers that omit the choice keep it; an explicit false switches back to the chosen locations.
+ const kept=await app.api(app.office,'/planners/'+plan.id,'PUT',{...plan,allLocations:undefined,title:'Renamed'});assert.equal(kept.status,200,JSON.stringify(kept.data));assert.equal(kept.data.allLocations,true);
+ const chosen=await app.api(app.office,'/planners/'+plan.id,'PUT',{...kept.data,allLocations:false,locationIds:[app.first]});assert.equal(chosen.status,200,JSON.stringify(chosen.data));assert.equal(chosen.data.allLocations,undefined);assert.deepEqual(chosen.data.locationIds,[app.first]);
+ assert.equal((await app.api(app.office,'/planners/'+plan.id,'PUT',{...chosen.data,allLocations:'yes'})).status,400);
+ }finally{await app.close();}});
