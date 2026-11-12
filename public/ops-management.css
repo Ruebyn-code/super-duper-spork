@@ -887,3 +887,8 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-plan-location-search{display:block;width:100%;box-sizing:border-box;margin:10px 0 0;min-height:36px;padding:7px 10px;border:1px solid var(--theme-line,#cbd5e1);border-radius:9px;background:var(--theme-surface,#fff);color:var(--theme-text,#0f172a);font:inherit;font-size:.85rem}
 .ops-settings-choices>.ops-location-choice[hidden]{display:none}
 @media(max-width:600px){.ops-plan-location-search{min-height:42px;font-size:16px}}
+/* Compact single-step tick on active cards: a short pill sized to its text (styling only). */
+.ops-task-card .ops-quick-complete{width:auto;max-width:100%;min-height:28px;height:28px;padding:3px 9px 3px 7px;gap:5px;margin:6px 0 0;border-radius:999px;align-self:flex-start}
+.ops-task-card .ops-quick-complete svg{width:14px;height:14px}
+.ops-task-card .ops-quick-step-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;line-height:1.2}
+@media(pointer:coarse){.ops-task-card .ops-quick-complete{min-height:32px;height:32px}}
