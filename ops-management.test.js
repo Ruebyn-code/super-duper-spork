@@ -246,14 +246,15 @@ test('hourly checklists can be due part-way through each hour and keep that choi
  const cleared=await app.api(app.office,'/planners/'+plan.id,'PUT',{...base,revision:kept.data.revision,hourlyDueMinutes:60});assert.equal(cleared.data.hourlyDueMinutes,undefined);
  app.setTime('2026-10-19T02:05Z');task=(await app.api(app.member)).data.tasks[0];assert.equal(task.dueTime,'14:00');
  }finally{await app.close();}});
-test('the whole-day Checklists view lists an hourly checklist’s next hour as upcoming while the current hour is open',async()=>{const app=await fixture();try{
+test('the whole-day Checklists view lists every later hour of an hourly checklist today as upcoming',async()=>{const app=await fixture();try{
  app.setTime('2026-10-19T01:15Z');const content=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Hourly upcoming',steps:[app.step()]})).data;
  const plan=(await app.api(app.office,'/planners','POST',{requestId:crypto.randomUUID(),title:'Every hour',templateId:content.id,locationIds:[app.first],type:'recurring',active:true,roleIds:['user'],schedule:{kind:'hourly',startDate:'2026-10-19'},activeFrom:'12:00',activeUntil:'14:30'})).data;
- const list=async()=>(await app.api(app.member,'?whole=1')).data.tasks.filter(task=>task.plannerId===plan.id);
- let tasks=await list();assert.deepEqual(tasks.map(task=>task.window),['open','upcoming']);assert.equal(tasks[1].activeWindow.opensAt,'2026-10-19T02:00:00.000Z');assert.equal(tasks[1].activeWindow.closesAt,'2026-10-19T03:00:00.000Z');
+ const list=async(date)=>{const r=await app.api(app.member,'?whole=1'+(date?'&date='+date:''));if(!r.data.tasks)throw Error(JSON.stringify(r));return r.data.tasks.filter(task=>task.plannerId===plan.id);};
+ let tasks=await list();assert.deepEqual(tasks.map(task=>task.window),['open','upcoming','upcoming']);assert.deepEqual(tasks.slice(1).map(task=>task.activeWindow.opensAt),['2026-10-19T02:00:00.000Z','2026-10-19T03:00:00.000Z']);assert.equal(tasks[2].activeWindow.closesAt,'2026-10-19T03:30:00.000Z');
  assert.equal((await app.api(app.member)).data.tasks.filter(task=>task.plannerId===plan.id).length,1,'other readers keep only the open hour');
  assert.equal((await app.start(content.id,app.first,app.member,{plannerId:plan.id,periodKey:tasks[1].periodKey})).status,409,'an upcoming hour cannot be started');
- app.setTime('2026-10-19T03:10Z');tasks=await list();assert.deepEqual(tasks.map(task=>task.window),['open'],'no next hour after the last one');
+ app.setTime('2026-10-19T03:10Z');tasks=await list();assert.deepEqual(tasks.map(task=>task.window),['open'],'no later hour after the last one');
+ app.setTime('2026-10-18T23:30Z');tasks=await list();assert.deepEqual(tasks.map(task=>task.window),['upcoming','upcoming','upcoming'],'before the window opens every hour of the day is upcoming');
  }finally{await app.close();}});
 test('legacy Active includes only planned recurrence days and removes completed and unfinished cards at the saved finish time',async()=>{const app=await fixture();try{
  const content=(await app.api(app.office,'/templates','POST',{contentOnly:true,requestId:crypto.randomUUID(),title:'Planned-day checks',steps:[app.step()]})).data;for(const kind of ['weekly','fortnightly','monthly','yearly','once'])assert.equal((await legacyPlanner(app,{requestId:crypto.randomUUID(),title:kind,templateId:content.id,locationIds:[app.first],type:kind==='once'?'once':'recurring',active:true,schedule:{kind,startDate:'2026-10-19',anchor:'start'},activeFrom:'12:00',activeUntil:'15:00'})).status,201);
