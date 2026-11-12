@@ -35,3 +35,11 @@ A paired kiosk (`/kiosk`) shows a sign-in screen for the device's location.
 Each kiosk has a **Kiosk type** in Settings → Kiosk devices (Add kiosk or the device's Settings): **All app features** (the default, `features: ['app']`) or **Training only** (`features: ['training']`). Writers that omit `features` keep the saved type, and changing it bumps the device revision, so anyone signed in is signed out.
 
 On a training-only kiosk, staff still sign in with their own PIN, but their session keeps only their own training grants (`learning.view`, `learning.complete`, `learning.signoff` and `learning.assign`, and only if they already have them); every detailed action outside these is switched off. The restriction is applied in `kiosk-policy.js` and again in `permission-levels` `decorate` (through the session's `kioskTraining` flag), so per-company permission checks can't restore other access. Signing in and `/kiosk` open the Learning centre, any other signed-in app page redirects to it (Help stays available), Home links are hidden (`kiosk-training` on the shell) and `/api/session` reports `kiosk.feature: 'training'`. The idle sign-out, location pinning, PIN rules and required-reading gate work as on other kiosks.
+
+### Training kiosk look
+
+Training kiosks look different so staff can tell them apart (display only, no extra reads or writes):
+
+- **Locked screen** (`kiosk-training-device` in `public/kiosk.js`/`kiosk.css`): a Training station greeting, a "Your training, in one place" panel in place of the What's happening feed, no promotions carousel, the company logo with a Training badge and a "Tap to start training" sign-in bar.
+- **Learning centre** (`kiosk-training-frame`, `public/learning-kiosk.css`/`learning-kiosk.js`, added by the server only inside training kiosks): a welcome banner with the person's first name and location, and large touch tabs (My learning, Course library, In-store training) instead of the left subpage rail.
+- **Header**: the search field is hidden, and the Sign out button shows a live m:ss countdown to the automatic sign out (it resets when staff tap or type, like the normal idle lock).

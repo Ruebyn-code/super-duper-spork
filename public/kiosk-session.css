@@ -42,3 +42,12 @@ html.kiosk-app.navigation-preview{--kiosk-nav-width:200px}
 @media(max-width:720px){.kiosk-app #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{width:46px;padding:0;justify-content:center}.kiosk-signout span{display:none}}
 /* Training-only kiosks: the Learning centre is the only destination, so Home links are hidden. */
 .kiosk-training a[href="/home"],.kiosk-training a[href="/"]{display:none!important}
+/* Training kiosks have no search: only the account button stays in the joined header control. */
+.kiosk-training .app-search-control,.kiosk-training .app-search-toggle,.kiosk-training .app-search-panel{display:none!important}
+.kiosk-training #app-sidebar.top-navigation>.sidebar-scroll>.sidebar-footer.app-search-account,.kiosk-training .mobile-brand-header .account-menu-footer.app-search-account{flex:0 0 auto!important;width:auto!important;min-width:0!important}
+.kiosk-training #app-sidebar.top-navigation .sidebar-footer.app-search-account #toolbar-toggle,.kiosk-training .mobile-brand-header .app-search-account #toolbar-toggle{border-top-left-radius:12px!important;border-bottom-left-radius:12px!important}
+/* Training kiosks show the time left before the automatic sign out inside the Sign out button (display only). */
+.kiosk-signout-timer{display:none}
+.kiosk-training #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout .kiosk-signout-timer:not(:empty){display:inline-block!important;min-width:3.4em;padding:4px 7px;border-radius:999px;background:color-mix(in srgb,#e5484d 12%,var(--theme-surface,#fff));font-variant-numeric:tabular-nums;font-size:13px;text-align:center}
+@media(max-width:720px){.kiosk-training #app-sidebar.top-navigation>.sidebar-scroll>.kiosk-signout{width:auto;padding:0 8px;gap:4px}}
+@media(forced-colors:active){.kiosk-signout-timer{border:1px solid ButtonText}}

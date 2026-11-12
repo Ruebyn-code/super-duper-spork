@@ -243,3 +243,24 @@ button.kiosk-news-item .kiosk-news-meta::after{content:" · Tap to read";opacity
 .kiosk-promo-media.is-empty{padding-bottom:0}
 .kiosk-promo-caption{position:static;flex:1;display:flex;flex-direction:column;justify-content:center;padding:16px 22px 18px;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none)}
 @media (max-width:600px){.kiosk-promo-caption{padding:12px 16px 14px}}
+/* Training-only kiosks: a different sign-in screen (training wording, a training panel instead of company news, a Training badge). */
+.kiosk-training-device .kiosk-hero{background:radial-gradient(120% 80% at 0% 100%,rgba(255,255,255,.16),transparent 55%),repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 14px,transparent 14px 28px),linear-gradient(200deg,color-mix(in srgb,var(--k-primary) 55%,#4f46e5) 0%,color-mix(in srgb,var(--k-primary) 70%,#1e1b4b) 100%)}
+.kiosk-training-device .kiosk-news,.kiosk-training-device #kiosk-promos{display:none!important}
+.kiosk-training-panel{position:relative;margin-top:auto;padding:20px 20px 18px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px)}
+.kiosk-training-icon{display:grid;place-items:center;width:52px;height:52px;margin-bottom:10px;border-radius:16px;background:rgba(255,255,255,.2)}
+.kiosk-training-icon svg{width:30px;height:30px}
+.kiosk-training-panel h2{margin:0 0 10px;font-size:22px;line-height:1.2;color:#fff}
+.kiosk-training-panel ul{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.kiosk-training-panel li{display:grid;gap:2px;padding-left:16px;border-left:3px solid rgba(255,255,255,.55)}
+.kiosk-training-panel li strong{font-size:15px}
+.kiosk-training-panel li span{font-size:13px;opacity:.85}
+.kiosk-training-badge{display:inline-flex;align-items:center;gap:8px;margin:14px auto 0;padding:8px 16px;border-radius:999px;background:color-mix(in srgb,var(--k-primary) 14%,var(--k-surface,#fff));color:var(--k-primary);font-weight:700;font-size:15px;letter-spacing:.02em}
+.kiosk-training-badge svg{width:20px;height:20px}
+.kiosk-training-device .kiosk-sheet[data-expanded=false] .kiosk-sheet-handle{background:linear-gradient(90deg,color-mix(in srgb,#4f46e5 12%,var(--k-surface)),var(--k-surface))}
+@media (max-width:900px){.kiosk-training-panel{flex-basis:100%;margin-top:10px;padding:14px 16px}.kiosk-training-panel ul{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){.kiosk-training-panel ul{grid-template-columns:1fr}.kiosk-training-panel h2{font-size:18px}.kiosk-training-icon{display:none}}
+@media (forced-colors:active){.kiosk-training-panel,.kiosk-training-badge{border:1px solid CanvasText;backdrop-filter:none}}
+@media (prefers-reduced-transparency:reduce){.kiosk-training-panel{backdrop-filter:none;background:rgba(0,0,0,.25)}}
+/* Training kiosks always show the logo and Training badge (promotions are not shown here), over a soft training tint. */
+.kiosk-training-device .kiosk-stage.has-promos .kiosk-idle{display:flex}
+.kiosk-training-device .kiosk-stage{background:radial-gradient(70% 60% at 50% 35%,color-mix(in srgb,#4f46e5 9%,var(--k-surface)),var(--k-surface) 70%)}
