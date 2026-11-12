@@ -342,3 +342,5 @@ The fixed start and end times stay on the step as the fallback (shown as **No tr
 - The frozen section keeps the original rule as `fromTradingHours`; its title becomes the resolved times.
 
 Each store therefore gets its own window, and changing a location's trading hours later never rewrites runs already started. Upcoming previews use the same resolution.
+
+In the builder, the section title field and the phone preview show the actual times the section will have today at the selected store (for example "10:00 am – 9:30 pm"), with the rule and store name in the hover hint, or "(no trading hours today)" when the fallback times apply. The saved step keeps the rule as its title; each store gets its own times when work starts.
