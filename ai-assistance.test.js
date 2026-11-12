@@ -116,3 +116,15 @@ test('ordinary signed-in pages expose only company-safe intelligence branding an
   assert((await(await fetch(app.base+'/fonts/SpaceGrotesk-OFL.txt')).text()).includes('SIL OPEN FONT LICENSE'));assert.equal(app.calls.length,0);
  }finally{await app.close();}
 });
+test('checklist drafts can build from up to three reference photos sent only with that request',async()=>{const app=await fixture();try{
+ await app.settings();const png=size=>{const data=Buffer.alloc(24);Buffer.from([137,80,78,71,13,10,26,10]).copy(data);data.writeUInt32BE(size,16);data.writeUInt32BE(size,20);return{mime:'image/png',data:data.toString('base64')};};
+ const before=await fs.readdir(app.dir);
+ const value=await app.api(app.office,'/api/ai/drafts','POST',draft('checklist',{prompt:'',notes:'',images:[png(120),png(80)]}));assert.equal(value.kind,'checklist');
+ const payload=JSON.parse(app.calls.at(-1).options.body),content=payload.messages[1].content;assert(Array.isArray(content));assert.equal(content.filter(part=>part.type==='image_url').length,2);
+ assert(content[0].text.includes('Build the checklist from the attached reference images.'));assert(payload.messages[0].content.includes('Reference images are attached'));assert.equal(content[1].image_url.url,'data:image/png;base64,'+png(120).data);
+ for(const bad of [[png(100),png(100),png(100),png(100)],[{mime:'image/gif',data:png(10).data}],[png(2500)],[{mime:'image/png',data:'not base64!'}],'photo'])assert.equal((await app.request(app.office,'/api/ai/drafts','POST',draft('checklist',{images:bad}))).status,400,JSON.stringify(bad).slice(0,40));
+ assert.equal((await app.request(app.office,'/api/ai/drafts','POST',draft('course',{images:[png(50)]}))).status,400,'only checklist drafts take photos');
+ assert.equal((await app.request(app.office,'/api/ai/drafts','POST',draft('checklist',{prompt:''}))).status,400,'a prompt or a photo is needed');
+ const settings=JSON.parse(await fs.readFile(path.join(app.dir,'ai-assistance','default.json'),'utf8'));assert(!JSON.stringify(settings).includes(png(120).data),'photos are not stored');
+ const after=await fs.readdir(app.dir);assert.deepEqual(after.filter(name=>!before.includes(name)&&name!=='ai-assistance'),[],'no other files written');
+ }finally{await app.close();}});

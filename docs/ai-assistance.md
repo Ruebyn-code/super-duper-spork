@@ -32,6 +32,14 @@ Tests use a fake provider and isolated data; they do not make paid requests. A r
 
 [Scheduled OpStack intelligence reports](scheduled-ai-reports.md) use the same company model, key, estimated budget and request cap. Their selected reporting topics provide bounded server-calculated aggregate facts; recipients and schedules are managed separately in Reporting → OpStack intelligence reports. Previewing spends an AI request but sends nothing. Only enabled schedules create email and inbox deliveries.
 
+## Checklist reference photos
+
+The checklist builder's **Create checklist with OpStack intelligence** dialog has an optional **Reference photos** box. Add up to three photos (Add photos, or Take photo with the in-app camera), such as an existing paper checklist, a sign, a procedure or the area to check, and the draft is built from them together with any written instructions (the instructions box can be left empty when photos are added).
+
+- Photos are shrunk in the browser to JPEG (up to 1,600 px, under 1.4 MB) and sent only with that Generate request; they are not saved anywhere. The server accepts only `kind: 'checklist'` drafts with up to three JPEG/PNG images under 1.5 MB and 2,000 px per side (the same checks as invoice pages), includes a hash of each image in the request fingerprint so retries stay idempotent, and reserves budget for each image like invoice and hourly-sales reads.
+- OpStack intelligence is told to turn what the photos show into practical steps, keep sensible order/wording, follow the written requirements when they differ, and never copy personal details, signatures or names.
+- Generating still only creates a preview; Open draft in builder creates an ordinary checklist draft through the normal API.
+
 ## Platform search
 
 The shared search bar uses the OpStack intelligence gradient and supports natural-language searches. Type a request, then press the inline **search arrow** or **Enter** without selecting a result. For example, “where can I see who completed training?” can find Training progress reports for users who have the required reporting permissions. Typing still returns ordinary search matches without making a paid request. Use the arrow keys and Enter to open a selected match. On phones, open the search icon beside the account menu.

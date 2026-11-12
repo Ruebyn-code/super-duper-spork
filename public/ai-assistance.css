@@ -59,3 +59,16 @@
 .ai-writing-dialog input,.ai-writing-dialog select{width:100%;min-width:0;margin:0}
 .ai-writing-dialog .ai-draft-preview textarea{min-height:140px}
 @media(max-width:720px){.text-editor-toolbar .ai-writing-button{min-height:40px}.ai-writing-dialog input,.ai-writing-dialog select{font-size:16px}}
+/* Checklist draft reference photos. */
+.ai-photo-box{display:grid;gap:6px;margin:10px 0;padding:10px 12px;border:1px dashed color-mix(in srgb,#4F46E5 35%,var(--theme-line,#e2e8f0));border-radius:12px;background:color-mix(in srgb,#4F46E5 4%,var(--theme-surface,#fff))}
+.ai-photo-box>strong{font-size:.85rem}
+.ai-photo-box>.ai-help{margin:0}
+.ai-photo-list{display:flex;flex-wrap:wrap;gap:8px}
+.ai-photo-list:empty{display:none}
+.ai-photo{position:relative;margin:0;width:86px;height:86px;border-radius:10px;overflow:hidden;border:1px solid var(--theme-line,#e2e8f0);background:var(--theme-surface,#fff)}
+.ai-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ai-photo-remove{position:absolute;top:4px;right:4px;width:24px;height:24px;min-height:24px;padding:0;border:0;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:15px;line-height:1;cursor:pointer}
+.ai-photo-actions{display:flex;flex-wrap:wrap;gap:6px}
+@media(pointer:coarse){.ai-photo-remove{width:32px;height:32px}}
+.ai-draft-dialog .ai-photo .ai-photo-remove{position:absolute;top:4px;right:4px;width:24px;min-width:0;height:24px;min-height:0;padding:0;margin:0;display:grid;place-items:center;border:0;border-radius:999px;background:rgba(15,23,42,.72);box-shadow:none;color:#fff;font-size:14px;line-height:1}
+@media(pointer:coarse){.ai-draft-dialog .ai-photo .ai-photo-remove{width:30px;height:30px}}
