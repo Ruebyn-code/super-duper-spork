@@ -48,14 +48,17 @@
   const used=folds.filter(fold=>fold.members.length);for(const fold of used){bindFold(fold);fold.set?.(!fold.closed);}
   const popups=embeds.filter(item=>item.members.length);for(const item of popups)bindEmbed(item);return[...used,...popups];}
  function bindEmbed(item){const card=item.card,heading=card.querySelector('.ops-answer-heading'),doc=card.ownerDocument,title=card.querySelector('h3')?.textContent||'';if(!heading)return;
-  card.classList.add('ops-embed-card');item.count=el('span',undefined,'ops-section-count');heading.querySelector('h3')?.after(item.count);
+  card.classList.remove('section');card.classList.add('ops-embed-card');item.count=el('span',undefined,'ops-section-count');heading.querySelector('h3')?.after(item.count);
+  // Shown like an ordinary step: a progress bar of the included steps answered so far, then Open checklist.
+  const bar=el('div',undefined,'ops-embed-progress'),fill=el('span',undefined,'ops-embed-progress-fill');bar.setAttribute('role','progressbar');bar.setAttribute('aria-label',title+' progress');bar.setAttribute('aria-valuemin','0');bar.append(fill);
+  const progress=()=>{const [done,total]=(item.count.textContent||'0 / 0').split('/').map(value=>Number(value.trim())||0),percent=total?Math.round(done/total*100):0;fill.style.width=percent+'%';bar.setAttribute('aria-valuemax',String(total));bar.setAttribute('aria-valuenow',String(done));bar.setAttribute('aria-valuetext',done+' of '+total+' steps done');card.classList.toggle('ops-embed-complete',total>0&&done===total);};
   const popup=doc.createElement('dialog'),head=el('div',undefined,'ops-embed-dialog-head'),name=data('h2',title),done=button('Done',()=>popup.close(),'primary ops-embed-done'),body=el('div',undefined,'ops-embed-dialog-body'),count=el('span',undefined,'ops-section-count');popup.className='ops-embed-dialog';popup.setAttribute('aria-label',title);head.append(name,count,done);body.append(...item.members);popup.append(head,body);
   const open=button('Open checklist',()=>{count.textContent=item.count.textContent;popup.showModal();popup.querySelector('.ops-embed-dialog-body input,.ops-embed-dialog-body select,.ops-embed-dialog-body textarea,.ops-embed-dialog-body button')?.focus({preventScroll:true});},'ops-embed-open');
   heading.setAttribute('role','button');heading.tabIndex=0;heading.addEventListener('click',event=>{if(event.target.closest('input,select,textarea,a,button'))return;open.click();});heading.addEventListener('keydown',event=>{if(event.target===heading&&(event.key==='Enter'||event.key===' ')){event.preventDefault();open.click();}});
   // Keep the popup count live and reveal it when a step inside needs attention on completion.
-  new MutationObserver(()=>{count.textContent=item.count.textContent;}).observe(item.count,{childList:true,characterData:true,subtree:true});
+  new MutationObserver(()=>{count.textContent=item.count.textContent;progress();}).observe(item.count,{childList:true,characterData:true,subtree:true});
   popup.addEventListener('invalid',()=>{if(!popup.open)popup.showModal();},true);popup.addEventListener('close',()=>open.focus({preventScroll:true}));
-  card.append(open,popup);}
+  card.append(bar,open,popup);progress();}
  function bindFold(fold){const heading=fold.card.querySelector('.ops-answer-heading');if(!heading)return;fold.count=el('span',undefined,'ops-section-count');heading.querySelector('h3')?.after(fold.count);fold.card.classList.add('ops-section-foldable');
   const set=open=>{fold.card.classList.toggle('ops-answer-collapsed',!open);heading.setAttribute('aria-expanded',String(open));for(const member of fold.members)member.classList.toggle('ops-section-folded',!open);};
   heading.setAttribute('role','button');heading.tabIndex=0;heading.addEventListener('click',event=>{if(event.target.closest('input,select,textarea,a'))return;set(fold.card.classList.contains('ops-answer-collapsed'));});heading.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();set(fold.card.classList.contains('ops-answer-collapsed'));}});fold.set=set;}

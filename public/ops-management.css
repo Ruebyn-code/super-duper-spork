@@ -909,3 +909,14 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-embed-done{min-height:34px;padding:6px 16px}
 .ops-embed-dialog-body{flex:1 1 auto;min-height:0;justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;padding:10px 12px 14px;display:flex;flex-direction:column;gap:4px}
 @media(max-width:700px){.ops-embed-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}.ops-embed-done{min-height:40px}.ops-embed-open{min-height:40px}}
+/* Included checklist cards look like ordinary steps, with a progress bar of their steps. */
+.ops-embed-progress{flex-basis:100%;width:100%;height:6px;margin-top:6px;border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 14%,var(--theme-surface,#fff));overflow:hidden}
+.ops-embed-progress-fill{display:block;height:100%;width:0;border-radius:inherit;background:var(--primary,#008cff);transition:width .25s ease}
+.ops-embed-complete .ops-embed-progress-fill{background:#16a34a}
+.ops-embed-card .ops-embed-open{align-self:flex-start}
+@media(prefers-reduced-motion:reduce){.ops-embed-progress-fill{transition:none}}
+/* The included checklist card points sideways (it opens a popup rather than folding), and its button fits its text. */
+#ops-answers .ops-embed-card>.ops-answer-heading[role=button]::after,.ops-embed-card>.ops-answer-heading[role=button]::after{transform:rotate(-45deg)}
+.ops-answer.ops-embed-card .ops-embed-open{width:auto;flex:none;align-self:flex-start;margin-top:6px}
+#ops-run-dialog .ops-answer.ops-embed-card>.ops-embed-open,.ops-preview-body .ops-answer.ops-embed-card>.ops-embed-open{flex:0 0 auto;flex-basis:auto;width:auto;max-width:100%;align-self:flex-start}
+#ops-run-dialog .ops-answer:not(.section):not(.timed-section):not(.instruction)>.ops-embed-open{flex:0 0 auto;width:auto;max-width:100%;margin-top:6px}
