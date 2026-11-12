@@ -314,3 +314,5 @@ On the Checklists page an hourly checklist shows only its latest hour: as soon a
 ## Negative numbers (freezer temperatures)
 
 Number steps with a format (temperature, decimal, weight…) open the phone's number keypad, which has no minus key. When a step allows negative values (no minimum, or a minimum below zero), a **±** button sits beside the field: tap it before or after typing to make the number negative or positive again. Typing a minus sign that some keyboards insert as a long dash (−, –, —) is also accepted. Pass rules such as "Passes from −25 °C to −15 °C" work as normal.
+
+Card icons can be tapped (or focused and Enter pressed) to show what they mean, such as Daily, In progress or High priority, in a small bubble; tapping an icon never opens the checklist. With **Show upcoming** on, an hourly checklist also shows its next hour as an upcoming card while the current hour is open (unless the active hours end first).

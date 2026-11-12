@@ -875,3 +875,10 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 .ops-number-sign{flex:none;min-width:40px;padding:0 10px;border:1px solid var(--theme-line,#e2e8f0);border-radius:8px;background:var(--theme-surface,#fff);color:var(--theme-text,#182b3a);font-size:1.05rem;font-weight:700;line-height:1;cursor:pointer}
 .ops-number-sign:hover,.ops-number-sign:focus-visible{border-color:var(--primary,#008cff);color:var(--theme-primary-text,var(--primary,#008cff))}
 @media(pointer:coarse){.ops-number-sign{min-width:44px;min-height:44px}}
+/* Card icons are tappable: they sit above the card's open button and show their name in a small bubble. */
+.ops-task-card .ops-chip-icon{position:relative;z-index:2;cursor:pointer}
+.ops-task-card .ops-chip-icon:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:1px}
+.ops-chip-tip{position:fixed;z-index:1000;max-width:220px;padding:5px 9px;border-radius:7px;background:var(--theme-text,#182b3a);color:var(--theme-surface,#fff);font-size:.74rem;font-weight:600;line-height:1.3;box-shadow:0 6px 18px rgba(15,23,42,.22);pointer-events:none}
+.ops-chip-tip[hidden]{display:none}
+@media(pointer:coarse){.ops-task-card .ops-chip-icon{width:30px;height:30px}}
+@media(forced-colors:active){.ops-chip-tip{border:1px solid CanvasText}}
