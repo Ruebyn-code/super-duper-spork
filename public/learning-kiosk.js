@@ -5,7 +5,7 @@
   const main=document.getElementById('learning-main');if(!main||document.getElementById('learning-kiosk-hero'))return;
   const hero=document.createElement('section'),text=document.createElement('div'),eyebrow=document.createElement('p'),title=document.createElement('h2'),lead=document.createElement('p'),icon=document.createElement('span');
   hero.id='learning-kiosk-hero';hero.className='learning-kiosk-hero';hero.setAttribute('aria-label','Training station');
-  eyebrow.className='learning-kiosk-eyebrow';eyebrow.textContent='Training station';title.dataset.userText='';title.textContent='Welcome';lead.textContent='Choose a course below, or open In-store training for your practical sessions.';
+  eyebrow.className='learning-kiosk-eyebrow';eyebrow.textContent='Training station';title.dataset.userText='';title.textContent='Welcome';lead.textContent='Choose a course below, or open In-store training for your practical training.';
   icon.className='learning-kiosk-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m2 9 10-5 10 5-10 5Z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 9v6"/></svg>';
   text.append(eyebrow,title,lead);hero.append(text,icon);
   // The banner sits above the tab row once the shared subpage layout exists (it is built after load).
