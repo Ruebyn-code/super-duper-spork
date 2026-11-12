@@ -198,3 +198,11 @@
 :root[data-theme=dark] #learning-main .instore-attempt.passed .instore-attempt-copy>span{color:#86efac}
 @media(prefers-reduced-motion:reduce){#learning-main .instore-attempt-new{animation:none}}
 @media(forced-colors:active){#learning-main .instore-attempt-number{background:CanvasText;color:Canvas}}
+/* Open in-store sessions fill the screen on tablets and phones (styling only). */
+#learning-main .instore-dialog.instore-session-full{inset:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;display:flex;flex-direction:column}
+#learning-main .instore-dialog.instore-session-full[open]{display:flex}
+#learning-main .instore-dialog.instore-session-full>.instore-dialog-heading{flex:none;padding-top:max(12px,env(safe-area-inset-top))}
+#learning-main .instore-dialog.instore-session-full>.instore-dialog-body{flex:1 1 auto;min-height:0;overflow:auto}
+#learning-main .instore-dialog.instore-session-full>.instore-dialog-actions{flex:none;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+#learning-main .instore-dialog.instore-session-full::backdrop{background:var(--theme-surface,#fff)}
+.instore-session-fullscreen .subpages-sidebar,.instore-session-fullscreen .phone-subpage-navigation{display:none}

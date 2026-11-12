@@ -66,7 +66,7 @@
   positionClockDock();
   root.classList.toggle('shell-conversation-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('comms-conversation-open')));
   root.classList.toggle('shell-checklist-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('ops-checklist-fullscreen')));
-  root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')));
+  root.classList.toggle('shell-course-fullscreen',Boolean(current?.contentDocument?.body.classList.contains('learning-course-fullscreen')||current?.contentDocument?.body.classList.contains('instore-session-fullscreen')));
   // The camera takes over the whole screen: hide the shell's bars while it is open in the page or the phone roster.
   root.classList.toggle('shell-camera-fullscreen',[current,rosterPopup].some(frame=>frame?.contentDocument?.body?.classList.contains('camera-capture-fullscreen')));
   // The phone roster is a page reader. Its sheet covers only the content
