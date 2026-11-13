@@ -122,6 +122,36 @@ test('messages support replies, mentions, polls, edits, deletes, mute, archive, 
  }finally{await app.close();}
 });
 
+test('poll types: sign-up spots, event RSVP, ratings, one-try quizzes, short answers and numbers',async()=>{const app=await fixture();try{
+  const group=(await app.comm(app.alice,'threads','POST',{kind:'group',name:'Shift team',members:[app.bobRecord.id]})).data;const make=async poll=>app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:poll.question,poll});const vote=(who,m,body)=>app.comm(who,'threads/'+group.id+'/messages/'+m.id+'/poll','PUT',body);
+  assert.equal((await make({kind:'nonsense',question:'x',options:['a','b']})).status,400);
+  // Sign-up: spots fill up; a full slot rejects newcomers but keeps the people already in it.
+  const signup=(await make({kind:'signup',question:'Cover Saturday',options:[{text:'Open',spots:1},{text:'Close'}]})).data;assert.equal(signup.poll.kind,'signup');assert.equal(signup.poll.options[0].spots,1);
+  assert.equal((await vote(app.alice,signup,{optionIds:[signup.poll.options[0].id]})).data.poll.options[0].full,true);
+  assert.equal((await vote(app.bob,signup,{optionIds:[signup.poll.options[0].id]})).status,400);
+  assert.equal((await vote(app.alice,signup,{optionIds:[signup.poll.options[0].id]})).status,200);
+  assert.equal((await make({kind:'signup',question:'x',options:[{text:'a',spots:0}]})).status,400);
+  // Event RSVP: fixed answers and an event time.
+  assert.equal((await make({kind:'rsvp',question:'Team dinner',options:[]})).status,400);
+  const rsvp=(await make({kind:'rsvp',question:'Team dinner',event:{at:'2026-10-20T08:00:00.000Z',place:'Back room'}})).data;assert.deepEqual(rsvp.poll.options.map(o=>o.text),['Going','Maybe','Can’t go']);assert.equal(rsvp.poll.event.place,'Back room');
+  // Rating: 1–5 or 1–10 with an average.
+  assert.equal((await make({kind:'rating',question:'x',scale:7})).status,400);
+  const rating=(await make({kind:'rating',question:'How busy was lunch?',scale:5})).data;await vote(app.alice,rating,{optionIds:[rating.poll.options[3].id]});const rated=(await vote(app.bob,rating,{optionIds:[rating.poll.options[1].id]})).data;assert.equal(rated.poll.average,3);assert.equal(rated.poll.scale,5);
+  // Quiz: the answer stays hidden until you answer; one try only.
+  assert.equal((await make({kind:'quiz',question:'Cool room temperature?',options:['5°C or below','10°C']})).status,400);
+  const quiz=(await make({kind:'quiz',question:'Cool room temperature?',options:['5°C or below','10°C'],correct:0})).data;assert.equal(quiz.poll.revealed,true);
+  const unseen=(await app.comm(app.bob,'threads/'+group.id+'/messages')).data.messages.find(m=>m.id===quiz.id).poll;assert.equal(unseen.revealed,undefined);assert.ok(unseen.options.every(o=>o.correct===undefined));
+  const answered=(await vote(app.bob,quiz,{optionIds:[quiz.poll.options[1].id]})).data.poll;assert.equal(answered.revealed,true);assert.equal(answered.correctCount,0);assert.equal(answered.options[0].correct,true);
+  assert.equal((await vote(app.bob,quiz,{optionIds:[quiz.poll.options[0].id]})).status,400);
+  // Short answer and number: typed replies listed with names; numbers validate bounds and average.
+  const reply=(await make({kind:'question',question:'Any ideas for the special?'})).data;assert.equal((await vote(app.bob,reply,{text:'  '})).status,400);const replied=(await vote(app.bob,reply,{text:'Lamb wrap'})).data.poll;assert.equal(replied.total,1);assert.equal(replied.answers[0].text,'Lamb wrap');assert.equal(replied.mine,'Lamb wrap');assert.equal((await vote(app.bob,reply,{clear:true})).data.poll.total,0);
+  const number=(await make({kind:'number',question:'Trays for Friday?',min:0,max:50,unit:'trays'})).data;assert.equal((await vote(app.bob,number,{value:60})).status,400);await vote(app.bob,number,{value:10});const counted=(await vote(app.alice,number,{value:15})).data.poll;assert.equal(counted.average,12.5);assert.equal(counted.lowest,10);assert.equal(counted.highest,15);assert.equal(counted.unit,'trays');
+  assert.equal((await make({kind:'number',question:'x',min:5,max:5})).status,400);
+  // Ending works for every type.
+  await app.comm(app.alice,'threads/'+group.id+'/messages/'+reply.id+'/poll/close','POST',{});assert.equal((await vote(app.bob,reply,{text:'late'})).status,400);
+  // Posts take the same types.
+  const event=(await app.post({title:'Staff party',poll:{kind:'rsvp',question:'Staff party',event:{at:'2026-12-20T08:00:00.000Z'}}})).data;assert.equal(event.poll.kind,'rsvp');
+ }finally{await app.close();}});
 test('posts support scheduling, polls, comments, read reminders and on-shift audiences',async()=>{
  const app=await fixture();try{
   // Scheduled posts stay with the author until their time.
