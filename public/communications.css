@@ -206,3 +206,24 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 .poll-builder-event label,.poll-builder-number label{flex:1 1 140px}
 @media (pointer:coarse){.poll-builder-type{padding:10px}.poll-answer-form input{min-height:44px}}
 @media (forced-colors:active){.poll-builder-type.is-selected{background:Highlight;color:HighlightText}.poll-option.is-correct,.poll-option.is-wrong{border-color:Highlight}}
+/* Compact header: no main Comms heading; the view title is the page heading and create actions float. */
+.communications-page{padding-top:12px}
+.communications-heading{display:contents}
+.communications-heading>div:first-child{display:none}
+.communications-page .communication-view-heading{margin:0 0 8px}
+.communications-page .communication-view-heading h2{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:18px;line-height:1.25}
+.communications-actions{position:fixed;right:max(22px,env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));z-index:46;display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin:0;pointer-events:none}
+.communications-actions>button{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px 0 16px;border:0;border-radius:999px;background:var(--brand-sheen,none) var(--primary);color:#fff;font-weight:700;box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 32%,transparent);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+.communications-actions>button::before{content:'+';font-size:22px;font-weight:600;line-height:1}
+.communications-actions>button:hover{transform:translateY(-2px);box-shadow:0 12px 30px color-mix(in srgb,var(--primary) 38%,transparent)}
+.communications-actions>button:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 45%,white);outline-offset:3px}
+.communications-actions>button[hidden]{display:none}
+.conversation-directory:has(.communications-actions.in-directory){display:flex;flex-direction:column}
+.conversation-directory:has(.communications-actions.in-directory)>*{flex-shrink:0}
+.communications-actions.in-directory{position:sticky;right:auto;bottom:4px;align-self:flex-end;margin-top:auto;padding-top:10px}
+.comms-conversation-open .communications-actions{display:none!important}
+@media(max-width:720px){.communications-page{padding-top:8px}.communications-actions:not(.in-directory){right:max(14px,env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.communications-actions>button{transition:none}.communications-actions>button:hover{transform:none}}
+@media(forced-colors:active){.communications-actions>button{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
+.communications-page{padding-bottom:96px}
+@media(max-width:720px){.communications-actions>button{min-height:44px;padding:0 16px 0 13px;font-size:14px}.communications-actions>button::before{font-size:20px}}
