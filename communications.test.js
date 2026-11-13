@@ -33,7 +33,7 @@ test('conversation pins are personal, persistent, idempotent and limited to acce
  for(let i=0;i<2;i++){const result=await app.comm(app.alice,'threads/'+direct.id+'/pin','PUT',{pinned:true,userId:app.bobRecord.id});assert.equal(result.status,200);assert.equal(result.data.pinned,true);}
  assert.equal((await app.comm(app.alice,'threads')).data.threads[0].id,direct.id);assert.ok((await app.comm(app.bob,'threads')).data.threads.every(thread=>!thread.pinned));assert.equal((await app.comm(app.alice,'unread')).data.unread,1);
  assert.equal((await app.comm(app.office,'threads/'+direct.id+'/pin','PUT',{pinned:true})).status,404);assert.equal((await app.comm(app.outside,'threads/'+group.id+'/pin','PUT',{pinned:true})).status,404);assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/pin','PUT',{pinned:'yes'})).status,400);assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/pin','PUT',null)).status,400);assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/pin','PUT',{pinned:false},{'X-CSRF-Token':''})).status,403);
- await app.comm(app.alice,'threads/'+group.id+'/pin','PUT',{pinned:true});await app.restart();const alice=await app.login('Alice'),bob=await app.login('Bob');assert.ok((await app.comm(alice,'threads')).data.threads.every(thread=>thread.pinned));assert.ok((await app.comm(bob,'threads')).data.threads.every(thread=>!thread.pinned));await app.comm(alice,'threads/'+direct.id+'/pin','PUT',{pinned:false});assert.equal((await app.comm(alice,'threads')).data.threads.find(thread=>thread.id===direct.id).pinned,false);
+ await app.comm(app.alice,'threads/'+group.id+'/pin','PUT',{pinned:true});await app.restart();const alice=await app.login('Alice'),bob=await app.login('Bob');assert.ok((await app.comm(alice,'threads')).data.threads.filter(thread=>thread.kind!=='location').every(thread=>thread.pinned));assert.ok((await app.comm(bob,'threads')).data.threads.every(thread=>!thread.pinned));await app.comm(alice,'threads/'+direct.id+'/pin','PUT',{pinned:false});assert.equal((await app.comm(alice,'threads')).data.threads.find(thread=>thread.id===direct.id).pinned,false);
  }finally{await app.close();}});
 
 test('emoji reactions on posts, conversations and messages count each user once, persist and keep private content private',async()=>{const app=await fixture();try{
@@ -50,7 +50,7 @@ test('emoji reactions on posts, conversations and messages count each user once,
 test('reaction deltas update already loaded older messages, include removals and never change required-reading revisions',async()=>{const app=await fixture();try{
  const thread=(await app.comm(app.alice,'threads','POST',{kind:'direct',members:[app.bobRecord.id]})).data,first=(await app.comm(app.alice,'threads/'+thread.id+'/messages','POST',{body:'Old message'})).data,url='threads/'+thread.id+'/messages/'+first.id+'/reactions';
  for(let i=0;i<51;i++)await app.comm(app.alice,'threads/'+thread.id+'/messages','POST',{body:'Later '+i});let loaded=(await app.comm(app.bob,'threads/'+thread.id+'/messages')).data;assert.equal(loaded.messages.length,50);assert.equal(loaded.reactionRevision,0);await app.comm(app.alice,url,'PUT',{emoji:'✅',active:true});loaded=(await app.comm(app.bob,'threads/'+thread.id+'/messages?after=52&reactionsSince=0')).data;assert.equal(loaded.messages.length,0);assert.deepEqual(loaded.reactionUpdates.map(update=>update.id),[first.id]);assert.equal(loaded.reactionUpdates[0].reactions[0].count,1);const revision=loaded.reactionRevision;
- await app.comm(app.alice,url,'PUT',{emoji:'✅',active:false});loaded=(await app.comm(app.bob,'threads/'+thread.id+'/messages?after=52&reactionsSince='+revision)).data;assert.deepEqual(loaded.reactionUpdates,[{id:first.id,reactions:[]}]);assert.equal((await app.comm(app.bob,'threads/'+thread.id+'/messages?reactionsSince=-1')).status,400);
+ await app.comm(app.alice,url,'PUT',{emoji:'✅',active:false});loaded=(await app.comm(app.bob,'threads/'+thread.id+'/messages?after=52&reactionsSince='+revision)).data;assert.deepEqual(loaded.reactionUpdates.map(({id,reactions})=>({id,reactions})),[{id:first.id,reactions:[]}]);assert.equal(loaded.reactionUpdates[0].message.id,first.id);assert.equal((await app.comm(app.bob,'threads/'+thread.id+'/messages?reactionsSince=-1')).status,400);
  const post=(await app.post({requireRead:true})).data;await app.comm(app.alice,'posts/'+post.id+'/read','POST',{revision:1});await app.comm(app.alice,'posts/'+post.id+'/reactions','PUT',{emoji:'✅',active:true});assert.equal((await app.comm(app.alice,'required')).data.due.length,0);assert.equal((await app.comm(app.office,'posts')).data.posts[0].revision,1);
  const catalogue=(await app.request(app.office,'/api/permission-levels')).data,roles=(await app.request(app.office,'/api/permission-levels','POST',{name:'Comms reader',scope:'company',level:5,permissions:['home.view','comms.view'],revision:catalogue.revision})).data,role=roles.levels.find(role=>role.name==='Comms reader');await app.request(app.office,'/api/accounts/'+app.aliceRecord.id,'PUT',{username:'Alice',role:role.id,companyId:'default',locationId:app.alice.session.locationId});const alice=await app.login('Alice');assert.equal((await app.comm(alice,url,'PUT',{emoji:'👍',active:true})).status,403);assert.equal((await app.comm(alice,'posts/'+post.id+'/reactions','PUT',{emoji:'👍',active:true})).status,200);assert.equal((await app.comm(alice,'threads/'+thread.id+'/pin','PUT',{pinned:true})).status,200);
  }finally{await app.close();}});
@@ -66,3 +66,100 @@ test('media uploads validate formats and permissions; required posts can display
  const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZKsAAAAASUVORK5CYII=','base64');assert.equal((await app.comm(app.alice,'media','POST',{name:'fake.png',data:Buffer.from('<script>bad()</script>').toString('base64')})).status,400);for(const name of ['bad.html','bad.svg','bad.exe'])assert.equal((await app.comm(app.alice,'media','POST',{name,data:png.toString('base64')})).status,400);assert.equal((await app.comm(app.alice,'media','POST',{name:'photo.png',data:png.toString('base64')},{'X-CSRF-Token':''})).status,403);
  const image=(await app.comm(app.office,'media','POST',{name:'photo.png',data:png.toString('base64')})).data,richText={version:1,blocks:[{type:'heading',level:1,spans:[{text:'New process'}]},{type:'image',assets:[{id:image.id,name:image.name,mime:image.mime}],spans:[{text:'Read this photo'}]},{type:'callout',variant:'info',spans:[{text:'Remember the process'}]},{type:'accordion',title:'More details',spans:[{text:'Check with the team.'}]}]},post=(await app.post({richText,requireRead:true,scope:'network'})).data;assert.equal((await app.comm(app.outside,'media/'+image.id)).status,200);assert.equal((await app.request(app.outside,'/api/menu')).status,428);assert.deepEqual((await app.comm(app.alice,'required')).data.due[0].richText,richText);await app.comm(app.alice,'posts/'+post.id+'/read','POST',{revision:1});const catalogue=(await app.request(app.office,'/api/permission-levels')).data,roles=(await app.request(app.office,'/api/permission-levels','POST',{name:'Media reader',scope:'company',level:5,permissions:['home.view','comms.view'],revision:catalogue.revision})).data,role=roles.levels.find(role=>role.name==='Media reader');await app.request(app.office,'/api/accounts/'+app.aliceRecord.id,'PUT',{username:'Alice',role:role.id,companyId:'default',locationId:app.alice.session.locationId});const alice=await app.login('Alice');assert.equal((await app.comm(alice,'media','POST',{name:'photo.png',data:png.toString('base64')})).status,403);assert.equal((await app.comm(alice,'media/'+image.id)).status,200);const latest=(await app.request(app.office,'/api/permission-levels')).data,noCommsRoles=(await app.request(app.office,'/api/permission-levels','POST',{name:'Required post reader',scope:'company',level:5,permissions:['home.view'],revision:latest.revision})).data,noComms=noCommsRoles.levels.find(role=>role.name==='Required post reader');await app.request(app.office,'/api/accounts/'+app.bobRecord.id,'PUT',{username:'Bob',role:noComms.id,companyId:'default',locationId:app.bob.session.locationId});const bob=await app.login('Bob');assert.equal((await app.comm(bob,'required')).data.due.length,1);assert.equal((await app.comm(bob,'media/'+image.id)).status,200);assert.equal((await app.request(bob,'/api/menu')).status,428);await app.comm(bob,'posts/'+post.id+'/read','POST',{revision:1});assert.equal((await app.comm(bob,'posts')).status,403);
  }finally{await app.close();}});
+
+test('messages support replies, mentions, polls, edits, deletes, mute, archive, typing and seen-by',async()=>{
+ const app=await fixture();try{
+  const group=(await app.comm(app.alice,'threads','POST',{kind:'group',name:'Kitchen',members:[app.bobRecord.id]})).data;
+  const first=(await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Who can cover Friday?'})).data;
+  // Replies quote the original; mentions must be conversation members.
+  const reply=(await app.comm(app.bob,'threads/'+group.id+'/messages','POST',{body:'@Alice I can',replyTo:first.id,mentions:[app.aliceRecord.id]})).data;
+  assert.equal(reply.reply.id,first.id);assert.equal(reply.reply.authorName,'Alice');assert.equal(reply.reply.body,'Who can cover Friday?');
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages','POST',{body:'hi',mentions:[app.outsideRecord.id]})).status,400);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages','POST',{body:'x',replyTo:crypto.randomUUID()})).status,400);
+  let view=(await app.comm(app.alice,'threads/'+group.id+'/messages')).data;assert.equal(view.messages.find(m=>m.id===reply.id).mentioned,true);assert.equal(view.messages.find(m=>m.id===reply.id).requestId,undefined);
+  // Seen-by follows reads; typing is short-lived and only shown to others.
+  await app.comm(app.bob,'threads/'+group.id+'/read','POST',{through:reply.sequence});
+  assert.deepEqual((await app.comm(app.alice,'threads/'+group.id+'/messages')).data.seenBy,['Bob']);
+  await app.comm(app.bob,'threads/'+group.id+'/typing','POST',{});
+  assert.deepEqual((await app.comm(app.alice,'threads/'+group.id+'/messages')).data.typing,['Bob']);assert.deepEqual((await app.comm(app.bob,'threads/'+group.id+'/messages')).data.typing,[]);
+  app.advance(7000);assert.deepEqual((await app.comm(app.alice,'threads/'+group.id+'/messages')).data.typing,[]);
+  // Only the author edits; edits are visible through reaction deltas and keep history private.
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/messages/'+reply.id,'PUT',{body:'changed'})).status,403);
+  const since=view.reactionRevision;const edited=(await app.comm(app.bob,'threads/'+group.id+'/messages/'+reply.id,'PUT',{body:'@Alice I can do Friday'})).data;
+  assert.equal(edited.body,'@Alice I can do Friday');assert.ok(edited.editedAt);assert.equal(edited.history,undefined);
+  const delta=(await app.comm(app.alice,'threads/'+group.id+'/messages?after='+reply.sequence+'&reactionsSince='+since)).data;assert.equal(delta.reactionUpdates.find(u=>u.id===reply.id).message.body,'@Alice I can do Friday');
+  // Delete: Bob can't delete Alice's message; Alice (group owner) can delete Bob's.
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+first.id,'DELETE')).status,403);
+  const gone=(await app.comm(app.alice,'threads/'+group.id+'/messages/'+reply.id,'DELETE')).data;assert.equal(gone.deleted,true);assert.equal(gone.body,'');
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/messages')).data.messages.find(m=>m.id===first.id).canDelete,true);
+  // Polls in group chats: one vote each unless multiple.
+  const poll=(await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Team dinner?',poll:{question:'Which night?',options:['Monday','Tuesday']}})).data;
+  assert.equal(poll.poll.options.length,2);const voted=(await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll','PUT',{optionIds:[poll.poll.options[1].id]})).data;assert.equal(voted.poll.options[1].count,1);assert.equal(voted.poll.options[1].voted,true);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll','PUT',{optionIds:poll.poll.options.map(o=>o.id)})).status,400);
+  // Mute: only mentions count as unread; archive hides until a new message arrives.
+  await app.comm(app.bob,'threads/'+group.id+'/read','POST',{through:poll.sequence});
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/settings','PUT',{muted:true})).data.muted,true);
+  await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'General chatter'});
+  assert.equal((await app.comm(app.bob,'unread')).data.unread,0);
+  await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'@everyone meeting',mentionAll:true});
+  assert.equal((await app.comm(app.bob,'unread')).data.unread,1);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/settings','PUT',{archived:true})).data.archived,true);
+  app.advance(1000);await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Back again'});
+  assert.equal((await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===group.id).archived,false);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/settings','PUT',{pinned:true})).status,400);
+  // Direct messages: no @everyone or polls.
+  const direct=(await app.comm(app.alice,'threads','POST',{kind:'direct',members:[app.bobRecord.id]})).data;
+  assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/messages','POST',{body:'hi',mentionAll:true})).status,400);
+  assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/messages','POST',{body:'hi',poll:{question:'q',options:['a','b']}})).status,400);
+  assert.equal((await app.comm(app.outside,'threads/'+group.id+'/typing','POST',{})).status,404);
+ }finally{await app.close();}
+});
+
+test('posts support scheduling, polls, comments, read reminders and on-shift audiences',async()=>{
+ const app=await fixture();try{
+  // Scheduled posts stay with the author until their time.
+  const later=new Date(Date.parse('2026-10-15T12:00:00Z')+3600000).toISOString();
+  const scheduled=(await app.post({title:'Monday specials',publishAt:later})).data;assert.equal(scheduled.scheduled,true);
+  assert.ok(!(await app.comm(app.alice,'posts')).data.posts.some(p=>p.id===scheduled.id));assert.ok((await app.comm(app.office,'posts')).data.posts.some(p=>p.id===scheduled.id));
+  assert.equal((await app.post({title:'Past',publishAt:'2026-01-01T00:00:00Z'})).status,400);
+  app.advance(3600001);assert.ok((await app.comm(app.alice,'posts')).data.posts.some(p=>p.id===scheduled.id));
+  // Polls on posts; options are fixed once people vote.
+  const pollPost=(await app.post({title:'Meeting day',poll:{question:'Which day?',options:['Mon','Wed','Fri'],multiple:true}})).data;
+  const ids=pollPost.poll.options.map(o=>o.id);const voted=(await app.comm(app.alice,'posts/'+pollPost.id+'/poll','PUT',{optionIds:[ids[0],ids[2]]})).data;assert.deepEqual(voted.poll.options.map(o=>o.count),[1,0,1]);assert.equal(voted.poll.total,1);
+  assert.equal((await app.comm(app.office,'posts/'+pollPost.id,'PUT',{title:'Meeting day',body:'x',requireRead:false,revision:pollPost.revision,poll:{question:'Other',options:['A','B']}})).status,400);
+  // Comments: anyone who can chat; authors, the post author and managers remove them.
+  const commented=(await app.comm(app.alice,'posts/'+pollPost.id+'/comments','POST',{body:'Wednesday suits me'})).data;assert.equal(commented.commentCount,1);const commentId=commented.comments[0].id;
+  assert.equal((await app.comm(app.bob,'posts/'+pollPost.id+'/comments/'+commentId,'DELETE')).status,403);
+  assert.equal((await app.comm(app.office,'posts/'+pollPost.id+'/comments/'+commentId,'DELETE')).data.commentCount,0);
+  assert.equal((await app.comm(app.outside,'posts/'+pollPost.id+'/comments','POST',{body:'hi'})).status,404);
+  // Reminders for required posts: author only, unread readers are re-notified, once an hour.
+  const required=(await app.post({title:'New safety rule',requireRead:true})).data;
+  await app.comm(app.alice,'posts/'+required.id+'/snooze','POST',{revision:required.revision});
+  assert.equal((await app.comm(app.alice,'posts/'+required.id+'/remind','POST',{revision:required.revision})).status,403);
+  const reminded=(await app.comm(app.office,'posts/'+required.id+'/remind','POST',{revision:required.revision})).data;assert.ok(reminded.reminded>=2);
+  assert.ok((await app.comm(app.alice,'required')).data.due.some(p=>p.id===required.id),'a reminder clears the snooze');
+  assert.equal((await app.comm(app.office,'posts/'+required.id+'/remind','POST',{revision:required.revision})).status,400);
+  for(const actor of [app.alice,app.bob])await app.comm(actor,'posts/'+required.id+'/read','POST',{revision:required.revision});
+  // On-shift audience: frozen to people on a published shift right now at the author's location.
+  assert.equal((await app.post({title:'Urgent',audience:{kind:'on-shift'}})).status,400);
+  const locationId=app.office.session.locationId,companyId=app.office.session.companyId;
+  await fs.writeFile(path.join(app.dir,'rostering.json'),JSON.stringify({weeks:[{locationId,companyId,weekStart:'2026-10-12',publishedAt:'2026-10-10T00:00:00Z',published:[{userId:app.bobRecord.id,date:'2026-10-15',start:'22:00',end:'02:00'}]}],availability:[],rates:[],rateRevisions:[],budgets:[],entries:[]}));
+  const urgent=(await app.post({title:'Urgent: freezer down',audience:{kind:'on-shift'}})).data;assert.equal(urgent.audience.count,1);
+  assert.ok((await app.comm(app.bob,'posts')).data.posts.some(p=>p.id===urgent.id));assert.ok(!(await app.comm(app.alice,'posts')).data.posts.some(p=>p.id===urgent.id));
+ }finally{await app.close();}
+});
+
+test('every active location has an automatic store group that follows location access',async()=>{
+ const app=await fixture();try{
+  const groups=(await app.comm(app.alice,'threads')).data.threads.filter(t=>t.kind==='location');assert.equal(groups.length,1);const group=groups[0];
+  assert.ok(group.members.some(m=>m.id===app.bobRecord.id));assert.ok(!group.members.some(m=>m.id===app.outsideRecord.id));
+  assert.ok(!(await app.comm(app.outside,'threads')).data.threads.some(t=>t.id===group.id));
+  assert.equal((await app.comm(app.outside,'threads/'+group.id+'/messages')).status,404);
+  // Reading never creates it; the first message saves it and others see it.
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/messages')).data.messages.length,0);
+  const sent=(await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Delivery is late today',mentionAll:true})).data;assert.equal(sent.body,'Delivery is late today');
+  assert.equal((await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===group.id).unread,1);
+  assert.ok((await app.comm(app.bob,'threads/'+group.id+'/messages')).data.messages.some(m=>m.id===sent.id&&m.mentioned));
+  assert.equal((await app.comm(app.outside,'threads/'+group.id+'/messages','POST',{body:'hi'})).status,404);
+ }finally{await app.close();}
+});

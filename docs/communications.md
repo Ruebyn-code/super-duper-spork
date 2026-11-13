@@ -1,0 +1,26 @@
+# Comms: messaging and posts
+
+Comms (`/communications`, `communications.js`, `communications-routes.js`, `public/communications.js`) has company/network posts, direct messages and group chats. This page covers the collaboration features added on top of the original posts, chats, reactions, pins, read receipts and required reading.
+
+## Messages
+
+- **Replies** — a message may carry `replyTo` (a message in the same conversation). Readers get a `reply` excerpt (author, ≤140 characters, or a deleted marker); tapping the quote scrolls to the original when it is loaded.
+- **@mentions** — the composer suggests conversation members (and `@everyone` in group/store chats) as you type `@`. On send, the page derives `mentions` (member IDs whose `@name` appears in the text) and `mentionAll`; the server only accepts members of the conversation and rejects `@everyone` in direct messages. Mentioned readers see the message highlighted and get a high-priority “You were mentioned in …” notification, even in muted conversations.
+- **Edit and delete** — only the author can edit (`PUT /api/communications/threads/:id/messages/:mid`); the message shows “edited”. The author, the group owner or anyone with the required-post permission (`comms.require`) in that company can delete in group chats (`DELETE …/messages/:mid`); direct messages can only be deleted by their author. Deletes keep a “Message deleted” placeholder. Up to 20 earlier versions are kept privately on the server (`history`) and are never returned. Edits and deletes reach other open readers through the existing reaction-delta cursor (`reactionUpdates[].message`).
+- **Polls** — group and store chats (not direct messages) can send a poll (`poll:{question, options[2–10], multiple}`); votes use `PUT …/messages/:mid/poll` with `optionIds` (one, or any number for multiple-choice; an empty list clears your vote).
+- **Typing and seen-by** — `POST …/threads/:id/typing` marks you as typing for six seconds, in memory only (never saved). Message reads return `typing` (other people) and `seenBy` (people whose read position has reached your latest message); the page shows “… is typing…”, “Seen” (direct) or “Seen by …” (groups).
+
+## Conversations
+
+- **Mute and archive** (`PUT …/threads/:id/settings` with `muted`/`archived`, per person). Muted conversations only count and notify @mentions; archived conversations move to a collapsed Archived list until a newer message arrives. Thread DTOs add `muted`, `archived`, `alerts` (what counts toward badges) and `mentions`.
+- **Store groups** — every active location has an automatic group chat (`kind:'location'`, a deterministic ID per location) whose members are everyone with access to that location (location access, or all-location authority). It appears under Store groups in Group chats, is created on the first write (reading never saves it) and keeps following location access. People without access to the location cannot read or write it.
+
+## Posts
+
+- **Scheduled posts** — `publishAt` (future, ≤90 days) keeps a post visible only to its author (tagged “Scheduled”) until that time; then it appears in feeds, notifications, search, required reading and the kiosk feed. Editing can move or clear (`null` = publish now) the time until it is published; published posts cannot be rescheduled. Omitted `publishAt` keeps the saved value.
+- **Polls** — posts may include a poll (same shape as chat polls); once anyone has voted the poll can no longer change. Votes: `PUT /api/communications/posts/:id/poll`.
+- **Comments** — anyone with chat permission who can see a post may comment (`POST …/posts/:id/comments`, ≤1,000 characters, ≤500 per post, retry-safe `requestId`). Comment authors, the post author and managers (`comms.require`) can remove comments (`DELETE …/comments/:cid`), which leaves them hidden.
+- **Remind unread** — on required posts, the author’s **Remind unread** (`POST …/posts/:id/remind`, revision-checked, at most once an hour) clears snoozes for everyone who hasn’t read the current version and re-notifies them (“Reminder — required post”). Read receipts list everyone in the post’s audience except the author.
+- **People on shift now** — a new company post can target **People on shift now at <location>**: the server freezes `audience.userIds` from the published roster at the author’s location at that moment (Melbourne time, including overnight shifts that started the previous day). Only those people (and the author) see the post; it is never shown on kiosks. If nobody is on a published shift the post is refused.
+
+All writes keep CSRF, the existing chat/post permissions and company/network scopes. Reads never write.
