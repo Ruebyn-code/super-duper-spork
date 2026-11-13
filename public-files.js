@@ -51,6 +51,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/knowledge-library':'knowledge-library.html',
   '/knowledge-library.js':'knowledge-library.js',
   '/knowledge-library.css':'knowledge-library.css',
+  '/knowledge-extras.js':'knowledge-extras.js',
   '/editor-menu.js':'editor-menu.js',
   '/editor-menu.css':'editor-menu.css',
   '/emoji-picker.js':'emoji-picker.js',

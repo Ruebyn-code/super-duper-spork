@@ -94,3 +94,59 @@ test('permission-level audiences limit articles and categories while authors kee
  const opened=await app.library(app.office,'/categories/'+category.data.id,'PUT',{name:'Leaders',roleIds:null,revision:renamed.data.revision});assert.equal(opened.status,200);assert.equal((await app.library(app.member,'/'+inside.data.id)).status,200);
  const cleared=await app.library(app.office,'/'+limited.data.id,'PUT',{title:'Now open',type:'policy',scope:'company',body:'Open.',roleIds:null,revision:kept.data.revision});assert.equal(cleared.status,200);assert.equal((await app.library(app.member,'/'+limited.data.id)).status,200);
 }finally{await app.close();}});
+
+test('knowledge engagement: favourites, views, feedback, questions, read and confirm, quick checks and landing lists',async()=>{const app=await fixture();try{
+ const created=(await app.article({confirm:true,reviewMonths:6,check:[{question:'Cool room?',options:['5°C or below','10°C'],correct:0}]})).data,id=created.id;
+ let detail=(await app.library(app.member,'/'+id)).data;assert.equal(detail.confirmation.required,true);assert.equal(detail.confirmation.confirmed,false);assert.equal(detail.quickCheck.questions[0].correct,undefined);assert.equal(detail.feedback.summary,undefined);assert.equal(detail.owner.name,'Office');assert.ok(detail.reviewDueAt);
+ // Favourites and views are personal and never change the article.
+ assert.equal((await app.library(app.member,'/'+id+'/favourite','PUT',{favourite:true})).status,200);assert.equal((await app.library(app.member,'/'+id+'/viewed','POST',{})).status,200);
+ let home=(await app.library(app.member,'/home')).data;assert.equal(home.favourites[0].id,id);assert.equal(home.recent[0].id,id);assert.equal(home.popular[0].readers,1);assert.equal(home.toConfirm[0].id,id);assert.equal(home.upkeep,undefined);
+ assert.equal((await app.library(app.member,'/'+id)).data.revision,created.revision);
+ // Feedback: readers see only their own; publishers see the summary.
+ assert.equal((await app.library(app.member,'/'+id+'/feedback','PUT',{helpful:false,comment:'Which shelf?'})).data.mine.helpful,false);
+ const summary=(await app.library(app.office,'/'+id)).data.feedback.summary;assert.equal(summary.notHelpful,1);assert.equal(summary.comments[0].comment,'Which shelf?');
+ // Questions: anyone who can read asks; the owner or a publisher answers; the asker is notified.
+ const question=(await app.library(app.member,'/'+id+'/questions','POST',{text:'Does this apply to drinks?'})).data;assert.equal((await app.library(app.member,'/'+id+'/questions/'+question.id,'PUT',{text:'Yes'})).status,403);
+ assert.ok((await app.request(app.office,'/api/notifications')).data.items.some(item=>item.id==='knowledge:question:'+question.id));
+ await app.library(app.office,'/'+id+'/questions/'+question.id,'PUT',{text:'Yes, all chilled drinks.'});detail=(await app.library(app.member,'/'+id)).data;assert.equal(detail.questions[0].answer.text,'Yes, all chilled drinks.');
+ assert.ok((await app.request(app.member,'/api/notifications')).data.items.some(item=>item.id.startsWith('knowledge:answer:'+question.id)));
+ // Read and confirm: tied to the content version; editing the content asks again.
+ assert.ok((await app.request(app.member,'/api/notifications')).data.items.some(item=>item.id==='knowledge:confirm:'+id+':1'));
+ assert.equal((await app.library(app.member,'/'+id+'/confirm','POST',{contentVersion:2})).status,409);assert.equal((await app.library(app.member,'/'+id+'/confirm','POST',{contentVersion:1})).data.confirmed,true);
+ let people=(await app.library(app.office,'/'+id)).data.confirmation.people;assert.ok(people.confirmed.some(person=>person.name==='Member'));assert.ok(!people.pending.includes('Member'));
+ const office=(await app.library(app.office,'/'+id)).data;const edited=(await app.library(app.office,'/'+id,'PUT',{title:office.title,type:office.type,scope:office.scope,body:'Keep cold food at 5°C or below.',revision:office.revision})).data;
+ detail=(await app.library(app.member,'/'+id)).data;assert.equal(detail.contentVersion,2);assert.equal(detail.confirmation.confirmed,false);
+ // Quick check: graded on the server, answers revealed after trying.
+ assert.equal((await app.library(app.member,'/'+id+'/check','POST',{contentVersion:2,answers:[]})).status,400);const result=(await app.library(app.member,'/'+id+'/check','POST',{contentVersion:2,answers:[1]})).data;assert.equal(result.score,0);assert.deepEqual(result.correct,[0]);
+ detail=(await app.library(app.member,'/'+id)).data;assert.equal(detail.quickCheck.questions[0].correct,0);assert.equal(detail.quickCheck.mine.score,0);
+ // Versions: the earlier content is kept and can be restored.
+ const versions=(await app.library(app.office,'/'+id+'/versions')).data;assert.equal(versions.versions[0].contentVersion,1);assert.equal((await app.library(app.member,'/'+id+'/versions')).status,403);
+ const restored=(await app.library(app.office,'/'+id+'/versions/1/restore','POST',{revision:edited.revision})).data;assert.equal(restored.body,'Keep cold food refrigerated.');
+ // People outside the audience cannot use any of it.
+ assert.equal((await app.library(app.outside,'/'+id+'/favourite','PUT',{favourite:true})).status,404);assert.equal((await app.library(app.outside,'/'+id+'/questions','POST',{text:'hi'})).status,404);
+ // QR codes point at the article.
+ const qr=await app.library(app.member,'/'+id+'/qr.svg');assert.equal(qr.status,200);assert.ok(String(qr.data).includes('<svg'));
+}finally{await app.close();}});
+
+test('knowledge upkeep: drafts stay private until published, approvals, review dates, owners and related articles',async()=>{const app=await fixture();try{
+ await app.user('Approver','admin');const approver=await app.login('Approver');
+ const live=(await app.article()).data,other=(await app.article({title:'Allergens'})).data;
+ // New drafts are hidden from readers.
+ const draft=(await app.article({title:'New closing steps',draft:true})).data;assert.equal((await app.library(app.member,'/'+draft.id)).status,404);assert.ok(!(await app.library(app.member,'')).data.articles.some(item=>item.id===draft.id));
+ assert.equal((await app.library(app.office,'')).data.articles.find(item=>item.id===draft.id).unpublished,true);
+ // Drafts of a published article keep the live content until published.
+ const changed=(await app.library(app.office,'/'+live.id,'PUT',{title:live.title,type:live.type,scope:live.scope,body:'Draft wording.',draft:true,relatedIds:[other.id],stepMode:true,revision:live.revision})).data;
+ assert.equal((await app.library(app.member,'/'+live.id)).data.body,'Keep cold food refrigerated.');assert.equal((await app.library(app.member,'/'+live.id)).data.related[0].title,'Allergens');
+ let detail=(await app.library(app.office,'/'+live.id)).data;assert.equal(detail.draft.body,'Draft wording.');assert.equal(detail.stepMode,true);
+ const asked=(await app.library(app.office,'/'+live.id+'/approval','POST',{revision:detail.revision})).data;assert.ok((await app.library(approver,'/home')).data.upkeep.awaitingApproval.some(item=>item.id===live.id));
+ const published=(await app.library(approver,'/'+live.id+'/publish','POST',{revision:asked.revision})).data;assert.equal(published.body,'Draft wording.');assert.equal(published.approvedBy,'Approver');
+ assert.equal((await app.library(app.member,'/'+live.id)).data.body,'Draft wording.');assert.equal((await app.library(app.member,'/'+live.id+'/publish','POST',{revision:published.revision})).status,403);
+ // Publishing the new draft makes it visible.
+ const shown=(await app.library(app.office,'/'+draft.id,'PUT',{title:draft.title,type:draft.type,scope:draft.scope,body:draft.body,draft:false,revision:draft.revision})).data;assert.equal(shown.published,undefined);assert.equal((await app.library(app.member,'/'+draft.id)).status,200);
+ // Owners must be people in the company; review dates and Mark reviewed.
+ assert.equal((await app.library(app.office,'/'+other.id,'PUT',{title:other.title,type:other.type,scope:other.scope,body:other.body,ownerId:app.outsideRecord.id,revision:other.revision})).status,400);
+ const owned=(await app.library(app.office,'/'+other.id,'PUT',{title:other.title,type:other.type,scope:other.scope,body:other.body,ownerId:app.memberRecord.id,reviewMonths:3,revision:other.revision})).data;
+ assert.equal((await app.library(app.member,'/'+other.id)).data.owner.name,'Member');assert.equal((await app.library(app.office,'/'+other.id,'PUT',{title:other.title,type:other.type,scope:other.scope,body:other.body,reviewMonths:5,revision:owned.revision})).status,400);
+ const reviewed=(await app.library(app.member,'/'+other.id+'/reviewed','POST',{revision:owned.revision})).data;assert.ok(reviewed.reviewDueAt);
+ assert.ok((await app.library(app.office,'/owners')).data.people.some(person=>person.name==='Member'));assert.equal((await app.library(app.member,'/owners')).status,403);
+}finally{await app.close();}});
