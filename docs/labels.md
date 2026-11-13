@@ -47,3 +47,16 @@ The network's `prep-labels.json` contains company items, settings and immutable 
 Each Labels card shows the template name and ⋯ menu in a white bar at the top, with the label preview underneath; the category pill sits in its own row above the preview so it never covers the label.
 
 Template managers can add one optional **photo** per template in the editor's Template details (**Add photo** / **Change photo** / **Remove**). The photo is centre-cropped in the browser to 16:9 (up to 1200 × 675 JPEG) and stays a draft until **Save label template**: the template saves first, then the photo through the revision-checked `PUT`/`DELETE /api/prep-labels/items/:id/photo` (same template-manager rule as editing: `prep.manage` plus every active company location; JPEG/PNG/WebP up to 2 MB, checked by file signature). Files are stored privately under `prep-label-photos/<companyId>/`, served with `GET` to anyone with prep label viewing in the same company (private, no-sniff, sandboxed), and replaced files are removed. Ordinary template saves keep the existing photo. Cards show the photo behind a smaller label preview. Photos are for finding the right label only: they are never printed or copied into batches.
+
+
+## Shared designs
+
+One label design can be used by many label templates. In the label template editor, **Design** (in Template details) offers:
+
+- **Own design (this label only)**: the default; the label keeps its own layout.
+- **A shared design**: links this label to that design. The designer loads the shared layout, and saving changes to it updates every label linked to that design. The note under the chooser says how many other labels share it.
+- **Save as a shared design…**: names the current design and saves it as a shared design that this label (and later others) link to.
+
+Each label keeps its own name, shelf life, category, note, photo and active switch. Shared designs are company-wide and managed by label template managers (manage permission plus access to every active company location). They are stored in `prep-labels.json` under `designs` (up to 200 per company, names unique ignoring case). Linked templates store `designId` and no layout of their own; reads and saves return the design's layout with `designId`, `designName` and `designRevision`. Saving a linked label sends `design:{id,revision}`, and a changed layout updates the design only when its revision still matches (otherwise 409). Older writers that omit `design` keep the link; `design:null` turns the current layout into the label's own copy; `design:{name}` creates a shared design from the layout.
+
+**Rename** and **Stop sharing** (`PUT`/`DELETE /api/prep-labels/designs/:id`, revision-checked) appear beside a chosen shared design. Stopping sharing deletes the shared design but every linked label keeps a copy as its own layout (their revision goes up). Printed batches snapshot the design's layout together with `designId`/`designRevision`; printing with a stale design revision is refused so the preview always matches the label. Cards show a small marker with the shared design's name.

@@ -97,3 +97,35 @@ test('label template photos are manager-only, revision-checked, kept on edits an
  await assert.rejects(a.store.photoFile(a.member,item.id),e=>e.status===404);
  const listed=(await a.store.list(a.member)).items.find(entry=>entry.id===item.id);assert.equal(listed.photo,undefined);
 }finally{await a.close();}});
+
+test('shared designs link many label templates to one layout, update together and keep copies when deleted',async()=>{
+ const app=await fixture();try{
+  const layoutModel=require('./public/label-layout-model'),base=layoutModel.defaultLayout(),edited=structuredClone(base);edited.blocks[0].fontSize=edited.blocks[0].fontSize+2;
+  // Save the first label's layout as a shared design, then link a second label to it.
+  const first=await app.item({layout:base,design:{name:'Standard prep'}}),view=await app.store.list(app.office);
+  assert.equal(view.designs.length,1);const shared=view.designs[0];assert.equal(shared.name,'Standard prep');assert.equal(shared.labels,1);assert.equal(first.designId,shared.id);assert.equal(first.designName,'Standard prep');
+  const second=await app.item({name:'Garlic sauce',design:{id:shared.id}});assert.equal(second.designId,shared.id);assert.deepEqual(second.layout,first.layout);
+  assert.equal((await app.store.list(app.office)).designs[0].labels,2);
+  // Editing the design through one label updates every linked label; a stale design revision is refused.
+  await assert.rejects(app.store.saveItem(app.office,{name:'Garlic sauce',shelfLife:48,shelfLifeUnit:'hours',notes:'',active:true,revision:second.revision,layout:edited,design:{id:shared.id,revision:shared.revision+5}},second.id),/shared design changed/);
+  const saved=await app.store.saveItem(app.office,{name:'Garlic sauce',shelfLife:48,shelfLifeUnit:'hours',notes:'',active:true,revision:second.revision,layout:edited,design:{id:shared.id,revision:shared.revision}},second.id);
+  assert.equal(saved.designRevision,shared.revision+1);
+  const items=(await app.store.list(app.office)).items,firstNow=items.find(item=>item.id===first.id);assert.equal(firstNow.layout.blocks[0].fontSize,edited.blocks[0].fontSize);assert.equal(firstNow.revision,first.revision,'linked labels change through the design, not their own revision');
+  // Older writers that omit the design keep the link; batches snapshot the design's layout.
+  const kept=await app.store.saveItem(app.office,{name:'Tzatziki',shelfLife:24,shelfLifeUnit:'hours',notes:'',active:true,revision:firstNow.revision},first.id);assert.equal(kept.designId,shared.id);
+  const batch=await app.batch(kept,{designRevision:saved.designRevision});assert.equal(batch.layout.blocks[0].fontSize,edited.blocks[0].fontSize);assert.equal(batch.designId,shared.id);
+  await assert.rejects(app.batch(kept,{designRevision:1}),/changed/);
+  // Members cannot rename or delete shared designs; managers can, and deleting leaves each label a copy.
+  const current=(await app.store.list(app.office)).designs[0];
+  await assert.rejects(app.store.saveDesign(app.member,current.id,{name:'Mine',revision:current.revision}),error=>error.status===403);
+  await assert.rejects(app.store.saveDesign(app.other,current.id,{name:'Mine',revision:current.revision}),error=>error.status>=403);
+  const renamed=await app.store.saveDesign(app.office,current.id,{name:'House style',revision:current.revision});assert.equal(renamed.name,'House style');
+  const removed=await app.store.deleteDesign(app.office,current.id,{revision:renamed.revision});assert.equal(removed.labels,2);
+  const after=await app.store.list(app.office);assert.equal(after.designs.length,0);for(const item of after.items){assert.equal(item.designId,undefined);assert.equal(item.layout.blocks[0].fontSize,edited.blocks[0].fontSize);}
+  // A label can leave a shared design with its own layout (design: null).
+  const again=await app.item({name:'Hummus',layout:base,design:{name:'Second style'}});const own=await app.store.saveItem(app.office,{name:'Hummus',shelfLife:48,shelfLifeUnit:'hours',notes:'',active:true,revision:again.revision,layout:edited,design:null},again.id);
+  assert.equal(own.designId,undefined);assert.equal(own.layout.blocks[0].fontSize,edited.blocks[0].fontSize);assert.equal((await app.store.list(app.office)).designs.find(d=>d.name==='Second style').labels,0);
+  await assert.rejects(app.item({name:'Bad',design:{id:crypto.randomUUID()}}),/Shared design not found/);
+  await assert.rejects(app.item({name:'Dup',layout:base,design:{name:'second STYLE'}}),/already exists/);
+ }finally{await app.close();}
+});
