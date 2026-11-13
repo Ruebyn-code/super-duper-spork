@@ -96,6 +96,13 @@ test('messages support replies, mentions, polls, edits, deletes, mute, archive, 
   const poll=(await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Team dinner?',poll:{question:'Which night?',options:['Monday','Tuesday']}})).data;
   assert.equal(poll.poll.options.length,2);const voted=(await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll','PUT',{optionIds:[poll.poll.options[1].id]})).data;assert.equal(voted.poll.options[1].count,1);assert.equal(voted.poll.options[1].voted,true);
   assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll','PUT',{optionIds:poll.poll.options.map(o=>o.id)})).status,400);
+  // Ending polls: leaders are reported, only the poll's author (or the group owner) can end it, and nobody can vote afterwards.
+  assert.deepEqual(voted.poll.leading,[poll.poll.options[1].id]);assert.equal(voted.poll.voted,true);assert.equal(voted.poll.canClose,false);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll/close','POST',{})).status,403);
+  const ended=(await app.comm(app.alice,'threads/'+group.id+'/messages/'+poll.id+'/poll/close','POST',{})).data;assert.equal(ended.poll.closed,true);assert.equal(ended.poll.canClose,false);assert.ok(ended.poll.closedAt);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+poll.id+'/poll','PUT',{optionIds:[poll.poll.options[0].id]})).status,400);
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Late?',poll:{question:'Late?',options:['a','b'],closesAt:new Date(Date.parse('2026-10-15T11:00:00Z')).toISOString()}})).status,400);
+  const timed=(await app.comm(app.alice,'threads/'+group.id+'/messages','POST',{body:'Soon?',poll:{question:'Soon?',options:['a','b'],closesAt:'2026-10-15T13:00:00.000Z'}})).data;assert.equal(timed.poll.closed,false);assert.ok(timed.poll.closesAt);assert.equal(timed.poll.canClose,true);app.advance(2*3600000);assert.equal((await app.comm(app.bob,'threads/'+group.id+'/messages/'+timed.id+'/poll','PUT',{optionIds:[timed.poll.options[0].id]})).status,400);
   // Mute: only mentions count as unread; archive hides until a new message arrives.
   await app.comm(app.bob,'threads/'+group.id+'/read','POST',{through:poll.sequence});
   assert.equal((await app.comm(app.bob,'threads/'+group.id+'/settings','PUT',{muted:true})).data.muted,true);
@@ -127,6 +134,9 @@ test('posts support scheduling, polls, comments, read reminders and on-shift aud
   const pollPost=(await app.post({title:'Meeting day',poll:{question:'Which day?',options:['Mon','Wed','Fri'],multiple:true}})).data;
   const ids=pollPost.poll.options.map(o=>o.id);const voted=(await app.comm(app.alice,'posts/'+pollPost.id+'/poll','PUT',{optionIds:[ids[0],ids[2]]})).data;assert.deepEqual(voted.poll.options.map(o=>o.count),[1,0,1]);assert.equal(voted.poll.total,1);
   assert.equal((await app.comm(app.office,'posts/'+pollPost.id,'PUT',{title:'Meeting day',body:'x',requireRead:false,revision:pollPost.revision,poll:{question:'Other',options:['A','B']}})).status,400);
+  assert.equal(voted.poll.canClose,false);assert.equal((await app.comm(app.alice,'posts/'+pollPost.id+'/poll/close','POST',{})).status,403);
+  const endedPost=(await app.comm(app.office,'posts/'+pollPost.id+'/poll/close','POST',{})).data;assert.equal(endedPost.poll.closed,true);
+  assert.equal((await app.comm(app.alice,'posts/'+pollPost.id+'/poll','PUT',{optionIds:[ids[1]]})).status,400);
   // Comments: anyone who can chat; authors, the post author and managers remove them.
   const commented=(await app.comm(app.alice,'posts/'+pollPost.id+'/comments','POST',{body:'Wednesday suits me'})).data;assert.equal(commented.commentCount,1);const commentId=commented.comments[0].id;
   assert.equal((await app.comm(app.bob,'posts/'+pollPost.id+'/comments/'+commentId,'DELETE')).status,403);
