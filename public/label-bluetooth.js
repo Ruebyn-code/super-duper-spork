@@ -15,7 +15,9 @@
  const extraServices=['0000fe79-0000-1000-8000-00805f9b34fb','0000ae30-0000-1000-8000-00805f9b34fb','0000ffe5-0000-1000-8000-00805f9b34fb'];
  const reason=error=>error?.name&&error.name!=='Error'?' ('+error.name+(error.message?': '+String(error.message).slice(0,120):'')+')':error?.message?' ('+String(error.message).slice(0,120)+')':'';
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
- const listeners=new Set();let device=null,channel=null,sending=false;
+ const listeners=new Set();let device=null,channel=null,reader=null,info=null,sending=false;
+ // Zebra Link-OS printers answer setting queries on this channel (read-only questions, never printer changes).
+ const zebraRead='38eb4a81-c570-11e3-9507-0002a5d5c51b';
  const supported=()=>Boolean(navigator.bluetooth?.requestDevice)&&window.isSecureContext!==false;
  const notify=()=>{for(const listener of listeners)try{listener();}catch{}};
  // iPhone/iPad browsers (Safari, and Chrome/Edge on iOS) have no Web Bluetooth.
@@ -25,7 +27,8 @@
  const connected=()=>Boolean(device&&device.gatt?.connected&&channel);
  async function attach(){
   let server;try{server=device.gatt.connected?device.gatt:await device.gatt.connect();}catch{await pause(600);server=await device.gatt.connect();}
-  for(const known of channels){try{const service=await server.getPrimaryService(known.service);channel=await service.getCharacteristic(known.write);return;}catch{}}
+  reader=null;info=null;
+  for(const known of channels){try{const service=await server.getPrimaryService(known.service);channel=await service.getCharacteristic(known.write);if(known===channels[0]){try{reader=await service.getCharacteristic(zebraRead);await reader.startNotifications();}catch{reader=null;}}return;}catch{}}
   // Otherwise use the first writable channel on any service the browser lets us open.
   let services=[];try{services=await server.getPrimaryServices();}catch{for(const id of[...channels.map(known=>known.service),...extraServices]){try{services.push(await server.getPrimaryService(id));}catch{}}}
   for(const service of services){try{for(const candidate of await service.getCharacteristics())if(candidate.properties.write||candidate.properties.writeWithoutResponse){channel=candidate;return;}}catch{}}
@@ -39,12 +42,12 @@
   try{chosen=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[...channels.map(known=>known.service),...extraServices]});}
   catch(error){if(error?.name==='NotFoundError'&&/cancel/i.test(error.message||''))throw Error('No printer was chosen.');if(error?.name==='NotFoundError')throw Error('No Bluetooth printer was found. Turn the printer on, make sure Bluetooth is on for this device (on Android also allow Nearby devices/Location for the browser), then try again.'+reason(error));if(error?.name==='SecurityError'||error?.name==='NotAllowedError')throw Error('Bluetooth access was blocked. Allow Bluetooth for this site in your browser settings, then try again.'+reason(error));throw Error('Bluetooth is unavailable. Turn Bluetooth on and try again.'+reason(error));}
   if(device&&device!==chosen)disconnect();
-  device=chosen;channel=null;
+  device=chosen;channel=null;reader=null;info=null;
   if(!device.opstackWatched){device.opstackWatched=true;device.addEventListener('gattserverdisconnected',()=>{if(device===chosen){channel=null;notify();}});}
   try{await attach();}catch(error){device=null;notify();throw error.message?.startsWith('This Bluetooth')?error:Error('Could not connect to the printer. Make sure it is on, nearby and not connected to another phone or computer, then try again.'+reason(error));}
   notify();return name();
  }
- function disconnect(){const current=device;device=null;channel=null;try{current?.gatt?.connected&&current.gatt.disconnect();}catch{}notify();}
+ function disconnect(){const current=device;device=null;channel=null;reader=null;info=null;try{current?.gatt?.connected&&current.gatt.disconnect();}catch{}notify();}
  // Sends text in small sequential chunks; reconnects once to the chosen printer if the link dropped.
  async function send(text,progress){
   if(!device)throw Error('Connect a Bluetooth printer first.');
@@ -62,5 +65,19 @@
    }
   }finally{sending=false;}
  }
- window.labelBluetooth={supported,unsupportedText,connect,disconnect,send,connected,name,hasDevice:()=>Boolean(device),onchange:listener=>{listeners.add(listener);return()=>listeners.delete(listener);}};
+ // Asks a Zebra printer one Set-Get-Do value (for example its print resolution). Read-only; null when unknown.
+ async function ask(setting,timeout=2500){
+  if(!reader||!connected()||sending)return null;
+  let text='';const decoder=new TextDecoder();
+  const result=new Promise(resolve=>{const timer=setTimeout(()=>done(null),timeout);function listen(event){text+=decoder.decode(event.target.value);const match=text.match(/"([^"]*)"/);if(match)done(match[1].trim());}function done(value){clearTimeout(timer);reader.removeEventListener('characteristicvaluechanged',listen);resolve(value);}reader.addEventListener('characteristicvaluechanged',listen);});
+  try{const command=new TextEncoder().encode('! U1 getvar "'+setting+'"\r\n');await(channel.properties.write?channel.writeValueWithResponse(command):channel.writeValueWithoutResponse(command));}catch{return null;}
+  return result;
+ }
+ // The connected printer's real print resolution, asked once per connection (null for printers that cannot say).
+ async function printerInfo(){
+  if(info)return info;if(!connected()){try{await attach();notify();}catch{return {dpi:null};}}
+  const dpi=Number(await ask('head.resolution.in_dpi'));
+  info={dpi:[203,300].includes(dpi)?dpi:null};return info;
+ }
+ window.labelBluetooth={supported,unsupportedText,connect,disconnect,send,connected,name,printerInfo,hasDevice:()=>Boolean(device),onchange:listener=>{listeners.add(listener);return()=>listeners.delete(listener);}};
 })();
