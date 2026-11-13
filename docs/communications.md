@@ -26,3 +26,6 @@ Comms (`/communications`, `communications.js`, `communications-routes.js`, `publ
 - **People on shift now** — a new company post can target **People on shift now at <location>**: the server freezes `audience.userIds` from the published roster at the author’s location at that moment (Melbourne time, including overnight shifts that started the previous day). Only those people (and the author) see the post; it is never shown on kiosks. If nobody is on a published shift the post is refused.
 
 All writes keep CSRF, the existing chat/post permissions and company/network scopes. Reads never write.
+
+## Desktop chat layout
+Direct messages and Group chats fill the space beside the Comms side bar on desktop. When a conversation is open (and the side bar is wide enough), the conversation list moves under the side bar so the conversation uses the full width. Phones and touch tablets keep the full-screen conversation.

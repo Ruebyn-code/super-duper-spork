@@ -227,3 +227,38 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 @media(forced-colors:active){.communications-actions>button{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
 .communications-page{padding-bottom:96px}
 @media(max-width:720px){.communications-actions>button{min-height:44px;padding:0 16px 0 13px;font-size:14px}.communications-actions>button::before{font-size:20px}}
+/* Desktop chats fill the space beside the side bar; an open chat moves the conversation list under the side bar. */
+.comms-wide-chat .communications-page{max-width:none;padding-bottom:0}
+.comms-wide-chat #communications-chats.communication-workspace{height:var(--chat-height,75dvh);min-height:320px;max-height:none}
+.comms-wide-chat.comms-conversation-active .communication-view-heading{display:none}
+.comms-wide-chat.comms-side-list.comms-conversation-active:not(.comms-conversation-open) #communications-chats.communication-workspace{grid-template-columns:minmax(0,1fr);height:var(--chat-height,75dvh)}
+.communication-side-list[hidden]{display:none}
+.has-comms-side-list{grid-template-rows:auto minmax(0,1fr);row-gap:8px}
+.has-comms-side-list>aside,.has-comms-side-list>.communication-sidebar{grid-column:1;grid-row:1}
+.has-comms-side-list>:not(aside):not(.communication-side-list):not(.communication-sidebar){grid-column:2;grid-row:1/span 2}
+.communication-side-list{grid-column:1;grid-row:2;box-sizing:border-box;align-self:start;min-width:0;width:var(--subpage-width,198px);max-width:100%;height:var(--side-list-height,60dvh);border:1px solid var(--line,var(--theme-line,#dce5ed));border-radius:10px;background:var(--theme-surface,#fff);overflow:hidden}
+.communication-side-list .conversation-directory{height:100%;box-sizing:border-box;border:0;padding:8px 6px;overflow:auto;display:flex;flex-direction:column}
+.communication-side-list .conversation-directory>*{flex-shrink:0}
+.communication-side-list .conversation-directory-heading{gap:6px}
+.communication-side-list .conversation-directory-heading>span{font-size:11px}
+.communication-side-list .conversation-list-heading{margin:8px 4px 4px;font-size:10px}
+.communication-side-list .conversation-card{padding:6px 8px;gap:8px;border-radius:10px}
+.communication-side-list .conversation-card .conversation-avatar,.communication-side-list .conversation-card>svg:first-child{width:28px;height:28px}
+.communication-side-list .conversation-card strong{font-size:12px}
+.communication-side-list .conversation-card small,.communication-side-list .conversation-card p{font-size:11px}
+.communication-side-list .communications-actions.in-directory{position:sticky;bottom:2px;padding-top:6px}
+.communication-side-list .communications-actions>button{min-height:38px;padding:0 14px 0 11px;font-size:13px}
+.communication-side-list .conversation-card{padding:2px;border-radius:10px;box-shadow:none}
+.communication-side-list .conversation-card .conversation-link{display:flex;align-items:center;width:100%;min-height:0;padding:6px 26px 6px 6px;margin:0;border-radius:8px}
+.communication-side-list .conversation-link>.page-sidebar-label{display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0;width:100%;opacity:1;visibility:visible;transform:none;text-align:left}
+.communication-side-list .communication-avatar{flex:none;width:28px;height:28px;min-width:28px}
+.communication-side-list .conversation-label{display:grid;min-width:0;gap:1px}
+.communication-side-list .conversation-label strong,.communication-side-list .conversation-label small{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.communication-side-list .conversation-card .conversation-pin{top:6px;right:4px;width:22px;height:22px;min-height:0;padding:2px}
+.communication-side-list .conversation-card>.communication-reactions{min-height:0;padding:0 6px 2px}
+.communication-side-list .conversation-card>.communication-reactions:not(:has(.reaction-chip,.communication-reaction)) {display:none}
+.communication-layout .communication-side-list .communications-actions>button{width:auto;white-space:nowrap;background:var(--brand-sheen,none) var(--primary);color:#fff;border:0}
+.communication-side-list .conversation-card .conversation-link{padding-right:6px}
+.communication-side-list .conversation-card .conversation-pin[aria-pressed="false"]{opacity:0}
+.communication-side-list .conversation-card:hover .conversation-pin,.communication-side-list .conversation-card:focus-within .conversation-pin{opacity:1}
+.communication-side-list .conversation-card:hover .conversation-link,.communication-side-list .conversation-card:focus-within .conversation-link{padding-right:26px}
