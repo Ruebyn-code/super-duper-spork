@@ -36,4 +36,12 @@ On phones Comms opens to one list: recent posts as small cards that scroll sidew
 ## Customising chats
 ⋯ → **Customise chat** (direct) or **Customise group** sets the chat colour, background, quick-reaction emoji and nicknames, and for groups a description and photo (owners can also rename ordinary groups). `PUT /api/communications/threads/:id/customise` with `revision`, `colour`, `background`, `emoji`, `nicknames`, and for groups `description`, `photoId` (and `name` for ordinary groups). Direct-chat looks are personal; group looks are shared and editable by the group owner or Comms managers.
 
-Colours: default (company colour), ocean, teal, green, orange, red, pink, purple, slate, indigo, sky, emerald, lime, amber, rose, fuchsia, brown, charcoal. Backgrounds: plain, soft, dots, grid, waves, sunset, mint, night, ocean, lavender, peach, paper, stripes, checks, confetti, stars, forest, aurora (night, stars, forest and aurora are dark). All are allowlisted on the server and drawn with CSS only. The background fills the whole open conversation (header, reaction row, messages and around a translucent composer); dark backgrounds switch the header and composer to light text.
+Colours: default (company colour), ocean, teal, green, orange, red, pink, purple, slate, indigo, sky, emerald, lime, amber, rose, fuchsia, brown, charcoal. Backgrounds: plain, soft, dots, grid, waves, sunset, mint, night, ocean, lavender, peach, paper, stripes, checks, confetti, stars, forest, aurora (night, stars, forest and aurora are dark). All are allowlisted on the server and drawn with CSS only.
+
+More look options (all optional; omitted fields keep the saved value, the first value is the default):
+
+- **Themes** — one-click presets in the dialog (Classic, Midnight, Sunset, Ocean, Forest, Minimal, Playful, Retro, Aurora, Notebook) that fill in the options below; nothing is saved until **Save**.
+- **Custom colour** — `colour:'custom'` with `customColour` (`#rrggbb`).
+- **Emoji wallpaper** — `background:'emoji'` with `wallpaperEmoji`.
+- `bubble` rounded/soft/square/pill · `sent` solid/gradient/glass/outline · `received` grey/tint/outline/white · `textSize` normal/small/large/xlarge · `font` default/rounded/serif/mono/handwriting · `density` normal/compact/roomy · `layout` split/left · `times` always/hover (hover only on mouse devices) · `names` show/others/hide.
+- **Quick reactions** — `emojis`, one to three (duplicates removed). `emoji` stays the first one for older clients; sending only `emoji` moves it to the front. The background fills the whole open conversation (header, reaction row, messages and around a translucent composer); dark backgrounds switch the header and composer to light text.

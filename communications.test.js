@@ -173,6 +173,24 @@ test('chats can be customised: colours, backgrounds, quick emoji, nicknames and 
   assert.equal((await app.comm(app.alice,'threads')).data.threads.find(t=>t.id===direct.id).custom.colour,'pink');
   assert.equal((await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===direct.id).custom.colour,'default');
  }finally{await app.close();}});
+
+test('chat looks support themes, custom colours, bubble styles, text, layout and several quick reactions',async()=>{const app=await fixture();try{
+  const direct=(await app.comm(app.alice,'threads','POST',{kind:'direct',members:[app.bobRecord.id]})).data,url='threads/'+direct.id+'/customise';
+  // Defaults are reported for every option.
+  const fresh=(await app.comm(app.alice,'threads')).data.threads.find(t=>t.id===direct.id).custom;
+  assert.deepEqual([fresh.bubble,fresh.sent,fresh.received,fresh.textSize,fresh.font,fresh.density,fresh.layout,fresh.times,fresh.names,fresh.emojis.join('')],['rounded','solid','grey','normal','default','normal','split','always','show','👍']);
+  // Validation: unknown values, custom colour without a hex, too many emoji and bad wallpaper emoji are refused.
+  for(const bad of [{bubble:'blob'},{font:'Comic'},{textSize:'huge'},{colour:'custom'},{colour:'custom',customColour:'red'},{emojis:['👍','🔥','🎉','❤️']},{emojis:[]},{emojis:['ok']},{wallpaperEmoji:'abc'},{names:'nobody'}])assert.equal((await app.comm(app.alice,url,'PUT',bad)).status,400,JSON.stringify(bad));
+  const saved=(await app.comm(app.alice,url,'PUT',{colour:'custom',customColour:'#AA33CC',background:'emoji',wallpaperEmoji:'🍕',bubble:'pill',sent:'gradient',received:'white',textSize:'large',font:'serif',density:'roomy',layout:'left',times:'hover',names:'others',emojis:['🔥','👍','🔥','🎉']})).data;
+  assert.ok(saved.custom,JSON.stringify(saved));assert.equal(saved.custom.customColour,'#aa33cc');assert.equal(saved.custom.background,'emoji');assert.equal(saved.custom.wallpaperEmoji,'🍕');
+  assert.deepEqual(saved.custom.emojis,['🔥','👍','🎉']);assert.equal(saved.custom.emoji,'🔥');
+  assert.deepEqual([saved.custom.bubble,saved.custom.sent,saved.custom.received,saved.custom.textSize,saved.custom.font,saved.custom.density,saved.custom.layout,saved.custom.times,saved.custom.names],['pill','gradient','white','large','serif','roomy','left','hover','others']);
+  // Older writers that send only some fields keep the rest; a single emoji moves to the front of the list.
+  const older=(await app.comm(app.alice,url,'PUT',{colour:'teal',emoji:'🎉'})).data.custom;
+  assert.equal(older.colour,'teal');assert.equal(older.customColour,undefined);assert.equal(older.bubble,'pill');assert.deepEqual(older.emojis,['🎉','🔥','👍']);
+  // Bob's own look for the same direct chat is untouched.
+  assert.equal((await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===direct.id).custom.bubble,'rounded');
+ }finally{await app.close();}});
 test('posts support scheduling, polls, comments, read reminders and on-shift audiences',async()=>{
  const app=await fixture();try{
   // Scheduled posts stay with the author until their time.
