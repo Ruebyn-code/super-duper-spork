@@ -414,3 +414,19 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 .conversation-message>*{grid-column:1/-1}
 .conversation-message>.message-footer{grid-column:1/2}
 .conversation-message>.communication-reactions{grid-column:2/4;justify-self:start}
+/* Sent messages: solid company colour with white text. Received messages: soft neutral grey. */
+#conversation-messages .conversation-message:not(.own){background:color-mix(in srgb,var(--theme-text,#17212b) 7%,var(--theme-surface,#fff));color:var(--theme-text,#17212b);border:0;border-bottom-left-radius:6px}
+#conversation-messages .conversation-message.own{background:var(--brand-sheen,none) var(--primary);color:#fff;border:0;border-bottom-right-radius:6px}
+#conversation-messages .conversation-message.own>strong,#conversation-messages .conversation-message.own .message-footer,#conversation-messages .conversation-message.own time,#conversation-messages .conversation-message.own .message-edited{color:rgba(255,255,255,.82)}
+#conversation-messages .conversation-message.own>.formatted-text,#conversation-messages .conversation-message.own>.formatted-text :is(p,li,strong,em,span,h1,h2,h3,h4,blockquote),#conversation-messages .conversation-message.own>.message-deleted{color:#fff}
+#conversation-messages .conversation-message.own>.formatted-text a{color:#fff;text-decoration:underline}
+#conversation-messages .conversation-message.own .message-action,#conversation-messages .conversation-message.own .reaction-add{color:#fff;background:transparent}
+#conversation-messages .conversation-message.own .message-action:hover,#conversation-messages .conversation-message.own .message-action:focus-visible,#conversation-messages .conversation-message.own .reaction-add:hover,#conversation-messages .conversation-message.own .reaction-add:focus-visible{background:rgba(255,255,255,.18)}
+#conversation-messages .conversation-message.own .reaction-add svg,#conversation-messages .conversation-message.own .reaction-add svg *{stroke:#fff}
+#conversation-messages .conversation-message.own .reaction-chip{background:rgba(255,255,255,.2);border-color:transparent;color:#fff}
+#conversation-messages .conversation-message.own .reaction-chip.is-own{background:rgba(255,255,255,.34)}
+#conversation-messages .conversation-message.own .message-quote{background:rgba(255,255,255,.16);border-left-color:rgba(255,255,255,.7);color:#fff}
+#conversation-messages .conversation-message.own .message-quote *{color:#fff}
+#conversation-messages .conversation-message.own .communication-poll{color:var(--theme-text,#17212b)}
+#conversation-messages .conversation-message.own :focus-visible{outline-color:#fff}
+@media (forced-colors:active){#conversation-messages .conversation-message.own,#conversation-messages .conversation-message:not(.own){background:Canvas;color:CanvasText;border:1px solid CanvasText}}
