@@ -31,4 +31,4 @@ All writes keep CSRF, the existing chat/post permissions and company/network sco
 Direct messages and Group chats fill the space beside the Comms side bar on desktop. When a conversation is open (and the side bar is wide enough), the conversation list moves under the side bar so the conversation uses the full width. Phones and touch tablets keep the full-screen conversation.
 
 ## Phone list
-On phones Comms opens to one list of recent posts, direct messages and groups with a search box and a + Create menu. Rows open the normal post view or the full-screen chat; ‹ Comms and Back return to the list. Opening the list never marks anything as read.
+On phones Comms opens to one list: recent posts as small cards that scroll sideways across the top, then direct messages and groups with a search box and a + Create menu. Rows open the normal post view or the full-screen chat; ‹ Comms and Back return to the list. Opening the list never marks anything as read.

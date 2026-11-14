@@ -324,3 +324,25 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 @media (forced-colors:active){.comms-inbox-badge,.comms-inbox-dot,.comms-inbox-create{background:Highlight;color:HighlightText}}
 .comms-conversation-open #communications-chats .conversation-directory{display:none!important}
 @media (max-width:720px){.comms-inbox-open .communications-page{padding-top:4px}.comms-inbox-open .communication-layout,.comms-inbox-open .subpages-workspace{margin-top:0}.comms-inbox-open #communications-status{margin:0}}
+/* Phone list: posts as small cards in a sideways-scrolling strip. */
+.comms-post-strip{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:2px 4px 8px;margin:0 -4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.comms-post-strip::-webkit-scrollbar{display:none}
+.comms-post-card{flex:0 0 auto;width:min(62vw,230px);min-height:128px;box-sizing:border-box;display:flex;flex-direction:column;gap:5px;padding:12px;border:1px solid var(--theme-line,#dce5ed);border-radius:16px;background:var(--theme-surface,#fff);color:inherit;text-decoration:none;scroll-snap-align:start;box-shadow:0 4px 14px #10233a10}
+.comms-post-card[hidden]{display:none}
+.comms-post-card:active,.comms-post-card:focus-visible{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
+.comms-post-card.is-unread{border-color:color-mix(in srgb,var(--primary) 55%,var(--theme-line,#dce5ed))}
+.comms-post-card-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.comms-post-card-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.comms-post-card-icon svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.comms-post-card-icon svg .icon-detail{stroke:var(--secondary,currentColor)}
+.comms-post-card-flag{padding:2px 8px;border-radius:999px;background-color:var(--primary);background-image:var(--brand-sheen,none);color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.comms-post-card-flag.is-scheduled{background:var(--theme-surface-muted,#eef2f6);color:var(--theme-muted,#5b6b7c)}
+.comms-post-card-title{font-size:15px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.comms-post-card-excerpt{font-size:12px;line-height:1.35;color:var(--theme-muted,#5b6b7c);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.comms-post-card-meta{margin-top:auto;font-size:11px;color:var(--theme-muted,#5b6b7c);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.comms-post-card.is-more{width:120px;align-items:center;justify-content:center;text-align:center;border-style:dashed;color:var(--theme-primary-text,var(--primary))}
+.comms-post-card-arrow{font-size:24px;font-weight:700}
+@media (prefers-reduced-motion:reduce){.comms-post-strip{scroll-behavior:auto}}
+@media (forced-colors:active){.comms-post-card-flag{background:Highlight;color:HighlightText}}
+.comms-inbox,.comms-inbox-list,.comms-inbox-group{min-width:0;max-width:100%}.comms-post-strip{max-width:calc(100% + 8px);min-width:0}
+.comms-post-card{width:min(44vw,170px);min-height:118px;padding:10px;gap:4px;border-radius:14px}.comms-post-card-title{font-size:14px}.comms-post-card.is-more{width:96px}
