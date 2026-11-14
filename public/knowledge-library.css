@@ -198,3 +198,15 @@ html:has(.library-dialog[open]){scroll-behavior:auto;overflow:hidden}
 @media(max-width:720px){#library-create{right:max(14px,env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));min-height:44px;padding:0 16px 0 13px;font-size:14px}}
 @media(prefers-reduced-motion:reduce){#library-create{transition:none}#library-create:hover{transform:none}}
 @media(forced-colors:active){#library-create{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
+/* Narrower category side bar. */
+.library-workspace{--library-sidebar-width:184px}
+@media(max-width:1100px){.library-workspace{--library-sidebar-width:168px}}
+/* Desktop: filters share the heading row with the title. */
+.library-filters-in-heading .library-heading{display:flex;align-items:center;gap:18px;flex-wrap:nowrap}
+.library-filters-in-heading .library-heading>div:first-child{flex:0 0 auto;min-width:0}
+.library-filters-in-heading .library-heading>.library-filters{flex:1 1 auto;min-width:0;margin:0 0 0 auto;padding:0;border:0;background:transparent;box-shadow:none;justify-content:flex-end;gap:12px}
+.library-filters-in-heading .library-heading>.library-filters .library-types{flex-wrap:nowrap}
+.library-filters-in-heading .library-heading>.library-filters .library-types button{min-height:34px;padding:6px 12px}
+.library-filters-in-heading .library-heading>.library-filters #library-scope{min-height:36px;height:36px;font-size:14px}
+.library-filters-in-heading .library-heading>.library-filters .search-toggle{width:36px;height:36px;min-height:36px}
+.knowledge-library-page:has(#library-browse[hidden]) .library-heading>.library-filters{display:none}
