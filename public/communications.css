@@ -382,3 +382,8 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 #message-composer:has(.composer-poll[hidden]) .text-editor-toolbar{padding-right:8px;margin-right:100px}
 #message-composer .text-editor-footer{padding-right:16px;margin-right:142px}
 @media (max-width:720px){#message-composer .text-editor-toolbar{margin-right:92px}#message-composer:has(.composer-poll[hidden]) .text-editor-toolbar{margin-right:52px}}
+/* Tool row sits on the bottom edge, level with Poll and Send; the character count moves to the top-right corner. */
+#message-composer .text-editor-footer{position:absolute;top:4px;right:12px;margin:0;padding:0;pointer-events:none}
+#message-composer .text-editor-content{padding-right:64px}
+#message-composer .text-editor-toolbar{padding-top:2px;padding-bottom:9px;min-height:34px}
+@media (max-width:720px){#message-composer .text-editor-content{padding-right:14px}}
