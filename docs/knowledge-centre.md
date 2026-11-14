@@ -49,4 +49,11 @@ or publishers when no owner), approval requests, new questions (owner/publishers
 
 ## Landing cards
 
-The landing lists (Needs your attention, To read and confirm, Your favourites, Recently viewed, Most read) show each article as a card: the article's first image (or a tinted book icon), title, a two-line excerpt, the category and a chip for readers or the upkeep note. Most read cards carry their #rank. Desktop shows a wrapping grid; phones show a swipeable row per list. Display only — the data comes from the existing `GET /api/knowledge-library/home` read.
+The landing lists (Needs your attention, To read and confirm, Your favourites, Recently viewed) show each article as a card: the article's first image (or a tinted book icon), title, a two-line excerpt, the category and a chip for readers or the upkeep note. Desktop shows a wrapping grid; phones show a swipeable row per list. Display only — the data comes from the existing `GET /api/knowledge-library/home` read.
+
+
+The landing no longer shows a Most read list (the `popular` field stays in `GET /home` for compatibility).
+
+## Categories are required
+
+Every article must have a category: creating or editing an article without `categoryId` (or with `categoryId:null`) returns 400, and the editor's Category field is required with no Uncategorised choice. Network articles still need a network category. Older articles saved without a category stay readable; the list response's `uncategorised` count makes a **Needs a category** filter appear in the side bar while any exist, and they must be given a category the next time they are edited. A category that still has articles cannot be deleted (409 naming how many) — move its articles first.
