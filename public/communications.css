@@ -609,3 +609,12 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 @media (forced-colors:active){.chat-chip[aria-checked="true"]{outline:2px solid Highlight}.chat-theme-swatch{forced-color-adjust:none}}
 .chat-customise-section{align-content:start}.chat-chips{align-items:center;align-content:flex-start}.chat-chip{height:auto;align-self:center}
 .chat-colour-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+/* @mention suggestions: a plain menu list, never the company button style. */
+.mention-suggestions{font-family:inherit;color:var(--theme-text,#17212b);background:var(--theme-surface,#fff);box-shadow:0 14px 34px -14px rgba(15,23,42,.35);gap:2px}
+.mention-suggestions button.mention-option,.mention-suggestions button.mention-option:is(:hover,:focus,:focus-visible,:active){display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;width:100%!important;min-height:36px!important;height:auto!important;margin:0!important;padding:6px 10px!important;border:0!important;border-radius:8px!important;background:transparent!important;background-image:none!important;box-shadow:none!important;color:var(--theme-text,#17212b)!important;font-family:inherit!important;font-size:14px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;text-shadow:none!important;text-align:left!important;transform:none!important}
+.mention-suggestions button.mention-option strong{font:inherit!important;font-weight:600!important;color:inherit!important;text-transform:none!important;letter-spacing:normal!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mention-suggestions button.mention-option .small{font-family:inherit!important;font-size:12px!important;font-weight:400!important;color:var(--theme-muted,#5b6b7c)!important;text-transform:none!important;letter-spacing:normal!important;white-space:nowrap}
+.mention-suggestions button.mention-option:is(.is-active,:hover),.mention-suggestions button.mention-option:focus-visible{background:color-mix(in srgb,var(--chat-accent,var(--primary,#008cff)) 12%,transparent)!important;color:var(--theme-text,#17212b)!important}
+.mention-suggestions button.mention-option.is-active strong{color:var(--chat-accent,var(--primary,#008cff))!important}
+@media (forced-colors:active){.mention-suggestions button.mention-option:is(.is-active,:hover){outline:2px solid Highlight}}
+.mention-suggestions{max-height:min(280px,45vh);overflow-y:auto;overscroll-behavior:contain}
