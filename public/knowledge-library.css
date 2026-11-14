@@ -210,3 +210,40 @@ html:has(.library-dialog[open]){scroll-behavior:auto;overflow:hidden}
 .library-filters-in-heading .library-heading>.library-filters #library-scope{min-height:36px;height:36px;font-size:14px}
 .library-filters-in-heading .library-heading>.library-filters .search-toggle{width:36px;height:36px;min-height:36px}
 .knowledge-library-page:has(#library-browse[hidden]) .library-heading>.library-filters{display:none}
+/* ===== Article reading view polish (display only). ===== */
+.knowledge-library-page:has(#library-browse[hidden]) #library-create{display:none!important}
+.library-duplicate-title{display:none!important}
+/* Top bar: a plain back link and a compact Edit button. */
+.library-detail-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+#library-back{display:inline-flex;align-items:center;gap:4px;min-height:34px;padding:4px 10px 4px 6px;border:0!important;border-radius:999px;background:transparent!important;box-shadow:none!important;color:var(--theme-primary-text,var(--primary))!important;font-family:inherit!important;font-size:14px!important;font-weight:600!important;text-transform:none!important;letter-spacing:normal!important;cursor:pointer}
+#library-back:hover,#library-back:focus-visible{background:color-mix(in srgb,var(--primary) 8%,transparent)!important}
+#library-edit{min-height:36px;padding:6px 16px;border-radius:999px;font-size:14px}
+/* One reading column: tags, title, meta, tools, contents, body and extras all line up. */
+.library-reading{--reading-width:760px;padding:28px clamp(16px,4vw,48px) 36px}
+.library-reading>*{max-width:var(--reading-width);margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}
+.library-reading #library-article-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.library-reading #library-article-title{margin-top:0;margin-bottom:6px;line-height:1.15}
+.library-reading #library-article-title:focus:not(:focus-visible){outline:none;box-shadow:none}
+.library-reading #library-article-meta{margin:0 0 14px;color:var(--theme-muted,#5b6b7c)}
+/* Tools: a quiet upkeep line, then one row of small pills. */
+.library-article-tools{display:grid;gap:10px;padding:12px 0;margin-bottom:18px;border-top:1px solid var(--theme-line,#e1e8f0);border-bottom:1px solid var(--theme-line,#e1e8f0)}
+.library-article-tools .library-upkeep{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:12.5px;color:var(--theme-muted,#5b6b7c)}
+.library-article-tools .library-toolbar{display:flex;flex-wrap:wrap;gap:6px}
+.library-reading button.library-tool{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:4px 12px;border:1px solid var(--theme-line,#dce5ed);border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-text,#17212b);font-family:inherit!important;font-size:13px!important;font-weight:600!important;text-transform:none!important;letter-spacing:normal!important;box-shadow:none}
+.library-reading button.library-tool:hover,.library-reading button.library-tool:focus-visible{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))}
+.library-reading button.library-tool.is-on{border-color:color-mix(in srgb,var(--primary) 45%,transparent);background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.library-reading button.library-text-button{padding:2px 4px;border:0;background:transparent;color:var(--theme-primary-text,var(--primary));font-family:inherit!important;font-size:12.5px!important;font-weight:700!important;text-transform:none!important;letter-spacing:normal!important;cursor:pointer}
+.library-reading button.library-text-button:hover{text-decoration:underline}
+.library-article-tools .library-draft-banner{margin:0}
+/* Contents box sits in the column too. */
+.library-reading .library-toc{margin-bottom:18px}
+@media(max-width:720px){.library-reading{padding:18px 14px 26px}.library-detail-toolbar{margin-bottom:8px}}
+@media(forced-colors:active){.library-reading button.library-tool{border:1px solid ButtonText}}
+.library-reading{--reading-width:720px}
+.library-reading #library-article-title:focus{outline:none;box-shadow:none}
+.library-article-tools{border-top:0;padding-top:4px}
+.library-detail-toolbar{flex-wrap:nowrap}
+#library-back{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#library-edit{flex:0 0 auto;white-space:nowrap}
+@media(max-width:720px){#library-back{font-size:14px!important}#library-edit{min-height:34px;padding:5px 14px;font-size:13px}}
+.knowledge-library-page .library-detail-toolbar{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important}.knowledge-library-page .library-detail-toolbar>#library-back{flex:1 1 auto;width:auto!important;justify-content:flex-start}.knowledge-library-page .library-detail-toolbar>#library-edit{width:auto!important}

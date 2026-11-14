@@ -2,7 +2,7 @@
 // mode, read and confirm, quick checks, related articles, feedback, questions, review dates, drafts and versions.
 // Every write goes through an explicit click to the permission-checked Knowledge centre API.
 (function(){
- const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;return element;};
+ const node=(tag,text,cls)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;if(cls)element.className=cls;if(tag==='button'&&/\blibrary-(tool|text-button)\b/.test(cls||''))element.dataset.layoutUi='';return element;};
  const userText=element=>{element.dataset.userText='';return element;};
  const date=value=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeZone:'Australia/Melbourne'}).format(new Date(value));
  const when=value=>new Intl.DateTimeFormat('en-AU',{dateStyle:'medium',timeStyle:'short',timeZone:'Australia/Melbourne'}).format(new Date(value));

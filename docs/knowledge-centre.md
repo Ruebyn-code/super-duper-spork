@@ -64,3 +64,5 @@ Every article must have a category: creating or editing an article without `cate
 The category side bar is frameless like the app's other side bars (small uppercase Categories label, flat rows, Manage categories as a plain row), keeping its own collapse button. **+ Create article** floats as a pill in the bottom-right corner (same button, permissions and handler).
 
 On desktop (above 1100 px) the All articles/Policies/Information tabs, audience and search sit in the heading row beside the Knowledge centre title; narrower screens keep them below the heading. The category side bar is 184 px wide (168 px on tablets).
+
+The article reading view lines everything up in one 720 px column: tags, title, meta, a quiet upkeep line (owner, review dates, Mark reviewed, Version history), one row of small tool pills (Favourite, Step by step, Print, QR code), contents, the article and the extras. Back is a plain link beside a compact Edit button, the floating Create article button hides while reading, and a first heading that only repeats the article's title is hidden (display only — the saved article is unchanged).
