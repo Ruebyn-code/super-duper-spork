@@ -231,7 +231,7 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 .comms-wide-chat .communications-page{max-width:none;padding-bottom:0}
 .comms-wide-chat #communications-chats.communication-workspace{height:var(--chat-height,75dvh);min-height:320px;max-height:none}
 .comms-wide-chat.comms-conversation-active .communication-view-heading{display:none}
-.comms-wide-chat.comms-side-list.comms-conversation-active:not(.comms-conversation-open) #communications-chats.communication-workspace{grid-template-columns:minmax(0,1fr);height:var(--chat-height,75dvh)}
+.comms-wide-chat.comms-side-list.comms-conversation-active:not(.comms-conversation-open) #communications-chats.communication-workspace{grid-template-columns:minmax(0,1fr)}
 .communication-side-list[hidden]{display:none}
 .has-comms-side-list{grid-template-rows:auto minmax(0,1fr);row-gap:8px}
 .has-comms-side-list>aside,.has-comms-side-list>.communication-sidebar{grid-column:1;grid-row:1}
@@ -262,3 +262,17 @@ html:has(body.comms-conversation-open){overflow:hidden;scroll-behavior:auto}.com
 .communication-side-list .conversation-card .conversation-pin[aria-pressed="false"]{opacity:0}
 .communication-side-list .conversation-card:hover .conversation-pin,.communication-side-list .conversation-card:focus-within .conversation-pin{opacity:1}
 .communication-side-list .conversation-card:hover .conversation-link,.communication-side-list .conversation-card:focus-within .conversation-link{padding-right:26px}
+/* Open chats on desktop fill from the side bar's edge to the top bar and the bottom of the screen. */
+.comms-wide-chat.comms-conversation-active:not(.comms-conversation-open) #communications-chats.communication-workspace{position:fixed;top:0;bottom:0;left:var(--chat-left,240px);right:0;z-index:5;height:auto;min-height:0;margin:0;border:0;border-left:1px solid var(--theme-line,#dce5ed);border-radius:0;box-shadow:none}
+/* The moved conversation list looks like the side bar itself: no box, flat rows, tinted hover/selected. */
+.communication-side-list{border:0;border-top:1px solid var(--theme-line,#e3eaf1);border-radius:0;background:transparent;box-shadow:none;padding-top:6px}
+.communication-side-list .conversation-directory{padding:0 0 4px;background:transparent}
+.communication-side-list .conversation-directory-heading{border:0;padding:4px 4px 6px;margin:0;background:transparent}
+.communication-side-list .conversation-list-heading{margin:10px 8px 4px}
+.communication-side-list .conversation-card,.communication-side-list .conversation-card:hover{border:0;background:transparent;box-shadow:none;padding:0;margin:0 0 2px;border-radius:10px}
+.communication-side-list .conversation-card .conversation-link{border-radius:10px;background:transparent;padding:7px 8px}
+.communication-side-list .conversation-card .conversation-link:hover,.communication-side-list .conversation-card .conversation-link:focus-visible{background:color-mix(in srgb,var(--primary) 8%,transparent)}
+.communication-side-list .conversation-card .conversation-link.active,.communication-side-list .conversation-card .conversation-link[aria-current="true"]{background:linear-gradient(90deg,color-mix(in srgb,var(--primary) 14%,transparent),color-mix(in srgb,var(--primary) 7%,transparent));color:var(--theme-primary-text,var(--primary))}
+.communication-side-list .communication-avatar{background:transparent}
+.communication-side-list .conversation-directory>.conversation-directory-heading{background:transparent!important;box-shadow:none!important;border:0!important}
+.communication-side-list .conversation-directory{border:0!important}
