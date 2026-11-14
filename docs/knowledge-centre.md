@@ -45,3 +45,8 @@ required-reading and article visibility checks (company/network scope, permissio
 ## Notifications
 `libraryStore.notices` adds a read-only **Knowledge centre** category: articles to confirm, reviews due (owner,
 or publishers when no owner), approval requests, new questions (owner/publishers) and answers to your questions.
+
+
+## Landing cards
+
+The landing lists (Needs your attention, To read and confirm, Your favourites, Recently viewed, Most read) show each article as a card: the article's first image (or a tinted book icon), title, a two-line excerpt, the category and a chip for readers or the upkeep note. Most read cards carry their #rank. Desktop shows a wrapping grid; phones show a swipeable row per list. Display only — the data comes from the existing `GET /api/knowledge-library/home` read.
