@@ -39,3 +39,9 @@ dialog.kc-article-dialog>header.kc-article-head{display:flex;justify-content:spa
 dialog.kc-article-dialog .kc-article-titles{flex:1;min-width:0;text-align:left}
 dialog.kc-article-dialog>footer.kc-article-foot{display:flex;justify-content:flex-end;padding:10px 18px;border-top:1px solid var(--theme-line,#e2e8f0)}
 .ops-step-article-field .ops-step-article>span{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Keep linked-article cards readable wherever company button styles or white bubble text would otherwise reach them. */
+button.formatted-article-open,button.ops-step-article{background-color:color-mix(in srgb,var(--primary) 6%,var(--theme-surface,#fff))!important;background-image:none!important;color:var(--theme-text,#17212b)!important;font-family:inherit!important;font-weight:400!important;text-transform:none!important;letter-spacing:normal!important;text-shadow:none!important;box-shadow:none;text-align:left!important;height:auto!important}
+button.formatted-article-open:hover,button.ops-step-article:hover{background-color:color-mix(in srgb,var(--primary) 11%,var(--theme-surface,#fff))!important}
+:is(.formatted-article-open,.ops-step-article) .formatted-article-text :is(small,strong),.ops-step-article :is(small,strong){font-family:inherit!important;text-transform:none!important;letter-spacing:normal!important;text-shadow:none!important}
+:is(.formatted-article-open,.ops-step-article) strong{color:var(--theme-text,#17212b)!important;font-weight:650!important}
+:is(.formatted-article-open,.ops-step-article) small{color:var(--theme-primary-text,var(--primary))!important;font-weight:600!important}
