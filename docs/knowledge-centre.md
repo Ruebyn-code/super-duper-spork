@@ -57,3 +57,8 @@ The landing no longer shows a Most read list (the `popular` field stays in `GET 
 ## Categories are required
 
 Every article must have a category: creating or editing an article without `categoryId` (or with `categoryId:null`) returns 400, and the editor's Category field is required with no Uncategorised choice. Network articles still need a network category. Older articles saved without a category stay readable; the list response's `uncategorised` count makes a **Needs a category** filter appear in the side bar while any exist, and they must be given a category the next time they are edited. A category that still has articles cannot be deleted (409 naming how many) — move its articles first.
+
+
+## Layout
+
+The category side bar is frameless like the app's other side bars (small uppercase Categories label, flat rows, Manage categories as a plain row), keeping its own collapse button. **+ Create article** floats as a pill in the bottom-right corner (same button, permissions and handler).

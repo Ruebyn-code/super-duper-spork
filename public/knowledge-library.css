@@ -179,3 +179,22 @@ html:has(.library-dialog[open]){scroll-behavior:auto;overflow:hidden}
 :root[data-theme=dark] .library-home-card[data-kind="favourite"] .library-home-cover{background:linear-gradient(135deg,rgba(250,204,21,.22),rgba(250,204,21,.06));color:#fde047}
 @media (forced-colors:active){.library-home-card{border:1px solid CanvasText}}
 .library-home-cover.is-empty{aspect-ratio:auto;height:54px}.library-home-cover.is-empty svg{width:24px;height:24px}
+/* Category side bar matches the app's other side bars: frameless, small label heading, flat rows. Display only. */
+.library-workspace>#library-category-sidebar{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:2px 0!important}
+#library-category-sidebar .library-sidebar-heading{min-height:30px;padding:0 0 2px}
+#library-category-sidebar .library-sidebar-heading h2{font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--theme-muted,#5b6b7c);padding:0 10px}
+#library-category-sidebar .library-category-toggle{width:28px;min-width:28px;height:28px;padding:5px;background:transparent}
+#library-category-sidebar .library-category-toggle:hover,#library-category-sidebar .library-category-toggle:focus-visible{background:color-mix(in srgb,var(--primary) 8%,transparent)}
+#library-category-sidebar .page-sidebar-link,#library-category-sidebar button.library-category-manage{font-family:inherit!important;font-size:14px!important;font-weight:500!important;text-transform:none!important;letter-spacing:normal!important;text-shadow:none!important;border:0;box-shadow:none}
+#library-category-sidebar button.library-category-manage{background:transparent!important;background-image:none!important;color:var(--theme-primary-text,var(--primary))!important}
+#library-category-sidebar button.library-category-manage:hover,#library-category-sidebar button.library-category-manage:focus-visible{background:color-mix(in srgb,var(--primary) 8%,transparent)!important}
+@media(max-width:720px){.library-workspace[data-sidebar-collapsed=true]>#library-category-sidebar{box-shadow:none!important}.library-workspace:not([data-sidebar-collapsed=true])>#library-category-sidebar{background:var(--theme-surface,#fff)!important;border-radius:12px!important;box-shadow:6px 8px 24px #182b3a1f!important;padding:6px!important}}
+/* Create article is a floating + pill in the bottom-right corner, like Comms. Same native button and handler. */
+#library-create{position:fixed!important;right:max(22px,env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));z-index:46;display:inline-flex;align-items:center;gap:6px;min-height:48px;margin:0;padding:0 20px 0 16px;border:0;border-radius:999px;background:var(--brand-sheen,none) var(--primary);color:#fff;font-weight:700;box-shadow:0 8px 24px color-mix(in srgb,var(--primary) 32%,transparent);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+#library-create:hover{transform:translateY(-2px);box-shadow:0 12px 30px color-mix(in srgb,var(--primary) 38%,transparent)}
+#library-create:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 45%,white);outline-offset:3px}
+#library-create[hidden]{display:none!important}
+.library-page,main:has(#library-create){padding-bottom:96px}
+@media(max-width:720px){#library-create{right:max(14px,env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));min-height:44px;padding:0 16px 0 13px;font-size:14px}}
+@media(prefers-reduced-motion:reduce){#library-create{transition:none}#library-create:hover{transform:none}}
+@media(forced-colors:active){#library-create{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
