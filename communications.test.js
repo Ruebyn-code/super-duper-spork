@@ -152,6 +152,27 @@ test('poll types: sign-up spots, event RSVP, ratings, one-try quizzes, short ans
   // Posts take the same types.
   const event=(await app.post({title:'Staff party',poll:{kind:'rsvp',question:'Staff party',event:{at:'2026-12-20T08:00:00.000Z'}}})).data;assert.equal(event.poll.kind,'rsvp');
  }finally{await app.close();}});
+test('chats can be customised: colours, backgrounds, quick emoji, nicknames and group details',async()=>{const app=await fixture();try{
+  const group=(await app.comm(app.alice,'threads','POST',{kind:'group',name:'Floor team',members:[app.bobRecord.id]})).data;assert.equal(group.custom.colour,'default');assert.equal(group.canCustomise,true);
+  // Only the owner (or a Comms manager) customises a group; members see the shared look.
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/customise','PUT',{colour:'teal'})).status,403);
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{colour:'neon'})).status,400);
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{emoji:'abc'})).status,400);
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{nicknames:{[app.outsideRecord.id]:'Nope'}})).status,400);
+  const saved=(await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{revision:0,colour:'teal',background:'dots',emoji:'🔥',nicknames:{[app.bobRecord.id]:'Bobby'},name:'Floor crew',description:'Front of house chat'})).data;
+  assert.equal(saved.name,'Floor crew');assert.deepEqual([saved.custom.colour,saved.custom.background,saved.custom.emoji,saved.custom.nicknames[app.bobRecord.id],saved.custom.description],['teal','dots','🔥','Bobby','Front of house chat']);
+  const bobView=(await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===group.id);assert.equal(bobView.custom.colour,'teal');assert.equal(bobView.canCustomise,false);
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{revision:0,colour:'red'})).status,409);
+  // Group photos: uploaded by the owner and readable by members only.
+  const photo=(await app.comm(app.alice,'media','POST',{name:'team.png',mime:'image/png',data:Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000','hex').toString('base64')}));
+  assert.equal(photo.status,201,JSON.stringify(photo.data));if(photo.status===201){const withPhoto=(await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{photoId:photo.data.id})).data;assert.ok(withPhoto.custom.photoUrl);assert.equal((await app.request(app.bob,withPhoto.custom.photoUrl)).status,200);assert.equal((await app.request(app.outside,withPhoto.custom.photoUrl)).status,404);}
+  // Direct chats: each person keeps their own look; group-only fields are refused.
+  const direct=(await app.comm(app.alice,'threads','POST',{kind:'direct',members:[app.bobRecord.id]})).data;
+  assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/customise','PUT',{name:'x'})).status,400);
+  await app.comm(app.alice,'threads/'+direct.id+'/customise','PUT',{colour:'pink',nicknames:{[app.bobRecord.id]:'B'}});
+  assert.equal((await app.comm(app.alice,'threads')).data.threads.find(t=>t.id===direct.id).custom.colour,'pink');
+  assert.equal((await app.comm(app.bob,'threads')).data.threads.find(t=>t.id===direct.id).custom.colour,'default');
+ }finally{await app.close();}});
 test('posts support scheduling, polls, comments, read reminders and on-shift audiences',async()=>{
  const app=await fixture();try{
   // Scheduled posts stay with the author until their time.

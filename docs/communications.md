@@ -32,3 +32,6 @@ Direct messages and Group chats fill the space beside the Comms side bar on desk
 
 ## Phone list
 On phones Comms opens to one list: recent posts as small cards that scroll sideways across the top, then one Messages list of direct messages and groups, newest activity first (a chat with a new message moves to the top) with a search box and a + Create menu. Rows open the normal post view or the full-screen chat; ‹ Comms and Back return to the list. Opening the list never marks anything as read.
+
+## Customising chats
+⋯ → **Customise chat** (direct) or **Customise group** sets the chat colour, background, quick-reaction emoji and nicknames, and for groups a description and photo (owners can also rename ordinary groups). `PUT /api/communications/threads/:id/customise` with `revision`, `colour`, `background`, `emoji`, `nicknames`, and for groups `description`, `photoId` (and `name` for ordinary groups). Direct-chat looks are personal; group looks are shared and editable by the group owner or Comms managers.

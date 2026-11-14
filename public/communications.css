@@ -430,3 +430,56 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 #conversation-messages .conversation-message.own .communication-poll{color:var(--theme-text,#17212b)}
 #conversation-messages .conversation-message.own :focus-visible{outline-color:#fff}
 @media (forced-colors:active){#conversation-messages .conversation-message.own,#conversation-messages .conversation-message:not(.own){background:Canvas;color:CanvasText;border:1px solid CanvasText}}
+/* Chat customisation: per-chat colour (sent bubbles, Send, focus) and background. */
+#active-conversation{--chat-accent:var(--primary)}
+#active-conversation #conversation-messages .conversation-message.own{background:var(--brand-sheen,none) var(--chat-accent,var(--primary))}
+#active-conversation #message-composer>button#send-message{background:var(--brand-sheen,none) var(--chat-accent,var(--primary));box-shadow:0 4px 12px color-mix(in srgb,var(--chat-accent,var(--primary)) 30%,transparent)}
+#active-conversation #message-composer>button.composer-poll{color:var(--chat-accent,var(--primary))}
+#active-conversation #message-composer:focus-within{border-color:color-mix(in srgb,var(--chat-accent,var(--primary)) 55%,var(--theme-line,#d7e1ea));box-shadow:0 0 0 3px color-mix(in srgb,var(--chat-accent,var(--primary)) 16%,transparent)}
+:is(#active-conversation,.chat-customise-preview,.chat-background-choice)[data-chat-bg="soft"] :is(#conversation-messages),.chat-customise-preview[data-chat-bg="soft"],.chat-background-choice[data-chat-bg="soft"]{background:linear-gradient(180deg,color-mix(in srgb,var(--chat-accent,var(--primary)) 7%,var(--theme-surface,#fff)),var(--theme-surface,#fff))}
+#active-conversation[data-chat-bg="dots"] #conversation-messages,.chat-customise-preview[data-chat-bg="dots"],.chat-background-choice[data-chat-bg="dots"]{background:radial-gradient(color-mix(in srgb,var(--chat-accent,var(--primary)) 22%,transparent) 1.2px,transparent 1.4px) 0 0/16px 16px,var(--theme-surface,#fff)}
+#active-conversation[data-chat-bg="grid"] #conversation-messages,.chat-customise-preview[data-chat-bg="grid"],.chat-background-choice[data-chat-bg="grid"]{background:linear-gradient(color-mix(in srgb,var(--chat-accent,var(--primary)) 9%,transparent) 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,color-mix(in srgb,var(--chat-accent,var(--primary)) 9%,transparent) 1px,transparent 1px) 0 0/22px 22px,var(--theme-surface,#fff)}
+#active-conversation[data-chat-bg="waves"] #conversation-messages,.chat-customise-preview[data-chat-bg="waves"],.chat-background-choice[data-chat-bg="waves"]{background:repeating-radial-gradient(circle at 0 100%,transparent 0 18px,color-mix(in srgb,var(--chat-accent,var(--primary)) 7%,transparent) 18px 20px),var(--theme-surface,#fff)}
+#active-conversation[data-chat-bg="sunset"] #conversation-messages,.chat-customise-preview[data-chat-bg="sunset"],.chat-background-choice[data-chat-bg="sunset"]{background:linear-gradient(160deg,#fff4e6,#ffe3ec 55%,#efe6ff)}
+#active-conversation[data-chat-bg="mint"] #conversation-messages,.chat-customise-preview[data-chat-bg="mint"],.chat-background-choice[data-chat-bg="mint"]{background:linear-gradient(160deg,#ecfdf5,#e0f2fe)}
+#active-conversation[data-chat-bg="night"] #conversation-messages,.chat-customise-preview[data-chat-bg="night"],.chat-background-choice[data-chat-bg="night"]{background:linear-gradient(170deg,#101828,#1e293b)}
+#active-conversation[data-chat-bg="night"] .conversation-message:not(.own){background:#273449!important;color:#f1f5f9!important}
+#active-conversation[data-chat-bg="night"] .conversation-message:not(.own) .message-footer,#active-conversation[data-chat-bg="night"] .conversation-message:not(.own) time,#active-conversation[data-chat-bg="night"] .conversation-live{color:#cbd5e1}
+#active-conversation[data-chat-bg="night"] .conversation-message:not(.own) .formatted-text{color:#f1f5f9}
+#active-conversation[data-chat-bg="sunset"] .conversation-message:not(.own),#active-conversation[data-chat-bg="mint"] .conversation-message:not(.own){background:rgba(255,255,255,.85)}
+/* Header photo and description. */
+.conversation-photo{flex:none;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;overflow:hidden;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff))}
+.conversation-photo[hidden]{display:none}
+.conversation-photo img,.communication-avatar.has-photo img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.communication-avatar.has-photo{overflow:hidden;padding:0}
+.conversation-description{margin:2px 0 0;font-size:12px;color:var(--theme-muted,#5b6b7c);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:60ch}
+.conversation-description[hidden]{display:none}
+/* Quick-react button on each message. */
+.reaction-quick{display:inline-grid;place-items:center;min-width:24px;height:24px;min-height:24px;padding:0 4px;border:0;border-radius:999px;background:transparent;font-size:14px;line-height:1;cursor:pointer}
+.reaction-quick:hover,.reaction-quick:focus-visible{background:color-mix(in srgb,var(--primary) 12%,transparent)}
+@media (hover:hover) and (pointer:fine){.conversation-message .reaction-quick{opacity:0;transition:opacity .12s}.conversation-message:hover .reaction-quick,.conversation-message:focus-within .reaction-quick{opacity:1}}
+/* Customise dialog. */
+.chat-customise{display:grid;gap:12px;min-width:min(440px,84vw)}
+.chat-customise-section{margin:0;padding:0;border:0;display:grid;gap:6px}
+.chat-customise-section legend{padding:0;margin-bottom:4px;font-size:13px;font-weight:700}
+.chat-customise-hint{color:var(--theme-muted,#5b6b7c);font-size:12px}
+.chat-swatches{display:flex;flex-wrap:wrap;gap:8px}
+.chat-swatch{width:32px;height:32px;min-height:32px;padding:0;border-radius:50%;border:2px solid transparent;background:var(--brand-sheen,none) var(--swatch);box-shadow:inset 0 0 0 2px var(--theme-surface,#fff);cursor:pointer}
+.chat-swatch[aria-checked="true"]{border-color:var(--theme-text,#17212b)}
+.chat-backgrounds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.chat-background-choice{min-height:46px;padding:4px;border:2px solid var(--theme-line,#dce5ed);border-radius:10px;display:flex;align-items:flex-end;justify-content:center;font-size:11px;font-weight:700;color:var(--theme-text,#17212b);cursor:pointer;background:var(--theme-surface,#fff)}
+.chat-background-choice span{padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.85);color:#17212b}
+.chat-background-choice[aria-checked="true"]{border-color:var(--primary)}
+.chat-customise-preview{display:grid;gap:6px;padding:12px;border:1px solid var(--theme-line,#dce5ed);border-radius:14px;background:var(--theme-surface,#fff)}
+.chat-preview-in,.chat-preview-out{max-width:75%;padding:6px 11px;border-radius:14px;font-size:13px}
+.chat-preview-in{justify-self:start;background:color-mix(in srgb,var(--theme-text,#17212b) 7%,var(--theme-surface,#fff));color:var(--theme-text,#17212b);border-bottom-left-radius:6px}
+.chat-preview-out{justify-self:end;background:var(--brand-sheen,none) var(--chat-accent,var(--primary));color:#fff;border-bottom-right-radius:6px}
+.chat-customise-preview[data-chat-bg="night"] .chat-preview-in{background:#273449;color:#f1f5f9}
+.chat-emoji-choice{justify-self:start;width:44px;height:44px;font-size:24px;border:1px solid var(--theme-line,#dce5ed);border-radius:12px;background:var(--theme-surface,#fff);cursor:pointer}
+.chat-nicknames{display:grid;gap:6px;max-height:180px;overflow:auto}
+.chat-nickname-row{display:grid;grid-template-columns:minmax(90px,1fr) 1.4fr;align-items:center;gap:8px;margin:0;font-size:13px}
+.chat-photo-row{display:flex;align-items:center;gap:10px}
+.chat-photo-preview{width:48px;height:48px}
+@media (max-width:520px){.chat-backgrounds{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (forced-colors:active){.chat-swatch{forced-color-adjust:none}.chat-swatch[aria-checked="true"],.chat-background-choice[aria-checked="true"]{outline:2px solid Highlight}}
+.chat-swatches::before,.chat-backgrounds::before{content:'';display:none}.chat-swatch,.chat-swatch[aria-checked="true"]{background:var(--brand-sheen,none) var(--swatch)!important}
