@@ -511,7 +511,7 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 #active-conversation:not([data-chat-bg="plain"]) #message-composer{background:color-mix(in srgb,var(--theme-surface,#fff) 90%,transparent);backdrop-filter:blur(8px)}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]){color:#f1f5f9;--theme-text:#f1f5f9;--theme-muted:#cbd5e1}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-heading :is(h2,p,.small,button:not(.communication-primary)){color:#f1f5f9}
-#active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-heading button:not(.conversation-pin){background:rgba(255,255,255,.1)!important;background-image:none!important;border-color:rgba(255,255,255,.22)!important;color:#f1f5f9!important}
+#active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-heading button:not(.conversation-pin):not([role="menuitem"]){background:rgba(255,255,255,.1)!important;background-image:none!important;border-color:rgba(255,255,255,.22)!important;color:#f1f5f9!important}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-message:not(.own) :is(.message-action,.reaction-add){color:#bae6fd}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) #message-composer{background:rgba(15,23,42,.72);border-color:rgba(255,255,255,.18);color:#f1f5f9}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) #message-composer :is(.text-editor-content,.text-format-button,.editor-menu-button,.text-editor-footer,small){color:#e2e8f0}
@@ -521,3 +521,7 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 #active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) #message-composer>button.composer-poll{color:#e2e8f0}
 #active-conversation:not([data-chat-bg="plain"])>[data-feature-instruction]{background:transparent}
 @media (forced-colors:active){#active-conversation{background:Canvas!important;color:CanvasText}}
+#active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-options-menu{background:#1e293b;border-color:rgba(255,255,255,.16);color:#f1f5f9;box-shadow:0 14px 34px -12px rgba(0,0,0,.6)}
+#active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-options-menu button{color:#f1f5f9}
+#active-conversation:is([data-chat-bg="night"],[data-chat-bg="stars"],[data-chat-bg="forest"],[data-chat-bg="aurora"]) .conversation-options-menu button:is(:hover,:focus-visible){background:rgba(255,255,255,.1)}
+#active-conversation:not([data-chat-bg="plain"]) .conversation-heading{position:relative;z-index:6}
