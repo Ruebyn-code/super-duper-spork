@@ -31,6 +31,9 @@ function remaining(amount,onHand,roundTo){
  const left=Math.max(0,Math.round((amount-onHand)*1000)/1000);if(!left)return 0;
  if(roundTo){const steps=Math.round(roundTo*1000);return Math.ceil(Math.round(left*1000)/steps)*steps/1000;}return left;
 }
+// More than one to make (up to 20) splits an item into one checkbox per unit; the last box holds any part unit (2.5 → 1, 1, 0.5).
+function partCount(toPrep){if(typeof toPrep!=='number'||!Number.isFinite(toPrep))return 1;const count=Math.ceil(Math.round(toPrep*1000)/1000);return count>1&&count<=20?count:1;}
+function partSizes(toPrep){const count=partCount(toPrep);if(count<2)return null;return Array.from({length:count},(_,index)=>index<count-1?1:Math.round((toPrep-(count-1))*1000)/1000);}
 // The amount to prep for a sales-based item: amount × projected dollars ÷ salesPer, rounded up to roundTo (or to 0.001). Unknown projections stay unknown.
 function salesAmount(item,projectedCents){
  if(!Number.isSafeInteger(projectedCents)||projectedCents<0)return null;
@@ -66,7 +69,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   return{date:day,today:current,locationId:actor.locationId,canTick:day===current,canManage:manage,canPrint:can(actor,'prep.print'),
    rows:rows.map(row=>{const entry=stock[row.id],onHand=Number.isFinite(entry?.quantity)?entry.quantity:null,frozen=ticks[row.id]?.done&&ticks[row.id].snapshot&&Object.hasOwn(ticks[row.id].snapshot,'toPrep');
     const roundTo=live.find(item=>item.id===row.id)?.roundTo||null;
-    return{...row,onHand,onHandRevision:entry?.revision||0,onHandBy:entry&&onHand!==null?entry.by:null,onHandAt:entry&&onHand!==null?entry.at:null,toPrep:frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo),done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0};}),
+    return{...row,onHand,onHandRevision:entry?.revision||0,onHandBy:entry&&onHand!==null?entry.by:null,onHandAt:entry&&onHand!==null?entry.at:null,toPrep:frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo),done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0,...partsView(ticks[row.id],frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo))};}),
    ...(manage?{items:live.map(present).sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name)),labelTemplates:labels.filter(item=>item.active).map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name))}:{})};
  }
  async function create(actor,input){
@@ -100,6 +103,10 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   });
  }
  // Tick or untick one item for today. Repeating the same tick is harmless; changing it needs the current revision.
+ // Split items list each box ticked so far (every box once the item is done) with who ticked it.
+ function partsView(record,toPrep){const sizes=partSizes(toPrep);if(!sizes)return{};const done=record?.done?sizes.map((_,index)=>index):Object.keys(record?.parts||{}).map(Number).filter(index=>index<sizes.length).sort((a,b)=>a-b);
+  return{parts:sizes.map((size,index)=>({index,size,done:done.includes(index),by:record?.parts?.[index]?.by||(record?.done?record.doneBy:null)||null,at:record?.parts?.[index]?.at||(record?.done?record.doneAt:null)||null}))};}
+ const tickValue=(itemId,record,toPrep)=>({itemId,done:Boolean(record?.done),doneAt:record?.done?record.doneAt:null,doneBy:record?.done?record.doneBy:null,tickRevision:record?.revision||0,...partsView(record,toPrep)});
  async function tick(actor,input){
   need(actor);const current=today();
   if(input?.date!==current)fail('Prep items can only be ticked off for today. Reload the list.',409);
@@ -110,13 +117,40 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   return mutate(dayFile(actor,current),{ticks:{}},state=>{
    state.ticks||={};const existing=state.ticks[input.itemId];
    if(!item&&!existing)fail('This prep item is not on today\'s list.',404);
-   if(existing&&existing.done===input.done)return{changed:false,value:{itemId:input.itemId,done:existing.done,doneAt:existing.done?existing.doneAt:null,doneBy:existing.done?existing.doneBy:null,tickRevision:existing.revision}};
+   const heldNow=Number.isFinite(state.onHand?.[input.itemId]?.quantity)?state.onHand[input.itemId].quantity:null,leftOf=record=>record?.done&&record.snapshot&&Object.hasOwn(record.snapshot,'toPrep')?record.snapshot.toPrep:remaining(amount,heldNow,item?.roundTo);
+   if(existing&&existing.done===input.done&&(input.done||!Object.keys(existing.parts||{}).length))return{changed:false,value:tickValue(input.itemId,existing,leftOf(existing))};
    if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
    const stamp=new Date(now()).toISOString(),held=Number.isFinite(state.onHand?.[input.itemId]?.quantity)?state.onHand[input.itemId].quantity:null;
    // Ticking freezes what was on hand and what was left to make; unticking keeps the record of the earlier tick.
    const snapshot=input.done&&item?{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{}),onHand:held,toPrep:remaining(amount,held,item.roundTo)}:existing?.snapshot||{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{})};
-   const next={done:input.done,snapshot,revision:(existing?.revision||0)+1,doneAt:input.done?stamp:existing?.doneAt||null,doneBy:input.done?person(actor):existing?.doneBy||null,history:[...(existing?.history||[]),{done:input.done,at:stamp,by:person(actor)}].slice(-20)};
-   state.ticks[input.itemId]=next;return{changed:true,value:{itemId:input.itemId,done:next.done,doneAt:next.done?next.doneAt:null,doneBy:next.done?next.doneBy:null,tickRevision:next.revision}};
+   const next={done:input.done,snapshot,...(input.done?{parts:existing?.parts||{}}:{parts:{}}),revision:(existing?.revision||0)+1,doneAt:input.done?stamp:existing?.doneAt||null,doneBy:input.done?person(actor):existing?.doneBy||null,history:[...(existing?.history||[]),{done:input.done,at:stamp,by:person(actor)}].slice(-20)};
+   state.ticks[input.itemId]=next;return{changed:true,value:tickValue(input.itemId,next,leftOf(next))};
+  });
+ }
+ // Tick or untick one box of a split item. The item is done once every box is ticked; unticking a box of a done item
+ // reopens it with the other boxes still ticked. Repeating the same tick is harmless; changes need the current revision.
+ async function tickPart(actor,input){
+  need(actor);const current=today();
+  if(input?.date!==current)fail('Prep items can only be ticked off for today. Reload the list.',409);
+  if(!uuid(input?.itemId)||!Number.isInteger(input.index)||input.index<0||input.index>19||typeof input.done!=='boolean'||!Number.isSafeInteger(input.revision))fail('Reload the prep list before ticking items off.');
+  const item=(await readItems(actor)).items.find(entry=>entry.id===input.itemId&&!entry.deleted&&entry.active&&onDay(entry,current));
+  if(!item)fail('This prep item is not on today\'s list.',404);
+  let amount=item.amount;if(item.basis==='sales')amount=(await list(actor,{date:current})).rows.find(row=>row.id===item.id)?.amount??null;
+  return mutate(dayFile(actor,current),{ticks:{}},state=>{
+   state.ticks||={};const existing=state.ticks[input.itemId],held=Number.isFinite(state.onHand?.[input.itemId]?.quantity)?state.onHand[input.itemId].quantity:null;
+   const toPrep=existing?.done&&existing.snapshot&&Object.hasOwn(existing.snapshot,'toPrep')?existing.snapshot.toPrep:remaining(amount,held,item.roundTo),count=partCount(toPrep);
+   if(count<2||input.index>=count)fail('That box is no longer on this item. Reload the prep list.',409);
+   const ticked=Boolean(existing?.done)||Boolean(existing?.parts?.[input.index]);
+   if(ticked===input.done)return{changed:false,value:tickValue(input.itemId,existing,toPrep)};
+   if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
+   const stamp=new Date(now()).toISOString(),parts={};
+   // A done item counts every box as ticked; keep who ticked each one where it was recorded.
+   for(let index=0;index<count;index+=1)if(existing?.done||existing?.parts?.[index])parts[index]=existing?.parts?.[index]||{at:existing.doneAt,by:existing.doneBy};
+   if(input.done)parts[input.index]={at:stamp,by:person(actor)};else delete parts[input.index];
+   const done=Object.keys(parts).length===count;
+   const snapshot=done?{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{}),onHand:held,toPrep}:existing?.snapshot||{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{})};
+   const next={done,snapshot,parts,revision:(existing?.revision||0)+1,doneAt:done?stamp:existing?.doneAt||null,doneBy:done?person(actor):existing?.doneBy||null,history:[...(existing?.history||[]),{part:input.index,done:input.done,at:stamp,by:person(actor)}].slice(-20)};
+   state.ticks[input.itemId]=next;return{changed:true,value:tickValue(input.itemId,next,toPrep)};
   });
  }
  // Record how much is already prepped (on hand) for one of today's items; the list then shows only the rest to make.
@@ -134,19 +168,20 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
    if(same&&(existing||quantity===null))return{changed:false,value:shown(existing)};
    if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
    if(state.ticks?.[input.itemId]?.done)fail('This item is already marked done. Untick it before changing what was already prepped.',409);
+   if(Object.keys(state.ticks?.[input.itemId]?.parts||{}).length)fail('Some boxes of this item are already ticked. Untick them before changing what was already prepped.',409);
    const stamp=new Date(now()).toISOString(),next={quantity,revision:(existing?.revision||0)+1,at:stamp,by:person(actor),history:[...(existing?.history||[]),{quantity,at:stamp,by:person(actor)}].slice(-20)};
    state.onHand[input.itemId]=next;return{changed:true,value:shown(next)};
   });
  }
  // Today's progress for Home: counts and the remaining items, read-only.
- async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
+ async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis,parts})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(parts?{partsDone:parts.filter(part=>part.done).length,partCount:parts.length}:{}),...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
  // Staff activity: who finished which prep item, for recent days at this location.
  async function activity(actor,{start,end}){
   need(actor);const from=start&&validDate(start)?start:shift(today(),-31),to=end&&validDate(end)?end:today(),events=[];
   for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount===null||tick.snapshot.amount===undefined?'':tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
   return events;
  }
- return{list,create,update,remove,tick,setOnHand,summary,activity};
+ return{list,create,update,remove,tick,tickPart,setOnHand,summary,activity};
 }
 async function route({req,url,params,session,store,body,json}){
  if(url!=='/api/prep-list'&&!url.startsWith('/api/prep-list/')&&url!=='/api/home-prep')return false;
@@ -155,10 +190,11 @@ async function route({req,url,params,session,store,body,json}){
  if(url==='/api/prep-list'&&req.method==='GET'){json(200,await store.list(session,{date:params.get('date')||undefined}));return true;}
  if(url==='/api/prep-list/items'&&req.method==='POST'){json(201,await store.create(session,await body(req,16000)));return true;}
  if(url==='/api/prep-list/tick'&&req.method==='POST'){json(200,await store.tick(session,await body(req,4000)));return true;}
+ if(url==='/api/prep-list/part'&&req.method==='POST'){json(200,await store.tickPart(session,await body(req,4000)));return true;}
  if(url==='/api/prep-list/on-hand'&&req.method==='POST'){json(200,await store.setOnHand(session,await body(req,4000)));return true;}
  const match=url.match(/^\/api\/prep-list\/items\/([a-f0-9-]{36})$/i);
  if(match&&req.method==='PUT'){json(200,await store.update(session,match[1],await body(req,16000)));return true;}
  if(match&&req.method==='DELETE'){json(200,await store.remove(session,match[1],await body(req,4000)));return true;}
  fail('Prep list endpoint not found.',404);
 }
-module.exports={createStore,route,details,salesAmount,remaining};
+module.exports={createStore,route,details,salesAmount,remaining,partCount,partSizes};

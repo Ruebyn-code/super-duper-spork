@@ -88,3 +88,25 @@ test('already prepped amounts come off what is still to make, are today-only and
  row=(await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);assert.equal(row.toPrep,10,'clearing means the whole amount is still to make');
  assert.equal(f.calls(),0);
 });
+test('items with more than one to make split into one box per unit and finish when every box is ticked',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const saved=await f.api(f.office,'/api/prep-list/items','POST',item({amount:3.5,unit:'trays'}));
+ const row=async()=> (await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);
+ let current=await row();assert.deepEqual(current.parts.map(part=>part.size),[1,1,1,0.5]);
+ const part=(index,done,revision)=>f.api(f.staff,'/api/prep-list/part','POST',{date:'2026-10-23',itemId:saved.id,index,done,revision});
+ let result=await part(0,true,0);assert.equal(result.done,false);assert.equal(result.parts[0].by.name,'Staff');
+ assert.equal((await part(0,true,0)).tickRevision,1,'repeating a box tick is harmless');
+ assert.equal((await f.request(f.staff,'/api/prep-list/part','POST',{date:'2026-10-23',itemId:saved.id,index:1,done:true,revision:0})).status,409,'stale box ticks are rejected');
+ assert.equal((await f.request(f.staff,'/api/prep-list/part','POST',{date:'2026-10-23',itemId:saved.id,index:4,done:true,revision:1})).status,409,'boxes beyond the amount are rejected');
+ assert.equal((await f.request(f.staff,'/api/prep-list/on-hand','POST',{date:'2026-10-23',itemId:saved.id,quantity:1,revision:0})).status,409,'already prepped is locked once boxes are ticked');
+ result=await part(1,true,1);result=await part(2,true,2);result=await part(3,true,3);assert.equal(result.done,true,'the last box finishes the item');
+ assert.equal((await f.api(f.staff,'/api/home-prep')).done,1);
+ result=await part(1,false,4);assert.equal(result.done,false);assert.deepEqual(result.parts.map(entry=>entry.done),[true,false,true,true],'unticking one box keeps the others');
+ const whole=await f.api(f.staff,'/api/prep-list/tick','POST',{date:'2026-10-23',itemId:saved.id,done:false,revision:5});assert(whole.parts.every(entry=>!entry.done),'unticking the whole item clears its boxes');
+ // Already prepped changes the number of boxes.
+ await f.api(f.staff,'/api/prep-list/on-hand','POST',{date:'2026-10-23',itemId:saved.id,quantity:2,revision:0});
+ current=await row();assert.deepEqual(current.parts.map(entry=>entry.size),[1,0.5]);
+ await f.api(f.staff,'/api/prep-list/on-hand','POST',{date:'2026-10-23',itemId:saved.id,quantity:3,revision:1});
+ current=await row();assert.equal(current.parts,undefined,'one or less to make keeps a single checkbox');
+ assert.equal(f.calls(),0);
+});

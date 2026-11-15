@@ -87,3 +87,16 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 .prep-onhand-note{font-size:.72rem;color:var(--theme-muted,#64748b)}
 .prep-item-amount.is-covered{color:var(--theme-success-text,#15803d)}
 @media(pointer:coarse){.prep-item .prep-onhand .prep-onhand-field input{height:38px;min-height:38px;width:88px;font-size:16px}}
+/* Split items: one small checkbox per unit to make */
+.prep-parts{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin:6px 0 0}
+.prep-part{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:34px;height:30px;margin:0;padding:0 8px;border:1.5px solid var(--prep-line,var(--theme-line,#cfd9e4));border-radius:8px;background:var(--theme-surface,#fff);color:var(--theme-muted,#64748b);font:inherit;font-size:.74rem;font-weight:700;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+.prep-part svg{display:none}
+.prep-part:hover:not(:disabled):not(.is-done){border-color:var(--primary,#008cff);color:var(--theme-primary-text,var(--primary,#008cff))}
+.prep-part.is-done{border-color:var(--theme-success-text,#16a34a);background:var(--theme-success-text,#16a34a);color:#fff}
+.prep-part.is-done svg{display:block}
+.prep-part:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}
+.prep-part:disabled{cursor:default;opacity:.65}
+.prep-parts-count{margin-left:2px;font-size:.72rem;color:var(--theme-muted,#64748b)}
+@media(pointer:coarse){.prep-part{min-width:40px;height:38px}}
+@media(prefers-reduced-motion:reduce){.prep-part{transition:none}}
+@media(forced-colors:active){.prep-part.is-done{background:Highlight;border-color:Highlight;color:HighlightText}}

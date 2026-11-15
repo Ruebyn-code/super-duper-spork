@@ -44,6 +44,7 @@
   const top=el('div',undefined,'prep-item-top');top.append(name,qty);body.append(top);
   // Sales-based amounts: everyone sees the badge; only sales viewers see the ratio and the projected sales behind it.
   if(row.basis==='sales'){const basis=el('p',undefined,'prep-item-basis');basis.append(ui('span','Based on projected sales','prep-basis-badge'));if(row.amount===null||row.amount===undefined)basis.append(data('span',' · '+word(row.amountReason||'No sales projection for this day yet.')));else if(row.salesPer)basis.append(data('span',' · '+word('{amount} per {sales} · projected {projected}',{amount:amount(row.ratio)+(row.unit?' '+row.unit:''),sales:money(row.salesPer*100),projected:money(row.projectedSalesCents)})));body.append(basis);}
+  if(row.parts?.length)body.append(partBoxes(row));
   body.append(onHandField(row,known,left));
   if(row.notes)body.append(data('p',row.notes,'prep-item-notes'));
   if(row.done&&row.doneBy)body.append(data('p',word('Done by {name} at {time}',{name:row.doneBy.name||word('someone'),time:time(row.doneAt)}),'prep-item-meta'));
@@ -56,7 +57,7 @@
  function onHandField(row,known,left){
   const wrap=el('div',undefined,'prep-onhand'),label=el('label',undefined,'prep-onhand-field'),input=el('input'),note=el('span',undefined,'prep-onhand-note');
   input.type='number';input.min='0';input.max='1000000';input.step='0.001';input.inputMode='decimal';input.placeholder='0';input.value=row.onHand===null||row.onHand===undefined?'':String(row.onHand);
-  input.disabled=!state.canTick||row.removed||row.done||pending.has(row.id);input.dataset.prepOnhand=row.id;input.dataset.saved=input.value;
+  input.disabled=!state.canTick||row.removed||row.done||pending.has(row.id)||Boolean(row.parts?.some(part=>part.done));input.dataset.prepOnhand=row.id;input.dataset.saved=input.value;
   label.append(ui('span','Already prepped'),input);if(row.unit)label.append(data('span',row.unit,'prep-onhand-unit'));
   input.setAttribute('aria-label',word('Already prepped: {name}',{name:row.name}));
   if(row.onHand!==null&&row.onHand!==undefined&&known)note.append(left?data('span',word('{left} still to make of {total}',{left:amount(left)+(row.unit?' '+row.unit:''),total:amount(row.amount)})):ui('span','Enough already prepped'));
@@ -66,17 +67,36 @@
   input.addEventListener('change',commit);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
   wrap.hidden=!state.canTick&&(row.onHand===null||row.onHand===undefined);  wrap.append(label,note);return wrap;
  }
+ // More than one to make: one checkbox per unit (the last may be a part unit). The item is done once every box is ticked.
+ function partBoxes(row){
+  const wrap=el('div',undefined,'prep-parts'),total=row.parts.length,ticked=row.parts.filter(part=>part.done).length;wrap.setAttribute('role','group');wrap.setAttribute('aria-label',word('{name}: {done} of {total} ticked',{name:row.name,done:ticked,total}));
+  for(const part of row.parts){const box=el('button',undefined,'prep-part'+(part.done?' is-done':''));box.type='button';box.dataset.prepPart=row.id+':'+part.index;box.setAttribute('aria-pressed',String(part.done));
+   box.disabled=!state.canTick||row.removed||pending.has(row.id);
+   const size=amount(part.size)+(row.unit?' '+row.unit:'');box.setAttribute('aria-label',word('{size}, {number} of {total}',{size,number:part.index+1,total}));
+   box.title=part.done&&part.by?word('Done by {name} at {time}',{name:part.by.name||word('someone'),time:time(part.at)}):size;
+   box.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+   box.append(data('span',part.size===1?String(part.index+1):amount(part.size),'prep-part-label'));
+   box.onclick=()=>togglePart(row,part);wrap.append(box);}
+  wrap.append(data('span',word('{done} of {total}',{done:ticked,total}),'prep-parts-count'));return wrap;
+ }
+ async function togglePart(row,part){
+  if(!state?.canTick||pending.has(row.id))return;pending.add(row.id);render();status.textContent='';const focusKey=row.id+':'+part.index;
+  try{const result=await api('/part','POST',{date:state.date,itemId:row.id,index:part.index,done:!part.done,revision:row.tickRevision});Object.assign(row,{done:result.done,doneAt:result.doneAt,doneBy:result.doneBy,tickRevision:result.tickRevision,parts:result.parts||row.parts});
+   if(result.done&&row.label&&state.canPrint)status.textContent=word('{name} done. Use Print labels to print food labels for it.',{name:row.name});}
+  catch(error){status.textContent=error.message;if(error.status===409){try{state=await api('?date='+encodeURIComponent(state.date));}catch{}}}
+  finally{pending.delete(row.id);render();list.querySelector('[data-prep-part="'+CSS.escape(focusKey)+'"]')?.focus({preventScroll:true});}
+ }
  async function saveOnHand(row,quantity){
   if(!state?.canTick||pending.has(row.id))return;pending.add(row.id);status.textContent='';
   try{const result=await api('/on-hand','POST',{date:state.date,itemId:row.id,quantity,revision:row.onHandRevision||0});Object.assign(row,{onHand:result.onHand,onHandRevision:result.onHandRevision,onHandBy:result.onHandBy,onHandAt:result.onHandAt});
    // The remaining amount comes from the server so rounding matches everywhere.
-   const fresh=await api('?date='+encodeURIComponent(state.date)).catch(()=>null),match=fresh?.rows?.find(entry=>entry.id===row.id);if(match)Object.assign(row,{toPrep:match.toPrep});else row.toPrep=null;}
+   const fresh=await api('?date='+encodeURIComponent(state.date)).catch(()=>null),match=fresh?.rows?.find(entry=>entry.id===row.id);if(match)Object.assign(row,{toPrep:match.toPrep,parts:match.parts});else row.toPrep=null;}
   catch(error){status.textContent=error.message;if(error.status===409){try{state=await api('?date='+encodeURIComponent(state.date));}catch{}}}
   finally{pending.delete(row.id);render();}
  }
  async function toggle(row){
   if(!state?.canTick||pending.has(row.id))return;pending.add(row.id);render();status.textContent='';
-  try{const result=await api('/tick','POST',{date:state.date,itemId:row.id,done:!row.done,revision:row.tickRevision});Object.assign(row,{done:result.done,doneAt:result.doneAt,doneBy:result.doneBy,tickRevision:result.tickRevision});
+  try{const result=await api('/tick','POST',{date:state.date,itemId:row.id,done:!row.done,revision:row.tickRevision});Object.assign(row,{done:result.done,doneAt:result.doneAt,doneBy:result.doneBy,tickRevision:result.tickRevision,...(result.parts?{parts:result.parts}:{})});
    if(result.done&&row.label&&state.canPrint)status.textContent=word('{name} done. Use Print labels to print food labels for it.',{name:row.name});}
   catch(error){status.textContent=error.message;if(error.status===409)await load();}
   finally{pending.delete(row.id);render();}
