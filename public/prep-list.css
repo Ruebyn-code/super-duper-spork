@@ -76,3 +76,14 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 .prep-sales-row[hidden],.prep-sales-hint[hidden]{display:none}
 .prep-sales-hint{margin:-2px 0 4px;font-size:.72rem;line-height:1.4;color:var(--theme-muted,#64748b)}
 .prep-days[hidden]{display:none}
+/* Already prepped: on-hand amount that comes off what is still to make */
+.prep-onhand{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin:5px 0 0}
+.prep-onhand[hidden]{display:none}
+.prep-item .prep-onhand .prep-onhand-field{display:inline-flex;align-items:center;gap:6px;margin:0;font-size:.74rem;color:var(--theme-muted,#64748b);font-weight:600}
+.prep-item .prep-onhand .prep-onhand-field input{margin:0;box-sizing:border-box;height:30px;width:76px;min-height:30px;padding:3px 8px;border:1px solid var(--prep-line,var(--theme-line,#dbe3ec));border-radius:8px;font:inherit;font-size:.82rem;font-weight:600;color:var(--theme-text,#1d2b3f);background:var(--theme-surface,#fff)}
+.prep-item .prep-onhand .prep-onhand-field input:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:1px}
+.prep-item .prep-onhand .prep-onhand-field input:disabled{opacity:.6}
+.prep-onhand-unit{font-weight:500}
+.prep-onhand-note{font-size:.72rem;color:var(--theme-muted,#64748b)}
+.prep-item-amount.is-covered{color:var(--theme-success-text,#15803d)}
+@media(pointer:coarse){.prep-item .prep-onhand .prep-onhand-field input{height:38px;min-height:38px;width:88px;font-size:16px}}

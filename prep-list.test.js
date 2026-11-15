@@ -63,3 +63,28 @@ test('prep lists refuse while the Prep list feature is switched off',async t=>{
  await store.create(actor,item());await assert.rejects(store.list({...actor,disabledFeatures:['prep']}),/switched off/);await assert.rejects(store.summary({...actor,disabledFeatures:['prep']}),/switched off/);
  assert.equal((await store.list({...actor,disabledFeatures:['labels']})).rows.length,1,'Labels being off does not stop the prep list');
 });
+test('already prepped amounts come off what is still to make, are today-only and freeze into ticks',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const saved=await f.api(f.office,'/api/prep-list/items','POST',item());
+ const body={date:'2026-10-23',itemId:saved.id,quantity:1.5,revision:0};
+ const first=await f.api(f.staff,'/api/prep-list/on-hand','POST',body);assert.equal(first.onHand,1.5);assert.equal(first.onHandRevision,1);assert.equal(first.onHandBy.name,'Staff');
+ assert.equal((await f.api(f.staff,'/api/prep-list/on-hand','POST',body)).onHandRevision,1,'repeating the same amount is harmless');
+ assert.equal((await f.request(f.office,'/api/prep-list/on-hand','POST',{...body,quantity:2})).status,409,'stale changes are rejected');
+ for(const quantity of [-1,1.2345,'2',1000001])assert.equal((await f.request(f.staff,'/api/prep-list/on-hand','POST',{...body,quantity,revision:1})).status,400);
+ assert.equal((await f.request(f.staff,'/api/prep-list/on-hand','POST',{...body,date:'2026-10-22',revision:1})).status,409,'only today');
+ let row=(await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);assert.equal(row.amount,4);assert.equal(row.onHand,1.5);assert.equal(row.toPrep,2.5);
+ assert.equal((await f.api(f.staff,'/api/home-prep')).rows[0].toPrep,2.5);
+ await f.api(f.staff,'/api/prep-list/on-hand','POST',{...body,quantity:6,revision:1});
+ row=(await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);assert.equal(row.toPrep,0,'never below zero');
+ await f.api(f.staff,'/api/prep-list/on-hand','POST',{...body,quantity:1,revision:2});
+ const tick=await f.api(f.staff,'/api/prep-list/tick','POST',{date:'2026-10-23',itemId:saved.id,done:true,revision:0});
+ assert.equal((await f.request(f.staff,'/api/prep-list/on-hand','POST',{...body,quantity:2,revision:3})).status,409,'locked once ticked');
+ // Editing the item afterwards does not change what was frozen for the tick.
+ const current=(await f.api(f.office,'/api/prep-list')).items.find(entry=>entry.id===saved.id);
+ await f.api(f.office,'/api/prep-list/items/'+saved.id,'PUT',{...item(),amount:10,revision:current.revision});
+ row=(await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);assert.equal(row.toPrep,3,'the tick keeps the remaining amount it was ticked with');
+ await f.api(f.staff,'/api/prep-list/tick','POST',{date:'2026-10-23',itemId:saved.id,done:false,revision:tick.tickRevision});
+ const cleared=await f.api(f.staff,'/api/prep-list/on-hand','POST',{...body,quantity:null,revision:3});assert.equal(cleared.onHand,null);
+ row=(await f.api(f.staff,'/api/prep-list')).rows.find(entry=>entry.id===saved.id);assert.equal(row.toPrep,10,'clearing means the whole amount is still to make');
+ assert.equal(f.calls(),0);
+});

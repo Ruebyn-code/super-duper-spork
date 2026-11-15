@@ -30,22 +30,49 @@
   ring.style.setProperty('--prep-progress',percent+'%');ring.textContent=total?percent+'%':'';count.textContent=total?word('{done} of {total} done',{done,total}):word('Nothing to prep');
   note.textContent=!total?(state.canManage?word('Add prep items with Manage items.'):word('No prep items are scheduled for this day.')):state.canTick?(done===total?word('All prep is done for today.'):word('Tick items off as you finish them.')):word('Past and future days are read-only.');
   const groups=new Map();for(const row of state.rows){const key=row.station||'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
+  // Keep half-typed "Already prepped" amounts and the focused field when the list redraws after another save.
+  const drafts=new Map([...list.querySelectorAll('input[data-prep-onhand]')].filter(input=>input.dataset.saved!==input.value).map(input=>[input.dataset.prepOnhand,input.value])),focused=document.activeElement?.dataset?.prepOnhand;
   list.replaceChildren(...[...groups].map(([station,rows])=>{const group=el('section',undefined,'prep-group'),heading=station?data('h3',station):ui('h3','Other items'),left=rows.filter(row=>!row.done).length,badge=el('span',left?word('{count} to go',{count:left}):word('Done'),'prep-group-count'+(left?'':' is-done'));heading.append(badge);group.append(heading,...rows.map(item));return group;}));
+  for(const input of list.querySelectorAll('input[data-prep-onhand]')){if(drafts.has(input.dataset.prepOnhand)&&!input.disabled)input.value=drafts.get(input.dataset.prepOnhand);if(input.dataset.prepOnhand===focused&&!input.disabled)input.focus({preventScroll:true});}
  }
  function item(row){
-  const card=el('article',undefined,'prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'prep-check'),body=el('div',undefined,'prep-item-body'),name=data('strong',row.name,'prep-item-name'),qty=row.amount===null||row.amount===undefined?ui('span','Amount not available','prep-item-amount is-unknown'):data('span',amount(row.amount)+(row.unit?' '+row.unit:''),'prep-item-amount');
+  const card=el('article',undefined,'prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'prep-check'),body=el('div',undefined,'prep-item-body'),name=data('strong',row.name,'prep-item-name'),known=row.amount!==null&&row.amount!==undefined,left=row.toPrep??row.amount,qty=!known?ui('span','Amount not available','prep-item-amount is-unknown'):data('span',amount(left)+(row.unit?' '+row.unit:''),'prep-item-amount'+(row.onHand!==null&&row.onHand!==undefined&&!left?' is-covered':''));
+  if(known&&row.onHand!==null&&row.onHand!==undefined)qty.title=word('To prep: {left} of {total}',{left:amount(left),total:amount(row.amount)});
   check.type='button';check.setAttribute('aria-pressed',String(row.done));check.setAttribute('aria-label',(row.done?word('Mark not done: '):word('Mark done: '))+row.name);check.disabled=!state.canTick||row.removed||pending.has(row.id);
   check.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
   check.onclick=()=>toggle(row);
   const top=el('div',undefined,'prep-item-top');top.append(name,qty);body.append(top);
   // Sales-based amounts: everyone sees the badge; only sales viewers see the ratio and the projected sales behind it.
   if(row.basis==='sales'){const basis=el('p',undefined,'prep-item-basis');basis.append(ui('span','Based on projected sales','prep-basis-badge'));if(row.amount===null||row.amount===undefined)basis.append(data('span',' · '+word(row.amountReason||'No sales projection for this day yet.')));else if(row.salesPer)basis.append(data('span',' · '+word('{amount} per {sales} · projected {projected}',{amount:amount(row.ratio)+(row.unit?' '+row.unit:''),sales:money(row.salesPer*100),projected:money(row.projectedSalesCents)})));body.append(basis);}
+  body.append(onHandField(row,known,left));
   if(row.notes)body.append(data('p',row.notes,'prep-item-notes'));
   if(row.done&&row.doneBy)body.append(data('p',word('Done by {name} at {time}',{name:row.doneBy.name||word('someone'),time:time(row.doneAt)}),'prep-item-meta'));
   if(row.removed)body.append(ui('p','Removed from the list since it was ticked.','prep-item-meta'));
   card.append(check,body);
   if(row.label&&state.canPrint){const print=el('a',undefined,'prep-print');print.href='/labels?print='+encodeURIComponent(row.label.id)+'#print';print.append(ui('span',row.done?'Print labels':'Labels'));print.title=word('Print labels with {template}',{template:row.label.name});print.onclick=event=>{if(window.labelsPrint?.(row.label.id)){event.preventDefault();}};card.append(print);}
   return card;
+ }
+ // Already prepped: what is on hand comes off the amount to make. Saved when the field is left or Enter is pressed (today only).
+ function onHandField(row,known,left){
+  const wrap=el('div',undefined,'prep-onhand'),label=el('label',undefined,'prep-onhand-field'),input=el('input'),note=el('span',undefined,'prep-onhand-note');
+  input.type='number';input.min='0';input.max='1000000';input.step='0.001';input.inputMode='decimal';input.placeholder='0';input.value=row.onHand===null||row.onHand===undefined?'':String(row.onHand);
+  input.disabled=!state.canTick||row.removed||row.done||pending.has(row.id);input.dataset.prepOnhand=row.id;input.dataset.saved=input.value;
+  label.append(ui('span','Already prepped'),input);if(row.unit)label.append(data('span',row.unit,'prep-onhand-unit'));
+  input.setAttribute('aria-label',word('Already prepped: {name}',{name:row.name}));
+  if(row.onHand!==null&&row.onHand!==undefined&&known)note.append(left?data('span',word('{left} still to make of {total}',{left:amount(left)+(row.unit?' '+row.unit:''),total:amount(row.amount)})):ui('span','Enough already prepped'));
+  const commit=()=>{const raw=input.value.trim(),value=raw===''?null:Number(raw);if(value===(row.onHand??null))return;
+   if(value!==null&&!(Number.isFinite(value)&&value>=0&&value<=1000000&&Math.round(value*1000)===value*1000)){status.textContent=word('Enter the amount already prepped as a number from 0 with up to three decimal places, or leave it blank.');input.focus();return;}
+   saveOnHand(row,value);};
+  input.addEventListener('change',commit);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
+  wrap.hidden=!state.canTick&&(row.onHand===null||row.onHand===undefined);  wrap.append(label,note);return wrap;
+ }
+ async function saveOnHand(row,quantity){
+  if(!state?.canTick||pending.has(row.id))return;pending.add(row.id);status.textContent='';
+  try{const result=await api('/on-hand','POST',{date:state.date,itemId:row.id,quantity,revision:row.onHandRevision||0});Object.assign(row,{onHand:result.onHand,onHandRevision:result.onHandRevision,onHandBy:result.onHandBy,onHandAt:result.onHandAt});
+   // The remaining amount comes from the server so rounding matches everywhere.
+   const fresh=await api('?date='+encodeURIComponent(state.date)).catch(()=>null),match=fresh?.rows?.find(entry=>entry.id===row.id);if(match)Object.assign(row,{toPrep:match.toPrep});else row.toPrep=null;}
+  catch(error){status.textContent=error.message;if(error.status===409){try{state=await api('?date='+encodeURIComponent(state.date));}catch{}}}
+  finally{pending.delete(row.id);render();}
  }
  async function toggle(row){
   if(!state?.canTick||pending.has(row.id))return;pending.add(row.id);render();status.textContent='';

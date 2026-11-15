@@ -24,6 +24,13 @@ function details(input,templates){
  let labelTemplateId=null;if(input.labelTemplateId!==null&&input.labelTemplateId!==undefined&&input.labelTemplateId!==''){if(!uuid(input.labelTemplateId)||!templates.some(item=>item.id===input.labelTemplateId))fail('Choose a label template from this company, or none.');labelTemplateId=input.labelTemplateId;}
  return{name,amount:input.amount,...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
 }
+// What is still to make once the amount already prepped is taken off: never below zero, rounded up to the item's round-up step
+// (or to 0.001). Unknown targets stay unknown; no on-hand entry means the whole amount is still to make.
+function remaining(amount,onHand,roundTo){
+ if(typeof amount!=='number'||!Number.isFinite(amount))return null;if(typeof onHand!=='number'||!Number.isFinite(onHand))return amount;
+ const left=Math.max(0,Math.round((amount-onHand)*1000)/1000);if(!left)return 0;
+ if(roundTo){const steps=Math.round(roundTo*1000);return Math.ceil(Math.round(left*1000)/steps)*steps/1000;}return left;
+}
 // The amount to prep for a sales-based item: amount × projected dollars ÷ salesPer, rounded up to roundTo (or to 0.001). Unknown projections stay unknown.
 function salesAmount(item,projectedCents){
  if(!Number.isSafeInteger(projectedCents)||projectedCents<0)return null;
@@ -46,7 +53,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
  async function list(actor,{date}={}){
   need(actor);const current=today(),day=date||current;if(!validDate(day)||day<shift(current,-90)||day>shift(current,7))fail('Choose a date within the last 90 days or the next week.');
   const [state,record,labels]=await Promise.all([readItems(actor),readJson(dayFile(actor,day),{ticks:{}}),companyTemplates(actor)]);
-  const ticks=record.ticks||{},names=new Map(labels.map(item=>[item.id,item])),manage=can(actor,'prep.manage');
+  const ticks=record.ticks||{},stock=record.onHand||{},names=new Map(labels.map(item=>[item.id,item])),manage=can(actor,'prep.manage');
   const live=state.items.filter(item=>!item.deleted);
   // A day's projected sales come from the normal daily projection (Monday–Sunday week). Only sales viewers see the figures behind it.
   const salesView=can(actor,'sales.view'),needsSales=live.some(item=>item.active&&item.basis==='sales');let projected=null;
@@ -57,7 +64,9 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   for(const [itemId,tick] of Object.entries(ticks))if(tick.done&&!rows.some(row=>row.id===itemId))rows.push({id:itemId,...tick.snapshot,label:null,removed:true});
   rows.sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name));
   return{date:day,today:current,locationId:actor.locationId,canTick:day===current,canManage:manage,canPrint:can(actor,'prep.print'),
-   rows:rows.map(row=>({...row,done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0})),
+   rows:rows.map(row=>{const entry=stock[row.id],onHand=Number.isFinite(entry?.quantity)?entry.quantity:null,frozen=ticks[row.id]?.done&&ticks[row.id].snapshot&&Object.hasOwn(ticks[row.id].snapshot,'toPrep');
+    const roundTo=live.find(item=>item.id===row.id)?.roundTo||null;
+    return{...row,onHand,onHandRevision:entry?.revision||0,onHandBy:entry&&onHand!==null?entry.by:null,onHandAt:entry&&onHand!==null?entry.at:null,toPrep:frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo),done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0};}),
    ...(manage?{items:live.map(present).sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name)),labelTemplates:labels.filter(item=>item.active).map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name))}:{})};
  }
  async function create(actor,input){
@@ -103,20 +112,41 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
    if(!item&&!existing)fail('This prep item is not on today\'s list.',404);
    if(existing&&existing.done===input.done)return{changed:false,value:{itemId:input.itemId,done:existing.done,doneAt:existing.done?existing.doneAt:null,doneBy:existing.done?existing.doneBy:null,tickRevision:existing.revision}};
    if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
-   const stamp=new Date(now()).toISOString(),snapshot=existing?.snapshot||{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{})};
+   const stamp=new Date(now()).toISOString(),held=Number.isFinite(state.onHand?.[input.itemId]?.quantity)?state.onHand[input.itemId].quantity:null;
+   // Ticking freezes what was on hand and what was left to make; unticking keeps the record of the earlier tick.
+   const snapshot=input.done&&item?{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{}),onHand:held,toPrep:remaining(amount,held,item.roundTo)}:existing?.snapshot||{name:item.name,amount,unit:item.unit,station:item.station,...(item.basis==='sales'?{basis:'sales'}:{})};
    const next={done:input.done,snapshot,revision:(existing?.revision||0)+1,doneAt:input.done?stamp:existing?.doneAt||null,doneBy:input.done?person(actor):existing?.doneBy||null,history:[...(existing?.history||[]),{done:input.done,at:stamp,by:person(actor)}].slice(-20)};
    state.ticks[input.itemId]=next;return{changed:true,value:{itemId:input.itemId,done:next.done,doneAt:next.done?next.doneAt:null,doneBy:next.done?next.doneBy:null,tickRevision:next.revision}};
   });
  }
+ // Record how much is already prepped (on hand) for one of today's items; the list then shows only the rest to make.
+ // Repeating the same amount is harmless; changing it needs the current revision; null clears it. Ticked items are locked.
+ async function setOnHand(actor,input){
+  need(actor);const current=today();
+  if(input?.date!==current)fail('Already prepped amounts can only be entered for today. Reload the list.',409);
+  if(!uuid(input?.itemId)||!Number.isSafeInteger(input.revision))fail('Reload the prep list before entering what is already prepped.');
+  const quantity=input.quantity;if(quantity!==null&&(typeof quantity!=='number'||!Number.isFinite(quantity)||quantity<0||quantity>1000000||Math.round(quantity*1000)!==quantity*1000))fail('Enter the amount already prepped as a number from 0 with up to three decimal places, or leave it blank.');
+  const item=(await readItems(actor)).items.find(entry=>entry.id===input.itemId&&!entry.deleted&&entry.active&&onDay(entry,current));
+  return mutate(dayFile(actor,current),{ticks:{}},state=>{
+   state.onHand||={};const existing=state.onHand[input.itemId],same=(existing?.quantity??null)===quantity;
+   if(!item&&!existing)fail('This prep item is not on today\'s list.',404);
+   const shown=entry=>({itemId:input.itemId,onHand:Number.isFinite(entry?.quantity)?entry.quantity:null,onHandRevision:entry?.revision||0,onHandBy:Number.isFinite(entry?.quantity)?entry.by:null,onHandAt:Number.isFinite(entry?.quantity)?entry.at:null});
+   if(same&&(existing||quantity===null))return{changed:false,value:shown(existing)};
+   if((existing?.revision||0)!==input.revision)fail('Someone else just changed this item. Reload the prep list.',409);
+   if(state.ticks?.[input.itemId]?.done)fail('This item is already marked done. Untick it before changing what was already prepped.',409);
+   const stamp=new Date(now()).toISOString(),next={quantity,revision:(existing?.revision||0)+1,at:stamp,by:person(actor),history:[...(existing?.history||[]),{quantity,at:stamp,by:person(actor)}].slice(-20)};
+   state.onHand[input.itemId]=next;return{changed:true,value:shown(next)};
+  });
+ }
  // Today's progress for Home: counts and the remaining items, read-only.
- async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,unit,station,done,tickRevision,label,basis})=>({id,name,amount,unit,station,done,tickRevision,label,...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
+ async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
  // Staff activity: who finished which prep item, for recent days at this location.
  async function activity(actor,{start,end}){
   need(actor);const from=start&&validDate(start)?start:shift(today(),-31),to=end&&validDate(end)?end:today(),events=[];
   for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount===null||tick.snapshot.amount===undefined?'':tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
   return events;
  }
- return{list,create,update,remove,tick,summary,activity};
+ return{list,create,update,remove,tick,setOnHand,summary,activity};
 }
 async function route({req,url,params,session,store,body,json}){
  if(url!=='/api/prep-list'&&!url.startsWith('/api/prep-list/')&&url!=='/api/home-prep')return false;
@@ -125,9 +155,10 @@ async function route({req,url,params,session,store,body,json}){
  if(url==='/api/prep-list'&&req.method==='GET'){json(200,await store.list(session,{date:params.get('date')||undefined}));return true;}
  if(url==='/api/prep-list/items'&&req.method==='POST'){json(201,await store.create(session,await body(req,16000)));return true;}
  if(url==='/api/prep-list/tick'&&req.method==='POST'){json(200,await store.tick(session,await body(req,4000)));return true;}
+ if(url==='/api/prep-list/on-hand'&&req.method==='POST'){json(200,await store.setOnHand(session,await body(req,4000)));return true;}
  const match=url.match(/^\/api\/prep-list\/items\/([a-f0-9-]{36})$/i);
  if(match&&req.method==='PUT'){json(200,await store.update(session,match[1],await body(req,16000)));return true;}
  if(match&&req.method==='DELETE'){json(200,await store.remove(session,match[1],await body(req,4000)));return true;}
  fail('Prep list endpoint not found.',404);
 }
-module.exports={createStore,route,details,salesAmount};
+module.exports={createStore,route,details,salesAmount,remaining};
