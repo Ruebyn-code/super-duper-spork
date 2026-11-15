@@ -65,3 +65,27 @@
 .count-item .delivery-stock-note{font-size:10px;line-height:1.4;margin:4px 0;overflow-wrap:anywhere}.count-item .delivery-shortage{color:var(--theme-warning-text,#985400);font-weight:600}
 .stock-count-page .count-grouping{display:flex;align-items:center;gap:3px;flex:0 0 auto;font-size:11px;white-space:nowrap}.stock-count-page .count-grouping>span{margin-right:4px;color:var(--theme-muted,var(--muted,#64748b))}.stock-count-page .count-grouping button{margin:0;min-height:28px;padding:4px 8px;border-radius:6px;font-size:11px;line-height:1.4}.stock-count-page .count-grouping button[aria-pressed=true]{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:var(--theme-on-primary,#fff)}.stock-count-page #count-report>.count-grouping{margin:8px 0}@media(max-width:720px){.stock-count-page #count-form .count-grouping{grid-column:1/-1}.stock-count-page .count-grouping button{min-height:32px;padding:5px 10px}}
 .count-item .count-already-ordered{display:inline-block;width:fit-content;max-width:100%;box-sizing:border-box;font-size:10px;line-height:1.35;margin:4px 0;padding:2px 7px;border-radius:999px;font-weight:600;color:var(--theme-text,#21384a);background:color-mix(in srgb,var(--secondary) 24%,var(--theme-surface,#fff));border:1px solid color-mix(in srgb,var(--secondary) 60%,var(--line,#dce5ed));overflow-wrap:anywhere}
+/* Correcting saved counts. */
+.count-edit-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 10px}
+.count-edited-note{font-size:12.5px;color:var(--theme-muted,#5b6b7c)}
+.count-edit-link{padding:2px 4px;border:0;background:transparent;color:var(--theme-primary-text,var(--primary));font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.count-edit-button{margin-left:auto;min-height:32px;padding:4px 14px;border:1px solid color-mix(in srgb,var(--primary) 40%,transparent);border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary));font-weight:700;cursor:pointer}
+.count-edit-button:hover,.count-edit-button:focus-visible{background:color-mix(in srgb,var(--primary) 8%,var(--theme-surface,#fff))}
+.count-edit-history{flex:1 1 100%;display:grid;gap:8px;padding:10px 12px;border:1px solid var(--theme-line,#e1e8f0);border-radius:12px;background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.count-edit-entry strong{font-size:13px}.count-edit-entry p{margin:2px 0;font-size:13px}.count-edit-entry ul{margin:2px 0 0;padding-left:18px;font-size:12.5px}
+.count-corrected-chip{display:inline-block;padding:0 7px;border-radius:999px;background:#fff4e5;color:#9a3412;font-size:11px;font-weight:700}
+.count-edit-form{display:grid;gap:12px}
+.count-edit-head h2{margin:0}.count-edit-hint{margin:4px 0 0;font-size:13px;color:var(--theme-muted,#5b6b7c)}
+.count-edit-rows{display:grid;gap:4px}
+.count-edit-row{display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(70px,auto) 32px;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--theme-line,#e8eef3)}
+.count-edit-row .stock-name{display:grid;min-width:0}
+.count-edit-row input{width:100%;min-height:34px;text-align:right}
+.count-edit-unit{font-size:12px;color:var(--theme-muted,#5b6b7c)}
+.count-edit-remove{width:30px;height:30px;min-height:30px;padding:0;border:1px solid var(--theme-line,#dce5ed);border-radius:50%;background:transparent;color:var(--theme-muted,#5b6b7c);font-size:16px;line-height:1;cursor:pointer}
+.count-edit-remove:hover{color:#b91c1c;border-color:#fca5a5}
+.count-edit-add{display:flex;flex-wrap:wrap;gap:8px}.count-edit-add select{flex:1 1 240px;min-height:36px}
+.count-edit-form label{display:grid;gap:4px;font-weight:600;font-size:13px}
+.count-edit-error{margin:0;color:#b91c1c;font-weight:600}.count-edit-error:empty{display:none}
+.count-edit-actions{display:flex;justify-content:flex-end;gap:8px}
+.count-edit-save{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:#fff}
+@media(max-width:720px){.count-edit-row{grid-template-columns:minmax(0,1fr) 88px 30px;grid-template-areas:'name input remove' 'unit unit unit'}.count-edit-row .stock-name{grid-area:name}.count-edit-row input{grid-area:input;min-height:44px}.count-edit-unit{grid-area:unit}.count-edit-remove{grid-area:remove}.count-edit-actions button{min-height:44px}}

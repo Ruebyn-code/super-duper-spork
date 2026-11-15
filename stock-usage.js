@@ -61,7 +61,7 @@ function createReader(){
   }));result.push(...batch.filter(Boolean));}
   return result;
  }
- return async dir=>{const [counts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);return {counts,orders:await fulfilment.decorate(dir,await orderPrices.decorate(dir,await orderNumbers.decorate(dir,orders.filter(order=>order.status!=='deleted')))),transfers};};
+ return async dir=>{const [rawCounts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);const counts=await require('./stock-counts').applyAll(dir,rawCounts);return {counts,orders:await fulfilment.decorate(dir,await orderPrices.decorate(dir,await orderNumbers.decorate(dir,orders.filter(order=>order.status!=='deleted')))),transfers};};
 }
 const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){

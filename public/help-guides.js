@@ -108,7 +108,7 @@
   'Open Weekly usage to inspect the Sunday–Saturday cycles and storage groups.',
   'Compare opening count, orders and confirmed transfer effects with the following Sunday’s closing count.',
   'Investigate missing counts or negative usage before relying on the automatic target.'
- ],{route:'/stock-count#usage',permissions:['counts.view'],notes:['A stock count is a snapshot, so several counts are not added together as stock on hand. Missing quantities remain unknown.'],related:['target-levels','stock-transfers']});
+ ],{route:'/stock-count#usage',permissions:['counts.view'],notes:['A stock count is a snapshot, so several counts are not added together as stock on hand. Missing quantities remain unknown.','To fix a saved count, open it and choose Edit count: change quantities, add missed items or remove mistakes, and give a reason. The original count stays on file, View changes shows every correction, and usage, target levels and recommendations use the corrected quantities.'],related:['target-levels','stock-transfers']});
  add(c,'target-levels','Choose target level calculations','Use item usage or a quantity per projected sales amount.',[
   'When adding a location, choose Target level system once. It applies to every current and future stock item at that location.',
   'In location setup, open Target level system. Automatic usage (current) keeps the existing usage/manual fallback; Projected sales enables item ratios.',

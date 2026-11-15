@@ -715,6 +715,13 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const saved=await stockCounts.save(dataDir,await body(req,2000000),await readCatalogue(),session);return json(saved.created?201:200,saved.record);
       }
       const stockCountRoute=req.url.match(/^\/api\/stock-counts\/([^/]+)$/);
+      const stockCountHistoryRoute=req.url.match(/^\/api\/stock-counts\/([^/]+)\/edits$/);
+      if(stockCountHistoryRoute&&req.method==='GET'){const record=await stockCounts.get(dataDir,stockCountHistoryRoute[1],session);if(record.locationId){const target=await locationStore.get(record.locationId),context=await auth.forCompany(session,target.companyId);if(!can(context,'counts.view')||!canAccessLocation(context,target))fail('Stock count not found.',404);}return json(200,{edits:await stockCounts.history(dataDir,record.id,session)});}
+      if(stockCountRoute&&req.method==='PUT'){
+        if(req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
+        const record=await stockCounts.get(dataDir,stockCountRoute[1],session);if(record.locationId){const target=await locationStore.get(record.locationId),context=await auth.forCompany(session,target.companyId);if(!can(context,'counts.edit')||!canAccessLocation(context,target)||record.locationId!==session.locationId)fail('Open this count at its own location to correct it.',403);}
+        return json(200,await stockCounts.edit(dataDir,record.id,await body(req,2000000),await readCatalogue(),session));
+      }
       if(stockCountRoute&&req.method==='GET'){const record=await stockCounts.get(dataDir,stockCountRoute[1],session);if(record.locationId){const target=await locationStore.get(record.locationId),context=await auth.forCompany(session,target.companyId);if(!can(context,'counts.view')||!canAccessLocation(context,target))fail('Stock count not found.',404);}return json(200,record);}
       if(req.url==='/api/layout'&&req.method==='PUT')return json(200,await layouts.save(customisationDir,await body(req,1500000)));
       if(req.url==='/api/element-overrides'&&req.method==='PATCH'){try{return json(200,await elementOverrides.patch(customisationDir,await body(req,2900000)));}catch(error){fail(error.message);}}
