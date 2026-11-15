@@ -133,3 +133,8 @@ The button is hidden when no action is allowed. Opening the menu only shows link
 ### Quick actions button position and icon
 
 The floating Quick actions button shows a + (it turns into × while the menu is open). On phones it sits 14 px above the bottom of the Home content frame; because the persistent shell's phone navigation bar is outside that frame, the button no longer adds the navigation height again (`html.embedded-page` rule in `public/home-quick-actions.css`). Pages opened outside the shell still clear the navigation bar.
+
+
+## Today's checklists
+
+The Home Today's checklists card shows only overall progress for the day: the completion ring, "N of M completed" and how many are still to do, with View all checklists. It no longer lists individual checklist names (they stay on the Checklists page). Display only; the read is unchanged.

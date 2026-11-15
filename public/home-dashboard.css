@@ -146,3 +146,4 @@ body[data-home-dashboard="head-office"] .dashboard-reference #home-today::before
 .dashboard-outlook-table .dashboard-table th.dashboard-outlook-sticky{position:sticky;left:0;z-index:1;text-align:left;font-weight:inherit;background:var(--theme-surface,#fff);box-shadow:1px 0 0 var(--dash-line,#dce5ed)}
 .dashboard-outlook-table .dashboard-table thead th.dashboard-outlook-sticky,.dashboard-outlook-table .dashboard-table tfoot th.dashboard-outlook-sticky{background:var(--dash-tint,var(--theme-surface,#fff))}
 .dashboard-outlook-table tfoot th{border-top:2px solid var(--dash-line,#dce5ed)}
+.dashboard-checklist-list:has(.dashboard-checklist-total){display:grid;align-content:center;gap:2px}.dashboard-checklist-total{font-size:16px}.dashboard-checklist-left{color:var(--theme-muted,#5b6b7c)}
