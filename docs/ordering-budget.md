@@ -63,3 +63,7 @@ The metric uses ordinary layout identities and `data-user-text` for its computed
 value. Keep it hidden with the existing budget on Staff Home and for viewers
 without `sales.view`. Check desktop/phone layouts and native cart changes, price
 refreshes, Sunday rollover and the no-data/pending-price cases.
+
+## Compact sticky strip
+
+On the Ordering catalogue the Weekly ordering budget is one compact strip (`#ordering-budget`, styles at the end of `public/ordering-cards.css`): the heading row, then Available after cart, projected sales, budget, order costs and both COGS projections side by side, then the budget bar with This cart/Review cart and a one-line status. It sticks to the top of the page while the catalogue scrolls; once scrolled past, `public/app.js` adds `ordering-budget-stuck` (an IntersectionObserver on a 1 px marker) so only the figures, COGS values and cart row stay in view (phones keep Available, order costs, COGS and the cart). Display only: figures, warnings, calculations and the Review cart action are unchanged.

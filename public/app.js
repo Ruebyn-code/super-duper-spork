@@ -231,3 +231,5 @@ window.addEventListener('before-location-switch',event=>{if(busy||reviewingOrder
 window.addEventListener('app-layout-changed',()=>renderMenu());
 
 })();
+// Weekly ordering budget: mark the sticky strip once the page scrolls past it so only its figures stay in view (display only).
+(()=>{const panel=document.getElementById('ordering-budget');if(!panel||!('IntersectionObserver' in window))return;const marker=document.createElement('div');marker.className='ordering-budget-sentinel';marker.setAttribute('aria-hidden','true');marker.style.cssText='height:1px;margin-bottom:-1px;pointer-events:none';panel.before(marker);new IntersectionObserver(([entry])=>panel.classList.toggle('ordering-budget-stuck',!entry.isIntersecting&&entry.boundingClientRect.top<0)).observe(marker);})();
