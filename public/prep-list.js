@@ -23,16 +23,34 @@
  const progress=el('div',undefined,'prep-progress'),ring=el('div',undefined,'prep-ring'),progressText=el('div',undefined,'prep-progress-text'),count=data('strong',''),note=el('span','','prep-progress-note');
  ring.setAttribute('aria-hidden','true');progressText.append(count,note);progress.append(ring,progressText);
  const status=el('p','','prep-status');status.setAttribute('role','status');const list=el('div',undefined,'prep-groups');
- panel.append(head,progress,status,list);
+ // Toolbar: station chips, search and Hide done (display only; the Hide done choice is remembered per person and store).
+ const toolbar=el('div',undefined,'prep-toolbar'),chips=el('div',undefined,'prep-chips'),search=el('input'),hideLabel=el('label',undefined,'prep-hide-done'),hideBox=el('input');
+ chips.setAttribute('role','group');chips.setAttribute('aria-label',word('Show station'));search.type='search';search.className='prep-search';search.placeholder=word('Search prep');search.setAttribute('aria-label',word('Search prep items'));
+ hideBox.type='checkbox';hideBox.setAttribute('role','switch');hideLabel.append(hideBox,ui('span','Hide done'));toolbar.append(chips,search,hideLabel);
+ const hiddenNote=el('p','','prep-hidden-note');
+ let station='all';const hideKey=()=>'prep-hide-done:'+(actor?.id||'')+':'+(window.appLocationId||actor?.locationId||'');
+ hideBox.onchange=()=>{try{localStorage.setItem(hideKey(),hideBox.checked?'1':'0');}catch{}render();};search.oninput=()=>render();
+ panel.append(head,progress,toolbar,status,list,hiddenNote);
  function render(){
   if(!state)return;subtitle.textContent=longDate(state.date)+(state.date===state.today?' · '+word('Today'):'');todayButton.disabled=state.date===state.today;next.disabled=state.date>=shift(state.today,7);previous.disabled=state.date<=shift(state.today,-90);manage.hidden=!state.canManage;
   const total=state.rows.length,done=state.rows.filter(row=>row.done).length,percent=total?Math.round(done/total*100):0;
   ring.style.setProperty('--prep-progress',percent+'%');ring.textContent=total?percent+'%':'';count.textContent=total?word('{done} of {total} done',{done,total}):word('Nothing to prep');
   note.textContent=!total?(state.canManage?word('Add prep items with Manage items.'):word('No prep items are scheduled for this day.')):state.canTick?(done===total?word('All prep is done for today.'):word('Tick items off as you finish them.')):word('Past and future days are read-only.');
-  const groups=new Map();for(const row of state.rows){const key=row.station||'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
+  // Station chips with done/total counts; a chosen station that no longer exists falls back to All.
+  const stations=[...new Set(state.rows.map(row=>row.station||''))];if(station!=='all'&&!stations.includes(station))station='all';
+  const chip=(key,label,rows)=>{const button=el('button',undefined,'prep-chip');button.type='button';button.setAttribute('aria-pressed',String(station===key));const finished=rows.filter(row=>row.done).length;button.append(key===''?ui('span','No station'):key==='all'?ui('span','All'):data('span',label),el('small',finished+'/'+rows.length));if(rows.length&&finished===rows.length)button.classList.add('is-done');button.onclick=()=>{station=key;render();};return button;};
+  chips.replaceChildren(chip('all','',state.rows),...(stations.length>1?stations.map(key=>chip(key,key,state.rows.filter(row=>(row.station||'')===key))):[]));toolbar.hidden=!total;
+  try{hideBox.checked=localStorage.getItem(hideKey())==='1';}catch{}
+  const query=search.value.trim().toLowerCase(),hideDone=hideBox.checked,matches=row=>(station==='all'||(row.station||'')===station)&&(!query||[row.name,row.station,row.notes].some(value=>String(value||'').toLowerCase().includes(query)));
+  const shown=state.rows.filter(row=>matches(row)&&!(hideDone&&row.done)),hiddenDone=hideDone?state.rows.filter(row=>matches(row)&&row.done).length:0;
+  hiddenNote.textContent=hiddenDone?word('{count} done item(s) hidden.',{count:hiddenDone}):'';hiddenNote.hidden=!hiddenDone;
+  if(total&&!shown.length&&!hiddenDone)hiddenNote.textContent=word('No prep items match.'),hiddenNote.hidden=false;
+  if(total&&!shown.length&&hiddenDone)hiddenNote.textContent=word('Everything here is done. {count} done item(s) hidden.',{count:hiddenDone});
+  // Unfinished items first within each station.
+  const groups=new Map();for(const row of [...shown.filter(row=>!row.done),...shown.filter(row=>row.done)]){const key=row.station||'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
   // Keep half-typed "Already prepped" amounts and the focused field when the list redraws after another save.
   const drafts=new Map([...list.querySelectorAll('input[data-prep-onhand]')].filter(input=>input.dataset.saved!==input.value).map(input=>[input.dataset.prepOnhand,input.value])),focused=document.activeElement?.dataset?.prepOnhand;
-  list.replaceChildren(...[...groups].map(([station,rows])=>{const group=el('section',undefined,'prep-group'),heading=station?data('h3',station):ui('h3','Other items'),left=rows.filter(row=>!row.done).length,badge=el('span',left?word('{count} to go',{count:left}):word('Done'),'prep-group-count'+(left?'':' is-done'));heading.append(badge);group.append(heading,...rows.map(item));return group;}));
+  list.replaceChildren(...[...groups].map(([station,rows])=>{const group=el('section',undefined,'prep-group'),heading=station?data('h3',station):ui('h3','No station'),left=rows.filter(row=>!row.done).length,badge=el('span',left?word('{count} to go',{count:left}):word('Done'),'prep-group-count'+(left?'':' is-done'));heading.append(badge);const items=el('div',undefined,'prep-group-items');items.append(...rows.map(item));group.append(heading,items);return group;}));
   for(const input of list.querySelectorAll('input[data-prep-onhand]')){if(drafts.has(input.dataset.prepOnhand)&&!input.disabled)input.value=drafts.get(input.dataset.prepOnhand);if(input.dataset.prepOnhand===focused&&!input.disabled)input.focus({preventScroll:true});}
  }
  function item(row){
@@ -58,14 +76,19 @@
   const wrap=el('div',undefined,'prep-onhand'),label=el('label',undefined,'prep-onhand-field'),input=el('input'),note=el('span',undefined,'prep-onhand-note');
   input.type='number';input.min='0';input.max='1000000';input.step='0.001';input.inputMode='decimal';input.placeholder='0';input.value=row.onHand===null||row.onHand===undefined?'':String(row.onHand);
   input.disabled=!state.canTick||row.removed||row.done||pending.has(row.id)||Boolean(row.parts?.some(part=>part.done));input.dataset.prepOnhand=row.id;input.dataset.saved=input.value;
-  label.append(ui('span','Already prepped'),input);if(row.unit)label.append(data('span',row.unit,'prep-onhand-unit'));
+  // − / + step by the item's round-up size (or 1); several quick taps save once after a short pause.
+  const step=row.roundTo||1,stepper=el('span',undefined,'prep-stepper'),minus=el('button','−','prep-step'),plus=el('button','+','prep-step');minus.type=plus.type='button';minus.disabled=plus.disabled=input.disabled;
+  minus.setAttribute('aria-label',word('Less already prepped: {name}',{name:row.name}));plus.setAttribute('aria-label',word('More already prepped: {name}',{name:row.name}));
+  let timer=0;const nudge=direction=>{const current=Number(input.value)||0,value=Math.max(0,Math.round((current+direction*step)*1000)/1000);if(value>1000000)return;input.value=String(value);clearTimeout(timer);timer=setTimeout(commit,700);};
+  minus.onclick=()=>nudge(-1);plus.onclick=()=>nudge(1);stepper.append(minus,input,plus);
+  label.append(ui('span','Already prepped'));wrap.append(label,stepper);if(row.unit)wrap.append(data('span',row.unit,'prep-onhand-unit'));
   input.setAttribute('aria-label',word('Already prepped: {name}',{name:row.name}));
   if(row.onHand!==null&&row.onHand!==undefined&&known)note.append(left?data('span',word('{left} still to make of {total}',{left:amount(left)+(row.unit?' '+row.unit:''),total:amount(row.amount)})):ui('span','Enough already prepped'));
   const commit=()=>{const raw=input.value.trim(),value=raw===''?null:Number(raw);if(value===(row.onHand??null))return;
    if(value!==null&&!(Number.isFinite(value)&&value>=0&&value<=1000000&&Math.round(value*1000)===value*1000)){status.textContent=word('Enter the amount already prepped as a number from 0 with up to three decimal places, or leave it blank.');input.focus();return;}
    saveOnHand(row,value);};
   input.addEventListener('change',commit);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
-  wrap.hidden=!state.canTick&&(row.onHand===null||row.onHand===undefined);  wrap.append(label,note);return wrap;
+  wrap.hidden=!state.canTick&&(row.onHand===null||row.onHand===undefined);  wrap.append(note);return wrap;
  }
  // A linked method/recipe article opens read-only in the shared Knowledge centre popup (its own access checks apply).
  function articleName(row){const button=el('button',undefined,'prep-item-name prep-item-article');button.type='button';button.dataset.kcArticle=row.article.id;button.dataset.kcTitle=row.article.title||'';button.append(data('strong',row.name));
@@ -105,10 +128,10 @@
   catch(error){status.textContent=error.message;if(error.status===409)await load();}
   finally{pending.delete(row.id);render();}
  }
- async function load(){
-  if(!actor||loading)return;const version=++generation;loading=true;status.textContent=word('Loading prep list…');
-  try{const value=await api(date?'?date='+date:'');if(version!==generation)return;state=value;date=value.date;status.textContent='';render();}
-  catch(error){if(version===generation)status.textContent=error.message;}
+ async function load({quiet=false}={}){
+  if(!actor||loading)return;const version=++generation;loading=true;if(!quiet)status.textContent=word('Loading prep list…');
+  try{const value=await api(date?'?date='+date:'');if(version!==generation||(quiet&&pending.size))return;state=value;date=value.date;if(!quiet)status.textContent='';render();}
+  catch(error){if(version===generation&&!quiet)status.textContent=error.message;}
   finally{if(version===generation)loading=false;}
  }
  previous.onclick=()=>{if(state){date=shift(state.date,-1);load();}};next.onclick=()=>{if(state){date=shift(state.date,1);load();}};todayButton.onclick=()=>{date=null;load();};
@@ -190,5 +213,7 @@
  // Shown through the Labels page's view switch.
  const visible=()=>!panel.hidden;new MutationObserver(()=>{if(visible())load();}).observe(panel,{attributes:true,attributeFilter:['hidden']});
  window.addEventListener('focus',()=>{if(visible()&&!dialog.open)load();});
+ // Quiet refresh every minute so ticks from other devices show up; skipped while typing, saving or a popup is open.
+ setInterval(()=>{if(document.hidden||!visible()||dialog.open||copyDialog.open||pending.size||loading)return;const active=document.activeElement;if(active&&panel.contains(active)&&active.matches('input,textarea,select'))return;load({quiet:true});},60000);
  (async()=>{try{actor=await window.appAccess.initialSession();if(visible())load();}catch{}})();
 })();
