@@ -66,3 +66,12 @@
 .home-cx-score.is-gold{background:color-mix(in srgb,#eab308 9%,var(--theme-surface,#fff))}.home-cx-score.is-silver{background:color-mix(in srgb,#94a3b8 10%,var(--theme-surface,#fff))}.home-cx-score.is-bronze{background:color-mix(in srgb,#c2410c 8%,var(--theme-surface,#fff))}
 .home-cx-value{flex:none;font-size:.86rem}
 @media (forced-colors:active){.home-cx-rank{border:1px solid CanvasText}}
+/* Today's prep: one small box per unit for items with more than one to make */
+.home-prep-parts{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.home-prep-part{min-width:26px;height:24px;margin:0;padding:0 6px;border:1.5px solid var(--theme-line,#cfd9e4);border-radius:6px;background:var(--theme-surface,#fff);color:var(--theme-muted,#64748b);font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.home-prep-part:hover:not(:disabled):not(.is-done){border-color:var(--primary,#008cff);color:var(--theme-primary-text,var(--primary,#008cff))}
+.home-prep-part.is-done{border-color:var(--theme-success-text,#16a34a);background:var(--theme-success-text,#16a34a);color:#fff}
+.home-prep-part:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px}
+.home-prep-part:disabled{opacity:.6;cursor:default}
+@media(pointer:coarse){.home-prep-part{min-width:34px;height:32px}}
+@media(forced-colors:active){.home-prep-part.is-done{background:Highlight;border-color:Highlight;color:HighlightText}}

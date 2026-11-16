@@ -19,16 +19,26 @@
   const ordered=[...state.rows.filter(row=>!row.done),...state.rows.filter(row=>row.done)],shown=showAll?ordered:ordered.slice(0,6);
   list.replaceChildren(...shown.map(row=>{const item=el('div',undefined,'home-prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'home-prep-check'),text=el('div',undefined,'home-prep-text');
    check.type='button';check.setAttribute('aria-pressed',String(row.done));check.setAttribute('aria-label',(row.done?word('Mark not done: '):word('Mark done: '))+row.name);check.disabled=pending.has(row.id);check.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';check.onclick=()=>toggle(row);
-   text.append(data('strong',row.name),data('span',[row.amount===null||row.amount===undefined?(typeof interfaceLabel==='function'?interfaceLabel('Amount not available'):'Amount not available'):amount(row.toPrep??row.amount)+(row.unit?' '+row.unit:'')+(row.onHand!==null&&row.onHand!==undefined?' '+(typeof interfaceLabel==='function'?interfaceLabel('to prep'):'to prep'):''),row.partCount&&!row.done?row.partsDone+'/'+row.partCount:null,row.station].filter(Boolean).join(' · ')));item.append(check,text);
+   text.append(data('strong',row.name),data('span',[row.amount===null||row.amount===undefined?(typeof interfaceLabel==='function'?interfaceLabel('Amount not available'):'Amount not available'):amount(row.toPrep??row.amount)+(row.unit?' '+row.unit:'')+(row.onHand!==null&&row.onHand!==undefined?' '+(typeof interfaceLabel==='function'?interfaceLabel('to prep'):'to prep'):''),row.parts?.length&&!row.done?row.partsDone+'/'+row.partCount:null,row.station].filter(Boolean).join(' · ')));item.append(check,text);
+   // More than one to make: one small box per unit, ticked one at a time like on the prep list.
+   if(row.parts?.length&&!row.done){const boxes=el('div',undefined,'home-prep-parts');boxes.setAttribute('role','group');boxes.setAttribute('aria-label',word('{name}: {done} of {total} ticked',{name:row.name,done:row.partsDone,total:row.partCount}));
+    for(const part of row.parts){const box=el('button',part.size===1?String(part.index+1):amount(part.size),'home-prep-part'+(part.done?' is-done':''));box.type='button';box.setAttribute('aria-pressed',String(part.done));box.setAttribute('aria-label',word('{size}, {number} of {total}',{size:amount(part.size)+(row.unit?' '+row.unit:''),number:part.index+1,total:row.partCount}));box.dataset.homePrepPart=row.id+':'+part.index;box.disabled=pending.has(row.id);box.onclick=()=>togglePart(row,part);boxes.append(box);}
+    text.append(boxes);}
    if(row.done&&row.label&&state.canPrint){const print=el('a',word('Labels'),'home-prep-print');print.href='/labels?print='+encodeURIComponent(row.label.id)+'#print';print.title=word('Print labels with {template}',{template:row.label.name});item.append(print);}
    return item;}));
   more.hidden=ordered.length<=6;more.textContent=showAll?word('Show fewer'):word('Show all {count}',{count:ordered.length});
  }
+ const post=async(route,body)=>{const response=await fetch('/api/prep-list/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':actor.csrf,'X-Location-Id':actor.locationId},body:JSON.stringify(body)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Object.assign(Error(result.error||word('Unable to update the prep list.')),{status:response.status});return result;};
+ const apply=(row,result)=>{row.done=result.done;row.tickRevision=result.tickRevision;if(result.parts){row.parts=result.parts.map(({index,size,done})=>({index,size,done}));row.partsDone=row.parts.filter(part=>part.done).length;row.partCount=row.parts.length;}state.done=state.rows.filter(entry=>entry.done).length;};
+ async function togglePart(row,part){
+  if(pending.has(row.id))return;pending.add(row.id);render();status.textContent='';const key=row.id+':'+part.index;
+  try{apply(row,await post('part',{date:state.date,itemId:row.id,index:part.index,done:!part.done,revision:row.tickRevision}));}
+  catch(error){status.textContent=error.message;if(error.status===409)refresh();}
+  finally{pending.delete(row.id);render();list.querySelector('[data-home-prep-part="'+CSS.escape(key)+'"]')?.focus({preventScroll:true});}
+ }
  async function toggle(row){
   if(pending.has(row.id))return;pending.add(row.id);render();status.textContent='';
-  try{const response=await fetch('/api/prep-list/tick',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':actor.csrf,'X-Location-Id':actor.locationId},body:JSON.stringify({date:state.date,itemId:row.id,done:!row.done,revision:row.tickRevision})}),result=await response.json().catch(()=>({}));
-   if(!response.ok)throw Object.assign(Error(result.error||word('Unable to update the prep list.')),{status:response.status});
-   row.done=result.done;row.tickRevision=result.tickRevision;state.done=state.rows.filter(entry=>entry.done).length;}
+  try{apply(row,await post('tick',{date:state.date,itemId:row.id,done:!row.done,revision:row.tickRevision}));}
   catch(error){status.textContent=error.message;if(error.status===409)refresh();}
   finally{pending.delete(row.id);render();}
  }

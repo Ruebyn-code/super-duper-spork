@@ -67,4 +67,9 @@ async function activity(contexts,period,deps){
  for(const name of included)skipped.delete(name);
  return{rows:limited,people,sources:activitySources.map(source=>({id:source.id,name:source.name})),included:[...included],skipped:[...skipped].filter(name=>!included.has(name)),failed:[...failed],truncated:events.length>limited.length,note:'Times are in Melbourne time. Each source only shows what you are allowed to see for the selected locations. Checklist steps show the latest time each step was completed.'};
 }
-module.exports={training,checklists,activity};
+// Prep list report: item-day rows from each selected location's prep list (read-only).
+async function prep(contexts,period,store){const rows=[];let start=period.start,trimmed=false;
+ for(const actor of contexts){const result=await store.report(actor,{start:period.start,end:period.end});if(result.trimmed){trimmed=true;start=result.start;}for(const row of result.rows)rows.push({...row,locationId:actor.locationId,locationName:actor.locationName,companyName:actor.companyName});}
+ rows.sort((a,b)=>b.date.localeCompare(a.date)||a.locationName.localeCompare(b.locationName)||a.name.localeCompare(b.name));
+ return{rows,trimmed,shownStart:start,note:'Each row is one prep item on one day. Done items use the amounts frozen when they were ticked; items not ticked by the end of their day count as skipped. Days before an item was added are not counted. Finish times are Melbourne time.'+(trimmed?' Only the latest 400 days are shown.':'')};}
+module.exports={training,checklists,activity,prep};

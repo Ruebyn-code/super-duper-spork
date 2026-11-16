@@ -36,7 +36,7 @@
   for(const input of list.querySelectorAll('input[data-prep-onhand]')){if(drafts.has(input.dataset.prepOnhand)&&!input.disabled)input.value=drafts.get(input.dataset.prepOnhand);if(input.dataset.prepOnhand===focused&&!input.disabled)input.focus({preventScroll:true});}
  }
  function item(row){
-  const card=el('article',undefined,'prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'prep-check'),body=el('div',undefined,'prep-item-body'),name=data('strong',row.name,'prep-item-name'),known=row.amount!==null&&row.amount!==undefined,left=row.toPrep??row.amount,qty=!known?ui('span','Amount not available','prep-item-amount is-unknown'):data('span',amount(left)+(row.unit?' '+row.unit:''),'prep-item-amount'+(row.onHand!==null&&row.onHand!==undefined&&!left?' is-covered':''));
+  const card=el('article',undefined,'prep-item'+(row.done?' is-done':'')),check=el('button',undefined,'prep-check'),body=el('div',undefined,'prep-item-body'),name=row.article?.id?articleName(row):data('strong',row.name,'prep-item-name'),known=row.amount!==null&&row.amount!==undefined,left=row.toPrep??row.amount,qty=!known?ui('span','Amount not available','prep-item-amount is-unknown'):data('span',amount(left)+(row.unit?' '+row.unit:''),'prep-item-amount'+(row.onHand!==null&&row.onHand!==undefined&&!left?' is-covered':''));
   if(known&&row.onHand!==null&&row.onHand!==undefined)qty.title=word('To prep: {left} of {total}',{left:amount(left),total:amount(row.amount)});
   check.type='button';check.setAttribute('aria-pressed',String(row.done));check.setAttribute('aria-label',(row.done?word('Mark not done: '):word('Mark done: '))+row.name);check.disabled=!state.canTick||row.removed||pending.has(row.id);
   check.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
@@ -67,6 +67,10 @@
   input.addEventListener('change',commit);input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();input.blur();}});
   wrap.hidden=!state.canTick&&(row.onHand===null||row.onHand===undefined);  wrap.append(label,note);return wrap;
  }
+ // A linked method/recipe article opens read-only in the shared Knowledge centre popup (its own access checks apply).
+ function articleName(row){const button=el('button',undefined,'prep-item-name prep-item-article');button.type='button';button.dataset.kcArticle=row.article.id;button.dataset.kcTitle=row.article.title||'';button.append(data('strong',row.name));
+  const icon=el('span',undefined,'prep-article-icon');icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h6M8 11h6"/></svg>';button.append(icon);
+  button.title=word('Open how to make it: {title}',{title:row.article.title||row.name});button.setAttribute('aria-label',word('{name} – open how to make it',{name:row.name}));return button;}
  // More than one to make: one checkbox per unit (the last may be a part unit). The item is done once every box is ticked.
  function partBoxes(row){
   const wrap=el('div',undefined,'prep-parts'),total=row.parts.length,ticked=row.parts.filter(part=>part.done).length;wrap.setAttribute('role','group');wrap.setAttribute('aria-label',word('{name}: {done} of {total} ticked',{name:row.name,done:ticked,total}));
@@ -117,6 +121,15 @@
  const nameInput=el('input'),amountInput=el('input'),unitInput=el('input'),stationInput=el('input'),stationList=el('datalist'),labelSelect=el('select'),notesInput=el('textarea'),activeInput=el('input');
  nameInput.maxLength=80;nameInput.required=true;nameInput.placeholder=word('e.g. Tzatziki');amountInput.type='number';amountInput.min='0.001';amountInput.step='0.001';amountInput.required=true;amountInput.inputMode='decimal';unitInput.maxLength=30;unitInput.placeholder=word('e.g. litres, trays');stationInput.maxLength=60;stationInput.placeholder=word('e.g. Grill, Cold prep');stationList.id='prep-stations';stationInput.setAttribute('list','prep-stations');notesInput.maxLength=300;notesInput.rows=2;activeInput.type='checkbox';
  const dayGroup=el('fieldset',undefined,'prep-days'),dayLegend=ui('legend','Days');dayGroup.append(dayLegend);const dayInputs=days.map((name,index)=>{const label=el('label',undefined,'prep-day'),input=el('input');input.type='checkbox';input.value=String(index+1);label.append(input,ui('span',name));dayGroup.append(label);return input;});
+ // How to make it: an optional Knowledge centre article (chosen through the shared read-only article picker).
+ const articleBox=el('div',undefined,'prep-article-field'),articleHeading=ui('span','How to make it (optional)','prep-field-name');let articleDraft=null;
+ function renderArticle(){const links=Boolean(window.knowledgeArticlePopup?.canLink?.());articleBox.hidden=!links&&!articleDraft;const row=el('div',undefined,'prep-article-row');
+  if(articleDraft){const open=el('button',undefined,'prep-article-chip');open.type='button';open.dataset.kcArticle=articleDraft.id;open.dataset.kcTitle=articleDraft.title;open.append(data('span',articleDraft.title));open.title=word('Preview the article');row.append(open);
+   if(links){const change=ui('button','Change','prep-secondary prep-small');change.type='button';change.onclick=pickArticle;row.append(change);}
+   const unlink=ui('button','Remove','prep-secondary prep-small');unlink.type='button';unlink.onclick=()=>{articleDraft=null;renderArticle();};row.append(unlink);}
+  else if(links){const add=ui('button','Link a Knowledge centre article','prep-secondary prep-small');add.type='button';add.onclick=pickArticle;row.append(add);}
+  articleBox.replaceChildren(articleHeading,row);}
+ async function pickArticle(){const chosen=await window.knowledgeArticlePopup?.pick?.({parent:dialog});if(chosen?.id){articleDraft={id:chosen.id,title:String(chosen.title||'').slice(0,200)||word('Article')};renderArticle();}}
  const activeLabel=el('label',undefined,'prep-active');activeLabel.append(activeInput,ui('span','On the prep list'));
  const editorTitle=ui('h3','Add a prep item'),editorRow1=el('div',undefined,'prep-row'),editorRow2=el('div',undefined,'prep-row');
  const amountField=field('Amount each day',amountInput),salesRow=el('div',undefined,'prep-row prep-sales-row'),perField=field('Per projected sales ($)',perInput),salesHint=ui('p','It’s on the list every day, worked out from that day’s projected sales, e.g. 2 kg per $1,000. If there is no projection yet, staff see “Amount not available”.','prep-sales-hint');salesRow.append(perField,field('Round up to (optional)',roundInput));
@@ -124,29 +137,51 @@
  function syncBasis(){const sales=basisSelect.value==='sales';salesRow.hidden=salesHint.hidden=!sales;dayGroup.hidden=sales;perInput.required=sales;amountField.querySelector('span').textContent=sales?word('Amount to prep'):word('Amount each day');}basisSelect.onchange=syncBasis;
  editorRow1.append(amountField,field('Unit',unitInput));editorRow2.append(field('Station',stationInput),field('Label template',labelSelect));
  const editorActions=el('div',undefined,'prep-editor-actions'),save=ui('button','Add item','prep-primary'),cancel=ui('button','Cancel','prep-secondary'),remove=ui('button','Delete','prep-delete');save.type='submit';cancel.type=remove.type='button';editorActions.append(remove,cancel,save);
- editor.append(editorTitle,field('Item name',nameInput),basisField,editorRow1,salesRow,salesHint,editorRow2,dayGroup,field('Notes (optional)',notesInput),activeLabel,stationList,editorActions);
+ editor.append(editorTitle,field('Item name',nameInput),basisField,editorRow1,salesRow,salesHint,editorRow2,dayGroup,field('Notes (optional)',notesInput),articleBox,activeLabel,stationList,editorActions);
  dialogBody.append(itemList,editor);foot.append(formStatus);form.append(dialogHead,dialogBody,foot);dialog.append(form);
  let editing=null,requestId=null,saving=false;
  function fillEditor(itemValue){
   editing=itemValue||null;requestId=itemValue?null:crypto.randomUUID();editorTitle.textContent=itemValue?word('Edit prep item'):word('Add a prep item');save.textContent=itemValue?word('Save item'):word('Add item');remove.hidden=!itemValue;cancel.hidden=!itemValue;formStatus.textContent='';
   nameInput.value=itemValue?.name||'';amountInput.value=itemValue?String(itemValue.amount):'';unitInput.value=itemValue?.unit||'';stationInput.value=itemValue?.station||'';notesInput.value=itemValue?.notes||'';activeInput.checked=itemValue?itemValue.active!==false:true;basisSelect.value=itemValue?.basis==='sales'?'sales':'fixed';perInput.value=itemValue?.salesPer?String(itemValue.salesPer):'';roundInput.value=itemValue?.roundTo?String(itemValue.roundTo):'';syncBasis();window.appSelects?.refresh?.(basisSelect);
   for(const input of dayInputs)input.checked=itemValue?itemValue.days.includes(Number(input.value)):true;
+  articleDraft=itemValue?.article?.id?{id:itemValue.article.id,title:itemValue.article.title||''}:null;renderArticle();
   labelSelect.replaceChildren(ui('option','No label template'),...(state.labelTemplates||[]).map(template=>{const option=data('option',template.name);option.value=template.id;return option;}));labelSelect.firstChild.value='';labelSelect.value=itemValue?.labelTemplateId&&(state.labelTemplates||[]).some(template=>template.id===itemValue.labelTemplateId)?itemValue.labelTemplateId:'';window.appSelects?.refresh?.(labelSelect);
   stationList.replaceChildren(...[...new Set((state.items||[]).map(entry=>entry.station).filter(Boolean))].map(value=>{const option=el('option');option.value=value;return option;}));
   for(const row of itemList.querySelectorAll('.prep-manage-row'))row.classList.toggle('is-editing',row.dataset.id===itemValue?.id);
  }
  function renderManage(){
   itemList.replaceChildren(ui('h3','Items at this location'));const items=state.items||[];
+  if(items.length&&state.copyTargets?.length){const copyButton=ui('button','Copy to other stores','prep-secondary prep-small prep-copy-open');copyButton.type='button';copyButton.onclick=openCopy;itemList.append(copyButton);}
   if(!items.length)itemList.append(ui('p','No prep items yet. Add the first one.','prep-empty'));
   for(const entry of items){const row=el('button',undefined,'prep-manage-row'+(entry.active?'':' is-off'));row.type='button';row.dataset.id=entry.id;const label=el('span',undefined,'prep-manage-text');label.append(data('strong',entry.name),data('small',[amount(entry.amount)+(entry.unit?' '+entry.unit:'')+(entry.basis==='sales'?' '+word('per {sales} projected',{sales:money(entry.salesPer*100)}):''),entry.station,entry.days.length===7?word('Every day'):entry.days.map(day=>days[day-1]).join(' '),entry.active?null:word('Off')].filter(Boolean).join(' · ')));row.append(label);row.onclick=()=>{fillEditor(entry);if(matchMedia('(max-width:700px)').matches)editorTitle.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});};itemList.append(row);}
  }
+ // Copy items to other stores: choose items and stores, then one explicit Copy. Each store gets its own copy; names it already has are skipped.
+ const copyDialog=el('dialog',undefined,'prep-dialog prep-copy-dialog');copyDialog.setAttribute('aria-labelledby','prep-copy-title');copyDialog.dataset.layoutUi='';document.body.append(copyDialog);
+ const copyForm=el('form'),copyHead=el('header',undefined,'prep-dialog-head'),copyTitle=ui('h2','Copy prep items'),copyClose=el('button','×','prep-close');copyTitle.id='prep-copy-title';copyClose.type='button';copyClose.setAttribute('aria-label',word('Close copy prep items'));copyHead.append(copyTitle,copyClose);
+ const copyBody=el('div',undefined,'prep-copy-body'),copyItems=el('fieldset',undefined,'prep-copy-group'),copyStores=el('fieldset',undefined,'prep-copy-group'),copyFoot=el('footer',undefined,'prep-dialog-foot prep-copy-foot'),copyStatus=el('p','','prep-form-status'),copyGo=ui('button','Copy','prep-primary'),copyCancel=ui('button','Cancel','prep-secondary');copyStatus.setAttribute('role','status');copyGo.type='submit';copyCancel.type='button';
+ copyBody.append(ui('p','Each store gets its own copy it can change. Items a store already has (same name) are skipped.','prep-sales-hint'),copyItems,copyStores);copyFoot.append(copyStatus,copyCancel,copyGo);copyForm.append(copyHead,copyBody,copyFoot);copyDialog.append(copyForm);
+ let copyRequest=null,copying=false;
+ function checkGroup(fieldset,title,entries,checked){fieldset.replaceChildren(ui('legend',title));const all=el('label',undefined,'prep-copy-option prep-copy-all'),allBox=el('input');allBox.type='checkbox';all.append(allBox,ui('span','Select all'));fieldset.append(all);
+  const boxes=entries.map(entry=>{const label=el('label',undefined,'prep-copy-option'),box=el('input');box.type='checkbox';box.value=entry.id;box.checked=checked;label.append(box,data('span',entry.label));fieldset.append(label);return box;});
+  const sync=()=>{allBox.checked=boxes.every(box=>box.checked);allBox.indeterminate=!allBox.checked&&boxes.some(box=>box.checked);};allBox.onchange=()=>{for(const box of boxes)box.checked=allBox.checked;copyRequest=null;};for(const box of boxes)box.addEventListener('change',()=>{sync();copyRequest=null;});sync();}
+ function openCopy(){if(!state?.copyTargets?.length)return;copyRequest=null;copyStatus.textContent='';
+  checkGroup(copyItems,word('Prep items'),(state.items||[]).map(entry=>({id:entry.id,label:entry.name+(entry.station?' · '+entry.station:'')})),true);
+  checkGroup(copyStores,word('Copy to'),state.copyTargets.map(entry=>({id:entry.id,label:entry.name})),false);copyDialog.showModal();copyStores.querySelector('input')?.focus();}
+ const chosenIn=fieldset=>[...fieldset.querySelectorAll('.prep-copy-option:not(.prep-copy-all) input')].filter(box=>box.checked).map(box=>box.value);
+ copyClose.onclick=copyCancel.onclick=()=>{if(!copying)copyDialog.close();};copyDialog.addEventListener('cancel',event=>{if(copying)event.preventDefault();});
+ copyForm.onsubmit=async event=>{event.preventDefault();if(copying)return;const itemIds=chosenIn(copyItems),locationIds=chosenIn(copyStores);
+  if(!itemIds.length){copyStatus.textContent=word('Choose at least one prep item.');return;}if(!locationIds.length){copyStatus.textContent=word('Choose at least one store.');return;}
+  copyRequest||=crypto.randomUUID();copying=true;for(const control of copyForm.querySelectorAll('button,input'))control.disabled=control!==copyClose;copyStatus.textContent=word('Copying…');
+  try{const result=await api('/copy','POST',{requestId:copyRequest,itemIds,locationIds});copyStatus.textContent=result.results.map(entry=>word('{store}: {copied} copied',{store:entry.name,copied:entry.copied})+(entry.skipped?word(', {skipped} already there',{skipped:entry.skipped}):'')).join(' · ');copyRequest=null;}
+  catch(error){copyStatus.textContent=error.message;if(error.status&&error.status<500&&error.status!==409)copyRequest=null;}
+  finally{copying=false;for(const control of copyForm.querySelectorAll('button,input'))control.disabled=false;}};
  function openManage(){if(!state?.canManage)return;renderManage();fillEditor(null);dialog.showModal();nameInput.focus();}
  manage.onclick=openManage;close.onclick=()=>{if(!saving)dialog.close();};dialog.addEventListener('cancel',event=>{if(saving)event.preventDefault();});dialog.addEventListener('close',()=>{load();manage.focus({preventScroll:true});});cancel.onclick=()=>fillEditor(null);
  const busy=value=>{saving=value;for(const control of form.querySelectorAll('button,input,select,textarea'))control.disabled=value&&control!==close;};
  form.onsubmit=async event=>{
   event.preventDefault();if(saving)return;const chosen=dayInputs.filter(input=>input.checked).map(input=>Number(input.value));
   if(!nameInput.value.trim()){formStatus.textContent=word('Enter the item name.');nameInput.focus();return;}if(!(Number(amountInput.value)>0)){formStatus.textContent=word('Enter an amount above 0.');amountInput.focus();return;}const sales=basisSelect.value==='sales';if(!sales&&!chosen.length){formStatus.textContent=word('Choose at least one day.');return;}if(sales&&!(Number.isInteger(Number(perInput.value))&&Number(perInput.value)>=1)){formStatus.textContent=word('Enter the projected sales amount in whole dollars.');perInput.focus();return;}
-  const value={name:nameInput.value,amount:Number(amountInput.value),...(sales?{basis:'sales',salesPer:Number(perInput.value),roundTo:roundInput.value.trim()?Number(roundInput.value):null}:{basis:'fixed'}),unit:unitInput.value,station:stationInput.value,days:sales?[1,2,3,4,5,6,7]:chosen,labelTemplateId:labelSelect.value||null,notes:notesInput.value,active:activeInput.checked};
+  const value={name:nameInput.value,amount:Number(amountInput.value),...(sales?{basis:'sales',salesPer:Number(perInput.value),roundTo:roundInput.value.trim()?Number(roundInput.value):null}:{basis:'fixed'}),unit:unitInput.value,station:stationInput.value,days:sales?[1,2,3,4,5,6,7]:chosen,labelTemplateId:labelSelect.value||null,notes:notesInput.value,article:articleDraft,active:activeInput.checked};
   busy(true);formStatus.textContent=word('Saving…');
   try{if(editing)await api('/items/'+editing.id,'PUT',{...value,revision:editing.revision});else await api('/items','POST',{...value,requestId});state=await api(date?'?date='+date:'');busy(false);renderManage();fillEditor(null);formStatus.textContent=word('Saved.');render();}
   catch(error){busy(false);formStatus.textContent=error.message;if(error.status===409||error.status===404)requestId=crypto.randomUUID();}

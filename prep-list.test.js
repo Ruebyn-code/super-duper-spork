@@ -110,3 +110,45 @@ test('items with more than one to make split into one box per unit and finish wh
  current=await row();assert.equal(current.parts,undefined,'one or less to make keeps a single checkbox');
  assert.equal(f.calls(),0);
 });
+test('prep items link a method article and copy to other stores where the manager runs prep',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const article={id:crypto.randomUUID(),title:'How to make tzatziki'};
+ const saved=await f.api(f.office,'/api/prep-list/items','POST',item({article}));assert.deepEqual(saved.article,article);
+ assert.equal((await f.request(f.office,'/api/prep-list/items','POST',item({name:'Bad',article:{id:'nope',title:'x'}}))).status,400);
+ // Older writers that omit the article keep it; null removes it.
+ let current=(await f.api(f.office,'/api/prep-list')).items.find(entry=>entry.id===saved.id);
+ const {article:_omit,...older}=item();const kept=await f.api(f.office,'/api/prep-list/items/'+saved.id,'PUT',{...older,revision:current.revision});assert.deepEqual(kept.article,article);
+ assert.deepEqual((await f.api(f.staff,'/api/prep-list')).rows.find(row=>row.id===saved.id).article,article,'staff see the link on the list');
+ const second=(await f.request(f.office,'/api/locations','POST',{name:'Second store'})).data;
+ const list=await f.api(f.office,'/api/prep-list');assert(list.copyTargets.some(entry=>entry.id===second.id),'other stores are offered');assert(!list.copyTargets.some(entry=>entry.id===f.location));
+ const extra=await f.api(f.office,'/api/prep-list/items','POST',item({name:'Chips',amount:2}));
+ const body={requestId:crypto.randomUUID(),itemIds:[saved.id,extra.id],locationIds:[second.id]};
+ const first=await f.api(f.office,'/api/prep-list/copy','POST',body);assert.deepEqual(first.results.map(entry=>[entry.copied,entry.skipped]),[[2,0]]);
+ const retry=await f.api(f.office,'/api/prep-list/copy','POST',body);assert.equal(retry.results[0].skipped,0,'a retry creates nothing new and skips nothing');
+ const there=await f.api(f.office,'/api/prep-list',undefined,undefined,{'X-Location-Id':second.id});
+ assert.equal(there.items.length,2,'retrying did not duplicate copies');const copy=there.items.find(entry=>entry.name==='Tzatziki');assert.notEqual(copy.id,saved.id);assert.deepEqual(copy.article,article);
+ const again=await f.api(f.office,'/api/prep-list/copy','POST',{...body,requestId:crypto.randomUUID()});assert.deepEqual(again.results.map(entry=>[entry.copied,entry.skipped]),[[0,2]],'names a store already has are skipped');
+ assert.equal((await f.request(f.office,'/api/prep-list/copy','POST',{...body,requestId:crypto.randomUUID(),locationIds:[f.location]})).status,400,'cannot copy to the same store');
+ assert.equal((await f.request(f.office,'/api/prep-list/copy','POST',{...body,requestId:crypto.randomUUID(),locationIds:['no-such-store']})).status,403);
+ assert.equal((await f.request(f.staff,'/api/prep-list/copy','POST',{...body,requestId:crypto.randomUUID()})).status,403,'staff cannot copy');
+ current=(await f.api(f.office,'/api/prep-list')).items.find(entry=>entry.id===saved.id);
+ const removed=await f.api(f.office,'/api/prep-list/items/'+saved.id,'PUT',{...item(),article:null,revision:current.revision});assert.equal(removed.article,undefined);
+ assert.equal(f.calls(),0);
+});
+test('the prep report lists each item per day with done, skipped and open work, read-only',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const a=await f.api(f.office,'/api/prep-list/items','POST',item({name:'Tzatziki',amount:4}));const b=await f.api(f.office,'/api/prep-list/items','POST',item({name:'Chips',amount:2}));
+ await f.api(f.staff,'/api/prep-list/on-hand','POST',{date:'2026-10-23',itemId:a.id,quantity:1,revision:0});
+ await f.api(f.staff,'/api/prep-list/tick','POST',{date:'2026-10-23',itemId:a.id,done:true,revision:0});
+ f.setTime('2026-10-24T01:00:00Z');
+ const path='/api/reporting/prep?preset=custom&start=2026-10-20&end=2026-10-24&locations='+f.location;
+ const report=await f.api(f.office,path);
+ const day=date=>report.rows.filter(row=>row.date===date);
+ assert.equal(day('2026-10-22').length,0,'days before the items were added are not counted');
+ const done=day('2026-10-23').find(row=>row.itemId===a.id);assert.equal(done.status,'done');assert.equal(done.toPrep,3);assert.equal(done.doneBy,'Staff');assert.match(done.doneTime,/^\d\d:\d\d$/);
+ assert.equal(day('2026-10-23').find(row=>row.itemId===b.id).status,'skipped');
+ assert(day('2026-10-24').every(row=>row.status==='open'),'today stays open');
+ assert.equal(report.rows[0].locationName,'Office');
+ assert.equal((await f.request(f.staff,path)).status,403,'reporting permission is still required');
+ assert.equal(f.calls(),0);
+});

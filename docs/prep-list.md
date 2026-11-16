@@ -43,3 +43,20 @@ Each of today's items has an **Already prepped** field. What staff enter (0–1,
 When today's still-to-make amount (`toPrep`) is more than 1 and at most 20, the item splits into one checkbox per unit (`partCount`/`partSizes` in `prep-list.js`; the last box holds any part unit, so 2.5 trays → 1, 1, 0.5). Rows add `parts:[{index,size,done,by,at}]` (every box shows ticked once the item is done). CSRF-protected `POST /api/prep-list/part` `{date, itemId, index, done, revision}` (today only, `prep.view`, the item's `tickRevision`, harmless repeats, 409 for stale revisions or boxes the amount no longer has) records who ticked each box in the day file's `ticks[itemId].parts`; ticking the last box marks the item done with the usual frozen snapshot, and unticking one box of a done item reopens it with the others still ticked. The big checkbox still ticks the whole item; unticking it clears every box. Already prepped is locked while any box is ticked, because it changes the number of boxes. Home's Today's prep card shows boxes ticked (for example 1/3).
 
 On phones the Manage items popup stacks the item list above the editor at their natural heights (one scrolling body), and picking an item scrolls to its editor, so every item stays tappable.
+
+## How to make it (linked article)
+
+Items may carry an optional `article` `{id, title ≤200}` (Manage items → How to make it → Link a Knowledge centre article, through the shared read-only `knowledgeArticlePopup.pick`). Older writers that omit `article` keep it; `null` removes it. The item name on the list becomes a button with `data-kc-article`, so the shared popup opens it read-only with the article's own access checks (people who can't see the article get its unavailable message).
+
+## Copy to other stores
+
+Manage items → Copy to other stores (`POST /api/prep-list/copy` `{requestId, itemIds ≤300, locationIds ≤100}`, CSRF, `prep.manage` here) copies chosen items into other active stores in the same company where the person also has `prep.view` + `prep.manage` (the list's `copyTargets`; never from a kiosk, never the current store). Each target gets an independent copy created through the native create with a request ID derived from the copy request, item and store, so retries add nothing; items whose name a store already has are skipped and counted. Results list copied/skipped per store.
+
+## Home and kiosks
+
+Home's Today's prep card ticks items and the per-unit boxes (`/api/prep-list/tick` and `/api/prep-list/part`, same revisions). `GET /api/home-prep` rows include `parts` (index/size/done). Paired kiosks use the same Home card.
+
+## Reporting → Checklists → Prep list
+
+`GET /api/reporting/prep` (reporting + `prep.view` in every selected company, kiosks pinned to their store) returns one row per item per day from each store's day files (`store.report`, latest 400 days): ticked items from their frozen snapshot (planned, already prepped, to prep, done time/person), unticked items from current settings only for days after the item was added and before it was removed (sales-based amounts unknown until ticked), status `done`/`skipped` (past days)/`open` (today). `public/reporting-prep.js` shows totals, completion rate (finished days only), skipped count, usual finish time, a store ranking with gold/silver/bronze places, By item (days, done, rate, usual finish, planned vs made) and Recently skipped; search filters rows; Export CSV downloads every filtered row. Read-only.
+

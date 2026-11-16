@@ -130,6 +130,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/reporting.js':'reporting.js',
   '/reporting-guide.js':'reporting-guide.js',
   '/reporting-activity.js':'reporting-activity.js',
+  '/reporting-prep.js':'reporting-prep.js',
+  '/reporting-prep.css':'reporting-prep.css',
   '/reporting-people.js':'reporting-people.js',
   '/reporting-checklist-steps.js':'reporting-checklist-steps.js',
   '/reporting-table-align.js':'reporting-table-align.js',

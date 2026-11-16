@@ -102,3 +102,26 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 @media(forced-colors:active){.prep-part.is-done{background:Highlight;border-color:Highlight;color:HighlightText}}
 /* Phones: the item list and editor stack at their natural height inside the scrolling popup body, so the editor never covers list rows */
 @media(max-width:700px){.prep-dialog .prep-dialog-body{grid-template-rows:none;grid-auto-rows:max-content;align-content:start}.prep-dialog .prep-manage-list,.prep-dialog .prep-editor{min-height:auto}}
+/* How to make it: linked Knowledge centre article */
+.prep-item-article{display:inline-flex;align-items:center;gap:5px;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.prep-item-article strong{text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--primary,#008cff) 45%,transparent);text-underline-offset:3px}
+.prep-item-article:hover strong{text-decoration-color:var(--primary,#008cff)}
+.prep-item-article:focus-visible{outline:2px solid var(--primary,#008cff);outline-offset:2px;border-radius:4px}
+.prep-article-icon{display:inline-flex;color:var(--theme-primary-text,var(--primary,#008cff))}
+.prep-article-field{display:grid;gap:6px}.prep-article-field[hidden]{display:none}
+.prep-article-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.prep-article-chip{max-width:100%;padding:5px 10px;border:1px solid color-mix(in srgb,var(--primary,#008cff) 35%,var(--prep-line,#dbe3ec));border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 8%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prep-dialog .prep-small{min-height:30px;padding:4px 10px;font-size:.78rem}
+/* Copy to other stores */
+.prep-copy-open{margin:0 0 10px}
+.prep-copy-dialog{width:min(560px,calc(100vw - 24px))}
+.prep-copy-body{display:grid;gap:12px;padding:14px 18px;overflow:auto;min-height:0}
+.prep-copy-group{display:grid;gap:4px;margin:0;padding:10px 12px;border:1px solid var(--prep-line,var(--theme-line,#dbe3ec));border-radius:10px;max-height:34vh;overflow:auto}
+.prep-copy-group legend{padding:0 4px;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-primary-text,var(--primary))}
+.prep-copy-option{display:flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin:0;font-size:.86rem;cursor:pointer}
+.prep-copy-all{font-weight:700}
+.prep-copy-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.prep-copy-foot .prep-form-status{margin-right:auto;flex:1 1 200px}
+@media(pointer:coarse){.prep-copy-option{min-height:36px}}
+.prep-copy-dialog .prep-copy-group .prep-copy-option{display:flex;flex-direction:row;align-items:center;gap:8px;width:auto;max-width:100%;margin:0;padding:3px 0;text-align:left}
+.prep-copy-dialog .prep-copy-group .prep-copy-option input{flex:none;width:16px;height:16px;min-height:0;margin:0;padding:0}
+.prep-copy-dialog .prep-copy-group .prep-copy-option span{flex:1 1 auto;min-width:0;white-space:normal}

@@ -22,7 +22,10 @@ function details(input,templates){
  // Sales-based items follow the projection every day, so they have no day choice.
  const days=basis==='sales'?[1,2,3,4,5,6,7]:input.days;if(!Array.isArray(days)||!days.length||days.some(day=>!Number.isInteger(day)||day<1||day>7)||new Set(days).size!==days.length)fail('Choose at least one day.');
  let labelTemplateId=null;if(input.labelTemplateId!==null&&input.labelTemplateId!==undefined&&input.labelTemplateId!==''){if(!uuid(input.labelTemplateId)||!templates.some(item=>item.id===input.labelTemplateId))fail('Choose a label template from this company, or none.');labelTemplateId=input.labelTemplateId;}
- return{name,amount:input.amount,...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
+ // Optional linked Knowledge centre article (the method/recipe). It opens read-only through the article's own access checks.
+ // Omitted keeps the saved link (older writers); null removes it.
+ let article;if(input.article===null)article=null;else if(input.article!==undefined){if(!input.article||typeof input.article!=='object'||!uuid(input.article.id))fail('Choose a Knowledge centre article, or none.');article={id:input.article.id,title:text(input.article.title,200,'Article title',true)};}
+ return{name,amount:input.amount,...(article!==undefined?{article}:{}),...(basis==='sales'?{basis,salesPer,...(roundTo?{roundTo}:{})}:{}),unit:text(input.unit,30,'Unit'),station:text(input.station,60,'Station'),days:[...days].sort(),labelTemplateId,notes:text(input.notes,300,'Notes'),active:input.active!==false};
 }
 // What is still to make once the amount already prepped is taken off: never below zero, rounded up to the item's round-up step
 // (or to 0.001). Unknown targets stay unknown; no on-hand entry means the whole amount is still to make.
@@ -40,7 +43,7 @@ function salesAmount(item,projectedCents){
  const raw=item.amount*projectedCents/(item.salesPer*100),step=item.roundTo||0.001,steps=Math.ceil(Math.round(raw/step*1e6)/1e6);
  return Math.round(steps*step*1000)/1000;
 }
-function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=>null}){
+function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=>null,locations=async()=>[],contextFor=async()=>null}){
  const queues=new Map();
  const today=()=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(now()));return['year','month','day'].map(key=>parts.find(part=>part.type===key).value).join('-');};
  const folder=actor=>{if(!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.locationId||'')||!/^[a-zA-Z0-9-]{1,100}$/.test(actor?.companyId||''))fail('Select a location first.',403);return path.join(dir,'prep-lists',actor.locationId);};
@@ -70,8 +73,38 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
    rows:rows.map(row=>{const entry=stock[row.id],onHand=Number.isFinite(entry?.quantity)?entry.quantity:null,frozen=ticks[row.id]?.done&&ticks[row.id].snapshot&&Object.hasOwn(ticks[row.id].snapshot,'toPrep');
     const roundTo=live.find(item=>item.id===row.id)?.roundTo||null;
     return{...row,onHand,onHandRevision:entry?.revision||0,onHandBy:entry&&onHand!==null?entry.by:null,onHandAt:entry&&onHand!==null?entry.at:null,toPrep:frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo),done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0,...partsView(ticks[row.id],frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo))};}),
-   ...(manage?{items:live.map(present).sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name)),labelTemplates:labels.filter(item=>item.active).map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name))}:{})};
+   ...(manage?{copyTargets:await copyTargets(actor),items:live.map(present).sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name)),labelTemplates:labels.filter(item=>item.active).map(({id,name})=>({id,name})).sort((a,b)=>a.name.localeCompare(b.name))}:{})};
  }
+ // Other active stores in this company where the person can also manage prep (never from a pinned kiosk).
+ async function copyTargets(actor){if(actor.kiosk)return[];try{const result=[];for(const location of await locations(actor)){if(!location||location.id===actor.locationId)continue;const context=await contextFor(actor,location.id).catch(()=>null);if(context&&context.companyId===actor.companyId&&can(context,'prep.view')&&can(context,'prep.manage')&&!context.disabledFeatures?.includes('prep'))result.push({id:location.id,name:location.name||''});}return result.sort((a,b)=>a.name.localeCompare(b.name));}catch{return[];}}
+ // Copy chosen items to other stores. Each store gets its own independent copy; items whose name it already has are skipped.
+ // Retrying with the same requestId creates nothing new (each copy uses a request ID derived from it).
+ async function copy(actor,input){
+  need(actor,'prep.manage');if(actor.kiosk)fail('Copying prep items to other stores isn\'t available on a kiosk.',403);
+  if(!uuid(input?.requestId))fail('Refresh the page before copying prep items.');
+  const itemIds=input.itemIds,locationIds=input.locationIds;
+  if(!Array.isArray(itemIds)||!itemIds.length||itemIds.length>300||itemIds.some(id=>!uuid(id))||new Set(itemIds).size!==itemIds.length)fail('Choose the prep items to copy.');
+  if(!Array.isArray(locationIds)||!locationIds.length||locationIds.length>100||new Set(locationIds).size!==locationIds.length||locationIds.some(id=>typeof id!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(id)||id===actor.locationId))fail('Choose the stores to copy to.');
+  const allowed=new Map((await copyTargets(actor)).map(location=>[location.id,location]));
+  if(locationIds.some(id=>!allowed.has(id)))fail('You can only copy to stores where you manage prep lists.',403);
+  const source=(await readItems(actor)).items.filter(item=>!item.deleted),chosen=itemIds.map(id=>source.find(item=>item.id===id));
+  if(chosen.some(item=>!item))fail('One of these prep items was removed. Reload and try again.',409);
+  const results=[];
+  for(const locationId of locationIds){
+   const target=await contextFor(actor,locationId);if(!target||target.companyId!==actor.companyId||!can(target,'prep.manage'))fail('You can only copy to stores where you manage prep lists.',403);
+   const existing=(await readItems(target)).items.filter(item=>!item.deleted),names=new Set(existing.map(item=>item.name.toLowerCase())),requestIds=new Set(existing.map(item=>item.requestId));
+   let copied=0,skipped=0;
+   for(const item of chosen){
+    const requestId=derivedId(input.requestId,item.id,locationId);
+    if(names.has(item.name.toLowerCase())&&!requestIds.has(requestId)){skipped+=1;continue;}
+    const{id,companyId,locationId:_,revision,requestId:__,requestFingerprint,createdAt,createdBy,updatedAt,updatedBy,deleted,deletedAt,deletedBy,...values}=item;
+    await create(target,{...values,article:values.article||null,requestId});copied+=1;names.add(item.name.toLowerCase());
+   }
+   results.push({locationId,name:allowed.get(locationId).name,copied,skipped});
+  }
+  return{results};
+ }
+ const derivedId=(...parts)=>{const hex=crypto.createHash('sha256').update(parts.join('|')).digest('hex');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-4'+hex.slice(13,16)+'-8'+hex.slice(17,20)+'-'+hex.slice(20,32);};
  async function create(actor,input){
   need(actor,'prep.manage');if(!uuid(input?.requestId))fail('Refresh the page before adding a prep item.');
   const values=details(input,await companyTemplates(actor)),print=fingerprint(values);
@@ -79,7 +112,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
    state.items||=[];const existing=state.items.find(item=>item.requestId===input.requestId&&item.companyId===actor.companyId);
    if(existing){if(existing.createdBy?.id!==actor.id||existing.requestFingerprint!==print)fail('This prep item was already saved with different details. Reload and try again.',409);return{changed:false,value:present(existing)};}
    if(state.items.filter(item=>!item.deleted&&item.companyId===actor.companyId).length>=300)fail('A location can have up to 300 prep items.');
-   const stamp=new Date(now()).toISOString(),item={id:crypto.randomUUID(),companyId:actor.companyId,locationId:actor.locationId,...values,revision:1,requestId:input.requestId,requestFingerprint:print,createdAt:stamp,createdBy:person(actor),updatedAt:stamp,updatedBy:person(actor)};
+   const stamp=new Date(now()).toISOString(),{article,...plain}=values,item={id:crypto.randomUUID(),companyId:actor.companyId,locationId:actor.locationId,...plain,...(article?{article}:{}),revision:1,requestId:input.requestId,requestFingerprint:print,createdAt:stamp,createdBy:person(actor),updatedAt:stamp,updatedBy:person(actor)};
    state.items.push(item);return{changed:true,value:present(item)};
   });
  }
@@ -89,7 +122,8 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   return mutate(itemsFile(actor),{items:[]},state=>{
    const item=(state.items||[]).find(entry=>entry.id===id&&!entry.deleted&&entry.companyId===actor.companyId);if(!item)fail('Prep item not found.',404);
    if(item.revision!==input.revision)fail('This prep item changed since you opened it. Reload to see the latest version.',409);
-   Object.assign(item,values,{revision:item.revision+1,updatedAt:new Date(now()).toISOString(),updatedBy:person(actor)});return{changed:true,value:present(item)};
+   const{article,...plain}=values;if(article===null)delete item.article;else if(article)item.article=article;
+   Object.assign(item,plain,{revision:item.revision+1,updatedAt:new Date(now()).toISOString(),updatedBy:person(actor)});return{changed:true,value:present(item)};
   });
  }
  async function remove(actor,id,input){
@@ -173,15 +207,35 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
    state.onHand[input.itemId]=next;return{changed:true,value:shown(next)};
   });
  }
+ // Reporting: one row per item per day at this location, read-only. Ticked items come from their frozen snapshot;
+ // unticked items are worked out from current settings, only for days after the item was added and before it was removed.
+ // Sales-based amounts are only known once ticked (their frozen amount), so other days show them as unknown.
+ const melbourne=at=>{const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(at)),get=key=>parts.find(part=>part.type===key).value;return{date:get('year')+'-'+get('month')+'-'+get('day'),time:get('hour')+':'+get('minute')};};
+ async function report(actor,{start,end}){
+  need(actor);const current=today();if(!validDate(start)||!validDate(end)||start>end)fail('Choose valid report dates.');
+  const last=end>current?current:end,first=start<shift(last,-399)?shift(last,-399):start,items=(await readItems(actor)).items,rows=[];
+  for(let day=first;day<=last;day=shift(day,1)){
+   const record=await readJson(dayFile(actor,day),null),ticks=record?.ticks||{},stock=record?.onHand||{},seen=new Set();
+   const added=item=>melbourne(item.createdAt||0).date<=day&&(!item.deleted||!item.deletedAt||melbourne(item.deletedAt).date>day);
+   for(const item of items.filter(item=>item.active&&onDay(item,day)&&added(item))){seen.add(item.id);const tick=ticks[item.id],held=Number.isFinite(stock[item.id]?.quantity)?stock[item.id].quantity:null,frozen=tick?.done&&tick.snapshot;
+    const planned=frozen?tick.snapshot.amount??null:item.basis==='sales'?null:item.amount,toPrep=frozen&&Object.hasOwn(tick.snapshot,'toPrep')?tick.snapshot.toPrep:remaining(planned,held,item.roundTo);
+    rows.push(reportRow(day,current,{id:item.id,name:frozen?tick.snapshot.name:item.name,station:frozen?tick.snapshot.station:item.station,unit:frozen?tick.snapshot.unit:item.unit,basis:item.basis||'fixed'},planned,held,toPrep,tick));}
+   // Ticked items that are no longer on the list for that day still count, from their snapshot.
+   for(const [itemId,tick] of Object.entries(ticks))if(tick.done&&!seen.has(itemId)){const snap=tick.snapshot||{};rows.push(reportRow(day,current,{id:itemId,name:snap.name||'',station:snap.station||'',unit:snap.unit||'',basis:snap.basis||'fixed'},snap.amount??null,snap.onHand??null,Object.hasOwn(snap,'toPrep')?snap.toPrep:snap.amount??null,tick));}
+  }
+  return{rows,start:first,end:last,trimmed:first!==start};
+ }
+ function reportRow(day,current,item,planned,onHand,toPrep,tick){const done=Boolean(tick?.done),at=done?tick.doneAt:null,when=at?melbourne(at):null;
+  return{date:day,itemId:item.id,name:item.name,station:item.station||'',unit:item.unit||'',basis:item.basis,planned:typeof planned==='number'?planned:null,onHand:typeof onHand==='number'?onHand:null,toPrep:typeof toPrep==='number'?toPrep:null,status:done?'done':day<current?'skipped':'open',doneAt:at,doneTime:when?.time||null,doneBy:done?tick.doneBy?.name||null:null};}
  // Today's progress for Home: counts and the remaining items, read-only.
- async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis,parts})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(parts?{partsDone:parts.filter(part=>part.done).length,partCount:parts.length}:{}),...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
+ async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis,parts})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(parts?{partsDone:parts.filter(part=>part.done).length,partCount:parts.length,parts:parts.map(({index,size,done})=>({index,size,done}))}:{}),...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
  // Staff activity: who finished which prep item, for recent days at this location.
  async function activity(actor,{start,end}){
   need(actor);const from=start&&validDate(start)?start:shift(today(),-31),to=end&&validDate(end)?end:today(),events=[];
   for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount===null||tick.snapshot.amount===undefined?'':tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
   return events;
  }
- return{list,create,update,remove,tick,tickPart,setOnHand,summary,activity};
+ return{list,create,update,remove,copy,tick,tickPart,setOnHand,summary,activity,report};
 }
 async function route({req,url,params,session,store,body,json}){
  if(url!=='/api/prep-list'&&!url.startsWith('/api/prep-list/')&&url!=='/api/home-prep')return false;
@@ -190,6 +244,7 @@ async function route({req,url,params,session,store,body,json}){
  if(url==='/api/prep-list'&&req.method==='GET'){json(200,await store.list(session,{date:params.get('date')||undefined}));return true;}
  if(url==='/api/prep-list/items'&&req.method==='POST'){json(201,await store.create(session,await body(req,16000)));return true;}
  if(url==='/api/prep-list/tick'&&req.method==='POST'){json(200,await store.tick(session,await body(req,4000)));return true;}
+ if(url==='/api/prep-list/copy'&&req.method==='POST'){json(200,await store.copy(session,await body(req,32000)));return true;}
  if(url==='/api/prep-list/part'&&req.method==='POST'){json(200,await store.tickPart(session,await body(req,4000)));return true;}
  if(url==='/api/prep-list/on-hand'&&req.method==='POST'){json(200,await store.setOnHand(session,await body(req,4000)));return true;}
  const match=url.match(/^\/api\/prep-list\/items\/([a-f0-9-]{36})$/i);

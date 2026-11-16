@@ -1,0 +1,39 @@
+// Reporting → Checklists → Prep list: completion by store and item from the loaded prep rows (display only, no extra reads).
+(()=>{
+ const $=id=>document.getElementById(id),panel=$('report-prep-panel');if(!panel)return;
+ const word=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):String(text).replace(/\{(\w+)\}/g,(_,key)=>values[key]??'');
+ const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;},data=(tag,text,cls)=>{const node=el(tag,text,cls);node.dataset.userText='';return node;};
+ const amount=value=>Number(value).toLocaleString('en-AU',{maximumFractionDigits:3}),percent=value=>value===null?'—':Math.round(value*100)+'%';
+ const metals={1:'gold',2:'silver',3:'bronze'};
+ const clock=value=>{if(!value)return'—';const[h,m]=value.split(':').map(Number);return(h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');};
+ const usual=times=>{const sorted=times.filter(Boolean).sort();return sorted.length?sorted[Math.floor((sorted.length-1)/2)]:null;};
+ let result=null,rows=[];
+ function medal(rank){const node=el('span',rank===null?'—':String(rank),'report-rank-place');if(rank!==null&&metals[rank]){node.dataset.medal=metals[rank];node.setAttribute('aria-label',word('{metal} · Place {rank}',{metal:word(metals[rank][0].toUpperCase()+metals[rank].slice(1)),rank}));node.title=node.getAttribute('aria-label');}else node.setAttribute('aria-label',rank===null?word('Unranked'):word('Place {rank}',{rank}));return node;}
+ function table(id,headers,body){const host=$(id),head=el('thead'),line=el('tr');for(const label of headers){const th=el('th',word(label));th.scope='col';line.append(th);}head.append(line);const tbody=el('tbody');tbody.append(...body);host.replaceChildren(head,tbody);}
+ function cells(row,values){for(const value of values){const cell=typeof value==='object'&&value?.nodeType?el('td'):data('td',value===null||value===undefined?'—':String(value));if(typeof value==='object'&&value?.nodeType)cell.append(value);row.append(cell);}return row;}
+ function metric(label,value,note){const card=el('div',undefined,'report-prep-metric');card.append(el('span',word(label)),data('strong',value),el('small',word(note)));return card;}
+ const counted=list=>list.filter(row=>row.status!=='open');
+ function render(next){
+  if(next!==undefined)result=next;if(!result){clear();return;}
+  const query=($('report-search')?.value||'').trim().toLowerCase();rows=result.rows.filter(row=>!query||[row.name,row.station,row.locationName,row.doneBy].some(value=>String(value||'').toLowerCase().includes(query)));
+  const done=rows.filter(row=>row.status==='done').length,skipped=rows.filter(row=>row.status==='skipped').length,finished=counted(rows).length;
+  $('report-prep-summary').replaceChildren(metric('Prep items',String(rows.length),'One per item per day'),metric('Done',String(done),'Ticked off'),metric('Skipped',String(skipped),'Not ticked by the end of their day'),metric('Completion rate',percent(finished?done/finished:null),finished?'Done ÷ finished days (today not counted until it ends)':'No finished days yet'),metric('Usual finish',clock(usual(rows.filter(row=>row.status==='done').map(row=>row.doneTime))),'Middle time items were ticked'));
+  // Stores ranked by completion rate; ties share a place, stores with nothing finished stay unranked.
+  const stores=new Map();for(const row of rows){const key=row.locationId;if(!stores.has(key))stores.set(key,{name:row.locationName,company:row.companyName,done:0,finished:0,skipped:0,times:[]});const entry=stores.get(key);if(row.status!=='open'){entry.finished++;if(row.status==='done')entry.done++;else entry.skipped++;}if(row.status==='done')entry.times.push(row.doneTime);}
+  const ranked=[...stores.values()].map(entry=>({...entry,rate:entry.finished?entry.done/entry.finished:null})).sort((a,b)=>(b.rate??-1)-(a.rate??-1)||a.name.localeCompare(b.name));let place=0,previous=null;ranked.forEach((entry,index)=>{if(entry.rate===null){entry.rank=null;return;}if(entry.rate!==previous){place=index+1;previous=entry.rate;}entry.rank=place;});
+  table('report-prep-stores',['Place','Store','Completion rate','Done','Skipped','Usual finish'],ranked.map(entry=>{const row=el('tr');if(entry.rank&&entry.rank<=3)row.dataset.rank=String(entry.rank);const name=data('span',entry.name);const where=el('span',undefined,'report-prep-store');where.append(name,data('small',entry.company||''));return cells(row,[medal(entry.rank),where,percent(entry.rate),entry.done+' / '+entry.finished,entry.skipped,clock(usual(entry.times))]);}));
+  // Items: how often each was done, when, and planned versus made.
+  const items=new Map();for(const row of rows){const key=row.locationId+'|'+row.itemId;if(!items.has(key))items.set(key,{name:row.name,station:row.station,unit:row.unit,store:row.locationName,days:0,done:0,finished:0,times:[],planned:0,plannedKnown:true,made:0});const entry=items.get(key);entry.days++;if(row.status!=='open')entry.finished++;if(row.status==='done'){entry.done++;entry.times.push(row.doneTime);if(typeof row.toPrep==='number')entry.made+=row.toPrep;}if(typeof row.planned==='number')entry.planned+=row.planned;else entry.plannedKnown=false;}
+  const unit=(value,entry)=>amount(Math.round(value*1000)/1000)+(entry.unit?' '+entry.unit:'');
+  table('report-prep-items',['Item','Store','Days on list','Done','Completion rate','Usual finish','Planned','Made'],[...items.values()].sort((a,b)=>(a.finished?a.done/a.finished:2)-(b.finished?b.done/b.finished:2)||a.name.localeCompare(b.name)).map(entry=>{const row=el('tr'),name=data('span',entry.name);const what=el('span',undefined,'report-prep-store');what.append(name,data('small',entry.station||''));return cells(row,[what,entry.store,entry.days,entry.done+' / '+entry.finished,percent(entry.finished?entry.done/entry.finished:null),clock(usual(entry.times)),entry.plannedKnown?unit(entry.planned,entry):word('Varies with sales'),unit(entry.made,entry)]);}));
+  const missed=rows.filter(row=>row.status==='skipped').slice(0,40);
+  table('report-prep-skipped',['Date','Store','Item','Station','Amount'],missed.map(row=>cells(el('tr'),[row.date,row.locationName,row.name,row.station||'—',typeof row.toPrep==='number'?amount(row.toPrep)+(row.unit?' '+row.unit:''):'—'])));
+  $('report-prep-skipped-empty').hidden=missed.length>0;$('report-prep-empty').hidden=rows.length>0;$('report-prep-note').textContent=word(result.note||'');
+  document.dispatchEvent(new CustomEvent('report-prep-drawn',{detail:{rows}}));
+ }
+ function clear(){result=null;rows=[];for(const id of ['report-prep-summary','report-prep-stores','report-prep-items','report-prep-skipped'])$(id).replaceChildren();$('report-prep-empty').hidden=true;$('report-prep-skipped-empty').hidden=true;$('report-prep-note').textContent='';}
+ function exportCsv(){if(!result)return;const meta=[['Report','Prep list'],['From',result.period?.start||''],['To',result.period?.end||''],['Search',$('report-search')?.value||''],['Time zone','Australia/Melbourne'],['Definition',result.note||''],[]],head=['Date','Store','Company','Item','Station','Unit','Planned','Already prepped','To prep','Status','Done at','Done by'],values=rows.map(row=>[row.date,row.locationName,row.companyName,row.name,row.station,row.unit,row.planned??'',row.onHand??'',row.toPrep??'',row.status,row.doneTime||'',row.doneBy||'']);
+  const url=URL.createObjectURL(new Blob([reportingExport.csv([...meta,head,...values])],{type:'text/csv;charset=utf-8'})),link=el('a');link.href=url;link.download='report-prep-list-'+(result.period?.start||'')+'-'+(result.period?.end||'')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ $('report-search')?.addEventListener('input',()=>{if(result&&!panel.hidden)render();});
+ window.reportPrep={render,clear,exportCsv};
+})();
