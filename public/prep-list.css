@@ -100,3 +100,5 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 @media(pointer:coarse){.prep-part{min-width:40px;height:38px}}
 @media(prefers-reduced-motion:reduce){.prep-part{transition:none}}
 @media(forced-colors:active){.prep-part.is-done{background:Highlight;border-color:Highlight;color:HighlightText}}
+/* Phones: the item list and editor stack at their natural height inside the scrolling popup body, so the editor never covers list rows */
+@media(max-width:700px){.prep-dialog .prep-dialog-body{grid-template-rows:none;grid-auto-rows:max-content;align-content:start}.prep-dialog .prep-manage-list,.prep-dialog .prep-editor{min-height:auto}}
