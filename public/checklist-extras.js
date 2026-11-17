@@ -132,7 +132,7 @@
    body.append(grid);window.appSelects?.refresh?.(plan);}
   catch(error){message(body,error.message,true);}
  }
- function printQr(station){const win=window.open('','_blank');if(!win){alert(window.interfaceLabel?interfaceLabel('Allow pop-ups to print.'):'Allow pop-ups to print.');return;}const doc=win.document;doc.title=station.name;const style=doc.createElement('style');style.textContent='body{font-family:system-ui,sans-serif;text-align:center;padding:24px}img{width:70mm;height:70mm}h1{font-size:22pt;margin:12px 0 4px}p{margin:2px 0;color:#444}';doc.head.append(style);const image=doc.createElement('img');image.src=location.origin+'/api/checklist-extras/stations/'+station.id+'/qr.svg';const h1=doc.createElement('h1');h1.textContent=station.name;const p=doc.createElement('p');p.textContent=station.planTitle+' · '+station.locationName;const hint=doc.createElement('p');hint.textContent='Scan to open this checklist';doc.body.append(image,h1,p,hint);image.onload=()=>{win.focus();win.print();};}
+ function printQr(station){const win=window.open('','_blank');if(!win){alert(window.interfaceLabel?interfaceLabel('Allow pop-ups to print.'):'Allow pop-ups to print.');return;}const doc=win.document;doc.title=station.name;const style=doc.createElement('style');style.textContent='body{font-family:system-ui,sans-serif;text-align:center;padding:24px}img{width:70mm;height:70mm}h1{font-size:22pt;margin:12px 0 4px}p{margin:2px 0;color:#444}';doc.head.append(style);const image=doc.createElement('img');image.src=location.origin+'/api/checklist-extras/stations/'+station.id+'/qr.svg';const h1=doc.createElement('h1');h1.textContent=station.name;const p=doc.createElement('p');p.textContent=station.planTitle+' · '+station.locationName;const hint=doc.createElement('p');hint.textContent='Scan to open this checklist';doc.body.append(image,h1,p,hint);image.onload=()=>{Promise.resolve(window.printBranding?.brand(doc)).finally(()=>{win.focus();win.print();});};}
 
  // Features: the company switches and roster assignment per plan.
  async function showFeatures(){
@@ -220,7 +220,7 @@
     const answer=add('td');answer.append(add('span',step.type==='signature'&&step.assets.length?'Signed':step.answer||'—',step.outcome==='fail'?'fail':''));if(step.rule)answer.append(add('br'),add('small',step.rule));if(step.note)answer.append(add('br'),add('small','Corrective action: '+step.note));for(const note of step.staffNotes||[])answer.append(add('br'),add('small','Note: '+note));for(const asset of step.assets){const image=add('img');image.src=location.origin+asset.url;image.alt='';answer.append(image);}
     row.append(add('td',step.title),answer,add('td',step.at?when(step.at)+(step.by?' · '+step.by:''):''));table.append(row);}
    doc.body.append(table,add('p','Printed '+when(new Date().toISOString()),'meta'));
-   const images=[...doc.images];await Promise.all(images.map(image=>image.complete?null:new Promise(resolve=>{image.onload=image.onerror=resolve;})));win.focus();win.print();}
+   await window.printBranding?.brand(doc);const images=[...doc.images];await Promise.all(images.map(image=>image.complete?null:new Promise(resolve=>{image.onload=image.onerror=resolve;})));win.focus();win.print();}
   catch(error){win.document.body.textContent=error.message;}
  }
 

@@ -61,6 +61,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/text-editor.js':'text-editor.js',
   '/formatted-text.css':'formatted-text.css',
   '/knowledge-article-popup.js':'knowledge-article-popup.js',
+  '/print-branding.js':'print-branding.js',
   '/knowledge-article-popup.css':'knowledge-article-popup.css',
   '/communications':'communications.html',
   '/communications.js':'communications.js',
