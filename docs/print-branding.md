@@ -7,4 +7,10 @@ Printed pages and PDFs (the browser's Print / Save as PDF) start with a small he
 - Print windows call `printBranding.brand(doc)` before printing: the printable checklist run and checklist QR station sheets (`public/checklist-extras.js`) and the Staff activity person report (`public/reporting-person.js`).
 - Label printing is unaffected (labels print over Bluetooth from their own raster, which already carries the sidebar logo).
 
+## Modern print styling
+
+- The header is a thin accent line in the company primary colour (`--primary`, plain hex/rgb only, slate otherwise), then the logo (≤44 × 170 px) beside the company name and store, with a small uppercase PRINTED label and the Melbourne print time on the right, above a soft divider. It is a plain `div` with inline styles so app `header` rules never reach it.
+- `printBranding.styles` is the shared stylesheet for print windows: 16 × 15 mm page margins, a system font at 10.5 pt, a large tight title, labelled fact cards (Location, Date, Completed, Score, Review on checklist runs), tables with small uppercase grey column headings, roomy 10 × 12 px cells, soft row dividers and repeating headers, uppercase section rows, red fail pills, rounded photos and a quiet footer. The checklist run and QR station sheet (a centred card with a Scan pill) use it; the person report and Knowledge article print get the same page margins.
+- The Reporting print area (`public/reporting-details.css`) uses the same type, grey meta lines, uppercase column headings, zebra rows and 14 × 13 mm landscape margins. The header always goes into the Reporting print area when one exists, even though it is hidden on screen when `beforeprint` fires.
+
 Display only: nothing is saved, no print is started and no other content changes.

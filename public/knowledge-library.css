@@ -137,6 +137,8 @@ html:has(.library-dialog[open]){scroll-behavior:auto;overflow:hidden}
  body.library-printing-qr .library-qr-dialog,body.library-printing-qr .library-qr-dialog *{visibility:visible!important}
  body.library-printing-qr .library-qr-dialog .library-close,body.library-printing-qr .library-qr-dialog .library-dialog-actions,body.library-printing-qr .library-qr-dialog .library-editor-note{display:none!important}
  body.library-printing-qr .library-qr-dialog{position:absolute;inset:0;border:0;box-shadow:none}
+ body:not(.library-printing-qr) .library-reading{line-height:1.6}
+ @page{margin:16mm 15mm}
 }
 .library-check-option,.library-switch{flex-direction:row;justify-content:flex-start;text-align:left}
 .library-check-option input,.library-switch input,.library-check-option-edit input[type=radio]{flex:none;width:18px;height:18px;min-height:0;margin:0;padding:0;box-shadow:none}
