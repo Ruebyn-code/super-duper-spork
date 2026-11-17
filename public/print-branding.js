@@ -1,5 +1,5 @@
 // Printed pages and PDFs (browser Print / Save as PDF) carry the company's own logo, name, store and print time at the top.
-// Display only: the logo is read once from the company's existing logo route (main logo, then sidebar logo) and the shared
+// Display only: the logo is read once from the company's existing logo route (sidebar logo, then main logo) and the shared
 // Opstack fallback logo is never printed as if it were the company's. Nothing is saved and no print is started from here.
 (()=>{
  if(window.printBranding)return;
@@ -7,7 +7,7 @@
  const scoped=path=>typeof window.companyAssetUrl==='function'?window.companyAssetUrl(path):path;
  const dataUrl=blob=>new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>resolve('');reader.readAsDataURL(blob);});
  async function companyLogo(){
-  for(const path of ['/logo','/sidebar-logo']){
+  for(const path of ['/sidebar-logo','/logo']){
    try{const response=await fetch(scoped(path),{cache:'no-store',headers:typeof window.companyHeaders==='function'?window.companyHeaders():{}});
     if(!response.ok||response.headers.get('X-Branding-Scope')==='platform')continue;const type=response.headers.get('Content-Type')||'';if(!/^image\/(png|jpe?g|webp|svg\+xml)/.test(type))continue;
     const url=await dataUrl(await response.blob());if(url.startsWith('data:image/'))return url;}catch{}
