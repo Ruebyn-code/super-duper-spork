@@ -11,5 +11,7 @@
  function normalize(unit){if(!valid(unit))return null;return unit.measure?{name:unit.name,perUnit:Math.round(unit.perUnit*1000)/1000,measure:unit.measure}:{name:unit.name.trim(),perUnit:unit.perUnit};}
  function equal(a,b){a=normalize(a);b=normalize(b);return a===null?b===null:b!==null&&a.name===b.name&&a.perUnit===b.perUnit&&(a.measure||null)===(b.measure||null);}
  function quantity(value,unit){return Math.round(value/(normalize(unit)?.perUnit||1)*1000)/1000;}
- return {measures,valid,normalize,equal,quantity};
+ // Whole ordered units plus loose counting units (e.g. 2 boxes + 5 sleeves at 20 per box = 2.25 ordered units).
+ function total(packs,loose,unit){return Math.round(((Number(packs)||0)+(Number(loose)||0)/(normalize(unit)?.perUnit||1))*1000)/1000;}
+ return {measures,valid,normalize,equal,quantity,total};
 });

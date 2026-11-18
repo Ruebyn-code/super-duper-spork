@@ -68,3 +68,23 @@ test('stock can be counted by weight (kg/g) or volume (L/mL) with decimal amount
   assert.equal((await f.request(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-18',items:[{id:product.id,quantity:6.25,countUnit:{name:'g',perUnit:2500,measure:'weight'}}]})).status,409,'a stale conversion is rejected');
  }finally{await f.close();}
 });
+
+test('stock counts accept whole ordered units together with loose smaller units',async()=>{
+ assert.equal(units.total(2,5,sleeves),2.25);assert.equal(units.total(0,10,sleeves),0.5);assert.equal(units.total(3,0,sleeves),3);assert.equal(units.total(1.5,0.25,{name:'kg',perUnit:2.5,measure:'weight'}),1.6);
+ const f=await fixture({fetchImpl:()=>{throw Error('Unexpected provider request');}});
+ try{
+  const input={name:'Chip sleeves',supplierId:'packaging',unitAmount:'Box of 20 sleeves',price:25,category:'Packaging',countUnit:sleeves};
+  const product=await f.api(f.office,'/api/products','POST',input),id=product.id;
+  const record=await f.api(f.staff,'/api/stock-counts','POST',{requestId:crypto.randomUUID(),countDate:'2026-10-18',items:[{id,quantity:5,countUnit:sleeves,packs:2}]});
+  assert.equal(record.items[0].quantity,2.25);assert.equal(record.items[0].countedQuantity,5);assert.equal(record.items[0].countedPacks,2);assert.equal(record.items[0].packs,undefined);
+  // Whole units only still saves as an ordinary ordered-unit count.
+  const whole=await f.api(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-19',items:[{id,quantity:3}]});assert.equal(whole.items[0].quantity,3);assert.equal(whole.items[0].countedPacks,undefined);
+  for(const bad of [{id,quantity:2,packs:1},{id,quantity:2,countUnit:sleeves,packs:-1},{id,quantity:2,countUnit:sleeves,packs:1.0001},{id,quantity:2,countUnit:sleeves,packs:'2'},{id,quantity:0,countUnit:sleeves,packs:1000001}]){const response=await f.request(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-20',items:[bad]});assert.equal(response.status,400);}
+  const tooMany=await f.request(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-20',items:[{id,quantity:40,countUnit:sleeves,packs:1000000}]});assert.equal(tooMany.status,400);
+  // Corrections keep both parts and only re-snapshot when either part changes.
+  const corrected=await f.api(f.office,'/api/stock-counts/'+record.id,'PUT',{requestId:crypto.randomUUID(),revision:0,reason:'Found another box',items:[{id,quantity:5,countUnit:sleeves,packs:3}]});
+  assert.equal(corrected.items[0].quantity,3.25);assert.equal(corrected.items[0].countedPacks,3);
+  const same=await f.request(f.office,'/api/stock-counts/'+record.id,'PUT',{requestId:crypto.randomUUID(),revision:1,reason:'No change',items:[{id,quantity:5,countUnit:sleeves,packs:3}]});assert.equal(same.status,400);
+  const {edits}=await f.api(f.office,'/api/stock-counts/'+record.id+'/edits');assert.equal(edits[0].changes[0].from,2.25);assert.equal(edits[0].changes[0].to,3.25);
+ }finally{await f.close();}
+});

@@ -89,3 +89,13 @@
 .count-edit-actions{display:flex;justify-content:flex-end;gap:8px}
 .count-edit-save{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:#fff}
 @media(max-width:720px){.count-edit-row{grid-template-columns:minmax(0,1fr) 88px 30px;grid-template-areas:'name input remove' 'unit unit unit'}.count-edit-row .stock-name{grid-area:name}.count-edit-row input{grid-area:input;min-height:44px}.count-edit-unit{grid-area:unit}.count-edit-remove{grid-area:remove}.count-edit-actions button{min-height:44px}}
+/* Items with a smaller counting unit: whole ordered units above, loose smaller units below, combined total underneath. */
+.stock-count-page .count-quantity-field>[hidden]{display:none!important}
+.stock-count-page .count-quantity-field>label{display:block;margin:0;min-width:0}
+.stock-count-page .count-quantity-field .count-pack-part{margin-bottom:4px}
+.stock-count-page .count-split .count-pack-part input[type=number]{background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.count-edit-row.count-edit-row-split{grid-template-columns:minmax(0,1fr) auto 32px}
+.count-edit-split{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:4px 6px;min-width:0}
+.count-edit-split input{width:84px}
+.count-edit-plus{font-weight:700;color:var(--theme-muted,#5b6b7c)}
+@media(max-width:720px){.count-edit-row.count-edit-row-split{grid-template-columns:minmax(0,1fr) 30px;grid-template-areas:'name remove' 'split split'}.count-edit-row-split .stock-name{grid-area:name}.count-edit-row-split .count-edit-split{grid-area:split;justify-content:flex-start}.count-edit-row-split .count-edit-remove{grid-area:remove}.count-edit-split input{width:72px;grid-area:auto}}

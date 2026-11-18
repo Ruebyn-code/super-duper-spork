@@ -13,10 +13,14 @@ function normalize(input){
  const seen=new Set();const items=input.items.map(item=>{
   if(!item||typeof item.id!=='string'||!item.id||item.id.length>240||seen.has(item.id)||typeof item.quantity!=='number'||!Number.isFinite(item.quantity)||item.quantity<0||item.quantity>1000000||Math.abs(item.quantity*1000-Math.round(item.quantity*1000))>0.000001)invalid('Use unique stock items and quantities from 0 to 1,000,000, with up to three decimal places.');
   if(item.countUnit!==undefined&&!countUnits.valid(item.countUnit))invalid('Choose a valid stock counting unit.');
-  seen.add(item.id);return {id:item.id,quantity:Math.round(item.quantity*1000)/1000,...(item.countUnit===undefined?{}:{countUnit:countUnits.normalize(item.countUnit)})};
+  // Optional whole ordered units counted alongside the smaller counting unit (only with a counting unit).
+  if(item.packs!==undefined&&(item.countUnit===undefined||typeof item.packs!=='number'||!Number.isFinite(item.packs)||item.packs<0||item.packs>1000000||Math.abs(item.packs*1000-Math.round(item.packs*1000))>0.000001))invalid('Enter ordered units from 0 to 1,000,000, with up to three decimal places, alongside a counting unit.');
+  seen.add(item.id);return {id:item.id,quantity:Math.round(item.quantity*1000)/1000,...(item.countUnit===undefined?{}:{countUnit:countUnits.normalize(item.countUnit)}),...(item.packs===undefined?{}:{packs:Math.round(item.packs*1000)/1000})};
  }).sort((a,b)=>a.id.localeCompare(b.id));
  return {countDate:input.countDate,location:(input.location||'').trim(),notes:(input.notes||'').trim(),items};
 }
+// Saved quantity in ordered units; the entered counting-unit amount (and any whole ordered units) are kept beside it.
+function counted(item){const {packs,...rest}=item;if(!item.countUnit)return rest;const quantity=countUnits.total(packs,item.quantity,item.countUnit);if(quantity>1000000)invalid('Counted quantities must be 1,000,000 ordered units or less.');return {...rest,countedQuantity:item.quantity,...(packs===undefined?{}:{countedPacks:packs}),quantity};}
 function folder(dir){return path.join(dir,'stock-counts');}
 async function read(dir,id){if(!uuid.test(id))return null;try{return JSON.parse(await fs.readFile(path.join(folder(dir),id+'.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return null;throw error;}}
 function canRead(record,session){return record&&(headOffice(session)||belongs(record,session));}
@@ -34,7 +38,7 @@ async function save(dir,input,catalogue,session){
  const items=normalized.items.map(item=>{
   const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');
   if(item.countUnit&&!countUnits.equal(item.countUnit,product.countUnit))invalid(product.name+': the counting unit changed. Refresh, clear this quantity and enter it again.',409);
-  return {...item,...(item.countUnit?{countedQuantity:item.quantity,quantity:countUnits.quantity(item.quantity,item.countUnit)}:{}),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
+  return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
  });
  const record={...normalized,items,id,accountId:session.id,counterName:session.username,...(session.locationId?{companyId:session.companyId,locationId:session.locationId,locationName:session.locationName}:{}),createdAt:new Date().toISOString(),fingerprint};
  await fs.mkdir(folder(dir),{recursive:true});const temp=path.join(folder(dir),id+'.'+crypto.randomUUID()+'.tmp'),target=path.join(folder(dir),id+'.json');
@@ -64,12 +68,12 @@ async function edit(dir,id,input,catalogue,session){
   const products=new Map(catalogue.products.map(product=>[product.id,product])),suppliers=new Map(catalogue.suppliers.map(supplier=>[supplier.id,supplier.name])),before=new Map(current.items.map(item=>[item.id,item]));
   const items=normalized.items.map(item=>{
    const previous=before.get(item.id),sameUnit=previous&&(item.countUnit?countUnits.equal(item.countUnit,previous.countUnit):!previous.countUnit),enteredBefore=previous&&(previous.countUnit?previous.countedQuantity:previous.quantity);
-   if(previous&&sameUnit&&enteredBefore===item.quantity)return previous;
+   if(previous&&sameUnit&&enteredBefore===item.quantity&&(previous.countedPacks??null)===(item.packs??null))return previous;
    const product=products.get(item.id);if(!product)invalid((previous?.name||'A stock item')+' is no longer in the catalogue, so its quantity cannot be changed.');
    if(item.countUnit&&!countUnits.equal(item.countUnit,product.countUnit))invalid(product.name+': the counting unit changed. Reload and enter it again.',409);
-   return {...item,...(item.countUnit?{countedQuantity:item.quantity,quantity:countUnits.quantity(item.quantity,item.countUnit)}:{}),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
+   return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
   });
-  const brief=list=>list.map(item=>({id:item.id,name:item.name,quantity:item.quantity,...(item.countUnit?{countedQuantity:item.countedQuantity,countUnit:item.countUnit.name}:{})}));
+  const brief=list=>list.map(item=>({id:item.id,name:item.name,quantity:item.quantity,...(item.countUnit?{countedQuantity:item.countedQuantity,...(item.countedPacks===undefined?{}:{countedPacks:item.countedPacks}),countUnit:item.countUnit.name}:{})}));
   const changed=JSON.stringify(brief(items))!==JSON.stringify(brief(current.items))||normalized.notes!==(current.notes||'');if(!changed)invalid('Nothing changed in this count.');
   const entry={id:requestId,at:new Date().toISOString(),byId:session.id,by:session.username,reason,fingerprint,before:{items:brief(current.items),notes:current.notes||''},after:{items:brief(items),notes:normalized.notes}};
   const next={countId:id,revision:revision+1,items,notes:normalized.notes,edits:[...(existing?.edits||[]),entry].slice(-100)};
