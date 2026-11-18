@@ -221,7 +221,7 @@
  /* Subpage column: a frameless rail on the canvas instead of a boxed card. */
  :root body .subpages-sidebar{background:transparent;border-color:transparent;box-shadow:none}
  :root body .subpages-sidebar .subpages-native-nav{gap:2px}
- @media(min-width:1001px){:root body .subpages-workspace.page-sidebar-layout{--subpage-width:198px}}
+ @media(min-width:1001px){:root body .subpages-workspace.page-sidebar-layout{--subpage-width:150px}}
  :root body .app-page main .eyebrow{letter-spacing:.06em}
  :root body .subpages-heading{letter-spacing:.06em;font-size:10.5px;margin-bottom:8px}
  :root body .subpages-sidebar .page-sidebar-link{min-height:36px;margin:1px 0;padding:8px 10px;border-radius:10px;color:var(--ui-text);line-height:1.3}

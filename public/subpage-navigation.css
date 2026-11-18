@@ -1,5 +1,5 @@
 /* One permanent subpage column. The shared primary header remains above it. */
-.subpages-workspace.page-sidebar-layout{--subpage-width:178px;display:grid;grid-template-columns:var(--subpage-width) minmax(0,1fr);gap:0;align-items:start;width:100%;min-height:100dvh;min-width:0}
+.subpages-workspace.page-sidebar-layout{--subpage-width:150px;display:grid;grid-template-columns:var(--subpage-width) minmax(0,1fr);gap:0;align-items:start;width:100%;min-height:100dvh;min-width:0}
 .subpages-workspace>.subpages-main{min-width:0;width:100%;max-width:100%;box-sizing:border-box;margin:0}
 .subpages-sidebar{position:sticky;top:0;align-self:start;box-sizing:border-box;width:var(--subpage-width);max-height:100dvh;overflow:auto;overscroll-behavior:contain;padding:14px 8px;border-right:1px solid var(--theme-line,#dce5ed);background:var(--theme-surface,#fff);scrollbar-width:thin;z-index:21}
 .subpages-heading{font:600 11px/1.4 var(--body-font,Arial,sans-serif);letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#627383);padding:0 8px;margin:0 0 12px}
@@ -12,7 +12,7 @@
 .subpages-sidebar #labels-categories,.subpages-sidebar .labels-sidebar-group{display:block;overflow:visible;padding:0;border:0}.subpages-sidebar #labels-sidebar h2{font-size:11px;margin:12px 8px 6px}.subpages-sidebar .page-sidebar-badge{position:static;margin-left:auto}
 .phone-subpage-navigation{display:none}
 .comms-conversation-open .subpages-sidebar,.ops-checklist-fullscreen .subpages-sidebar,.learning-course-fullscreen .subpages-sidebar{display:none}.comms-conversation-open .subpages-workspace,.ops-checklist-fullscreen .subpages-workspace,.learning-course-fullscreen .subpages-workspace{display:block}
-@media(max-width:1000px){.subpages-workspace.page-sidebar-layout{--subpage-width:148px}.subpages-sidebar{padding:12px 5px}.subpages-sidebar .page-sidebar-link{font-size:11px;gap:7px;padding:9px 7px}}
+@media(max-width:1000px){.subpages-workspace.page-sidebar-layout{--subpage-width:136px}.subpages-sidebar{padding:12px 5px}.subpages-sidebar .page-sidebar-link{font-size:11px;gap:7px;padding:9px 7px}}
 @media(max-width:720px){
  .subpages-workspace.page-sidebar-layout{--subpage-width:44px}.subpages-sidebar{padding:8px 3px}.subpages-heading,.subpages-sidebar #labels-sidebar h2{display:none}.subpages-sidebar .page-sidebar-link{justify-content:center;gap:0;min-height:40px;padding:10px 8px}.subpages-sidebar .page-sidebar-label{position:absolute!important;width:1px!important;height:1px!important;max-width:1px!important;padding:0!important;margin:-1px!important;clip:rect(0,0,0,0)!important;overflow:hidden!important;white-space:nowrap!important}.subpages-sidebar .page-sidebar-badge{position:absolute;right:1px;top:1px;font-size:8px}.subpages-workspace>.subpages-main{padding-left:10px;padding-right:10px}
  .has-phone-subpages .phone-subpage-navigation{position:absolute;display:flex;flex-direction:column;gap:4px;left:0;top:var(--phone-subpages-top,80px);bottom:0;width:44px;box-sizing:border-box;padding:8px 3px;border-right:1px solid var(--theme-line,#dce5ed);background:var(--theme-surface,#fff);z-index:2}.phone-subpage-navigation .page-sidebar-link{display:grid;place-items:center;min-height:40px;width:38px;margin:0;padding:9px;border:0;border-radius:8px;background:transparent}.phone-subpage-navigation .page-sidebar-label{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}.has-phone-subpages .phone-roster-datebar,.has-phone-subpages #phone-roster-shifts,.has-phone-subpages #phone-roster-panels,.has-phone-subpages .phone-roster-tabs,.has-phone-subpages #rostering-status{margin-left:50px;max-width:calc(100% - 56px);box-sizing:border-box}.has-phone-subpages #phone-roster-shifts{padding-left:6px;padding-right:6px}
@@ -23,3 +23,11 @@
 /* Outer breathing room is taken from the existing sidebar track, not the page. */
 @media screen and (min-width:721px){.subpages-sidebar{width:calc(var(--subpage-width) - 12px);margin:12px 0 12px 12px;top:12px;max-height:calc(100dvh - 24px);border:1px solid var(--theme-line,#dce5ed);border-radius:12px}}
 @media screen and (max-width:720px){.subpages-sidebar{width:calc(var(--subpage-width) - 6px);margin:8px 0 8px 6px;top:8px;max-height:calc(100dvh - 16px);border:1px solid var(--theme-line,#dce5ed);border-radius:9px;padding:8px 0}.subpages-sidebar .page-sidebar-link{padding-left:8px;padding-right:8px}}
+/* Narrow side bars (desktop/tablet): tighter padding, smaller gaps and icons so labels fit in 150 px (136 px on tablets); long labels wrap. */
+@media screen and (min-width:721px){
+ :root body .subpages-sidebar{padding:10px 5px}
+ :root body .subpages-sidebar .subpages-heading{padding:0 6px}
+ :root body .subpages-sidebar .page-sidebar-link{gap:7px;padding:7px 7px;font-size:12px;line-height:1.25}
+ :root body .subpages-sidebar .page-sidebar-link>svg{flex-basis:16px;width:16px;height:16px}
+ :root body .subpages-sidebar #labels-sidebar h2{margin:10px 6px 4px}
+}

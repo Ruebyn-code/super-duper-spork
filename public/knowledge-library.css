@@ -201,8 +201,8 @@ html:has(.library-dialog[open]){scroll-behavior:auto;overflow:hidden}
 @media(prefers-reduced-motion:reduce){#library-create{transition:none}#library-create:hover{transform:none}}
 @media(forced-colors:active){#library-create{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}}
 /* Narrower category side bar. */
-.library-workspace{--library-sidebar-width:184px}
-@media(max-width:1100px){.library-workspace{--library-sidebar-width:168px}}
+.library-workspace{--library-sidebar-width:150px}
+@media(max-width:1100px){.library-workspace{--library-sidebar-width:136px}}
 /* Desktop: filters share the heading row with the title. */
 .library-filters-in-heading .library-heading{display:flex;align-items:center;gap:18px;flex-wrap:nowrap}
 .library-filters-in-heading .library-heading>div:first-child{flex:0 0 auto;min-width:0}
