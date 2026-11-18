@@ -15,7 +15,7 @@
  }
  function available(){return !phone.matches&&!root.classList.contains('kiosk-app')&&!root.classList.contains('app-edit-mode')&&document.getElementById('top-navigation-tabs');}
  function build(){panel=document.createElement('nav');panel.id='nav-dropdown';panel.className='nav-dropdown';panel.hidden=true;panel.dataset.layoutUi='';panel.setAttribute('data-copy-editor','');
-  panel.addEventListener('pointerenter',()=>clearTimeout(closeTimer));panel.addEventListener('pointerleave',()=>scheduleClose());
+  panel.addEventListener('pointerenter',()=>clearTimeout(closeTimer));panel.addEventListener('pointerleave',event=>{const toBar=Boolean(event.relatedTarget?.closest?.('#app-sidebar'));if(!toBar)scheduleClose();dispatchEvent(new CustomEvent('nav-dropdown-left',{detail:{toBar}}));});
   panel.addEventListener('keydown',event=>{const links=[...panel.querySelectorAll('a')],index=links.indexOf(document.activeElement);
    if(event.key==='Escape'){event.preventDefault();const back=owner;close();back?.focus();}
    else if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const next=links[(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length];next?.focus();}
@@ -34,8 +34,8 @@
   link.setAttribute('aria-expanded','true');panel.hidden=false;place();
   if(focusFirst)panel.querySelector('a')?.focus();return true;
  }
- function place(){if(!owner||!panel||panel.hidden)return;const r=owner.getBoundingClientRect(),w=panel.offsetWidth;panel.style.top=Math.round(r.bottom+6)+'px';panel.style.left=Math.round(Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8)))+'px';}
- function close(){clearTimeout(openTimer);clearTimeout(closeTimer);if(panel)panel.hidden=true;owner?.removeAttribute('aria-expanded');owner=null;}
+ function place(){if(!owner||!panel||panel.hidden)return;const r=owner.getBoundingClientRect(),w=panel.offsetWidth;const top=Math.round(r.bottom+6),barBottom=document.getElementById('app-sidebar')?.getBoundingClientRect().bottom??r.bottom;panel.style.top=top+'px';panel.style.setProperty('--nav-dropdown-bridge',Math.max(8,Math.ceil(top-Math.min(barBottom,r.bottom))+2)+'px');panel.style.left=Math.round(Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8)))+'px';}
+ function close(){clearTimeout(openTimer);clearTimeout(closeTimer);const wasOpen=panel&&!panel.hidden;if(panel)panel.hidden=true;owner?.removeAttribute('aria-expanded');owner=null;if(wasOpen&&!document.querySelector('#app-sidebar:hover'))dispatchEvent(new CustomEvent('nav-dropdown-left',{detail:{toBar:false}}));}
  function scheduleClose(){clearTimeout(openTimer);clearTimeout(closeTimer);closeTimer=setTimeout(close,220);}
  function init(){
   const tabs=document.getElementById('top-navigation-tabs');if(!tabs)return false;

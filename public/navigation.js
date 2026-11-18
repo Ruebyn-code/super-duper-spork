@@ -86,12 +86,14 @@
  function renderNavigation(){const preview=!mobile.matches&&(pointerInside||keyboardInside||touchOpen);root.classList.toggle('navigation-compact',!preview);root.classList.toggle('navigation-preview',preview);updateToggle();}
  if(toggle)toggle.onclick=()=>{touchOpen=!root.classList.contains('navigation-preview');pointerInside=false;keyboardInside=false;renderNavigation();};
  const previewRoots=kiosk?[tabs,secondary].filter(Boolean):[sidebar],previewExcluded='.sidebar-footer,.app-search-account,.app-search-panel,#app-controls-menu,#toolbar-toggle';
+ // The main bar's dropdown menus sit outside the bar: keep the bar expanded while the pointer or focus is in one, and collapse once it leaves both.
+ window.addEventListener('nav-dropdown-left',event=>{if(event.detail?.toBar)return;pointerInside=false;keyboardInside=Boolean(document.activeElement?.closest?.('#top-navigation-tabs')&&document.activeElement.matches(':focus-visible'));touchOpen=false;renderNavigation();});
  for(const target of previewRoots){
   // Search and the account dropdown sit in the header but never expand the navigation preview.
   target.addEventListener('pointerover',event=>{if(event.pointerType!=='mouse'||!matchMedia('(hover:hover) and (pointer:fine)').matches)return;const inside=!event.target.closest?.(previewExcluded);if(inside!==pointerInside){pointerInside=inside;renderNavigation();}});
-  target.addEventListener('pointerleave',event=>{if(kiosk&&event.relatedTarget?.nodeType&&previewRoots.some(root=>root.contains(event.relatedTarget)))return;pointerInside=false;touchOpen=false;renderNavigation();});
+  target.addEventListener('pointerleave',event=>{if(kiosk&&event.relatedTarget?.nodeType&&previewRoots.some(root=>root.contains(event.relatedTarget)))return;if(event.relatedTarget?.closest?.('#nav-dropdown'))return;pointerInside=false;touchOpen=false;renderNavigation();});
   target.addEventListener('focusin',event=>{const inside=event.target.matches(':focus-visible')&&!event.target.closest(previewExcluded);if(inside!==keyboardInside){keyboardInside=inside;renderNavigation();}});
-  target.addEventListener('focusout',()=>queueMicrotask(()=>{keyboardInside=previewRoots.some(root=>[...root.querySelectorAll(':focus-visible')].some(item=>!item.closest(previewExcluded)));renderNavigation();}));
+  target.addEventListener('focusout',()=>queueMicrotask(()=>{keyboardInside=previewRoots.some(root=>[...root.querySelectorAll(':focus-visible')].some(item=>!item.closest(previewExcluded)))||Boolean(document.activeElement?.closest?.('#nav-dropdown'));renderNavigation();}));
  }
  document.addEventListener('pointerdown',event=>{if(!sidebar.contains(event.target)){touchOpen=false;renderNavigation();}});
  window.addEventListener('interface-text-updated',()=>{updateToggle();updateNavigationLabels();updateMore();controls.refresh();});

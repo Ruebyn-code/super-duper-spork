@@ -27,3 +27,5 @@ Labels/Prep list/Promotions options also follow the network feature switches thr
 The current page is marked `aria-current`. Destinations with a dropdown get `aria-haspopup`.
 
 Display only: opening a menu never saves, fetches or starts anything. Reduced motion removes the fade, forced colours use system colours, and printing hides the menu.
+
+While the pointer or keyboard focus is in a dropdown, the main bar stays expanded (labels shown): `navigation.js` ignores a `pointerleave` into `#nav-dropdown` and treats focus inside it as keyboard focus, and the dropdown sends `nav-dropdown-left` when the pointer leaves it (or it closes) so the bar collapses once the pointer has left both. An invisible bridge (`::before`) covers the small gap between the bar and the menu, and the menu has no outer margin.
