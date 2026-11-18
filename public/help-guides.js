@@ -24,7 +24,7 @@
   'Use the permanent bar on the left to switch between that feature’s subpages. Larger screens show labels; phones keep a compact icon bar. The selected subpage stays highlighted.',
   'Open the blue account dropdown for User profile, Dark mode, Help & support and your available Settings.',
   'Use browser Back and Forward to return to earlier screens. Save or resolve outstanding changes before leaving an editor.'
- ],{popular:true,related:['switch-location','platform-search','permissions'],keywords:['menu','blue dropdown','phone','navigation','help support']});
+ ],{popular:true,notes:['On a computer or tablet, rest the mouse on a main bar item (or press the Down arrow key on it) to see a small menu of its pages, such as Hourly sales or Timesheets, and jump straight there. Click the item itself to open its main page.'],related:['switch-location','platform-search','permissions'],keywords:['menu','blue dropdown','phone','navigation','help support','dropdown','sub menu']});
  add(c,'switch-location','Switch company or location','Make sure you are working in the correct store.',[
   'Select the company logo to choose one of your accessible companies.',
   'Open the location selector and choose the store you need. The app remembers your last location within each company during your sign-in session.',
