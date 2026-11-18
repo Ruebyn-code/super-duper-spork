@@ -45,3 +45,15 @@ More look options (all optional; omitted fields keep the saved value, the first 
 - **Emoji wallpaper** — `background:'emoji'` with `wallpaperEmoji`.
 - `bubble` rounded/soft/square/pill · `sent` solid/gradient/glass/outline · `received` grey/tint/outline/white · `textSize` normal/small/large/xlarge · `font` default/rounded/serif/mono/handwriting · `density` normal/compact/roomy · `layout` split/left · `times` always/hover (hover only on mouse devices) · `names` show/others/hide.
 - **Quick reactions** — `emojis`, one to three (duplicates removed). `emoji` stays the first one for older clients; sending only `emoji` moves it to the front. The background fills the whole open conversation (header, reaction row, messages and around a translucent composer); dark backgrounds switch the header and composer to light text.
+
+
+## View options
+
+Comms pages on desktop and tablet have a **View** switch beside the page title (`public/comms-views.js`/`.css`; display only, remembered per person in browser storage as `comms-view:<userId>`; hidden on phones, which keep the combined inbox, and while a conversation is open):
+
+- **Posts** (All/Company/Network): **Cards** (the two-column grid), **List** (one readable column) or **Headlines** (title, author and a two-line preview; **Show more/Show less** opens one post at a time with its poll, reactions, read/receipt actions and comments). Opening a headline never marks a post as read or writes anything.
+- **Direct messages and Group chats**: **Cards** (the grid), **List** (one conversation per row) or **Compact** (dense single-line rows with the name and latest message).
+
+## Reactions
+
+Reactions belong to individual messages and posts. Whole chats and groups can't be reacted to: conversation cards and the open-chat header no longer show a reaction bar, and `PUT /api/communications/threads/:id/reactions` (without a message) returns 405. Message and post reactions, quick reactions and their customisation are unchanged. Old whole-chat reactions stay in the data but are not shown.

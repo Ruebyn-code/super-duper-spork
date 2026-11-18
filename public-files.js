@@ -63,6 +63,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/knowledge-article-popup.js':'knowledge-article-popup.js',
   '/print-branding.js':'print-branding.js',
   '/navigation-dropdowns.js':'navigation-dropdowns.js',
+  '/comms-views.js':'comms-views.js',
+  '/comms-views.css':'comms-views.css',
   '/navigation-dropdowns.css':'navigation-dropdowns.css',
   '/knowledge-article-popup.css':'knowledge-article-popup.css',
   '/communications':'communications.html',
