@@ -13,5 +13,5 @@ Step 2: Use Confirm ordered for stock actually ordered externally or not confirm
 Step 3: Use Change delivery date to correct an outstanding estimate.
 
 4
-00:00:19.750 --> 00:00:26.583
-Step 4: When every item from that supplier arrives, choose Mark received, check the items and press Confirm received.
+00:00:19.750 --> 00:00:29.083
+Step 4: Deliveries count as received automatically on their delivery date. If one hasn’t arrived, choose Not here yet? Change delivery date and pick the new date.

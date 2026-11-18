@@ -39,9 +39,7 @@ Private `orderPriceUpdates` records in the company catalogue save exact target o
 Order details now include **Delivery tracking** for each supplier. New orders keep
 an estimated delivery date from the location's current schedule. Use **Confirm
 ordered** for orders placed externally or not confirmed by a sending service,
-**Change delivery date** to correct an outstanding estimate, and **Mark received →
-Confirm received** when that supplier's full delivery arrives. Multiple-supplier
-orders can be part received. Order placing permission is required for these actions.
+**Change delivery date** to correct an outstanding estimate. Deliveries count as received automatically on their delivery date (no Mark received step); a late delivery can be moved with **Not here yet? Change delivery date**. See [Supplier delivery planning](supplier-delivery-planning.md).
 
 Receipt actions update separate revisioned audit records in **data/order-receipts/**,
 not the original order or count files, and never resend a supplier message or

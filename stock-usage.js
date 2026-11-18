@@ -61,17 +61,22 @@ function createReader(){
   }));result.push(...batch.filter(Boolean));}
   return result;
  }
- return async dir=>{const [rawCounts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);const counts=await require('./stock-counts').applyAll(dir,rawCounts);return {counts,orders:await fulfilment.decorate(dir,await orderPrices.decorate(dir,await orderNumbers.decorate(dir,orders.filter(order=>order.status!=='deleted')))),transfers};};
+ return async dir=>{const [rawCounts,orders,transfers]=await Promise.all([folder(path.join(dir,'stock-counts')),folder(dir),transferEffects.read(dir)]);const counts=await require('./stock-counts').applyAll(dir,rawCounts);return {counts,orders:await fulfilment.decorate(dir,await orderPrices.decorate(dir,await orderNumbers.decorate(dir,orders.filter(order=>order.status!=='deleted'))),{auto:false}),transfers};};
 }
 const readHistory=createReader();
 async function report(dir,session,products,weekStart,{reader=readHistory,now=new Date()}={}){
  week(weekStart);const history=await reader(dir);return {record:derive(history.counts,history.orders,products,session,[weekStart],par.defaultTimeZone,history.transfers)[0],window:par.windowFor(now)};
 }
 // Units already ordered for the current ordering week (Monday–Sunday; Sunday orders fund the next week) and not yet marked received.
-function orderedThisWeek(orders,products,session,now=new Date()){
+function orderedThisWeek(orders,products,session,now=new Date(),counts=[]){
  const dates=require('./order-cost-period').dates,week=dates({createdAt:new Date(now).toISOString()})?.costWeekStart,byId=new Map(products.map(p=>[p.id,p])),totals=new Map(),seen=new Set();if(!week)return{weekStart:null,totals};
  for(const order of orders||[]){if(!order||seen.has(order.id)||order.status!=='requested'||(order.companyId||'default')!==(session.companyId||'default')||!belongs(order,session,'requestOwnerId')||dates(order)?.costWeekStart!==week||!Array.isArray(order.items))continue;seen.add(order.id);
-  const received=new Set((order.fulfilment?.suppliers||[]).filter(s=>s?.receivedAt).map(s=>s.supplierId));
+  // Received (marked or automatically at the expected delivery time) stock is already in counts. Without a delivery date,
+  // a stock count saved and dated after the order's day already includes what arrived, so the order stops counting as on its way.
+  // Only a count dated after the order's (Melbourne) day counts: a same-day count was most likely taken before the delivery arrived.
+  const placed=Date.parse(order.createdAt),orderDay=Number.isFinite(placed)?new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Melbourne'}).format(new Date(placed)):null,countedSince=Boolean(orderDay)&&(counts||[]).some(count=>belongs(count,session)&&Date.parse(count.createdAt)>placed&&typeof count.countDate==='string'&&count.countDate>orderDay);
+  const received=new Set((require('./order-fulfilment').automatic(order.fulfilment,new Date(now).getTime())?.suppliers||[]).filter(s=>s?.receivedAt||!s?.expectedAt&&countedSince).map(s=>s.supplierId));
+  if(!order.fulfilment&&countedSince)continue;
   for(const item of order.items){const product=byId.get(item?.id);if(!product||!Number.isFinite(item.quantity)||item.quantity<=0||received.has(item.supplierId)||item.unitAmount&&product.unitAmount&&item.unitAmount!==product.unitAmount)continue;totals.set(item.id,Math.round(((totals.get(item.id)||0)+item.quantity)*1000)/1000);}}
  return{weekStart:week,totals};
 }
@@ -92,7 +97,7 @@ async function parLevels(dir,session,products,{reader=readHistory,now=new Date()
  const records=derive(history.counts,history.orders,products,session,[1,2,3,4].map(index=>shift(window.currentWeekStart,-7*index)),par.defaultTimeZone,history.transfers);
  const result=par.calculate(records,products,session,{now,manualLevels}),calculations=require('./target-calculations'),settings=await calculations.resolve(dir,session,products);
  if(Object.values(settings).some(value=>value.mode==='sales')){const projection=(await require('./sales').createStore().report(dir,session,undefined,{now})).orderingProjection;result.levels=calculations.apply(result.levels,settings,projection);}
- const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers,orderedThisWeek(history.orders,products,session,now));
+ const suggestions=orderingSuggestions(history.counts,products,session,result.levels,history.transfers,orderedThisWeek(history.orders,products,session,now,history.counts));
  return {...result,calculationSettings:settings,stockTake:suggestions.stockTake,suggestions:suggestions.items};
 }
 module.exports={week,shift,derive,createReader,report,parLevels,orderingSuggestions,orderedThisWeek};

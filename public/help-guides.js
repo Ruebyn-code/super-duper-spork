@@ -191,12 +191,12 @@
   'Use Order history to confirm an externally placed order, correct its delivery date or record its receipt.',
   'If stock is genuinely insufficient, arrange the appropriate supplier action and place an order explicitly.'
  ],{notes:['Overdue and unconfirmed orders are flagged separately instead of being treated as assured incoming stock. A recommendation cannot make a supplier deliver earlier.'],related:['delivery-quantities','receiving-orders','stock-count']});
- add(c,'receiving-orders','Confirm orders and mark deliveries received','Track each supplier’s outstanding and received goods.',[
+ add(c,'receiving-orders','Confirm orders and track deliveries','Track each supplier’s outstanding and delivered goods.',[
   'Open Order history → View order → Delivery tracking.',
   'Use Confirm ordered for stock actually ordered externally or not confirmed by the sending service, and enter its expected date.',
   'Use Change delivery date to correct an outstanding estimate.',
-  'When every item from that supplier arrives, choose Mark received, check the items and press Confirm received.'
- ],{popular:true,route:'/order-history',permissions:['orders.view'],notes:['Suppliers in one order can be received separately; each confirmation covers that supplier’s full delivery. Receipts enter estimated stock once, and later counts prevent double credit. Older historical receipts update history only unless an outstanding future order was explicitly included in planning. These actions do not resend supplier emails.'],related:['delivery-quantities','order-history'],keywords:['arrived','receipt','part received','confirm ordered']});
+  'Deliveries count as received automatically on their delivery date. If one hasn’t arrived, choose Not here yet? Change delivery date and pick the new date.'
+ ],{popular:true,route:'/order-history',permissions:['orders.view'],notes:['You never have to mark a delivery received. Each supplier in an order is received automatically when its expected delivery time passes. Orders without a delivery date stop counting as “Ordered this week” once a stock count dated after the order day is saved, because that count already includes what arrived.','Received stock enters estimated stock once, and later counts prevent double credit. These actions do not resend supplier emails.'],related:['delivery-quantities','order-history'],keywords:['arrived','receipt','part received','confirm ordered','received automatically','mark received']});
  add(c,'delivery-exceptions','Public holidays and one-off delivery changes','Handle public holidays, cancelled days and extra deliveries.',[
   'Set the location’s state, then open Supplier delivery days → Delivery timing & exceptions.',
   'Under On public holidays, choose Deliver as normal, No delivery, Deliver the day before or Deliver the day after. Open Choose for each public holiday to set a different choice for a single holiday.',

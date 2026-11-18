@@ -26,3 +26,15 @@ test('only this ordering week’s unreceived orders at this location count, with
  const suggestion=usage.orderingSuggestions([{id:'count',locationId:'loc',createdAt:'2026-11-05T00:00:00Z',items:[{id:'cups',quantity:2}]}],products,session,{cups:{level:12}},[],result).items.cups;
  assert.deepEqual([suggestion.stockCount,suggestion.alreadyOrdered,suggestion.recommended,suggestion.orderingWeekStart],[2,7,3,'2026-11-02']);assert.equal(Object.hasOwn(usage.orderingSuggestions([],products,session,{lids:{level:1}},[],{totals:new Map()}).items.lids,'alreadyOrdered'),false);
 });
+
+test('deliveries count as received automatically: at their expected time, or once a later stock count includes them',()=>{
+ const products=[{id:'cups'}],now=new Date('2026-11-05T02:00:00Z');
+ const dated=(id,expectedAt)=>order(id,'2026-11-03T01:00:00Z',[{id:'cups',quantity:4,supplierId:'s1'}],{fulfilment:{suppliers:[{supplierId:'s1',expectedAt,receivedAt:null}]}});
+ assert.equal(usage.orderedThisWeek([dated('past','2026-11-04T22:00:00Z')],products,session,now).totals.get('cups'),undefined,'a passed delivery time is received');
+ assert.equal(usage.orderedThisWeek([dated('soon','2026-11-06T22:00:00Z')],products,session,now).totals.get('cups'),4,'a future delivery is still on its way');
+ const undated=order('u','2026-11-03T01:00:00Z',[{id:'cups',quantity:6,supplierId:'s1'}]);
+ assert.equal(usage.orderedThisWeek([undated],products,session,now,[{createdAt:'2026-11-02T01:00:00Z',countDate:'2026-11-02',locationId:'loc',companyId:'c1'}]).totals.get('cups'),6,'an earlier count does not include it');
+ assert.equal(usage.orderedThisWeek([undated],products,session,now,[{createdAt:'2026-11-04T01:00:00Z',countDate:'2026-11-04',locationId:'loc',companyId:'c1'}]).totals.get('cups'),undefined,'a later count already includes what arrived');
+ assert.equal(usage.orderedThisWeek([undated],products,session,now,[{createdAt:'2026-11-03T05:00:00Z',countDate:'2026-11-03',locationId:'loc',companyId:'c1'}]).totals.get('cups'),6,'a same-day count was probably taken before the delivery');
+ assert.equal(usage.orderedThisWeek([undated],products,session,now,[{createdAt:'2026-11-04T01:00:00Z',countDate:'2026-11-04',locationId:'other',companyId:'c1'}]).totals.get('cups'),6,'counts at other stores do not count');
+});

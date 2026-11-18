@@ -89,7 +89,13 @@ Open **Order history → View order → Delivery tracking**:
 
 - **Confirm ordered** records that an outstanding supplier order has been placed.
 - **Change delivery date** updates that supplier's outstanding estimate.
-- **Mark received → Confirm received** confirms the full supplier delivery.
+- **Deliveries are received automatically.** Nobody marks a delivery received: a supplier's part of an order reads as received
+  (`autoReceived`, at its `expectedAt`) once its expected delivery time passes, through `orderFulfilment.automatic`
+  (applied by Order history reads, delivery planning and "Ordered this week" with their own clock; nothing is written).
+  Received stock enters delivery-based available stock at that time, so passed deliveries are no longer "overdue".
+  If a delivery is late, **Not here yet? Change delivery date** moves the date and it is on its way again.
+  Without an expected delivery date, "Ordered this week" stops subtracting the order once a stock count dated after the
+  order's Melbourne day is saved (that count already includes what arrived; a same-day count probably came before the delivery). The older explicit `receive` API action still works for existing integrations.
 
 Different suppliers in one order can be received separately. Received deliveries
 cannot be rescheduled. Original order/count files, UUIDs, quantities, timestamps,

@@ -14,7 +14,7 @@ async function build(dir,actor,products,schedules,location,levels,stockTake,hist
  if(!active.length)return{plans,products};
  const horizon=Math.max(...active.map(p=>Date.parse(p.following.arrivesAt))),earliest=stockTake?Math.max(now-28*86400000,Date.parse(stockTake.savedAt)):now,model=await demandModel(dir,actor,time.parts(earliest,zone).date,time.parts(horizon,zone).date,now,zone);
  const orders=history.orders.filter(order=>order.status==='requested'&&(order.companyId||'default')===actor.companyId&&belongs(order,actor,'requestOwnerId')),seen=new Set(),movements=[];
- for(const order of orders){if(seen.has(order.id))continue;seen.add(order.id);for(const supplier of order.fulfilment?.suppliers||[])for(const item of order.items.filter(i=>i.supplierId===supplier.supplierId))movements.push({item,supplier,orderId:order.id});}
+ for(const order of orders){if(seen.has(order.id))continue;seen.add(order.id);for(const supplier of require('./order-fulfilment').automatic(order.fulfilment,now)?.suppliers||[])for(const item of order.items.filter(i=>i.supplierId===supplier.supplierId))movements.push({item,supplier,orderId:order.id});}
  return{plans,products:products.map(product=>{
   if(levels[product.id]?.source==='projected_sales')return product;
   const plan=plans.get(product.supplierId),average=levels[product.id]?.average;if(!plan?.timingConfigured||!plan.next||!plan.following)return product;
