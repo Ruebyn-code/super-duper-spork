@@ -99,3 +99,6 @@
 .count-edit-split input{width:84px}
 .count-edit-plus{font-weight:700;color:var(--theme-muted,#5b6b7c)}
 @media(max-width:720px){.count-edit-row.count-edit-row-split{grid-template-columns:minmax(0,1fr) 30px;grid-template-areas:'name remove' 'split split'}.count-edit-row-split .stock-name{grid-area:name}.count-edit-row-split .count-edit-split{grid-area:split;justify-content:flex-start}.count-edit-row-split .count-edit-remove{grid-area:remove}.count-edit-split input{width:72px;grid-area:auto}}
+/* Each area/supplier heading (name, counted progress, Count/Cart columns) stays at the top while you scroll through its items. */
+.stock-count-page .count-stock-group{overflow:clip}
+.stock-count-page #count-items .count-stock-heading{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}

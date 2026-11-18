@@ -38,7 +38,7 @@ async function save(dir,input,catalogue,session){
  const items=normalized.items.map(item=>{
   const product=products.get(item.id);if(!product)invalid('A counted stock item was removed. Refresh the catalogue and try again.');
   if(item.countUnit&&!countUnits.equal(item.countUnit,product.countUnit))invalid(product.name+': the counting unit changed. Refresh, clear this quantity and enter it again.',409);
-  return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
+  return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',...(product.orderUnitName?{orderUnitName:product.orderUnitName}:{}),supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
  });
  const record={...normalized,items,id,accountId:session.id,counterName:session.username,...(session.locationId?{companyId:session.companyId,locationId:session.locationId,locationName:session.locationName}:{}),createdAt:new Date().toISOString(),fingerprint};
  await fs.mkdir(folder(dir),{recursive:true});const temp=path.join(folder(dir),id+'.'+crypto.randomUUID()+'.tmp'),target=path.join(folder(dir),id+'.json');
@@ -71,7 +71,7 @@ async function edit(dir,id,input,catalogue,session){
    if(previous&&sameUnit&&enteredBefore===item.quantity&&(previous.countedPacks??null)===(item.packs??null))return previous;
    const product=products.get(item.id);if(!product)invalid((previous?.name||'A stock item')+' is no longer in the catalogue, so its quantity cannot be changed.');
    if(item.countUnit&&!countUnits.equal(item.countUnit,product.countUnit))invalid(product.name+': the counting unit changed. Reload and enter it again.',409);
-   return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
+   return {...counted(item),name:product.name,sku:product.sku||'',category:product.category||'',stockCountGroup:stockCountGroups.resolve(product),unitAmount:product.unitAmount||'',...(product.orderUnitName?{orderUnitName:product.orderUnitName}:{}),supplierId:product.supplierId,supplier:suppliers.get(product.supplierId)||'Supplier removed'};
   });
   const brief=list=>list.map(item=>({id:item.id,name:item.name,quantity:item.quantity,...(item.countUnit?{countedQuantity:item.countedQuantity,...(item.countedPacks===undefined?{}:{countedPacks:item.countedPacks}),countUnit:item.countUnit.name}:{})}));
   const changed=JSON.stringify(brief(items))!==JSON.stringify(brief(current.items))||normalized.notes!==(current.notes||'');if(!changed)invalid('Nothing changed in this count.');

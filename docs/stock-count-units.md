@@ -19,3 +19,11 @@ Items with a counting unit show two boxes in Stock count: **Ordered units** on t
 - The server saves `quantity` = `stockCountUnits.total(packs, quantity, countUnit)` (packs + loose ÷ `perUnit`, rounded to three decimals, at most 1,000,000) and keeps `countedQuantity` (loose) and `countedPacks` (whole units) beside it; `packs` itself is not stored. Saved counts show "2 ordered units + 5 Sleeves" above the total.
 - Browser drafts keep both boxes (`packs` beside `quantities`); older drafts and counts without `packs` behave as before. Edit count shows the same two boxes, and a correction re-snapshots an item only when either part changes.
 - Usage, target levels, Order when, recommendations, delivery availability and reports keep reading the saved ordered-unit `quantity`.
+
+## Naming the ordered unit
+
+Items may name their ordered unit (`orderUnitName`, optional, single line, ≤30 characters; set in the item editor's Pack & counting → How to count this item → **Name of the ordered unit**, e.g. "Slab", "Box" or "Bag"). Older writers that omit it keep the saved name and `''` clears it. Stock count uses it for the whole-units box label and the total ("= 3 Slab"), and for items counted only in ordered units it labels the count box. Saved counts snapshot it with each item (`orderUnitName`) so history keeps the name in use at the time. It is display only: quantities, conversions, prices and orders are unchanged.
+
+## Sticky group headings
+
+In Stock count entry each area/supplier heading (name, "x of y items counted", Count and Cart columns) sticks to the top of the page while you scroll through that group's items, then gives way to the next group (`position:sticky` with `overflow:clip` on the group). Display only.

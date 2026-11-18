@@ -88,3 +88,16 @@ test('stock counts accept whole ordered units together with loose smaller units'
   const {edits}=await f.api(f.office,'/api/stock-counts/'+record.id+'/edits');assert.equal(edits[0].changes[0].from,2.25);assert.equal(edits[0].changes[0].to,3.25);
  }finally{await f.close();}
 });
+
+test('items can name their ordered unit (e.g. Slab), kept through older writers and frozen into counts',async()=>{
+ const f=await fixture({fetchImpl:()=>{throw Error('Unexpected provider request');}});
+ try{
+  const input={name:'Coke cans',supplierId:'packaging',price:30,category:'Drinks',countUnit:{name:'Cans',perUnit:24},orderUnitName:' Slab '};
+  const product=await f.api(f.office,'/api/products','POST',input);assert.equal(product.orderUnitName,'Slab');
+  const {orderUnitName,...older}=input;const kept=await f.api(f.office,'/api/products/'+product.id,'PUT',older);assert.equal(kept.orderUnitName,'Slab');
+  const record=await f.api(f.staff,'/api/stock-counts','POST',{countDate:'2026-10-18',items:[{id:product.id,quantity:6,countUnit:{name:'Cans',perUnit:24},packs:2}]});
+  assert.equal(record.items[0].orderUnitName,'Slab');assert.equal(record.items[0].quantity,2.25);
+  for(const bad of ['x'.repeat(31),'Slab\n',5]){const response=await f.request(f.office,'/api/products/'+product.id,'PUT',{...older,orderUnitName:bad});assert.equal(response.status,400);}
+  const cleared=await f.api(f.office,'/api/products/'+product.id,'PUT',{...older,orderUnitName:''});assert.equal(cleared.orderUnitName,'');
+ }finally{await f.close();}
+});
