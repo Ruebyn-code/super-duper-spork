@@ -55,11 +55,11 @@ test('edit access respects permissions, CSRF, current location, companies and re
  await app.api(app.office,url,'DELETE',app.context);assert.equal((await app.request(app.office,url,'PUT',body)).status,404);assert.equal((await app.audit()).length,0);
 });
 
-test('validation preserves original dates and item units, accepts pending/zero prices, and keeps removed catalogue items editable',async t=>{
+test('validation rejects future/invalid dates, preserves item units, accepts pending/zero prices, and keeps removed catalogue items editable',async t=>{
  const app=await setup(t),order=await app.save(),url='/api/order-history/'+order.id,body=app.body(order);
  for(const quantity of [0,-1,1.5,1000])assert.equal((await app.request(app.office,url,'PUT',{...body,items:body.items.map(i=>({...i,quantity}))})).status,400);
  for(const price of [-1,'5',100000001])assert.equal((await app.request(app.office,url,'PUT',{...body,items:body.items.map(i=>({...i,price}))})).status,400);
- for(const patch of [{items:[]},{items:[...body.items,...body.items]},{reference:'x'.repeat(101)},{notes:'x'.repeat(1001)},{orderDate:'2026-10-12'}])assert.equal((await app.request(app.office,url,'PUT',{...body,...patch})).status,400);
+ for(const patch of [{items:[]},{items:[...body.items,...body.items]},{reference:'x'.repeat(101)},{notes:'x'.repeat(1001)},{orderDate:'2099-01-01'},{orderDate:'not a date'}])assert.equal((await app.request(app.office,url,'PUT',{...body,...patch})).status,400);
  const boxes=(await app.api(app.office,'/api/catalogue')).products.find(p=>p.id==='boxes');assert.equal((await app.request(app.office,url,'PUT',{...body,items:[...body.items,{id:'boxes',quantity:1,price:0,supplierId:boxes.supplierId,unitAmount:'wrong pack'}]})).status,409);
  await app.api(app.office,'/api/products/paper','DELETE');let changed=await app.edit(order,app.body(order,{items:body.items.map(i=>({...i,quantity:3,price:0}))}));assert.equal(changed.items[0].name,order.items[0].name);assert.equal(changed.total,0);assert.equal(changed.pricePending,false);changed=await app.edit(changed,app.body(changed,{items:changed.items.map(i=>({...i,price:null}))}));assert.equal(changed.pricePending,true);assert.equal(changed.total,0);
 });
@@ -76,4 +76,19 @@ test('same-location editors may correct legacy owner orders while owner-only API
 test('concurrent edit and deletion cannot resurrect an order or overwrite its original tombstone',async t=>{
  const app=await setup(t),order=await app.save(),url='/api/order-history/'+order.id,raw=JSON.parse(await fs.readFile(app.file(order.id),'utf8')),input=app.body(order,{notes:'Correction racing deletion'});
  const [edited,deleted]=await Promise.all([app.request(app.office,url,'PUT',input),app.request(app.office,url,'DELETE',app.context)]);assert([200,404].includes(edited.status));assert.equal(deleted.status,200);assert.equal((await app.request(app.office,url)).status,404);assert.equal((await usage.createReader()(app.dir)).orders.length,0);const tombstone=JSON.parse(await fs.readFile(app.file(order.id),'utf8'));assert.equal(tombstone.status,'deleted');assert.deepEqual(tombstone.items,raw.items);assert.equal((await app.request(app.office,url,'PUT',input)).status,404);
+});
+
+test('editing can correct the order date: costs, budgets and history follow it while the original order file is unchanged',async t=>{
+ const app=await setup(t),order=await app.save([['paper',2,500]]),raw=await fs.readFile(app.file(order.id),'utf8');
+ assert.equal((await app.api(app.office,'/api/weekly-sales-reports?week=2026-10-12')).weeklyOrders.totalCents,1000,'a Sunday order funds the next week');
+ const moved=await app.edit(order,app.body(order,{orderDate:'2026-10-08'}));
+ assert.equal(moved.orderDate,'2026-10-08');assert.equal(moved.originalOrderDate,'2026-10-11');assert.equal(moved.id,order.id);assert.equal(moved.orderNumber,order.orderNumber);
+ assert.equal((await app.api(app.office,'/api/weekly-sales-reports?week=2026-10-12')).weeklyOrders.totalCents,0);
+ assert.equal((await app.api(app.office,'/api/weekly-sales-reports?week=2026-10-05')).weeklyOrders.totalCents,1000,'costs follow the corrected date');
+ assert.equal((await app.api(app.office,'/api/order-history?from=2026-10-08&to=2026-10-08')).orders.map(o=>o.id).includes(order.id),true);
+ assert.equal(await fs.readFile(app.file(order.id),'utf8'),raw,'the original order file is never rewritten');
+ const audit=await app.audit();assert.equal(audit.at(-1).before.orderDate,'2026-10-11');assert.equal(audit.at(-1).after.orderDate,'2026-10-08');
+ // Later edits keep the corrected date unless it is changed again; moving it back clears the correction.
+ const kept=await app.edit(moved,app.body(moved,{notes:'Still Thursday'}));assert.equal(kept.orderDate,'2026-10-08');
+ const back=await app.edit(kept,app.body(kept,{orderDate:'2026-10-11'}));assert.equal(back.orderDate,'2026-10-11');assert.equal(back.originalOrderDate,undefined);
 });
