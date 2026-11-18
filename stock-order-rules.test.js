@@ -89,3 +89,11 @@ test('order rules persist per company, require stock-management permission and e
   assert.equal((await api(office,'/api/products/'+id,'PUT',{...input,minimumOrder:1,orderRule:'minimum'})).status,200);assert.equal((await api(member,'/api/orders','POST',order(1))).status,201);
  }finally{if(server?.listening)await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('Stock count rows use a brief order-rule description without rounding cutoffs',()=>{
+ const rules=require('./public/stock-order-rules');
+ assert.equal(rules.describe({minimumOrder:15,orderRule:'cutoff',roundingCutoff:6},{brief:true}),'Order units: 15');
+ assert.equal(rules.describe({minimumOrder:6,orderRule:'separate',roundDownThreshold:1,roundUpThreshold:4},{brief:true}),'Order units: 6');
+ assert.equal(rules.describe({minimumOrder:15,orderRule:'cutoff',roundingCutoff:6}),'Order units: 15 · Rounding cutoff: 6','the full description is unchanged elsewhere');
+ assert.equal(rules.describe({minimumOrder:6,orderRule:'multiples'},{brief:true}),'Order in multiples of 6');
+});
