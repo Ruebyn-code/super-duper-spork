@@ -102,3 +102,17 @@
 /* Each area/supplier heading (name, counted progress, Count/Cart columns) stays at the top while you scroll through its items. */
 .stock-count-page .count-stock-group{overflow:clip}
 .stock-count-page #count-items .count-stock-heading{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+/* Compact counting: whole units and smaller units side by side with small labels; the total shows only once something is entered. */
+.stock-count-page .count-equivalent.count-equivalent-empty{display:none}
+.stock-count-page #count-items .count-quantity-field .count-unit-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;font-size:10px;line-height:1.2}
+.stock-count-page #count-items .count-split .count-equivalent{margin-top:1px;line-height:1.2}
+@media(min-width:601px){
+ .stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,320px) 168px minmax(0,1fr) 200px}
+ .stock-count-page #count-items .count-quantity-field{display:grid;justify-items:end;align-items:end}
+ .stock-count-page #count-items .count-order-item:not(.count-split) .count-quantity-field>label{width:96px}
+ .stock-count-page #count-items .count-split .count-quantity-field{grid-template-columns:repeat(2,minmax(0,80px));column-gap:6px;justify-content:end}
+ .stock-count-page #count-items .count-split .count-quantity-field>label{width:100%;margin:0}
+ .stock-count-page #count-items .count-split .count-equivalent{grid-column:1/-1}
+}
+@media(min-width:601px) and (max-width:900px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,1fr) 150px 180px}.stock-count-page #count-items .count-split .count-quantity-field{grid-template-columns:repeat(2,minmax(0,72px))}}
+@media(max-width:600px){.stock-count-page #count-items .count-split .count-pack-part{margin-bottom:2px}.stock-count-page #count-items .count-split .count-quantity-field input[type=number]{min-height:32px;height:32px}}

@@ -27,3 +27,7 @@ Items may name their ordered unit (`orderUnitName`, optional, single line, ≤30
 ## Sticky group headings
 
 In Stock count entry each area/supplier heading (name, "x of y items counted", Count and Cart columns) sticks to the top of the page while you scroll through that group's items, then gives way to the next group (`position:sticky` with `overflow:clip` on the group). Display only.
+
+## Compact layout
+
+On desktop and tablet (above 600 px) the whole-units and smaller-unit boxes sit side by side (80 px each, 72 px on tablets) in a 168 px Count column (150 px on tablets) with small one-line labels above them. Single-box rows keep a 96 px box aligned to the right. The total line shows only once something is entered. Phones keep the two boxes stacked with tighter spacing. Styling only.

@@ -39,7 +39,7 @@
   row.packPart.hidden=!unit&&!hasPacks(product.id);row.element.classList.toggle('count-split',!row.packPart.hidden);row.packInput.setAttribute('aria-label',(orderName?wording('Counted {unit}',{unit:orderName}):wording('Counted ordered units'))+' — '+product.name);
   row.input.setAttribute('aria-label',(unit?wording('Counted {unit}',{unit:unit.name}):wording('Counted quantity'))+' — '+product.name);
   setTemplate(row.ratio,'{quantity} {unit} per ordered unit',{quantity:unit?.perUnit||'',unit:unit?.name||''});row.ratio.hidden=!unit;
-  const total=countedTotal(product,row);row.equivalent.hidden=!unit;setTemplate(row.equivalent,stale?'Unit changed':total!==null?(orderName?'= {quantity} {unit}':'= {quantity} ordered units'):(orderName?'{unit}: —':'Ordered units: —'),{quantity:new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(total??0),unit:orderName});
+  const total=countedTotal(product,row);row.equivalent.hidden=!unit;row.equivalent.classList.toggle('count-equivalent-empty',total===null&&!stale);setTemplate(row.equivalent,stale?'Unit changed':total!==null?(orderName?'= {quantity} {unit}':'= {quantity} ordered units'):(orderName?'{unit}: —':'Ordered units: —'),{quantity:new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(total??0),unit:orderName});
  }
  function writeDraft(){
   if(!draftKey)return;
