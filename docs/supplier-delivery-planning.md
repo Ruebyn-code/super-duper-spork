@@ -8,10 +8,27 @@ Open **Edit location → Supplier delivery days**. Set regular weekdays, then op
 - **Order cutoff** is the last local time to order that many days before delivery.
 - **Delivery time** is the supplier's expected arrival time. Enter AM/PM or 24-hour
   text; the editor displays 12-hour time. Same-day cutoffs must precede arrival.
-- **Skip public holidays** uses the location's state calendar, with reviewed
-  calendars taking priority. Set the location state or review a calendar first.
+- **Public holidays** (per supplier, under Delivery timing & exceptions) use the
+  location's state calendar, with reviewed calendars taking priority. Set the
+  location state or review a calendar first.
+  - **On public holidays** chooses what happens to a regular delivery that lands on
+    a holiday: *Deliver as normal*, *No delivery*, *Deliver the day before* or
+    *Deliver the day after*. A moved delivery goes to the nearest day (up to 7)
+    that is not a holiday or a one-off "No delivery" date. Saved as `holidayRule`.
+    Older saves with only the earlier *Skip public holidays* switch (`skipHolidays`)
+    read as *No delivery*. `skipHolidays` is still written (true unless *Deliver as
+    normal*) for older readers.
+  - **Choose for each public holiday** lists the location's holidays for the next 12
+    months (names and dates from the GET endpoint's `holidays`). Each can use the
+    default or its own choice. Saved as `holidayOverrides` [{date, rule}] (≤60);
+    overrides for dates no longer listed are kept.
+  - **Supplier is closed on public holidays** (`cutoffHolidays`) moves an order
+    deadline that falls on a holiday back to the nearest earlier non-holiday day,
+    at the same cutoff time.
+  - Estimates show "Moved from … (public holiday)" when a delivery has been moved.
+  - Older writers that omit these fields keep the saved values.
 - **One-off changes** either skip a dated delivery or add an extra delivery date.
-  These take priority over regular weekdays and holiday skips.
+  These take priority over regular weekdays and public holiday settings.
 
 Timing follows the location state's capital-city Australian timezone; an unset
 state uses Melbourne time. Repeated daylight-saving times use the later instant;

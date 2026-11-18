@@ -522,7 +522,13 @@ function createNetworkServer(dataDir,{deliveryNow=Date.now,fetchImpl,communicati
         const target=await locationStore.get(supplierDaysRoute[1]),context=await auth.forCompany(session,target.companyId);
         if(target.companyId!==session.companyId||!canAccessLocation(context,target))fail('Location not found.',404);
         if(!can(context,'locations.manage'))fail('Location management permission required.',403);
-        if(req.method==='GET')return json(200,{companyId:target.companyId,locationId:target.id,timeZone:deliveryClock.zoneFor(target),...await supplierDeliveryDaysStore.read(target.id,target.companyId),suppliers:(await catalogueStore.read(target.companyId)).suppliers.map(({id,name})=>({id,name}))});
+        if(req.method==='GET'){
+          // Upcoming public holidays (next 12 months) for the per-holiday delivery choices; names and dates only.
+          const zone=deliveryClock.zoneFor(target),today=deliveryClock.parts(Date.now(),zone).date,until=deliveryClock.shift(today,365),year=Number(today.slice(0,4));
+          const calendars=await publicHolidays.locationCalendars(dataDir,{...context,locationId:target.id,companyId:target.companyId},[year,year+1]);
+          const holidays=[...new Map(calendars.flatMap(calendar=>calendar.dates).filter(day=>day.date>=today&&day.date<=until).map(day=>[day.date,{date:day.date,name:String(day.name||'Public holiday').slice(0,80)}])).values()].sort((a,b)=>a.date.localeCompare(b.date));
+          return json(200,{companyId:target.companyId,locationId:target.id,timeZone:zone,holidayCalendar:calendars.length>0,holidays,...await supplierDeliveryDaysStore.read(target.id,target.companyId),suppliers:(await catalogueStore.read(target.companyId)).suppliers.map(({id,name})=>({id,name}))});
+        }
         if(req.method==='PUT')return json(200,await supplierDeliveryDaysStore.save(target.id,target.companyId,await body(req),async()=>(await catalogueStore.read(target.companyId)).suppliers));
         fail('Unsupported supplier delivery days action.',405);
       }

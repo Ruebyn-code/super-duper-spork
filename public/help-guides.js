@@ -197,12 +197,12 @@
   'Use Change delivery date to correct an outstanding estimate.',
   'When every item from that supplier arrives, choose Mark received, check the items and press Confirm received.'
  ],{popular:true,route:'/order-history',permissions:['orders.view'],notes:['Suppliers in one order can be received separately; each confirmation covers that supplier’s full delivery. Receipts enter estimated stock once, and later counts prevent double credit. Older historical receipts update history only unless an outstanding future order was explicitly included in planning. These actions do not resend supplier emails.'],related:['delivery-quantities','order-history'],keywords:['arrived','receipt','part received','confirm ordered']});
- add(c,'delivery-exceptions','Skip holidays or change a delivery date','Handle public holidays, cancelled days and extra deliveries.',[
+ add(c,'delivery-exceptions','Public holidays and one-off delivery changes','Handle public holidays, cancelled days and extra deliveries.',[
   'Set the location’s state, then open Supplier delivery days → Delivery timing & exceptions.',
-  'Turn on Skip public holidays when the supplier does not deliver on the location’s holidays.',
+  'Under On public holidays, choose Deliver as normal, No delivery, Deliver the day before or Deliver the day after. Open Choose for each public holiday to set a different choice for a single holiday.',
   'Add a dated exception and choose to skip that delivery or allow an extra delivery.',
   'Save settings and review the next eligible delivery. For an already placed order, correct its expected date separately in Order history.'
- ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Dated exceptions override regular weekdays and holiday skips. A holiday calendar is required for holiday skipping; reviewed location calendars take priority.'],related:['public-holidays','delivery-dates','receiving-orders']});
+ ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Tick Supplier is closed on public holidays when the supplier won’t take orders on a holiday: an order deadline that falls on one moves to the day before.','Moved deliveries show “Moved from … (public holiday)” in Ordering and the cart.','Dated exceptions override regular weekdays and public holiday settings. A holiday calendar is required for holiday settings; reviewed location calendars take priority.'],related:['public-holidays','delivery-dates','receiving-orders']});
 
  c='sales';
  add(c,'daily-sales','Enter daily sales from Home or Sales','Save a daily total and find it again in history.',[
