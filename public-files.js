@@ -8,6 +8,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/app-search.css':'app-search.css',
   '/persistent-navigation.css':'persistent-navigation.css',
   '/favicon.png':'assets/branding/opstack-icon.png',
+  '/opstack-print-mark.png':'assets/branding/opstack-print-mark.png',
   '/apple-touch-icon.png':'assets/branding/opstack-icon.png',
   '/checklist-phone-frame.png':'assets/branding/checklist-phone-frame.png',
   '/notifications.js':'notifications.js','/notifications.css':'notifications.css','/notification-model.js':'notification-model.js',
