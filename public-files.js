@@ -155,7 +155,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/sales-budget.js':'sales-budget.js',
   '/stock-count.js':'stock-count.js',
   '/stock-count-units.js':'stock-count-units.js',
-  '/stock-count-groups.js':'stock-count-groups.js','/stock-count.css':'stock-count.css',
+  '/stock-count-groups.js':'stock-count-groups.js','/stock-count-groups-editor.js':'stock-count-groups-editor.js','/stock-count.css':'stock-count.css',
   '/stock-usage.js':'stock-usage.js',
   '/order-destinations.js':'order-destinations.js',
   '/order-delivery-results.js':'order-delivery-results.js',

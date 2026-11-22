@@ -9,7 +9,7 @@ function createStore(dir,menu){
   const target=file(companyId);if(!initializations.has(target))initializations.set(target,(async()=>{
    let catalogue,changed=false;try{catalogue=JSON.parse(await fs.readFile(target,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;changed=true;catalogue=companyId==='default'?{suppliers:[{id:'office',name:'Office Supplies'},{id:'packaging',name:'Packaging Supplies'},{id:'safety',name:'Safety Supplies'}],products:menu.map(product=>({...product,supplierId:product.category.toLowerCase()}))}:{suppliers:[],products:[]};}
    if(companyId==='default'&&!catalogue.imports?.includes('book2-v1')){mergeSpreadsheet(catalogue);changed=true;}
-   for(const product of catalogue.products)if(!groups.valid(product.stockCountGroup)){product.stockCountGroup=groups.resolve(product);changed=true;}
+   for(const product of catalogue.products)if(typeof product.stockCountGroup!=='string'||!product.stockCountGroup){product.stockCountGroup=groups.resolve(product,catalogue);changed=true;} // custom/deleted group IDs are kept; readers show unknown ones as Not grouped
    for(const product of catalogue.products)if(product.unitAmount===undefined){product.unitAmount='';changed=true;}
    for(const product of catalogue.products){for(const key of ['roundDownThreshold','roundUpThreshold'])if(product[key]===undefined){product[key]=null;changed=true;}if(product.roundingCutoff===undefined){product.roundingCutoff=1;changed=true;}if(product.minimumOrder===undefined){product.minimumOrder=1;changed=true;}if(product.orderRule===undefined){product.orderRule='minimum';changed=true;}}
    if(changed)await write(target,catalogue);
