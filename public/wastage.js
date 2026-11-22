@@ -56,10 +56,11 @@
   for(const reason of wastageModel.reasons){const chip=el('button',word(shortReasons[reason.id]||reason.name),'waste-chip-button');chip.type='button';chip.dataset.reason=reason.id;chip.title=word(reason.name);chip.onclick=()=>{row.reason.value=reason.id;row.reason.dispatchEvent(new Event('change',{bubbles:true}));row.reasonChips.classList.remove('waste-missing');};row.reasonChips.append(chip);}
   const minus=el('button','−','waste-step'),plus=el('button','+','waste-step');minus.type=plus.type='button';minus.setAttribute('aria-label',word('Less'));plus.setAttribute('aria-label',word('More'));minus.onclick=()=>step(row,-1);plus.onclick=()=>step(row,1);
   const stepper=el('div',undefined,'waste-stepper');stepper.append(minus,row.quantity,plus);row.quantity.setAttribute('aria-label',word('Quantity'));
-  const top=el('div',undefined,'waste-line-top');top.append(field('Stock item',row.product,'waste-line-item'),row.remove);
-  const amount=el('div',undefined,'waste-line-amount');const amountLabel=el('span',word('How much'),'waste-line-label');amount.append(amountLabel,el('div',undefined,'waste-amount-row'));amount.lastChild.append(stepper,row.unitPills,row.cost);
-  const why=el('div',undefined,'waste-line-why');why.append(el('span',word('Why'),'waste-line-label'),row.reasonChips);
-  row.element.append(top,amount,row.meta,why,row.unit,row.reason);$('waste-lines').append(row.element);rows.push(row);
+  // Compact: item, quantity, unit pills, cost and remove share one row; the conversion line and reason chips share the next.
+  row.product.setAttribute('aria-label',word('Stock item'));const item=el('div',undefined,'waste-line-item');item.append(row.product);
+  const top=el('div',undefined,'waste-line-top');top.append(item,stepper,row.unitPills,row.cost,row.remove);
+  const why=el('div',undefined,'waste-line-why');why.append(row.meta,row.reasonChips);
+  row.element.append(top,why,row.unit,row.reason);$('waste-lines').append(row.element);rows.push(row);window.appSelects?.enhance(row.product,{menuWidth:420})?.menu?.classList.add('waste-item-menu');
   row.product.onchange=()=>{const product=options.products.find(p=>p.id===row.product.value);row.unitAmount=product?.unitAmount||'';row.quantity.value='';unitOptions(row,product);chips(row);row.quantity.focus();changed();};row.quantity.oninput=changed;row.reason.onchange=()=>{chips(row);changed();};row.unit.onchange=()=>{chips(row);changed();row.quantity.focus();};row.remove.onclick=()=>{rows=rows.filter(r=>r!==row);row.element.remove();changed();};chips(row);window.appSelects?.refresh();preview();
  }
  function changed(){frozen=null;requestId=crypto.randomUUID();$('waste-save-status').textContent='';persist();preview();}

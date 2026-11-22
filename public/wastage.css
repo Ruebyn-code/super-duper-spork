@@ -73,3 +73,31 @@
 @media(max-width:600px){.waste-line{padding:12px!important}.waste-line-cost{flex-basis:100%;margin-left:0}.waste-dialog .waste-stepper input{width:72px}.waste-dialog .waste-pill,.waste-dialog .waste-chip-button{min-height:40px}}
 @media(forced-colors:active){.waste-dialog .waste-pill[aria-pressed=true],.waste-dialog .waste-chip-button[aria-pressed=true]{background:Highlight;color:HighlightText;forced-color-adjust:none}}
 .waste-dialog .waste-stepper input,.waste-dialog .waste-stepper input:focus,.waste-dialog .waste-stepper input:focus-visible{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;background:transparent!important}
+/* Compact lines: one row for item/quantity/unit/cost/remove, one for the conversion text and reason chips. */
+.waste-dialog .waste-lines{gap:8px}
+.waste-line{gap:8px!important;padding:10px 12px!important;border-radius:12px!important}
+.waste-line-top{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+.waste-line-top .waste-line-item{flex:1 1 240px;min-width:0}
+.waste-dialog .waste-line-item select,.waste-line-item .location-select-trigger,.waste-line-item .app-select-trigger{min-height:36px;padding-top:6px;padding-bottom:6px}
+.waste-dialog .waste-stepper .waste-step{width:32px;min-height:36px;font-size:1.05rem}
+.waste-dialog .waste-stepper input{width:58px;min-height:36px;font-size:.95rem;padding:4px}
+.waste-dialog .waste-pills{gap:4px}
+.waste-dialog .waste-pill,.waste-dialog .waste-chip-button{min-height:30px;padding:4px 11px;font-size:.78rem}
+.waste-line-top .waste-line-cost{margin-left:auto;min-width:64px;text-align:right;font-size:1rem}
+.waste-line .waste-line-remove{min-width:32px;min-height:32px;border-radius:9px;padding:0}
+.waste-line-why{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;min-width:0}
+.waste-line-why .waste-item-meta{margin:0!important;flex:0 1 auto;font-size:.76rem}
+.waste-line-why .waste-chips{gap:4px;margin-left:auto}
+.waste-line .waste-smart-hint{margin:0;font-size:.76rem}
+.waste-line-empty .waste-stepper,.waste-line-empty .waste-line-cost,.waste-line-empty .waste-line-why{display:none}
+.waste-dialog-body{gap:10px!important;padding:12px 16px!important}.waste-dialog-header,.waste-dialog-footer{padding:10px 16px!important}
+/* Compact item picker menu */
+.waste-item-menu{padding:6px!important;max-height:340px}
+.waste-item-menu .location-picker-option{min-height:32px!important;padding:5px 10px!important;font-size:12.5px;line-height:1.3;border-radius:7px}
+.waste-item-menu .select-option-group{padding:6px 10px 3px}
+.waste-item-menu .select-search{height:32px}
+@media(max-width:700px){.waste-line-top .waste-line-item{flex-basis:100%}.waste-line-why .waste-chips{margin-left:0}.waste-dialog .waste-pill,.waste-dialog .waste-chip-button{min-height:34px}.waste-dialog .waste-stepper .waste-step{width:38px;min-height:40px}.waste-dialog .waste-stepper input{min-height:40px}.waste-item-menu .location-picker-option{min-height:40px!important}}
+.waste-item-menu .location-picker-option{justify-content:space-between!important;text-align:left!important;letter-spacing:0!important;text-transform:none!important}
+.waste-item-menu .location-picker-option>span{flex:1;text-align:left}
+@media(max-width:700px){.waste-line-top .waste-line-item{flex:1 1 calc(100% - 44px);order:0}.waste-line-top .waste-line-remove{order:1}.waste-line-top .waste-stepper{order:2}.waste-line-top .waste-pills{order:3}.waste-line-top .waste-line-cost{order:4;flex-basis:auto;margin-left:auto}}
+@media(max-width:700px){.waste-dialog .waste-stepper .waste-step{width:34px;min-height:38px}.waste-dialog .waste-stepper input{width:46px;min-height:38px}.waste-dialog .waste-pill{padding:4px 9px}.waste-line-top{gap:6px}}
