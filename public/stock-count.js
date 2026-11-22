@@ -79,6 +79,16 @@
   for(const [id,group] of groups){const show=(!query&&(groupId==='all'||groupId===id))||products.some(product=>groupKey(product)===id&&!rows.get(product.id).element.hidden);group.element.hidden=!show;}
   $('count-no-results').hidden=visible>0||Boolean(products.length&&!query);$('count-no-results').textContent=wording(products.length?'No stock matches your search.':'No stock items available.');
  }
+ // Before saving, find the first count box with a problem. If it is hidden by search or the section filter, show it again,
+ // name the item in the status line and focus it — the browser cannot show a warning on a hidden field, so the save would stop silently.
+ function revealInvalid(){
+  for(const product of products){const row=rows.get(product.id);if(!row)continue;const control=[row.packInput,row.input].find(input=>!input.validity.valid);if(!control)continue;
+   if(row.element.hidden||row.element.closest('[hidden]')){$('count-search').value='';selectGroup('all');}
+   $('count-message').textContent=product.name+': '+(control.validationMessage||wording('Check this quantity.'));
+   control.scrollIntoView({block:'center'});control.focus({preventScroll:true});control.reportValidity();return false;}
+  if(!form.reportValidity()){const first=form.querySelector(':invalid');if(first)$('count-message').textContent=first.validationMessage||wording('Check the highlighted field.');return false;}
+  return true;
+ }
  function selectGroup(id){selectedGroup=id;for(const button of $('count-supplier').children){const active=button.dataset.stockCountGroup===id;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}filterRows();}
  function buildGroupMenu(){
   $('count-supplier').replaceChildren();
@@ -164,8 +174,10 @@
    for(const record of history){const row=el('div',undefined,'count-history-row');row.dataset.editId='stock-count-history-'+record.id;const details=el('div');const title=el('h3',[displayDate(record.countDate),record.location].filter(Boolean).join(' · '));title.dataset.userText='';const meta=el('p',record.counterName+' · '+wording('{count} items counted',{count:record.itemCount}),'small');meta.dataset.userText='';if(record.edited)meta.append(' ',el('span',wording('Corrected'),'count-corrected-chip'));const button=el('button',wording('View count'));button.type='button';button.onclick=()=>viewCount(record.id);details.append(title,meta);row.append(details,button);$('count-history-list').append(row);}
   }catch(error){if(version===historyGeneration)$('count-message').textContent=error.message;}finally{if(version===historyGeneration){historyLoading=false;$('count-history-refresh').disabled=false;}}
  }
+ // The page checks the count itself (revealInvalid) so a problem in a hidden row is shown and named, instead of the browser stopping the save silently.
+ form.noValidate=true;
  form.onsubmit=async event=>{
-  event.preventDefault();if(saving)return;refreshRecommendations();if(!form.reportValidity())return;const body=countBody();if(!body.items.length){$('count-message').textContent=wording('Enter a quantity for at least one stock item.');return;}
+  event.preventDefault();if(saving)return;refreshRecommendations();if(!revealInvalid())return;const body=countBody();if(!body.items.length){$('count-message').textContent=wording('Enter a quantity for at least one stock item.');return;}
   const signature=JSON.stringify(body);
   if(signature!==requestSignature||!requestId){requestId=crypto.randomUUID();requestSignature=signature;}body.requestId=requestId;writeDraft();saving=true;for(const control of form.elements)control.disabled=true;$('count-message').textContent=wording('Saving stock count…');
   try{const record=await api('/api/stock-counts','POST',body);try{localStorage.setItem('souvlaki-usage-updated-'+(session.dataScope||session.id),String(Date.now()));}catch{}resetDraft();historyLoaded=false;await loadHistory();location.hash='history';showView();renderReport(record);$('count-message').textContent=wording('Stock count saved.');}
