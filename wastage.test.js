@@ -75,4 +75,17 @@ test('wastage records individual pieces, grams and millilitres worked out from e
  assert.deepEqual(units.derive({unitAmount:'24 x 375ml'}),[{name:'Each',perUnit:24},{name:'mL',perUnit:9000,measure:'volume'}]);
  assert.deepEqual(units.derive({unitAmount:'Box'}),[]);assert.deepEqual(units.derive({unitAmount:'Box of 20 sleeves',countUnit:{name:'Sleeves',perUnit:20}}),[]);
  assert.deepEqual(units.individual({unitAmount:'1.5kg'}),{name:'g',perUnit:1500,measure:'weight'});
+ // Nested packs break down to the smallest count.
+ assert.deepEqual(units.derive({unitAmount:'Box of 8 packs of 10 pita'}),[{name:'Pita',perUnit:80},{name:'Pack',perUnit:8}]);
+ assert.deepEqual(units.individual({unitAmount:'8 x 10 pita'}),{name:'Pita',perUnit:80});
+ assert.deepEqual(units.derive({unitAmount:'2 x 12 x 330ml cans'}),[{name:'Each',perUnit:24},{name:'mL',perUnit:7920,measure:'volume'}]);
+ assert.deepEqual(units.derive({unitAmount:'Box of 10 bags of 500g'}),[{name:'Bag',perUnit:10},{name:'g',perUnit:5000,measure:'weight'}]);
+ assert.deepEqual(units.individual({unitAmount:'10 pita per pack',countUnit:{name:'Packs',perUnit:8}}),{name:'Pita',perUnit:80});
+ assert.deepEqual(units.individual({unitAmount:'Box of 1,000 cups',countUnit:{name:'Sleeves',perUnit:20}}),{name:'Cup',perUnit:1000});
+ assert.equal(units.label({name:'Pita',perUnit:80},{unitAmount:'Box of 8 packs of 10 pita'}),'Pita · 80 per box');
+ const box=await f.api(f.office,'/api/products','POST',{name:'Pita box',supplierId:'packaging',unitAmount:'Box of 8 packs of 10 pita',price:40});
+ const boxOption=(await f.api(f.staff,'/api/wastage/options')).products.find(p=>p.id===box.id);assert.deepEqual(boxOption.individualUnit,{name:'Pita',perUnit:80});
+ const one80=await save(box,4,{name:'Pita',perUnit:80});assert.equal(one80.status,201);assert.equal(one80.data.items[0].quantity,0.05);assert.equal(one80.data.items[0].totalCents,200);
+ assert.equal((await save(box,1,{name:'Pack',perUnit:8})).status,201,'the in-between pack is allowed too');
+ const single=await save(box,1,{name:'Pita',perUnit:80});assert.equal(single.data.items[0].quantity,0.013);assert.equal(single.data.items[0].totalCents,50,'cost uses the exact 1/80 share, not the rounded pack amount');
 });
