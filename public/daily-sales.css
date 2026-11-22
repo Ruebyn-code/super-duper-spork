@@ -87,3 +87,8 @@
 .sales-unusual-save{min-height:36px;padding:6px 14px;border:0;border-radius:8px;background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none);color:var(--theme-on-primary,#fff);font-weight:600;cursor:pointer}
 .sales-unusual-save[hidden]{display:none}
 #sales-unusual-status{margin:6px 0 0}
+/* The weekly projection summary card (This/Next week's projection · Projected weekly sales · Ordering budget) is not shown
+   on Sales; its elements stay in the page so the native script keeps working. The forecast still drives budgets, rosters
+   and the per-day badges, and Sales → Projection & budget keeps the detail. */
+.sales-overview{display:none!important}
+.sales-performance{grid-column:1/-1!important;max-width:none!important}
