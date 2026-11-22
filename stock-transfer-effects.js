@@ -1,9 +1,9 @@
 const fs=require('node:fs/promises'),path=require('node:path');
 const par=require('./par-levels'),orderCosts=require('./order-cost-period'),rostering=require('./public/rostering-model');
 const melbourneDay=value=>par.calendar(par.defaultTimeZone).format(new Date(value));
-// A transfer recorded with an earlier transfer date (a past transfer entered later) moves stock and cost at both
-// locations at midday Melbourne on that date; otherwise the sender's stock moves when sent and the receiver's when received.
-function backdatedAt(record){if(typeof record?.transferDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(record.transferDate)||!Number.isFinite(Date.parse(record.createdAt))||record.transferDate>=melbourneDay(record.createdAt))return null;return rostering.instant(record.transferDate,'12:00');}
+// A transfer whose transfer date differs from the day it was recorded (a past transfer entered later, or a corrected
+// date) moves stock and cost at both locations at midday Melbourne on that date; otherwise the sender's stock moves when sent and the receiver's when received.
+function backdatedAt(record){if(typeof record?.transferDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(record.transferDate)||!Number.isFinite(Date.parse(record.createdAt))||record.transferDate===melbourneDay(record.createdAt))return null;return rostering.instant(record.transferDate,'12:00');}
 function effectiveAt(record,direction){return backdatedAt(record)||(direction==='out'?record.createdAt:record.receivedAt);}
 async function read(dir){try{return JSON.parse(await fs.readFile(path.join(dir,'stock-transfers.json'),'utf8'));}catch(error){if(error.code==='ENOENT')return [];throw error;}}
 function movements(records,session){

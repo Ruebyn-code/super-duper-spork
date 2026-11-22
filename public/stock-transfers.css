@@ -53,3 +53,38 @@
 :root[data-theme=dark] .transfers-page .transfer-badge[data-status=sent]{color:#fbbf24}
 @media(max-width:720px){.transfers-page .transfer-card{padding:12px}.transfers-page .transfer-card-heading{grid-template-columns:auto minmax(0,1fr);gap:10px}.transfers-page .transfer-card-title{display:contents}.transfers-page .transfer-card-heading .transfer-route{grid-column:2;align-self:center}.transfers-page .transfer-card-meta,.transfers-page .transfer-card-heading .transfer-badge{grid-column:1/-1}.transfers-page .transfer-card-heading .transfer-badge{justify-self:start;grid-row:auto}.transfers-page .transfer-chip{font-size:.68rem;padding:2px 8px}.transfers-page .transfer-card details,.transfers-page .transfer-card-bottom{margin-left:0}.transfer-stop-name{font-size:.94rem}.transfer-route-arrow svg{width:28px}.transfers-page .transfer-metrics>article.management{padding:9px 8px 9px 12px}.transfers-page .transfer-metrics span{font-size:.6rem}.transfers-page .transfer-metrics strong{font-size:1.3rem}}
 @media(forced-colors:active){.transfers-page .transfer-metrics>article.management::before,.transfers-page .transfer-card::before{background:CanvasText}}
+/* New / Edit transfer popup, modern look (styling only): icon heading with subtitle, outlined compact fields with small
+   labels, an info note, item rows as soft cards, a dashed Add stock item button and a footer with a cost pill. */
+.transfer-composer-dialog .transfer-section-heading{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.transfer-composer-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--brand-sheen,none) var(--primary);color:#fff}
+.transfer-composer-heading-text{min-width:0}
+.transfer-composer-heading-text h2{font-size:1.2rem;line-height:1.2}
+.transfer-composer-sub{margin:2px 0 0;font-size:.8rem;color:var(--theme-muted,#64748b)}
+.transfer-composer-dialog #transfer-close{width:36px;height:36px;min-height:36px;padding:0;border-radius:10px;font-size:1.1rem;line-height:1}
+.transfer-composer-dialog form{gap:14px}
+.transfer-composer-dialog label{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#64748b);gap:5px}
+.transfer-composer-dialog :is(input,select,textarea,.app-select-trigger){font-size:.92rem;text-transform:none;letter-spacing:normal;font-weight:500;color:var(--theme-text,#173344)}
+.transfer-composer-dialog :is(input:not([type=checkbox]),.app-select-trigger){min-height:42px;border-radius:10px}
+.transfer-composer-dialog textarea{border-radius:10px;min-height:64px}
+.transfer-composer-dialog #transfer-matching-note{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;font-size:.8rem;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff));color:var(--theme-text,#173344)}
+.transfer-composer-dialog #transfer-matching-note::before{content:"i";display:grid;place-items:center;flex:0 0 18px;height:18px;border-radius:50%;font:700 11px/1 Georgia,serif;font-style:italic;background:var(--primary);color:#fff}
+.transfer-items-heading{margin:2px 0 -6px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.transfer-composer-dialog .transfer-lines{gap:8px}
+.transfer-composer-dialog .transfer-line{padding:10px 12px;border-radius:12px;border:1px solid var(--theme-line,#dbe5ec);background:var(--theme-surface,#fff);box-shadow:0 1px 2px rgba(15,30,48,.04)}
+.transfer-composer-dialog .transfer-line:focus-within{border-color:color-mix(in srgb,var(--primary) 45%,var(--theme-line,#dbe5ec));box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent)}
+.transfer-composer-dialog .transfer-line label{font-size:.66rem}
+.transfer-composer-dialog .transfer-line .transfer-line-remove{width:36px;height:42px;min-height:42px;border-radius:10px;border-color:transparent;background:transparent;color:var(--theme-muted,#64748b);font-size:1.15rem}
+.transfer-composer-dialog .transfer-line .transfer-line-remove:hover{background:color-mix(in srgb,#dc2626 10%,var(--theme-surface,#fff));color:#dc2626}
+.transfer-composer-dialog #transfer-add-item{justify-self:start;min-height:38px;padding:6px 14px;border:1.5px dashed color-mix(in srgb,var(--primary) 45%,var(--theme-line,#dbe5ec));border-radius:10px;background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary));font-family:inherit;font-size:.85rem;font-weight:700;letter-spacing:normal;text-transform:none}
+.transfer-composer-dialog #transfer-add-item:hover:not(:disabled){border-style:solid;background:color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff))}
+.transfer-composer-dialog .transfer-composer-footer{align-items:center}
+.transfer-composer-dialog #transfer-cost-preview{display:inline-flex;align-items:center;min-height:30px;padding:4px 12px;border-radius:99px;font-size:.8rem;font-weight:600;background:color-mix(in srgb,var(--theme-text,#173344) 6%,var(--theme-surface,#fff));color:var(--theme-text,#173344)}
+.transfer-composer-dialog #transfer-send{min-height:42px;padding:8px 20px;border-radius:11px}
+.transfer-composer-dialog.transfer-editing .transfer-composer-icon{background:var(--brand-sheen,none) color-mix(in srgb,var(--primary) 70%,#f59e0b)}
+.transfer-action-date{display:grid;gap:5px;margin-top:12px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.transfer-action-date input{min-height:42px;border-radius:10px;font-size:.95rem;text-transform:none}
+.transfers-page .transfer-card-bottom .transfer-edit{margin-left:0}
+.transfers-page .transfer-chip-edited{background:color-mix(in srgb,#f59e0b 16%,var(--theme-surface,#fff));color:#92400e}
+:root[data-theme=dark] .transfers-page .transfer-chip-edited{color:#fbbf24}
+@media(max-width:720px){.transfer-composer-dialog .transfer-section-heading{gap:10px}.transfer-composer-icon{width:34px;height:34px}.transfer-composer-sub{font-size:.74rem}.transfer-composer-dialog #transfer-add-item{justify-self:stretch}.transfer-composer-dialog .transfer-composer-footer{flex-wrap:wrap}.transfer-composer-dialog #transfer-send{flex:1}}
+@media(forced-colors:active){.transfer-composer-icon{background:CanvasText;color:Canvas}}

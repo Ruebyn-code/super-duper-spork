@@ -109,3 +109,34 @@ test('transfer dates default to today, may be backdated up to 60 days and then m
   assert.equal(effects.movements([transfer()],actors.source)[0].createdAt,'2026-10-10T00:00:00Z');
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('transfers awaiting receipt can be edited at the sending location; received transfers only change their date; edits are audited and revision-checked',async()=>{
+ const dir=await fs.mkdtemp('/tmp/stock-transfer-edits-');try{
+  const actors={source:{...source,permissions:permissionModel.transferKeys},target:{...target,id:'receiver',permissions:permissionModel.transferKeys}},catalogues={default:{products:[{...product,price:650},{...product,id:'oil',name:'Oil',price:1200}],suppliers:[]},other:{products:[{...receiving,price:900},{...receiving,id:'oil-tin',name:'Oil tin'}],suppliers:[]}};
+  let stamp=Date.parse('2026-10-20T01:00:00Z');const store=require('./stock-transfers').createStore(dir,{context:async(actor,id)=>actors[id],catalogues:{read:async id=>catalogues[id]},now:()=>stamp});
+  const sent=await store.create(actors.source,{requestId:crypto.randomUUID(),destinationLocationId:'target',moveCosts:true,notes:'',items:[{sourceProductId:'rice',targetProductId:'rice-bag',quantity:4,targetQuantity:2}]});
+  assert.equal(sent.canEdit,true);
+  await assert.rejects(store.edit(actors.target,sent.id,{revision:1,requestId:crypto.randomUUID(),transferDate:'2026-10-19'}),error=>error.status===403);
+  await assert.rejects(store.edit(actors.source,sent.id,{revision:9,requestId:crypto.randomUUID(),notes:'x'}),error=>error.status===409);
+  await assert.rejects(store.edit(actors.source,sent.id,{revision:1,requestId:crypto.randomUUID(),transferDate:'2026-10-21'}),error=>error.status===400);
+  const request=crypto.randomUUID(),change={revision:1,requestId:request,transferDate:'2026-10-18',notes:' Fixed ',items:[{sourceProductId:'rice',targetProductId:'rice-bag',quantity:6,targetQuantity:3},{sourceProductId:'oil',targetProductId:'oil-tin',quantity:1,targetQuantity:1}]};
+  const edited=await store.edit(actors.source,sent.id,change);
+  assert.equal(edited.revision,2);assert.equal(edited.transferDate,'2026-10-18');assert.equal(edited.notes,'Fixed');assert.equal(edited.items.length,2);assert.equal(edited.totalCents,650*6+1200);assert.equal(edited.edited.count,1);assert.equal(edited.edits,undefined);
+  assert.equal((await store.edit(actors.source,sent.id,change)).revision,2,'a repeated edit applies once');
+  await assert.rejects(store.edit(actors.source,sent.id,{revision:2,requestId:crypto.randomUUID(),transferDate:'2026-10-18'}),error=>/Nothing changed/.test(error.message));
+  await assert.rejects(store.change(actors.target,sent.id,'receive',{revision:1,requestId:crypto.randomUUID()}),error=>error.status===409,'a stale receive screen cannot confirm an edited transfer');
+  const received=await store.change(actors.target,sent.id,'receive',{revision:2,requestId:crypto.randomUUID()});
+  assert.equal(received.canEdit,false);
+  await assert.rejects(store.edit(actors.source,sent.id,{revision:3,requestId:crypto.randomUUID(),notes:'Late note'}),error=>error.status===409);
+  const redated=await store.edit(actors.target,sent.id,{revision:3,requestId:crypto.randomUUID(),transferDate:'2026-10-20'});
+  assert.equal(redated.transferDate,'2026-10-20');assert.equal(redated.items.length,2);assert.equal(redated.edited.count,2);
+  const saved=(await effects.read(dir))[0];assert.equal(saved.edits.length,2);assert.equal(saved.edits[0].before.transferDate,'2026-10-20');assert.equal(saved.edits[0].after.items[0].quantity,6);
+  // Same-day date keeps the sending/receiving times; a different date moves both sides to midday on that date.
+  assert.equal(effects.movements([saved],actors.source)[0].createdAt,saved.createdAt);
+  const back=await store.edit(actors.source,sent.id,{revision:4,requestId:crypto.randomUUID(),transferDate:'2026-10-15'});assert.equal(back.transferDate,'2026-10-15');
+  assert.equal(effects.movements(await effects.read(dir),actors.target)[0].createdAt,'2026-10-15T01:00:00.000Z');
+  const cancelled=await store.create(actors.source,{requestId:crypto.randomUUID(),destinationLocationId:'target',moveCosts:false,notes:'',items:[{sourceProductId:'rice',targetProductId:'rice-bag',quantity:1,targetQuantity:1}]});
+  await store.change(actors.source,cancelled.id,'cancel',{revision:1,requestId:crypto.randomUUID()});
+  await assert.rejects(store.edit(actors.source,cancelled.id,{revision:2,requestId:crypto.randomUUID(),transferDate:'2026-10-19'}),error=>error.status===409);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
