@@ -170,3 +170,17 @@
 .count-groups-dialog .count-groups-head,.count-groups-dialog .count-groups-foot{width:auto;margin:0;background:none;border-left:0;border-right:0;box-shadow:none}
 .count-groups-dialog .count-groups-row{padding:2px 4px 2px 2px}.count-groups-dialog input.count-groups-name{min-height:30px!important;height:30px;font-size:.88rem}
 @media(max-width:700px){.count-groups-dialog .count-groups-body{display:block;overflow:auto}.count-groups-dialog .count-groups-list,.count-groups-dialog .count-groups-items{display:flex;min-height:auto;margin-bottom:14px}.count-groups-dialog .count-groups-rows,.count-groups-dialog .count-groups-item-rows{overflow:visible;display:grid}.count-groups-dialog input.count-groups-name{height:36px;min-height:36px!important;font-size:16px}.count-groups-head{align-items:flex-start}.count-groups-sub{font-size:.78rem}}
+/* Group rows: one tidy box per group (the row shows focus; the name field has no second ring), vertically centred text. */
+.count-groups-dialog input.count-groups-name,.count-groups-dialog input.count-groups-name:focus,.count-groups-dialog input.count-groups-name:focus-visible{border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;border-radius:6px;padding:0 8px!important;line-height:30px;align-self:center}
+.count-groups-dialog .count-groups-row{align-items:center;min-height:40px;padding:3px 4px 3px 4px}
+.count-groups-dialog .count-groups-row:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 16%,transparent)}
+.count-groups-dialog .count-groups-tools .location-select-trigger,.count-groups-dialog .count-groups-tools>.location-picker{min-width:150px}
+.count-groups-dialog .count-groups-item>.location-picker,.count-groups-dialog .count-groups-item .location-picker{width:42%;max-width:230px;flex:none}
+.count-groups-dialog .count-groups-move>.location-picker{flex:1;min-width:0}
+@media(max-width:700px){.count-groups-dialog .count-groups-item>.location-picker{width:48%}}
+.count-groups-dialog .count-groups-tools{align-items:stretch}.count-groups-dialog .count-groups-tools .count-groups-search{flex:1 1 auto;min-width:0;width:auto}
+.count-groups-dialog .count-groups-tools>:not(.count-groups-search){flex:0 0 38%;min-width:0;max-width:200px}
+.count-groups-dialog input.count-groups-name{margin:0!important;height:30px}
+@media(min-width:701px){.count-groups-dialog .location-select-trigger{min-height:32px!important;padding-top:4px!important;padding-bottom:4px!important;font-size:.82rem}}
+.count-groups-dialog .count-groups-tools>:not(.count-groups-search),.count-groups-dialog .count-groups-tools>:not(.count-groups-search) .location-select-trigger{min-width:0!important;box-sizing:border-box}
+@media(max-width:700px){.count-groups-dialog .count-groups-tools>:not(.count-groups-search){flex:0 0 42%;max-width:42%}}
