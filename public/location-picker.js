@@ -11,7 +11,7 @@
   return appEditParts.childIdentity(anchor.dataset.editId,path);
  }
  function enhance(select,settings={}){
-  if(!select||widgets.has(select))return widgets.get(select);
+  if(!select||widgets.has(select))return widgets.get(select);if(select.hasAttribute('data-native-select'))return null; // page keeps its own visible control
   const locationControl=Boolean(settings.host||settings.optionPart||select.id==='account-location'),generic=!locationControl,originalLabel=select.labels?.[0],labelText=originalLabel?[...originalLabel.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join('').trim():'';
   const fallbackLabel=settings.label||select.getAttribute('aria-label')||labelText||wording(generic?'Choose an option':'Location'),searchLabel=settings.searchLabel||(generic?'Search options':'Search locations'),optionPart=settings.optionPart||(generic?'select-option':'location-option'),ownedHost=!settings.host;
   const editId=identity(select);if(editId&&!select.dataset.editId)select.dataset.editId=editId;

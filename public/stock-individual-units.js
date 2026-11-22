@@ -54,5 +54,5 @@
  // "Box of …", otherwise "pack".
  function outer(product){const saved=String(product?.orderUnitName||'').trim();if(saved)return saved.toLowerCase();const lead=String(product?.unitAmount||'').trim().match(/^([a-z]+)\b/i)?.[1]?.toLowerCase();return lead&&singularContainers.has(singular(lead))?singular(lead):'pack';}
  function label(unit,product){if(!unit)return'';const per=' per '+outer(product);if(unit.measure)return(unit.name==='g'?'Grams (g)':unit.name==='mL'?'Millilitres (mL)':unit.name)+' · '+new Intl.NumberFormat('en-AU',{maximumFractionDigits:3}).format(unit.perUnit)+per;return unit.name+' · '+new Intl.NumberFormat('en-AU').format(unit.perUnit)+per;}
- return{derive,allowed,individual,label,breakdown,parsePieces:pieces,parseMeasure:measure};
+ return{derive,allowed,individual,label,outer,breakdown,parsePieces:pieces,parseMeasure:measure};
 });

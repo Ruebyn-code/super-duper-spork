@@ -50,7 +50,7 @@
   quick.append(el('span',word('Frequently wasted'),'waste-quick-label'));
   for(const item of items){const chip=el('button','+ '+item.name,'waste-quick-chip');chip.type='button';chip.dataset.userText='';chip.title=word('Add {name} · usually {quantity} · {reason}',{name:item.name,quantity:number(item.quantity),reason:word(wastageModel.reasonName(item.reason))});chip.onclick=()=>addItem(item);quick.append(chip);}}
  function productExists(id){const select=document.querySelector('#waste-lines .waste-line select');return !select||[...select.options].some(option=>option.value===id);}
- function lineParts(line){const selects=line.querySelectorAll('select');return{product:line.querySelector('.waste-line-item select')||selects[0],quantity:line.querySelector('.waste-line-quantity input')||line.querySelector('input[type=number]'),unit:line.querySelector('.waste-line-unit select'),reason:line.querySelector('.waste-line-reason select')};}
+ function lineParts(line){const natives=line.querySelectorAll('select.waste-native');return{product:line.querySelector('.waste-line-item select'),quantity:line.querySelector('.waste-stepper input'),unit:natives[0],reason:natives[1]};}
  function addItem(item){
   let line=[...document.querySelectorAll('#waste-lines .waste-line')].find(row=>!lineParts(row).product?.value);
   if(!line){$('waste-add')?.click();line=[...document.querySelectorAll('#waste-lines .waste-line')].pop();}if(!line)return;

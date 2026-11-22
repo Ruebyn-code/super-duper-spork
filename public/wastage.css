@@ -46,3 +46,30 @@
 @media(pointer:coarse){.waste-quick-chip{min-height:38px}}
 @media(forced-colors:active){.wastage-page .waste-bar,.wastage-page .waste-bar.current{background:CanvasText}}
 .wastage-page .waste-repeat{grid-template-columns:minmax(0,1fr);justify-content:stretch;justify-items:stretch}
+/* Easier Record wastage lines: one card per item with a − / + quantity, unit pills, reason chips and the line cost. */
+.waste-line{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;padding:14px!important;border-radius:16px!important;background:var(--theme-surface,#fff);box-shadow:0 1px 2px #0f2a4410}
+.waste-line:focus-within{border-color:color-mix(in srgb,var(--primary,#008cff) 45%,var(--theme-border,#d8e3ed))}
+.waste-line-top{display:flex;align-items:end;gap:8px;min-width:0}.waste-line-top .waste-line-item{flex:1;min-width:0}
+.waste-line .waste-line-remove{margin:0;min-width:40px;min-height:40px;border-radius:12px;color:var(--theme-muted,#607286)}
+.waste-line-label{display:block;font-size:.78rem;font-weight:600;color:var(--theme-muted,#607286);margin-bottom:6px}
+.waste-amount-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;min-width:0}
+.waste-stepper{display:inline-flex;align-items:stretch;border:1px solid var(--theme-border,#d8e3ed);border-radius:999px;overflow:hidden;background:var(--theme-surface,#fff)}
+.waste-stepper:focus-within{border-color:var(--primary,#008cff);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary,#008cff) 18%,transparent)}
+.wastage-page .waste-stepper .waste-step,.waste-dialog .waste-step{width:42px;min-height:42px;padding:0;border:0;border-radius:0;background:color-mix(in srgb,var(--primary,#008cff) 8%,var(--theme-surface,#fff));color:var(--primary,#008cff);font-size:1.25rem;font-weight:700;line-height:1}
+.waste-step:hover{background:color-mix(in srgb,var(--primary,#008cff) 16%,var(--theme-surface,#fff))}
+.waste-dialog .waste-stepper input{width:84px;min-height:42px;border:0;border-radius:0;text-align:center;font-size:1.05rem;font-weight:700;box-shadow:none;outline:0;padding:6px;-moz-appearance:textfield;appearance:textfield}
+.waste-stepper input::-webkit-inner-spin-button,.waste-stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.waste-pills,.waste-chips{display:flex;flex-wrap:wrap;gap:6px}
+.waste-dialog .waste-pill,.waste-dialog .waste-chip-button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--theme-border,#d8e3ed);background:var(--theme-surface,#fff);color:var(--theme-text,#203442);font-size:.86rem;font-weight:600;text-transform:none;letter-spacing:0;font-family:inherit}
+.waste-dialog .waste-pill:hover,.waste-dialog .waste-chip-button:hover{border-color:var(--primary,#008cff)}
+.waste-dialog .waste-pill[aria-pressed=true],.waste-dialog .waste-chip-button[aria-pressed=true]{background-color:var(--primary,#008cff);background-image:var(--brand-sheen,none);border-color:var(--primary,#008cff);color:#fff}
+.waste-chips.waste-missing .waste-chip-button{border-color:#d64545;box-shadow:0 0 0 2px #d6454522}
+.waste-line-cost{margin-left:auto;font-size:1.15rem;color:var(--theme-text,#203442);white-space:nowrap}
+.waste-line .waste-item-meta{margin-top:-4px;font-size:.8rem}
+.waste-line .waste-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;clip-path:inset(50%)}
+.waste-line-empty .waste-line-amount,.waste-line-empty .waste-line-why,.waste-line-empty .waste-item-meta{display:none}
+.waste-dialog-footer #waste-preview{font-size:1.05rem;font-weight:700}
+.waste-dialog .waste-date{max-width:200px}
+@media(max-width:600px){.waste-line{padding:12px!important}.waste-line-cost{flex-basis:100%;margin-left:0}.waste-dialog .waste-stepper input{width:72px}.waste-dialog .waste-pill,.waste-dialog .waste-chip-button{min-height:40px}}
+@media(forced-colors:active){.waste-dialog .waste-pill[aria-pressed=true],.waste-dialog .waste-chip-button[aria-pressed=true]{background:Highlight;color:HighlightText;forced-color-adjust:none}}
+.waste-dialog .waste-stepper input,.waste-dialog .waste-stepper input:focus,.waste-dialog .waste-stepper input:focus-visible{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;background:transparent!important}
