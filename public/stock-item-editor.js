@@ -3,16 +3,39 @@
  const tabs=[...form.querySelectorAll('[data-stock-tab]')],panels=[...form.querySelectorAll('[data-stock-panel]')];
  const name=form.elements.countUnitName,ratio=form.elements.countUnitsPerUnit,preview=document.getElementById('stock-count-unit-preview'),message=document.getElementById('stock-editor-message');
  const dialog=document.getElementById('stock-item-dialog'),closeButton=document.getElementById('stock-dialog-close');let returnFocus=null;
- let busy=false,invalidField=null;const disabled=new Map();
+ let busy=false,invalidField=null,setupMode=false,furthest=0;const disabled=new Map();
+ // Step-by-step setup for new items: the same three panels become steps 1–3 with Back/Next, and Save stock appears on the
+ // last step. Next checks only the visible fields of the current step. Editing an existing item keeps the free tabs.
+ const intros={details:'Name the item, choose its supplier and enter its price.',counting:'Describe one supplier pack and how staff count it.',ordering:'Set the ordering rules and this location’s stock levels, then save.'};
+ const create=(tag,text,className)=>{if(typeof document.createElement!=='function')return null;const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node;};
+ const stepLine=create('p','','stock-setup-step'),back=create('button','','stock-setup-back'),next=create('button','','stock-setup-next');
+ if(stepLine){stepLine.id='stock-setup-step';stepLine.setAttribute('aria-live','polite');stepLine.hidden=true;form.querySelector('.stock-settings-tabs')?.after(stepLine);}
+ if(back&&next){back.type=next.type='button';back.hidden=next.hidden=true;const actions=form.querySelector('.admin-form-actions'),save=document.getElementById('stock-save');(save||actions?.firstChild)?.before?.(back,next);if(!save&&actions)actions.prepend(back,next);
+  back.addEventListener('click',()=>{const index=currentIndex();if(index>0)select(tabs[index-1].dataset.stockTab);focusStep();});next.addEventListener('click',()=>goTo(currentIndex()+1));}
+ function currentIndex(){return Math.max(0,tabs.findIndex(tab=>tab.getAttribute('aria-selected')==='true'));}
+ function stepValid(index){const panel=panels[index];for(const control of [...(form.elements||[])]){if(control.closest?.('[data-stock-panel]')!==panel||control.disabled||!control.checkValidity||!control.getClientRects?.().length)continue;if(!control.checkValidity()){control.reportValidity?.();control.focus?.();return false;}}return true;}
+ function goTo(index){if(busy)return;index=Math.min(Math.max(index,0),tabs.length-1);for(let step=currentIndex();step<index;step++){if(!stepValid(step))return;select(tabs[step+1].dataset.stockTab);}if(index<currentIndex())select(tabs[index].dataset.stockTab);focusStep();}
+ function focusStep(){const panel=panels[currentIndex()],field=[...(form.elements||[])].find(control=>control.closest?.('[data-stock-panel]')===panel&&!control.disabled&&control.getClientRects?.().length&&/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName||''));(field||tabs[currentIndex()])?.focus?.({preventScroll:false});}
+ function updateSetup(){
+  const index=currentIndex(),last=index===tabs.length-1,save=document.getElementById('stock-save');form.classList?.toggle('stock-setup',setupMode);
+  for(const [position,tab] of tabs.entries()){if(setupMode){tab.dataset.stepState=position<index?'done':position===index?'current':'upcoming';tab.setAttribute('aria-label',wording('Step {number}: {name}',{number:position+1,name:tab.textContent}));}else{delete tab.dataset.stepState;tab.removeAttribute?.('aria-label');}}
+  if(stepLine){stepLine.hidden=!setupMode;stepLine.textContent=setupMode?wording('Step {number} of {total}',{number:index+1,total:tabs.length})+' · '+wording(intros[tabs[index].dataset.stockTab]||''):'';}
+  if(back&&next){back.hidden=!setupMode||index===0;next.hidden=!setupMode||last;back.textContent=wording('Back');next.textContent=wording('Next: {step}',{step:tabs[index+1]?.textContent||''});}
+  if(save)save.hidden=setupMode&&!last;
+ }
+ function setup(on){setupMode=Boolean(on);furthest=0;select('details');updateSetup();}
+ // In setup, pressing Enter before the last step moves on instead of saving.
+ form.addEventListener('submit',event=>{if(!setupMode||currentIndex()===tabs.length-1)return;event.preventDefault();event.stopImmediatePropagation();goTo(currentIndex()+1);},true);
  const wording=(text,values={})=>typeof interfaceLabel==='function'?interfaceLabel(text,values):text.replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??''));
  function select(key,focus=false){
   if(busy)return;const selected=tabs.find(tab=>tab.dataset.stockTab===key);if(!selected)return;
   for(const tab of tabs){const active=tab===selected;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
   for(const panel of panels)panel.hidden=panel.dataset.stockPanel!==key;
+  furthest=Math.max(furthest,tabs.indexOf(selected));updateSetup();
   if(focus)selected.focus();
  }
  for(const tab of tabs){
-  tab.addEventListener('click',()=>select(tab.dataset.stockTab));
+  tab.addEventListener('click',()=>{if(setupMode){goTo(tabs.indexOf(tab));return;}select(tab.dataset.stockTab);});
   tab.addEventListener('keydown',event=>{
    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey)return;
    event.preventDefault();const index=tabs.indexOf(tab),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
@@ -41,7 +64,7 @@
   if(invalidField)return;invalidField=event.target;const panel=invalidField.closest('[data-stock-panel]');if(panel)select(panel.dataset.stockPanel);
   setTimeout(()=>{invalidField=null;},0);
  },true);
- function reset(){select('details');document.getElementById('stock-photo-options').open=!document.getElementById('stock-photo-preview').hidden;message.textContent='';refresh();}
+ function reset(){setupMode=false;select('details');document.getElementById('stock-photo-options').open=!document.getElementById('stock-photo-preview').hidden;message.textContent='';refresh();}
  function presentation(){
   if(!dialog)return;document.documentElement.classList.toggle('stock-settings-open',dialog.open);
   if(window.appEmbedded)parent.appShell?.childPresentationChanged(window);
@@ -66,7 +89,7 @@
   for(const select of form.querySelectorAll('select'))window.locationPickers?.refresh(select);
   if(closeButton)closeButton.disabled=value;
  }
- window.stockItemEditor={select,refresh,reset,setBusy,open,close,get busy(){return busy;}};
+ window.stockItemEditor={select,refresh,reset,setup,setBusy,open,close,get setupMode(){return setupMode;},get busy(){return busy;}};
  window.addEventListener('before-location-switch',event=>{if(busy||dialog?.open)event.preventDefault();});
  window.addEventListener('interface-text-updated',refresh);
  refresh();

@@ -50,3 +50,13 @@ test('popup close and Escape preserve tab drafts and restore focus; pending save
  e.api.open(opener);assert.equal(e.active(),e.tabs[1]);assert.equal(e.panels[1].hidden,false);e.api.setBusy(true);e.closeButton.fire('click');e.dialog.fire('cancel',{preventDefault(){}});assert.equal(e.dialog.open,true);assert.equal(e.closeButton.disabled,true);
  e.api.setBusy(false);e.closeButton.fire('click');assert.equal(e.dialog.open,false);assert.equal(e.ratio.value,'20');
 });
+
+test('new items use step-by-step setup: later steps only open after the current step is valid; edits keep free tabs',()=>{
+ const e=editor();let valid=false,reported=0;e.itemName.checkValidity=()=>valid;e.itemName.reportValidity=()=>{reported++;};e.itemName.tagName='INPUT';
+ e.api.setup(true);assert.equal(e.api.setupMode,true);assert.equal(e.tabs[0].dataset.stepState,'current');assert.equal(e.tabs[2].dataset.stepState,'upcoming');
+ e.tabs[2].fire('click');assert.equal(e.panels[0].hidden,false,'an empty name keeps step 1 open');assert.equal(reported,1);
+ valid=true;e.tabs[2].fire('click');assert.equal(e.panels[2].hidden,false);assert.equal(e.tabs[0].dataset.stepState,'done');assert.equal(e.tabs[1].dataset.stepState,'done');
+ e.tabs[0].fire('click');assert.equal(e.panels[0].hidden,false,'going back is always allowed');
+ let stopped=false;e.form.fire('submit',{preventDefault(){},stopImmediatePropagation(){stopped=true;}});assert.equal(stopped,true,'Enter before the last step moves on instead of saving');assert.equal(e.panels[1].hidden,false);
+ e.api.reset();assert.equal(e.api.setupMode,false);assert.equal(e.tabs[0].dataset.stepState,undefined);valid=false;e.tabs[2].fire('click');assert.equal(e.panels[2].hidden,false,'editing keeps free tabs');
+});

@@ -127,7 +127,7 @@
   'Use Pack & counting for unit amount, storage group and smaller-pack conversion.',
   'Use Ordering rules for minimum quantities and rounding. The location’s target system is shown here; enter this item’s sales ratio when Projected sales is selected.',
   'Press Save changes once for the whole popup. Correct any highlighted field if its tab opens.'
- ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Close retains the current item’s draft for reopening; Cancel edit discards it. Remove stock is inside Item details → More actions. Company stock changes apply across that company.'],related:['count-sleeves','order-rounding','stock-price-changes'],keywords:['catalogue','SKU','photo','category','item settings']});
+ ],{route:'/admin#stock',permissions:['stock.manage'],notes:['Close retains the current item’s draft for reopening; Cancel edit discards it. Remove stock is inside Item details → More actions. Company stock changes apply across that company.','A new item opens as a three-step setup: Item details, Pack & counting, then Ordering rules. Next checks the current step before moving on (Enter does the same), you can go back at any time, and Save stock appears on the last step. Editing an existing item keeps the three tabs.'],related:['count-sleeves','order-rounding','stock-price-changes'],keywords:['catalogue','SKU','photo','category','item settings']});
  add(c,'order-rounding','Set minimum quantities and rounding','Match recommendations and cart quantities to supplier pack rules.',[
   'Edit a stock item and open Ordering rules.',
   'Set Minimum order quantity, then choose Minimum only, Multiples of minimum, Custom cutoff or Separate up/down cutoffs.',
@@ -139,7 +139,7 @@
   'In Order delivery, select the sending method and save the correct email recipient or other required contact details.',
   'Assign stock items to the supplier in their item settings.',
   'Configure each location’s separate Sending settings and delivery schedule.'
- ],{route:'/admin#suppliers',permissions:['suppliers.manage'],notes:['Supplier contacts belong to the company catalogue. Sender email and API key belong to the location. Both sides must be configured for email sending.'],related:['location-email','delivery-dates','order-not-sent']});
+ ],{route:'/admin#suppliers',permissions:['suppliers.manage'],notes:['Supplier contacts belong to the company catalogue. Sender email and API key belong to the location. Both sides must be configured for email sending.','Add supplier opens a three-step setup: the supplier’s name, how orders are sent (not yet, email, text message or an ordering platform), then a review and Create supplier. When it is done, Add stock for this supplier opens the new-item setup with that supplier already chosen.'],related:['location-email','delivery-dates','order-not-sent']});
  add(c,'stock-price-changes','Understand stock price updates','See how a price change affects recent order values.',[
   'Change an item’s price in Stock items, or confirm reviewed price updates from an invoice.',
   'The effective price also updates the latest non-deleted order containing that item at each compatible location in the company.',

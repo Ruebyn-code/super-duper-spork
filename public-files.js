@@ -190,6 +190,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/password.js':'password.js',
   '/admin.js':'admin.js',
   '/stock-item-editor.js':'stock-item-editor.js',
+  '/supplier-setup.js':'supplier-setup.js',
+  '/setup-wizard.css':'setup-wizard.css',
   '/stock-item-save.js':'stock-item-save.js',
   '/admin-panels.js':'admin-panels.js',
   '/admin-ui.js':'admin-ui.js',
