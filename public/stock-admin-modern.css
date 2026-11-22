@@ -1,0 +1,70 @@
+/* Modern Stock items / Suppliers & delivery lists (display only; public/stock-admin-modern.js adds the elements). */
+.stock-admin-page .stock-admin-hidden{display:none!important}
+.stock-admin-page .stock-admin-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:6px 0 14px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--primary) 14%,var(--theme-line,#dbe5ec));border-radius:14px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff))}
+.stock-admin-page .stock-admin-toolbar[hidden]{display:none}
+.stock-admin-page .stock-admin-search{position:relative;display:flex;align-items:center;flex:1 1 260px;min-width:0;margin:0}
+.stock-admin-page .stock-admin-search svg{position:absolute;left:11px;color:var(--theme-muted,#64748b);pointer-events:none}
+.stock-admin-page .stock-admin-search input{width:100%;min-height:38px;height:38px;margin:0;padding:0 12px 0 34px;border-radius:10px;font-size:.9rem}
+.stock-admin-page .stock-admin-summary{font-size:.78rem;font-weight:600;color:var(--theme-muted,#64748b);white-space:nowrap}
+.stock-admin-page .stock-admin-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.stock-admin-page .stock-admin-actions>button,.stock-admin-page .stock-admin-actions .admin-create-button{width:auto!important;min-height:38px;margin:0!important;padding:7px 16px;border-radius:10px;font-size:.86rem;font-weight:700;white-space:nowrap}
+.stock-admin-page .stock-admin-actions #add-stock-shortcut,.stock-admin-page .stock-admin-actions #add-supplier-setup{background:var(--brand-sheen,none) var(--primary);border-color:var(--primary);color:#fff}
+.stock-admin-page .stock-admin-toggle{background:var(--theme-surface,#fff);color:var(--theme-text,#173344);border:1px solid var(--theme-line,#dbe5ec)}
+.stock-admin-page .admin-create-section.stock-admin-moved{display:none!important}
+.stock-admin-page #stock-list .supplier-stock-menu .stock-items-count{white-space:nowrap;flex:none}
+
+/* Initial tiles: a soft colour per name so suppliers and items are easy to scan. */
+.stock-admin-tile{display:inline-grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border-radius:11px;font:800 12px/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:.02em;color:hsl(var(--tile-hue,210) 55% 32%);background:hsl(var(--tile-hue,210) 70% 92%)}
+.stock-admin-tile.item{width:32px;height:32px;border-radius:9px;font-size:11px}
+:root[data-theme=dark] .stock-admin-tile{color:hsl(var(--tile-hue,210) 70% 82%);background:hsl(var(--tile-hue,210) 35% 24%)}
+
+/* Stock items: supplier groups as cards, items as compact rows with a price pill. */
+.stock-admin-page #stock-list{display:grid;gap:10px}
+.stock-admin-page #stock-list .supplier-stock-menu{margin:0;border:1px solid var(--theme-line,#dbe5ec);border-radius:14px;background:var(--theme-surface,#fff);overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.stock-admin-page #stock-list .supplier-stock-menu:hover{border-color:color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dbe5ec))}
+.stock-admin-page #stock-list .supplier-stock-menu[open]{box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 8%,transparent)}
+.stock-admin-page #stock-list .supplier-stock-menu>summary{display:flex;align-items:center;gap:12px;margin:0;padding:10px 14px;list-style:none;cursor:pointer;background:none;border:0}
+.stock-admin-page #stock-list .supplier-stock-menu>summary::-webkit-details-marker{display:none}
+.stock-admin-page #stock-list .supplier-stock-menu>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--theme-muted,#64748b);border-bottom:2px solid var(--theme-muted,#64748b);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.stock-admin-page #stock-list .supplier-stock-menu[open]>summary::after{transform:rotate(225deg) translateY(-1px)}
+.stock-admin-page #stock-list .supplier-stock-menu>summary h3{margin:0;font-size:1rem;font-weight:700;color:var(--theme-text,#173344)}
+.stock-admin-page #stock-list .supplier-stock-menu .stock-items-count{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:600;background:color-mix(in srgb,var(--theme-text,#173344) 6%,var(--theme-surface,#fff));color:var(--theme-muted,#475569)}
+.stock-admin-page #stock-list .supplier-stock-content{display:grid;gap:0;padding:0 8px 8px;border-top:1px solid var(--theme-line,#e8eef4)}
+.stock-admin-page #stock-list .stock-entry{border:0}
+.stock-admin-page #stock-list .managed-stock{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;margin:0;padding:9px 8px;border:0;border-bottom:1px solid var(--theme-line,#eef2f6);border-radius:10px;flex-direction:row}
+.stock-admin-page #stock-list .stock-entry:last-child .managed-stock{border-bottom:0}
+.stock-admin-page #stock-list .managed-stock:hover{background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.stock-admin-page #stock-list .managed-stock>div:not(.stock-actions){display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;min-width:0}
+.stock-admin-page #stock-list .managed-stock .stock-name{flex:1 1 100%;font-size:.92rem;font-weight:700;letter-spacing:0;color:var(--theme-text,#173344)}
+.stock-admin-page #stock-list .managed-stock .stock-unit-amount,.stock-admin-page #stock-list .managed-stock .stock-order-rule{font-size:.76rem;color:var(--theme-muted,#64748b)}
+.stock-admin-page #stock-list .managed-stock .stock-admin-price{display:inline-flex;align-items:center;padding:1px 9px;border-radius:99px;font-size:.78rem;font-weight:700;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.stock-admin-page #stock-list .managed-stock .stock-actions{display:flex;gap:6px}
+.stock-admin-page #stock-list .managed-stock .stock-actions button{width:34px;height:34px;min-height:34px;border-radius:9px}
+.stock-admin-page #stock-list>p{padding:18px;border:1px dashed var(--theme-line,#dbe5ec);border-radius:14px;text-align:center;color:var(--theme-muted,#64748b)}
+
+/* Suppliers: one card per supplier with its sending method and item count. */
+.stock-admin-page #supplier-list{display:grid;gap:10px}
+.stock-admin-page #supplier-list .supplier-delivery-menu{margin:0;padding:0;border:1px solid var(--theme-line,#dbe5ec);border-radius:14px;background:var(--theme-surface,#fff);overflow:hidden}
+.stock-admin-page #supplier-list .supplier-delivery-menu:hover{border-color:color-mix(in srgb,var(--primary) 30%,var(--theme-line,#dbe5ec))}
+.stock-admin-page #supplier-list .admin-record-header{display:flex;align-items:center;gap:12px;margin:0;padding:10px 14px;border:0}
+.stock-admin-page .stock-admin-supplier-info{display:grid;gap:4px;min-width:0;flex:1}
+.stock-admin-page .stock-admin-supplier-info h3{margin:0;font-size:1rem;font-weight:700;color:var(--theme-text,#173344);overflow-wrap:anywhere}
+.stock-admin-page .stock-admin-chips{display:flex;flex-wrap:wrap;gap:5px}
+.stock-admin-page .stock-admin-chip{display:inline-flex;align-items:center;max-width:100%;padding:1px 9px;border-radius:99px;font-size:.72rem;font-weight:600;line-height:1.6;background:color-mix(in srgb,var(--theme-text,#173344) 6%,var(--theme-surface,#fff));color:var(--theme-muted,#475569);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-admin-page .stock-admin-chip.method-email,.stock-admin-page .stock-admin-chip.method-sms{background:color-mix(in srgb,#16a34a 13%,var(--theme-surface,#fff));color:#15803d}
+.stock-admin-page .stock-admin-chip.method-platform{background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.stock-admin-page .stock-admin-chip.method-none{background:color-mix(in srgb,#f59e0b 16%,var(--theme-surface,#fff));color:#92400e}
+:root[data-theme=dark] .stock-admin-page .stock-admin-chip.method-email,:root[data-theme=dark] .stock-admin-page .stock-admin-chip.method-sms{color:#4ade80}
+:root[data-theme=dark] .stock-admin-page .stock-admin-chip.method-none{color:#fbbf24}
+.stock-admin-page #supplier-list .admin-record-header .admin-edit-button{flex:none;width:34px;height:34px;min-height:34px;border-radius:9px}
+.stock-admin-page #supplier-list .supplier-edit-panel{margin:0;padding:12px 14px 14px;border:0;border-top:1px solid var(--theme-line,#e8eef4);border-radius:0;background:color-mix(in srgb,var(--primary) 3%,var(--theme-surface,#fff))}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery{display:grid;gap:10px;margin:0;padding:0;border:0;background:none}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery h3{margin:0;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery label{display:grid;gap:5px;margin:0;font-size:.8rem;font-weight:600}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery :is(select,input){min-height:40px;border-radius:10px}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery p.small{margin:0}
+.stock-admin-page #supplier-list .supplier-edit-panel button{width:auto;min-height:38px;margin:4px 8px 0 0;padding:7px 16px;border-radius:10px;font-size:.86rem}
+@media(min-width:900px){.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery>:is(h3,p,button){grid-column:1/-1;justify-self:start}}
+@media(max-width:720px){.stock-admin-page .stock-admin-toolbar{padding:10px}.stock-admin-page .stock-admin-search{flex-basis:100%}.stock-admin-page .stock-admin-actions{width:100%;margin-left:0}.stock-admin-page .stock-admin-actions>button{flex:1;min-height:42px}.stock-admin-page .stock-admin-summary{flex:1}.stock-admin-tile{width:32px;height:32px}.stock-admin-page #stock-list .managed-stock{grid-template-columns:auto minmax(0,1fr) auto;gap:10px}}
+@media(forced-colors:active){.stock-admin-tile{forced-color-adjust:auto;border:1px solid CanvasText}}
+.stock-admin-page #supplier-list .supplier-edit-panel .supplier-delivery label>span{font-weight:600;color:inherit}

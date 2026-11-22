@@ -192,6 +192,8 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/admin.js':'admin.js',
   '/stock-item-editor.js':'stock-item-editor.js',
   '/supplier-setup.js':'supplier-setup.js',
+  '/stock-admin-modern.js':'stock-admin-modern.js',
+  '/stock-admin-modern.css':'stock-admin-modern.css',
   '/setup-wizard.css':'setup-wizard.css',
   '/stock-item-save.js':'stock-item-save.js',
   '/admin-panels.js':'admin-panels.js',
