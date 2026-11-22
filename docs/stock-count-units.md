@@ -30,4 +30,4 @@ In Stock count entry each area/supplier heading (name, "x of y items counted", C
 
 ## Compact layout
 
-On desktop and tablet (above 600 px) the whole-units and smaller-unit boxes sit side by side (80 px each, 72 px on tablets) in a 168 px Count column (150 px on tablets) with small one-line labels above them. Single-box rows keep a 96 px box aligned to the right. The total line shows only once something is entered. Phones keep the two boxes stacked with tighter spacing. Styling only.
+On desktop and tablet (above 600 px) the whole-units and smaller-unit boxes sit side by side (100 px each, 88 px on tablets) in a 208 px Count column (184 px on tablets). Each unit name (e.g. "Slab", "Sleeves") sits inside its box on the right, after the number, and the whole box shows the focus ring. Single-box rows keep a 112 px box aligned to the right. The total line shows only once something is entered. Phones keep the two boxes stacked with tighter spacing. Styling only.

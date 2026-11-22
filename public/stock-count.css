@@ -116,3 +116,17 @@
 }
 @media(min-width:601px) and (max-width:900px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,1fr) 150px 180px}.stock-count-page #count-items .count-split .count-quantity-field{grid-template-columns:repeat(2,minmax(0,72px))}}
 @media(max-width:600px){.stock-count-page #count-items .count-split .count-pack-part{margin-bottom:2px}.stock-count-page #count-items .count-split .count-quantity-field input[type=number]{min-height:32px;height:32px}}
+/* Unit names sit inside each count box on the right (e.g. "3  box", "12  Packs"): the label is the bordered box and the input is borderless inside it. */
+.stock-count-page #count-items .count-quantity-field>label{box-sizing:border-box;display:flex;align-items:center;gap:4px;min-height:28px;height:28px;padding:0 6px 0 0;border:1px solid var(--theme-line,var(--line,#dce5ed));border-radius:6px;background:var(--theme-surface,#fff);cursor:text;overflow:hidden}
+.stock-count-page #count-items .count-quantity-field>label:focus-within{outline:2px solid var(--primary);outline-offset:1px}
+.stock-count-page #count-items .count-split .count-pack-part{background:color-mix(in srgb,var(--primary) 4%,var(--theme-surface,#fff))}
+.stock-count-page #count-items .count-quantity-field>label input[type=number]{flex:1 1 auto;min-width:0;width:auto;height:100%;min-height:0;border:0!important;background:transparent!important;box-shadow:none!important;outline:none!important;padding:0 2px 0 6px;border-radius:0}
+.stock-count-page #count-items .count-quantity-field>label .count-unit-label{order:2;flex:0 1 auto;max-width:55%;margin:0;padding:0;display:inline-block;font-size:10px;font-weight:600;line-height:1;color:var(--theme-muted,var(--muted,#64748b));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.stock-count-page #count-items .count-quantity-field>label .count-unit-label:empty{display:none}
+.stock-count-page #count-items .count-quantity-field .count-pack-part{margin-bottom:0}
+.stock-count-page #count-items .count-split .count-quantity-field>label{margin:0}
+@media(max-width:600px){.stock-count-page #count-items .count-split .count-pack-part{margin-bottom:4px}.stock-count-page #count-items .count-split .count-quantity-field>label{min-height:32px;height:32px}}
+.stock-count-page #count-items .count-quantity-field>label .count-unit-label{flex:0 0 auto;max-width:62%}
+.stock-count-page #count-items .count-quantity-field>label input[type=number]{flex:1 1 0}
+@media(min-width:901px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,320px) 208px minmax(0,1fr) 200px}.stock-count-page #count-items .count-order-item:not(.count-split) .count-quantity-field>label{width:112px}.stock-count-page #count-items .count-split .count-quantity-field{grid-template-columns:repeat(2,minmax(0,100px))}}
+@media(min-width:601px) and (max-width:900px){.stock-count-page #count-items :is(.count-entry-heading,.count-order-item){grid-template-columns:minmax(0,1fr) 184px 180px}.stock-count-page #count-items .count-split .count-quantity-field{grid-template-columns:repeat(2,minmax(0,88px))}}
