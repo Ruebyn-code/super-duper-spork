@@ -88,3 +88,23 @@
 :root[data-theme=dark] .transfers-page .transfer-chip-edited{color:#fbbf24}
 @media(max-width:720px){.transfer-composer-dialog .transfer-section-heading{gap:10px}.transfer-composer-icon{width:34px;height:34px}.transfer-composer-sub{font-size:.74rem}.transfer-composer-dialog #transfer-add-item{justify-self:stretch}.transfer-composer-dialog .transfer-composer-footer{flex-wrap:wrap}.transfer-composer-dialog #transfer-send{flex:1}}
 @media(forced-colors:active){.transfer-composer-icon{background:CanvasText;color:Canvas}}
+/* Transfer lookup filters (display only): a wrapping bar with an always-visible search, labelled selects and a date range. */
+.transfers-page .transfer-filters{justify-content:flex-end}
+.transfers-page .transfer-filter-bar{display:flex;flex-wrap:wrap;align-items:end;gap:8px 10px;margin:4px 0 2px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--primary) 5%,var(--theme-surface,#fff));border:1px solid color-mix(in srgb,var(--primary) 12%,var(--theme-line,#dbe5ec))}
+.transfers-page .transfer-filter-bar>label{display:grid;gap:3px;margin:0;min-width:0}
+.transfers-page .transfer-filter-bar>label>span:not(.visually-hidden){font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.transfers-page .transfer-filter-bar :is(select,input,.app-select-trigger){min-height:36px;height:36px;border-radius:9px;font-size:.84rem}
+.transfers-page .transfer-filter-bar input[type=date]{width:150px}
+.transfers-page .transfer-filter-bar>label:has(#transfer-filter),.transfers-page .transfer-filter-bar>label:has(#transfer-store){min-width:170px}
+.transfers-page .transfer-search-box{position:relative;flex:1 1 240px;align-self:end}
+.transfers-page .transfer-search-box svg{position:absolute;left:11px;bottom:10px;color:var(--theme-muted,#64748b);pointer-events:none}
+.transfers-page .transfer-search-box input{width:100%;padding-left:32px}
+.transfers-page #transfer-clear{min-height:36px;align-self:end}
+.transfers-page .transfer-result-count{margin:2px 2px 4px;font-size:.78rem;font-weight:600;color:var(--theme-muted,#64748b)}
+.transfers-page .transfer-result-count:empty{display:none}
+@media(max-width:720px){.transfers-page .transfer-filter-bar{display:grid;grid-template-columns:1fr 1fr;padding:10px}.transfers-page .transfer-search-box{grid-column:1/-1}.transfers-page .transfer-filter-bar>label{min-width:0!important}.transfers-page .transfer-filter-bar input[type=date]{width:100%}.transfers-page .transfer-filter-bar :is(select,input,.app-select-trigger){min-height:40px;height:40px}.transfers-page #transfer-clear{grid-column:1/-1}}
+.transfers-page .transfer-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1.2fr)) repeat(2,minmax(0,1fr)) auto;align-items:end}
+.transfers-page .transfer-search-box{grid-column:1/-1}
+.transfers-page .transfer-filter-bar>label{min-width:0!important}
+.transfers-page .transfer-filter-bar input[type=date]{width:100%;box-sizing:border-box;padding-top:0;padding-bottom:0}
+@media(max-width:720px){.transfers-page .transfer-filter-bar{grid-template-columns:1fr 1fr}.transfers-page .transfer-filter-bar>label:has(#transfer-store){grid-column:1/-1}}
