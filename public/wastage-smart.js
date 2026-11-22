@@ -57,16 +57,18 @@
   const parts=lineParts(line);if(!parts.product||![...parts.product.options].some(option=>option.value===item.id))return;
   parts.product.value=item.id;parts.product.dispatchEvent(new Event('change',{bubbles:true}));window.appSelects?.refresh(parts.product);setTimeout(()=>parts.quantity?.focus(),0);
  }
+ function chosenUnit(select){const match=/^u(\d+)$/.exec(select?.value||'');if(!match)return null;try{return JSON.parse(select.dataset.units||'[]')[Number(match[1])]||null;}catch{return null;}}
  function hintFor(line){let hint=line.querySelector('.waste-smart-hint');if(!hint){hint=el('p','','waste-smart-hint');hint.setAttribute('aria-live','polite');line.append(hint);}return hint;}
  function update(line,fillReason){
   const parts=lineParts(line),id=parts.product?.value;if(!parts.product)return;
   const hint=hintFor(line);if(!id){hint.replaceChildren();hint.hidden=true;return;}
   const usualEntry=[...usual.values()].find(entry=>entry.id===id),today=(data?.todayItems||[]).find(entry=>entry.id===id),messages=[];
   if(usualEntry){if(fillReason&&parts.reason&&!parts.reason.value&&[...parts.reason.options].some(o=>o.value===usualEntry.reason)){parts.reason.value=usualEntry.reason;parts.reason.dispatchEvent(new Event('change',{bubbles:true}));window.appSelects?.refresh(parts.reason);}
-   if(parts.quantity&&!parts.quantity.value)parts.quantity.placeholder=word('Usually {quantity}',{quantity:number(usualEntry.quantity)});
-   messages.push(['info',word('Usually {quantity} ordered packs · {reason}',{quantity:number(usualEntry.quantity),reason:word(wastageModel.reasonName(usualEntry.reason))})]);
-   const entered=Number(parts.quantity?.value),packs=!parts.unit||parts.unit.value!=='count';
-   if(packs&&entered>0&&usualEntry.lines>=3&&entered>usualEntry.quantity*3)messages.push(['warn',word('That is more than 3 times the usual amount — please double-check the quantity.')]);}
+   const unit=chosenUnit(parts.unit),per=unit?unit.perUnit:1,unitName=unit?(unit.measure?unit.name:unit.name.toLowerCase()):word('ordered packs'),usualHere=Math.round(usualEntry.quantity*per*1000)/1000;
+   if(parts.quantity)parts.quantity.placeholder=word('Usually {quantity}',{quantity:number(usualHere)});
+   messages.push(['info',word('Usually {quantity} {unit} · {reason}',{quantity:number(usualHere),unit:unitName,reason:word(wastageModel.reasonName(usualEntry.reason))})]);
+   const entered=Number(parts.quantity?.value)/per;
+   if(entered>0&&usualEntry.lines>=3&&entered>usualEntry.quantity*3)messages.push(['warn',word('That is more than 3 times the usual amount — please double-check the quantity.')]);}
   if(today&&$('waste-date')?.value===data.today)messages.push(['warn',word('Already recorded today: {quantity} ordered packs by {names}.',{quantity:number(today.quantity),names:today.by.join(', ')})]);
   hint.replaceChildren(...messages.map(([kind,text])=>el('span',text,'waste-smart-'+kind)));hint.hidden=!messages.length;
  }

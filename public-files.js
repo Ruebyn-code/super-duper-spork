@@ -13,7 +13,7 @@ module.exports={'/reference-pack.js':'reference-pack.js','/reference-pack.css':'
   '/checklist-phone-frame.png':'assets/branding/checklist-phone-frame.png',
   '/notifications.js':'notifications.js','/notifications.css':'notifications.css','/notification-model.js':'notification-model.js',
   '/equipment':'equipment.html','/equipment.js':'equipment.js','/equipment.css':'equipment.css','/equipment-model.js':'equipment-model.js',
-  '/wastage':'wastage.html','/wastage.js':'wastage.js','/wastage.css':'wastage.css','/wastage-model.js':'wastage-model.js','/wastage-smart.js':'wastage-smart.js',
+  '/wastage':'wastage.html','/wastage.js':'wastage.js','/wastage.css':'wastage.css','/wastage-model.js':'wastage-model.js','/wastage-smart.js':'wastage-smart.js','/stock-individual-units.js':'stock-individual-units.js',
   '/stock-transfers':'stock-transfers.html',
   '/stock-transfers.js':'stock-transfers.js',
   '/stock-transfers.css':'stock-transfers.css',

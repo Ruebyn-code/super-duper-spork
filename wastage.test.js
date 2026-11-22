@@ -61,3 +61,18 @@ test('smart insights compare this week with the same weekdays, find repeat items
  const other=await f.api(f.office,'/api/locations','POST',{name:'Quiet store'});const elsewhere=await f.api(f.office,'/api/wastage/insights','GET',undefined,{'X-Location-Id':other.id});assert.equal(elsewhere.repeat.length,0);assert.equal(elsewhere.comparison.changePercent,null);
  assert.equal((await f.request(null,'/api/wastage/insights')).status,401);assert.equal(f.calls(),0);
 });
+
+test('wastage records individual pieces, grams and millilitres worked out from each item and rejects other units',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());const units=require('./public/stock-individual-units');
+ const pita=await f.api(f.office,'/api/products','POST',{name:'Pita bread',supplierId:'packaging',unitAmount:'Pack of 10 pita',price:5});
+ const chicken=await f.api(f.office,'/api/products','POST',{name:'Chicken thigh',supplierId:'packaging',unitAmount:'5kg',price:50});
+ const options=(await f.api(f.staff,'/api/wastage/options')).products,pitaOption=options.find(p=>p.id===pita.id),chickenOption=options.find(p=>p.id===chicken.id);
+ assert.deepEqual(pitaOption.individualUnit,{name:'Pita',perUnit:10});assert.deepEqual(chickenOption.individualUnit,{name:'g',perUnit:5000,measure:'weight'});
+ const save=(product,quantity,countUnit)=>f.request(f.staff,'/api/wastage','POST',{requestId:crypto.randomUUID(),wasteDate:'2026-10-23',notes:'',items:[{id:product.id,unitAmount:product.unitAmount,quantity,reason:'expired',countUnit}]});
+ const one=await save(pita,1,pitaOption.individualUnit);assert.equal(one.status,201);const pitaItem=one.data.items[0];assert.equal(pitaItem.quantity,0.1);assert.equal(pitaItem.countedQuantity,1);assert.equal(pitaItem.totalCents,50);
+ const grams=await save(chicken,100,chickenOption.individualUnit);assert.equal(grams.status,201);const chickenItem=grams.data.items[0];assert.equal(chickenItem.quantity,0.02);assert.equal(chickenItem.totalCents,100);
+ assert.equal((await save(pita,1,{name:'Pita',perUnit:12})).status,409,'a unit the item cannot be counted in is rejected');
+ assert.deepEqual(units.derive({unitAmount:'24 x 375ml'}),[{name:'Each',perUnit:24},{name:'mL',perUnit:9000,measure:'volume'}]);
+ assert.deepEqual(units.derive({unitAmount:'Box'}),[]);assert.deepEqual(units.derive({unitAmount:'Box of 20 sleeves',countUnit:{name:'Sleeves',perUnit:20}}),[]);
+ assert.deepEqual(units.individual({unitAmount:'1.5kg'}),{name:'g',perUnit:1500,measure:'weight'});
+});
