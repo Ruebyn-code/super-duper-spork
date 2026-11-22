@@ -45,12 +45,40 @@ function createStore(dir,{catalogues,context,now=Date.now}){
   for(const record of report.records){if(status!=='all'&&record.status!==status)continue;for(const item of record.items){if(reason&&reason!==item.reason||query&&![record.createdBy.name,record.notes,item.name,item.sku,item.supplier].join(' ').toLocaleLowerCase().includes(query))continue;rows.push([record.wasteDate,record.locationName,record.status,record.createdBy.name,item.name,item.sku,item.unitAmount,item.quantity,item.countedQuantity??'',item.countUnit?.name||'',model.reasonName(item.reason),item.unitCostCents===null?'':item.unitCostCents/100,item.totalCents===null?'':item.totalCents/100,record.notes,record.voidedBy?.name||'',record.voidReason||'']);}}
   return csv(rows);
  }
- return{options,list,create,voidRecord,exportCsv};
+ // Smart insights (read-only, this location's recorded entries only): an 8-week cost trend with this week compared with the
+ // same weekdays of the previous four weeks, items wasted on 3+ days in the last 28 days with a tip from their main reason,
+ // waste by weekday, frequently wasted items for quick entry with each item's usual reason/quantity, and today's items.
+ async function insights(actor){
+  requireAccess(actor);await pending;const day=today(),dayMs=86400000,toNum=value=>Date.parse(value+'T00:00:00Z')/dayMs,label=num=>new Date(num*dayMs).toISOString().slice(0,10);
+  const todayNum=toNum(day),weekday=(new Date(todayNum*dayMs).getUTCDay()+6)%7,monday=todayNum-weekday,earliest=monday-7*7;
+  const records=(await read()).filter(r=>belongs(r,actor)&&r.status==='recorded'&&toNum(r.wasteDate)>=Math.min(earliest,todayNum-55)&&r.wasteDate<=day);
+  const weeks=Array.from({length:8},(_,i)=>({weekStart:label(earliest+i*7),knownCostCents:0,unpricedItems:0,lines:0,sameDaysCents:0,sameDaysUnpriced:0}));
+  const items=new Map(),days=Array.from({length:7},(_,i)=>({weekday:i,knownCostCents:0,lines:0})),todayItems=new Map();
+  for(const record of records){const num=toNum(record.wasteDate),index=Math.floor((num-earliest)/7),dow=(new Date(num*dayMs).getUTCDay()+6)%7;
+   for(const item of record.items){const cost=item.totalCents;
+    if(index>=0&&index<8){const week=weeks[index];week.lines++;week.knownCostCents+=cost??0;week.unpricedItems+=cost===null?1:0;if(dow<=weekday){week.sameDaysCents+=cost??0;week.sameDaysUnpriced+=cost===null?1:0;}}
+    const key=item.id+'\u0000'+item.unitAmount,entry=items.get(key)||{id:item.id,name:item.name,unitAmount:item.unitAmount,days:new Set(),recentDays:new Set(),quantity:0,knownCostCents:0,unpricedItems:0,reasons:{},quantities:[],lines:0};
+    entry.quantities.push(item.quantity);entry.reasons[item.reason]=(entry.reasons[item.reason]||0)+1;
+    if(num>todayNum-28){entry.recentDays.add(record.wasteDate);entry.lines++;entry.quantity=Math.round((entry.quantity+item.quantity)*1000)/1000;entry.knownCostCents+=cost??0;entry.unpricedItems+=cost===null?1:0;days[dow].knownCostCents+=cost??0;days[dow].lines++;}
+    items.set(key,entry);
+    if(record.wasteDate===day){const today=todayItems.get(item.id)||{id:item.id,lines:0,quantity:0,by:new Set()};today.lines++;today.quantity=Math.round((today.quantity+item.quantity)*1000)/1000;today.by.add(record.createdBy.name);todayItems.set(item.id,today);}
+   }}
+  const median=list=>{const sorted=[...list].sort((a,b)=>a-b),mid=Math.floor(sorted.length/2);return sorted.length%2?sorted[mid]:Math.round((sorted[mid-1]+sorted[mid])/2*1000)/1000;};
+  const mainReason=entry=>Object.entries(entry.reasons).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0][0];
+  const current=weeks[7],previous=weeks.slice(3,7),comparable=previous,average=Math.round(comparable.reduce((sum,w)=>sum+w.sameDaysCents,0)/comparable.length),unknown=current.sameDaysUnpriced>0||comparable.some(w=>w.sameDaysUnpriced>0);
+  const repeat=[...items.values()].filter(e=>e.recentDays.size>=3).sort((a,b)=>b.recentDays.size-a.recentDays.size||b.knownCostCents-a.knownCostCents||a.name.localeCompare(b.name)).slice(0,6).map(e=>{const reason=mainReason(e);return{id:e.id,name:e.name,unitAmount:e.unitAmount,days:e.recentDays.size,quantity:e.quantity,knownCostCents:e.knownCostCents,unpricedItems:e.unpricedItems,reason,tip:model.tip(reason)};});
+  const usual=[...items.values()].map(e=>({id:e.id,unitAmount:e.unitAmount,name:e.name,reason:mainReason(e),quantity:median(e.quantities),lines:e.quantities.length,recentLines:e.lines}));
+  const quick=[...usual].filter(e=>e.recentLines>0).sort((a,b)=>b.recentLines-a.recentLines||a.name.localeCompare(b.name)).slice(0,8);
+  const busiest=[...days].sort((a,b)=>b.knownCostCents-a.knownCostCents||b.lines-a.lines)[0];
+  return{companyId:actor.companyId,locationId:actor.locationId,today:day,weeks:weeks.map(({sameDaysCents,sameDaysUnpriced,...w})=>w),comparison:{weekdays:weekday+1,thisWeekCents:current.sameDaysCents,averageCents:average,changePercent:average>0?Math.round((current.sameDaysCents-average)/average*100):null,unknown},repeat,weekdays:days,busiestWeekday:busiest&&busiest.lines?busiest.weekday:null,quick,usual:usual.slice(0,300),todayItems:[...todayItems.values()].map(t=>({id:t.id,lines:t.lines,quantity:t.quantity,by:[...t.by]}))};
+ }
+ return{options,list,create,voidRecord,exportCsv,insights};
 }
 async function route({req,res,url,params,session,store,body,json}){
  if(!url.startsWith('/api/wastage'))return false;if(!session)fail('Sign-in required.',401);if(!can(session,'wastage.view'))fail('Wastage viewing permission required.',403);if(req.method!=='GET'&&req.headers['x-csrf-token']!==session.csrf)fail('Invalid session token. Sign in again.',403);
  if(url==='/api/wastage/options'&&req.method==='GET'){json(200,await store.options(session));return true;}
  if(url==='/api/wastage'&&req.method==='GET'){json(200,await store.list(session,params));return true;}
+ if(url==='/api/wastage/insights'&&req.method==='GET'){json(200,await store.insights(session));return true;}
  if(url==='/api/wastage/export'&&req.method==='GET'){const data=await store.exportCsv(session,params);res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="wastage.csv"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});res.end(data);return true;}
  if(url==='/api/wastage'&&req.method==='POST'){json(201,await store.create(session,await body(req,128000)));return true;}
  const match=url.match(/^\/api\/wastage\/([a-f0-9-]+)\/void$/i);if(match&&req.method==='POST'){json(200,await store.voidRecord(session,match[1],await body(req)));return true;}

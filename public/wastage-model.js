@@ -12,5 +12,8 @@
   const sort=(a,b)=>b.knownCostCents-a.knownCostCents||a.name.localeCompare(b.name);
   return{recordCount:active.length,voidCount:records.length-active.length,lineCount,knownCostCents,unpricedItems,totalCents:unpricedItems?null:knownCostCents,reasons:[...reasonsMap.values()].sort(sort),items:[...itemsMap.values()].sort(sort)};
  }
- return{reasons,reasonName,summarize};
+ // Practical tip for an item wasted again and again, chosen by its most common reason (display only; never changes targets).
+ const tips={expired:'Often expires — order smaller amounts or lower its target level.',spoiled:'Often spoils — check storage, stock rotation (first in, first out) and delivery quality.',preparation:'Lots of preparation waste — review trimming and portioning.',overproduction:'Often over-made — make less on quieter days or check its prep amount.',damaged:'Often damaged — check handling and how it is stored.',returned:'Often returned — check orders with the supplier.',other:'Wasted often — check the entry notes for a pattern.'};
+ const tip=reason=>tips[reason]||tips.other;
+ return{reasons,reasonName,summarize,tips,tip};
 });

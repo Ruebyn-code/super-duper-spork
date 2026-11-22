@@ -13,3 +13,12 @@ Creates are atomic, serialized and idempotent by actor, context, request UUID an
 The company-styled page is registered with the persistent shell, required reading, layouts, Ordering subpages, platform page search, optional Home shortcuts and the shared floating cart. Phone forms retain touch-sized inputs and scrolling dialog bodies with fixed actions. Drafts are scoped to network/company/location/user in browser storage, retained on close and guarded during navigation. Before a write, freeze the request for uncertain retries; do not permit editing/discarding until its outcome is known. Stock reload clears quantities whose pack/conversion changed. Reads and exports never write operational records.
 
 The adjacent info icon opens the written/picture/video guide in Help & support. Tests use isolated synthetic locations, accounts and stock, including concurrent retries, restarts, unit/price changes, unknown costs, void audits, denied actions, company/location access, formula-safe exports and unchanged counts/expenses.
+
+## Smart insights and recording help
+
+`GET /api/wastage/insights` (wastage viewing, this location's recorded entries only; voided entries ignored; read-only) feeds `public/wastage-smart.js`:
+
+- **This week so far** compared with the average of the same weekdays (Monday to today) in the previous four Monday–Sunday weeks, with an 8-week known-cost trend. Unpriced items are noted as partly unknown.
+- **Wasted again and again**: items wasted on three or more days in the last 28 days, with days, known cost and a tip chosen from their most common reason (`wastageModel.tip`: e.g. Expired → order smaller amounts or lower the target level; Overproduction → make less on quieter days). Tapping one searches the log. Tips are suggestions only and never change targets, orders or prep amounts.
+- **When waste happens**: known cost by weekday over the last 28 days and the busiest day.
+- **Recording help**: up to eight Frequently wasted chips (last 28 days) add the item to the form; choosing an item fills its usual reason (most common in the last 8 weeks) when no reason is chosen and shows a "Usually n" quantity placeholder; a warning appears when a pack quantity is over three times the usual (with at least three past entries) and when the item was already recorded today. These only fill the open draft; saving still uses Save wastage.

@@ -40,3 +40,24 @@ test('queued writes recheck permissions and required-reading gates cover wastage
  const f=await fixture({seed:false});t.after(()=>f.close());let current={...f.staff.session,actionPermissions:{'wastage.record':false}};const store=createStore(f.dir,{context:async()=>current,catalogues:{read:async()=>{throw Error('Revoked access must stop before catalogue reads');}},now:()=>Date.parse('2026-10-23T02:00:00Z')});await assert.rejects(store.create(f.staff.session,request()),error=>error.status===403);await assert.rejects(fs.access(path.join(f.dir,'wastage.json')),error=>error.code==='ENOENT');
  await f.api(f.office,'/api/communications/posts','POST',{title:'Required reading',body:'Review stock handling procedures.',scope:'company',requireRead:true});assert.equal((await f.request(f.staff,'/api/wastage?'+params())).status,428);assert.equal((await f.request(f.staff,'/api/wastage','POST',request())).status,428);assert.equal((await fetch(f.base+'/wastage',{headers:f.staff.headers,redirect:'manual'})).status,303);
 });
+
+test('smart insights compare this week with the same weekdays, find repeat items with tips, learn usual reasons and never write',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());const product=(await f.api(f.staff,'/api/wastage/options')).products.find(p=>p.id==='paper');
+ const add=(wasteDate,quantity,reason)=>f.api(f.staff,'/api/wastage','POST',{requestId:crypto.randomUUID(),wasteDate,notes:'',items:[{id:product.id,unitAmount:product.unitAmount,quantity,reason}]});
+ // Today is Friday 23 Oct 2026: this week Mon–Fri, earlier weeks back to 28 Sep.
+ for(const [date,quantity,reason] of [['2026-10-19',1,'expired'],['2026-10-21',1,'expired'],['2026-10-23',1,'spoiled'],['2026-10-14',1,'expired'],['2026-10-07',1,'expired'],['2026-10-03',4,'expired']])await add(date,quantity,reason);
+ const voided=await add('2026-10-22',50,'damaged');await f.api(f.staff,'/api/wastage/'+voided.id+'/void','POST',{requestId:crypto.randomUUID(),revision:1,reason:'Wrong'});
+ const before=await fs.readFile(path.join(f.dir,'wastage.json'),'utf8'),insights=await f.api(f.staff,'/api/wastage/insights');
+ assert.equal(await fs.readFile(path.join(f.dir,'wastage.json'),'utf8'),before,'reading insights never writes');
+ assert.equal(insights.weeks.length,8);assert.equal(insights.weeks[7].weekStart,'2026-10-19');assert.equal(insights.comparison.weekdays,5);
+ const price=product.price;assert.equal(insights.comparison.thisWeekCents,3*price);
+ // Previous four weeks Mon–Fri: 14 Oct (Wed) and 7 Oct (Wed) count; 3 Oct is a Saturday so it is outside the same weekdays.
+ assert.equal(insights.comparison.averageCents,Math.round(2*price/4));
+ const repeat=insights.repeat.find(item=>item.id===product.id);assert.equal(repeat.days,6,'the voided entry is left out');assert.equal(repeat.reason,'expired');assert.equal(repeat.tip,model.tip('expired'));
+ const usual=insights.usual.find(item=>item.id===product.id);assert.equal(usual.reason,'expired');assert.equal(usual.quantity,1);
+ assert.deepEqual(insights.quick.map(item=>item.id),[product.id]);
+ assert.deepEqual(insights.todayItems,[{id:product.id,lines:1,quantity:1,by:[f.staff.session.username]}]);
+ assert.equal(insights.weekdays.reduce((sum,day)=>sum+day.lines,0),6);assert.equal(insights.busiestWeekday,5,'Saturday has the most waste by cost');
+ const other=await f.api(f.office,'/api/locations','POST',{name:'Quiet store'});const elsewhere=await f.api(f.office,'/api/wastage/insights','GET',undefined,{'X-Location-Id':other.id});assert.equal(elsewhere.repeat.length,0);assert.equal(elsewhere.comparison.changePercent,null);
+ assert.equal((await f.request(null,'/api/wastage/insights')).status,401);assert.equal(f.calls(),0);
+});
