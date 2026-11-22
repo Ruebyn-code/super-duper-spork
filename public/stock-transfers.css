@@ -13,3 +13,43 @@
 @media(max-width:720px){.transfer-composer-dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;padding:14px}.transfer-composer-dialog .transfer-section-heading{top:-14px;margin:-14px -14px 0;padding:12px 14px 10px}.transfer-composer-dialog .transfer-composer-footer{bottom:-14px;margin:0 -14px -14px;padding:10px 14px calc(12px + env(safe-area-inset-bottom))}.transfer-composer-dialog .transfer-destinations{grid-template-columns:1fr}}
 .transfers-page>dialog.transfer-composer-dialog.management{margin:auto;inset:0;padding:18px;border-radius:18px}
 @media(max-width:720px){.transfers-page>dialog.transfer-composer-dialog.management{margin:0;padding:14px;border-radius:0}}
+/* Modern transfers (display only): labelled From → To routes, direction tiles, chips, soft cards and figure tiles. */
+.transfers-page .transfer-metrics>article.management{position:relative;overflow:hidden;padding:12px 14px 12px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--primary) 16%,var(--theme-line,#dbe5ec));background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 9%,var(--theme-surface,#fff)),var(--theme-surface,#fff));box-shadow:none}
+.transfers-page .transfer-metrics>article.management::before{content:"";position:absolute;inset:10px auto 10px 0;width:4px;border-radius:0 4px 4px 0;background:var(--primary)}
+.transfers-page .transfer-metrics>article.management:nth-child(2)::before{background:color-mix(in srgb,var(--primary) 55%,#f59e0b)}
+.transfers-page .transfer-metrics>article.management:nth-child(3)::before{background:#16a34a}
+.transfers-page .transfer-metrics span{font-size:.72rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.transfers-page .transfer-metrics strong{font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.transfers-page .transfer-history{border-radius:16px}
+.transfers-page .transfer-filters h2{font-size:1.05rem;margin:0 auto 0 0}
+.transfers-page .transfer-history-list{gap:10px}
+.transfers-page .transfer-card{position:relative;overflow:hidden;padding:14px 16px;gap:10px;border-radius:14px;border:1px solid var(--theme-line,#dbe5ec);background:var(--theme-surface,#fff);transition:border-color .15s,box-shadow .15s}
+.transfers-page .transfer-card:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--theme-line,#dbe5ec));box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 10%,transparent)}
+.transfers-page .transfer-card::before{content:"";position:absolute;inset:14px auto 14px 0;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
+.transfers-page .transfer-card[data-status=received]::before{background:#16a34a}
+.transfers-page .transfer-card[data-status=cancelled]::before{background:var(--theme-line,#cbd5e1)}
+.transfers-page .transfer-card[data-status=cancelled]{opacity:.85}
+.transfers-page .transfer-card-heading{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:12px}
+.transfers-page .transfer-direction-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.transfers-page .transfer-card[data-direction=in] .transfer-direction-icon{background:color-mix(in srgb,#16a34a 14%,var(--theme-surface,#fff));color:#15803d}
+.transfers-page .transfer-card-title{min-width:0;display:grid;gap:7px}
+.transfer-route{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0;font-size:inherit}
+.transfer-stop{display:grid;gap:1px;min-width:0}
+.transfer-stop-label{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--theme-muted,#64748b)}
+.transfer-stop-name{font-size:1rem;font-weight:700;line-height:1.25;color:var(--theme-text,#173344);overflow-wrap:anywhere}
+.transfer-route-arrow{display:inline-flex;align-self:end;padding-bottom:4px;color:color-mix(in srgb,var(--primary) 70%,var(--theme-muted,#64748b))}
+.transfers-page .transfer-card-meta{display:flex;flex-wrap:wrap;gap:5px}
+.transfers-page .transfer-chip{display:inline-flex;align-items:center;min-height:22px;padding:2px 9px;border-radius:99px;font-size:.72rem;line-height:1.3;background:color-mix(in srgb,var(--theme-text,#173344) 7%,var(--theme-surface,#fff));color:var(--theme-muted,#475569);overflow-wrap:anywhere}
+.transfers-page .transfer-chip-direction{font-weight:700;background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary))}
+.transfers-page .transfer-card[data-direction=in] .transfer-chip-direction{background:color-mix(in srgb,#16a34a 14%,var(--theme-surface,#fff));color:#15803d}
+.transfers-page .transfer-badge{padding:5px 10px;font-weight:700;font-size:.72rem}
+.transfers-page .transfer-badge[data-status=sent]{background:color-mix(in srgb,#f59e0b 18%,var(--theme-surface,#fff));color:#92400e}
+.transfers-page .transfer-card details{margin-left:48px;border-top:1px solid var(--theme-line,#e5edf3);padding-top:8px}
+.transfers-page .transfer-card summary{font-size:.78rem;font-weight:600}
+.transfers-page .transfer-card-bottom{margin-left:48px}
+.transfers-page .transfer-card-bottom>strong{font-size:.9rem}
+.transfer-action-dialog .transfer-route{padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--primary) 7%,var(--theme-surface,#fff))}
+:root[data-theme=dark] .transfers-page .transfer-card[data-direction=in] .transfer-direction-icon,:root[data-theme=dark] .transfers-page .transfer-card[data-direction=in] .transfer-chip-direction{color:#4ade80}
+:root[data-theme=dark] .transfers-page .transfer-badge[data-status=sent]{color:#fbbf24}
+@media(max-width:720px){.transfers-page .transfer-card{padding:12px}.transfers-page .transfer-card-heading{grid-template-columns:auto minmax(0,1fr);gap:10px}.transfers-page .transfer-card-title{display:contents}.transfers-page .transfer-card-heading .transfer-route{grid-column:2;align-self:center}.transfers-page .transfer-card-meta,.transfers-page .transfer-card-heading .transfer-badge{grid-column:1/-1}.transfers-page .transfer-card-heading .transfer-badge{justify-self:start;grid-row:auto}.transfers-page .transfer-chip{font-size:.68rem;padding:2px 8px}.transfers-page .transfer-card details,.transfers-page .transfer-card-bottom{margin-left:0}.transfer-stop-name{font-size:.94rem}.transfer-route-arrow svg{width:28px}.transfers-page .transfer-metrics>article.management{padding:9px 8px 9px 12px}.transfers-page .transfer-metrics span{font-size:.6rem}.transfers-page .transfer-metrics strong{font-size:1.3rem}}
+@media(forced-colors:active){.transfers-page .transfer-metrics>article.management::before,.transfers-page .transfer-card::before{background:CanvasText}}
