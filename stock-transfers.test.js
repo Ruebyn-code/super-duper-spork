@@ -89,3 +89,23 @@ test('transfer APIs enforce location/company permissions, receipt confirmation, 
   const original=await fs.readFile(path.join(dir,'stock-transfers.json'),'utf8');await new Promise(resolve=>server.close(resolve));await start();receiver=await login('Receiver');assert.equal((await request(receiver,'/api/stock-transfers')).data.find(row=>row.id===sent.data.id).status,'received');assert.equal((await request(receiver,'/api/weekly-sales-reports?week=2026-10-12')).data.stockCosts.totalCents,1300);assert.equal(await fs.readFile(path.join(dir,'stock-transfers.json'),'utf8'),original);assert.equal(sending,0);
  }finally{if(server?.listening)await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});}
 });
+
+test('transfer dates default to today, may be backdated up to 60 days and then move both locations’ stock and cost on that date',async()=>{
+ const dir=await fs.mkdtemp('/tmp/stock-transfer-dates-');try{
+  const actors={source:{...source,permissions:permissionModel.transferKeys},target:{...target,id:'receiver',permissions:permissionModel.transferKeys}},catalogues={default:{products:[{...product,price:650}],suppliers:[]},other:{products:[{...receiving,price:900}],suppliers:[]}};
+  const stamp=Date.parse('2026-10-20T01:00:00Z');const store=require('./stock-transfers').createStore(dir,{context:async(actor,id)=>actors[id],catalogues:{read:async id=>catalogues[id]},now:()=>stamp});
+  const input=extra=>({requestId:crypto.randomUUID(),destinationLocationId:'target',moveCosts:true,notes:'',items:[{sourceProductId:'rice',targetProductId:'rice-bag',quantity:4,targetQuantity:2}],...extra});
+  const today=await store.create(actors.source,input());assert.equal(today.transferDate,'2026-10-20');
+  for(const transferDate of ['2026-10-21','2026-08-20','2026-02-30','20/10/2026'])await assert.rejects(store.create(actors.source,input({transferDate})),error=>error.status===400);
+  const past=await store.create(actors.source,input({transferDate:'2026-10-14'}));assert.equal(past.transferDate,'2026-10-14');
+  const repeat=input({transferDate:'2026-10-13'});await store.create(actors.source,repeat);await assert.rejects(store.create(actors.source,{...repeat,transferDate:'2026-10-12'}),error=>error.status===409);
+  await store.change(actors.target,past.id,'receive',{revision:1,requestId:crypto.randomUUID()});await store.change(actors.target,today.id,'receive',{revision:1,requestId:crypto.randomUUID()});
+  const records=await effects.read(dir),midday='2026-10-14T01:00:00.000Z';
+  const sent=effects.movements(records,actors.source),received=effects.movements(records,actors.target);
+  assert.equal(sent.find(row=>row.transferId===past.id).createdAt,midday);assert.equal(received.find(row=>row.transferId===past.id).createdAt,midday);
+  assert.equal(sent.find(row=>row.transferId===today.id).createdAt,today.createdAt);assert.equal(received.find(row=>row.transferId===today.id).createdAt,records.find(row=>row.id===today.id).receivedAt);
+  const costs=effects.costLines(records,actors.target);assert.equal(costs.find(row=>row.transferId===past.id).costDate,'2026-10-14');assert.equal(costs.find(row=>row.transferId===today.id).costDate,'2026-10-20');
+  // Legacy records without a transfer date keep their sending/receiving times.
+  assert.equal(effects.movements([transfer()],actors.source)[0].createdAt,'2026-10-10T00:00:00Z');
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
