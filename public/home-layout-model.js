@@ -5,7 +5,7 @@
   'home-actions':'Quick links','home-budget-panel':'Ordering budget','home-administration':'Administration'
  };
  const shortcuts={
-  'home-ordering-card':'Ordering','home-cart-card':'Cart','home-stock-card':'Stock count','home-sales-card':'Sales',
+  'home-ordering-card':'Stock & ordering','home-cart-card':'Cart','home-stock-card':'Stock count','home-sales-card':'Sales',
   'home-roster-card':'Rostering','home-comms-card':'Comms','home-library-card':'Knowledge centre','home-reporting-card':'Reporting'
  };
  const metrics={

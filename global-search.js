@@ -1,7 +1,7 @@
 const {can,any}=require('./permissions');
 const pages=[
  ['home','Home','Dashboard greeting quick links','/home',['home.view']],
- ['ordering','Ordering','Catalogue stock items suppliers purchase request','/',['orders.view']],
+ ['ordering','Stock & ordering','Catalogue ordering stock items suppliers purchase request inventory','/',['orders.view']],
  ['cart','Cart','Review submit stock order','/#cart',['orders.view']],
  ['counts','Stock counts','Inventory stock take usage','/stock-count',['counts.view']],
  ['equipment','Equipment','Equipment assets fridge oven machine service repair maintenance fault broken warranty serial','/equipment',['equipment.view']],

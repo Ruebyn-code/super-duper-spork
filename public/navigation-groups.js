@@ -21,7 +21,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  const equipment=document.createElement('a');equipment.href='/equipment';equipment.dataset.sidebarName='Equipment';equipment.dataset.permission='equipment.view';equipment.dataset.editId=prefix+'-equipment';equipment.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4Z"/><g class="icon-detail"><path d="M17 17l3 3M15 19l2-2"/></g></svg><span class="sidebar-label" data-interface-label="Equipment">Equipment</span>';
  const rostering=document.createElement('a');rostering.href='/rostering';rostering.dataset.sidebarName='Rostering';rostering.dataset.editId=prefix+'-rostering';rostering.dataset.permission='rostering.view';rostering.innerHTML='<svg class="sidebar-navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18"/><g class="icon-detail"><path d="m8 15 2 2 5-5M17 15h1"/></g></svg><span class="sidebar-label" data-interface-label="Rostering">Rostering</span>';
  rostering.classList.add('roster-navigation-link');const rosterBeta=document.createElement('span');rosterBeta.className='navigation-beta-badge';rosterBeta.dataset.localWording='Beta';rosterBeta.textContent='Beta';rosterBeta.setAttribute('aria-hidden','true');rostering.append(rosterBeta);
- const ordersMenu=menuFor('ordering','Ordering');
+ const ordersMenu=menuFor('ordering','Stock & ordering');
  const newCount=menus.get('count')?.querySelector('a[href="/stock-count#new"]');
  if(newCount){const title=newCount.querySelector('.submenu-label');if(title){title.textContent='Stock count';title.dataset.localWording='Stock count';}ordersMenu.append(newCount);}
  ordersMenu.append(fresh(ordering,'/','Catalogue','catalogue'));
@@ -37,7 +37,7 @@ window.groupAppNavigation=(sidebar,secondary)=>{
  // Settings retain their own options, separate from the Admin category.
  menus.get('settings')?.removeAttribute('data-head-office-only');
  for(const link of menus.get('settings')?.querySelectorAll('a')||[]){if(link.hash==='#sign-in')link.dataset.permission='network.access';if(window.appPlatformAppearance)link.href=companyAssetUrl(link.getAttribute('href'));}
- for(const [link,group,text] of [[ordering,'ordering','Ordering'],[sales,'sales','Sales'],[accounts,'admin','Admin']])if(link){link.dataset.sidebarGroup=group;link.setAttribute('aria-controls','app-subsidebar');link.setAttribute('aria-expanded','false');label(link,text);}
+ for(const [link,group,text] of [[ordering,'ordering','Stock & ordering'],[sales,'sales','Sales'],[accounts,'admin','Admin']])if(link){link.dataset.sidebarGroup=group;link.setAttribute('aria-controls','app-subsidebar');link.setAttribute('aria-expanded','false');label(link,text);}
  if(accounts)accounts.setAttribute('data-user-manager-only','');
  const nav=document.createElement('nav');nav.className='main-sidebar-nav grouped-main-navigation';nav.dataset.editId=prefix+'-main';nav.setAttribute('aria-label','Main navigation');
  const original=sidebar.querySelector('.sidebar-scroll > .main-sidebar-nav');if(original)original.before(nav);else sidebar.querySelector('.sidebar-scroll')?.append(nav);
