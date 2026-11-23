@@ -129,3 +129,14 @@ test('shared designs link many label templates to one layout, update together an
   await assert.rejects(app.item({name:'Dup',layout:base,design:{name:'second STYLE'}}),/already exists/);
  }finally{await app.close();}
 });
+test('category icons are manager-only, allowlisted, revision-checked and company-scoped',async()=>{const a=await fixture();try{
+ const icons=require('./public/category-icons');assert.ok(icons.list.length>=100);assert.ok(icons.valid('fridge'));assert.equal(icons.valid('nope'),false);assert.equal(new Set(icons.list.map(icon=>icon.id)).size,icons.list.length);
+ await assert.rejects(a.store.saveCategoryIcon(a.member,{category:'Salad Bar',icon:'salad',revision:0}),e=>e.status===403);
+ await assert.rejects(a.store.saveCategoryIcon(a.office,{category:'Salad Bar',icon:'<svg>',revision:0}),e=>e.status===400);
+ await assert.rejects(a.store.saveCategoryIcon(a.office,{category:'  ',icon:'salad',revision:0}),e=>e.status===400);
+ const saved=await a.store.saveCategoryIcon(a.office,{category:' Salad Bar ',icon:'salad',revision:0});assert.deepEqual(saved,{categoryIcons:{'salad bar':'salad'},categoryIconsRevision:1});
+ await assert.rejects(a.store.saveCategoryIcon(a.office,{category:'Salad Bar',icon:'fridge',revision:0}),e=>e.status===409);
+ const list=await a.store.list(a.member);assert.deepEqual(list.categoryIcons,{'salad bar':'salad'});assert.equal(list.categoryIconsRevision,1);
+ assert.deepEqual((await a.store.list(a.other)).categoryIcons,{});
+ const removed=await a.store.saveCategoryIcon(a.office,{category:'salad bar',icon:null,revision:1});assert.deepEqual(removed.categoryIcons,{});assert.equal(removed.categoryIconsRevision,2);
+}finally{await a.close();}});

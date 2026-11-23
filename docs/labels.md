@@ -64,3 +64,13 @@ Each label keeps its own name, shelf life, category, note, photo and active swit
 ## Company logo
 
 Every designed label prints the company's sidebar logo (Settings → Logo, falling back to the main logo) in the bottom-right corner of the content area, inside the template's `paddingMm`. The shared `prep-label-renderer.js` loads it once per page, scales it to at most 30% of the content width and 22% of its height, converts it to black and white and draws it into the same raster used for the designer, print preview and Bluetooth ZPL. Nothing is saved: a company without a logo prints without one, and Print again draws the current logo. Arrange fields so they do not sit under the corner.
+
+## Category icons
+
+Label template managers (manage permission plus access to every active company location) can give each label category an
+icon: in the editor, **Choose icon** under Category opens the shared searchable picker from `public/category-icons.js`.
+Choosing saves straight away through `PUT /api/prep-labels/category-icon` (`{category, icon|null, revision}`, CSRF,
+403 for others, 400 for icons outside the allowlist, 409 for a stale revision); it does not need Save label template.
+Icons are stored per company in `prep-labels.json` under `categoryIcons[companyId] = {icons:{<lower-case name>:<id>},
+revision}` and returned by `GET /api/prep-labels` as `categoryIcons`/`categoryIconsRevision`. The category side bar and
+the category pill on each card show the icon; templates, layouts and batches are unchanged and icons are never printed.

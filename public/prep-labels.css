@@ -43,3 +43,16 @@ button.labels-primary:hover:not(:disabled){background:var(--brand-sheen,none) co
 .labels-design-actions button{min-height:30px;padding:4px 10px;border:1px solid color-mix(in srgb,var(--primary,#008cff) 30%,var(--theme-line,#dce5ed));border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-primary-text,var(--primary,#008cff));font-size:12px;font-weight:600}
 .labels-design-badge{position:absolute;right:6px;bottom:6px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary,#008cff) 14%,var(--theme-surface,#fff));color:var(--theme-primary-text,var(--primary,#008cff));font-size:11px;font-weight:600}
 @media(forced-colors:active){.labels-design-badge{border:1px solid CanvasText}}
+/* Category icons (shared list in public/category-icons.js): side bar buttons, card badges and the editor's icon button. */
+.labels-category-sidebar button{display:flex!important;align-items:center;gap:8px}
+.labels-category-sidebar .labels-category-icon{width:18px;height:18px;flex:none;color:var(--primary)}
+#labels-categories button .labels-category-icon{width:16px;height:16px;flex:none;color:var(--primary)}
+#labels-categories button{display:inline-flex;align-items:center;gap:6px}
+.labels-category-badge{display:inline-flex;align-items:center;gap:4px}
+.labels-category-badge .labels-badge-icon{width:12px;height:12px;flex:none}
+.labels-category-icon-field{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-2px 0 4px}.labels-category-icon-field[hidden]{display:none}.labels-category-icon-field .small{color:var(--theme-muted,#5b6b7a);font-size:.74rem}
+.labels-category-icon-button{display:inline-flex;align-items:center;gap:8px;justify-self:start;min-height:38px;padding:6px 12px;border:1px solid var(--theme-border,#d8e3ed);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#203442);font:inherit;text-transform:none;letter-spacing:0}
+.labels-category-icon-button .category-icon{width:20px;height:20px;color:var(--primary)}
+.labels-category-icon-button:not(:disabled):hover{border-color:var(--primary)}
+.labels-category-icon-button:disabled{opacity:.6}
+#labels-item-dialog .labels-photo-field>.labels-field-name{position:static;display:block;max-width:none;padding:0 0 4px;background:none}

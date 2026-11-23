@@ -1,0 +1,26 @@
+/* Shared category icon picker (public/category-icons.js) and category icon sizing. */
+.category-icon{width:18px;height:18px;flex:none}
+.category-icon-picker{width:min(720px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 32px));padding:0;border:1px solid var(--theme-border,#d8e3ed);border-radius:16px;background:var(--theme-surface,#fff);color:var(--theme-text,#203442);box-shadow:0 24px 70px #0004;overflow:hidden}
+.category-icon-picker[open]{display:flex;flex-direction:column}
+.category-icon-picker::backdrop{background:#07172988}
+.category-icon-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 8px}
+.category-icon-head h2{margin:0;font-size:1.05rem}
+.category-icon-close{min-width:32px;min-height:32px;padding:0;border-radius:9px}
+.category-icon-search{margin:0 16px 8px;min-height:36px;width:auto}
+.category-icon-body{overflow:auto;padding:0 16px 8px;overscroll-behavior:contain;flex:1;min-height:0}
+.category-icon-body h3{margin:10px 0 6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--theme-muted,#607286)}
+.category-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+.category-icon-picker .category-icon-option{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border:1px solid var(--theme-border,#e1e9f1);border-radius:10px;background:var(--theme-surface,#fff);color:var(--theme-text,#203442);font:inherit;font-size:.68rem;line-height:1.2;text-transform:none;letter-spacing:0;cursor:pointer}
+.category-icon-option .category-icon{width:22px;height:22px;color:var(--primary,#008cff)}
+.category-icon-option span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.category-icon-option:hover,.category-icon-option:focus-visible{border-color:var(--primary,#008cff);background:color-mix(in srgb,var(--primary,#008cff) 8%,var(--theme-surface,#fff))}
+.category-icon-option[aria-pressed=true]{border-color:var(--primary,#008cff);background:color-mix(in srgb,var(--primary,#008cff) 14%,var(--theme-surface,#fff));font-weight:700}
+.category-icon-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-top:1px solid var(--theme-border,#d8e3ed)}
+.category-icon-count{font-size:.78rem;color:var(--theme-muted,#607286)}
+.category-icon-empty{color:var(--theme-muted,#607286);font-size:.86rem}
+@media(max-width:600px){.category-icon-picker{width:calc(100vw - 12px);max-height:calc(100dvh - 12px)}.category-icon-grid{grid-template-columns:repeat(auto-fill,minmax(68px,1fr))}.category-icon-search{font-size:16px}}
+@media(forced-colors:active){.category-icon-option[aria-pressed=true]{outline:2px solid Highlight}}
+/* Knowledge centre category rows and the icon choice button in Manage categories. */
+.library-category-icon-choice{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border-radius:10px;align-self:end}
+.library-category-icon-choice .category-icon{color:var(--primary,#008cff)}
+.library-category-row-icon{width:22px;height:22px;color:var(--primary,#008cff);margin-right:8px;flex:none}

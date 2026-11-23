@@ -66,3 +66,12 @@ The category side bar is frameless like the app's other side bars (small upperca
 On desktop (above 1100 px) the All articles/Policies/Information tabs, audience and search sit in the heading row beside the Knowledge centre title; narrower screens keep them below the heading. The category side bar is 150 px wide (136 px on tablets).
 
 The article reading view lines everything up in one dense 900 px column (contents as one row of links, the upkeep line and tool pills sharing a row, tighter spacing; on phones the page heading and category rail hide while reading): tags, title, meta, a quiet upkeep line (owner, review dates, Mark reviewed, Version history), one row of small tool pills (Favourite, Step by step, Print, QR code), contents, the article and the extras. Back is a plain link beside a compact Edit button, the floating Create article button hides while reading, and a first heading that only repeats the article's title is hidden (display only — the saved article is unchanged).
+
+## Category icons
+
+Categories may have an optional `icon` from the shared allowlist in `public/category-icons.js` (146 line icons in food,
+drinks, kitchen, safety, stock, people, business, places and general groups). Manage categories → Choose icon opens a
+searchable, keyboard-friendly picker (arrow keys move, × / Escape close, **No icon** clears). Category writes accept
+`icon` (an allowlisted ID), `null` to remove it, or omit it to keep the saved icon (older writers); anything else is 400.
+Article views add `categoryIcon`. The side bar shows each category's icon (a folder when none) and landing cards without
+a picture use it as their cover. Display only.
