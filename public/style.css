@@ -1317,3 +1317,31 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 .unified-app-editor .editor-icon-choice-name{font-size:13px;font-weight:600;color:var(--theme-text,#182b3a)}
 .unified-app-editor .editor-icon-choice [hidden]{display:none!important}
 @media(prefers-reduced-motion:reduce){.app-edit-indicator,.app-edit-indicator>span,.app-edit-hover-tag:popover-open,.unified-app-editor[open]{animation:none}.app-edit-mode .app-hovered-part,.home-building .home-section,.home-building .home-section-controls{transition:none}}
+/* App edit quick toolbar, Your changes panel and drag-by-heading cursor (display only). */
+.app-quick-bar{position:fixed;inset:auto;margin:0;padding:10px 12px;width:max-content;max-width:min(380px,calc(100vw - 16px));border:1px solid var(--theme-line,#dce5ed);border-radius:14px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;box-shadow:0 14px 40px #182b3a2e;font:13px/1.4 Arial,Helvetica,sans-serif!important;display:none;flex-direction:column;gap:8px;animation:app-quick-in .16s ease-out}
+.app-quick-bar:popover-open{display:flex}
+@keyframes app-quick-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.app-quick-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.app-quick-head strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-quick-bar button{font:600 12px Arial,Helvetica,sans-serif!important;text-transform:none;letter-spacing:0;margin:0;min-height:30px;padding:5px 10px;border:1px solid var(--theme-line,#dce5ed);border-radius:999px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;cursor:pointer}
+.app-quick-bar button:hover,.app-quick-bar button:focus-visible{border-color:var(--primary)}
+.app-quick-bar .app-quick-close{width:28px;min-height:28px;padding:0;border:0;font-size:18px!important;font-weight:400!important}
+.app-quick-scope{display:flex;gap:4px;padding:3px;border-radius:999px;background:var(--theme-canvas,#f1f5f9)}
+.app-quick-scope button{flex:1;border-color:transparent!important;background:transparent!important}
+.app-quick-scope button[aria-pressed=true]{background:var(--theme-surface,#fff)!important;box-shadow:0 1px 4px #182b3a1f;color:var(--theme-primary-text,var(--primary))!important}
+.app-quick-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.app-quick-bar .app-quick-swatch{width:28px;min-width:28px;height:28px;min-height:28px;padding:0;border-radius:50%;background:var(--swatch,#fff)!important;border:1px solid #182b3a26}
+.app-quick-bar .app-quick-swatch.is-original{background:linear-gradient(135deg,#fff 45%,#e11d48 46%,#e11d48 54%,#fff 55%)!important}
+.app-quick-bar .app-quick-swatch[aria-pressed=true]{outline:2px solid var(--primary);outline-offset:2px}
+.app-quick-custom{width:30px;height:30px;padding:0;margin:0;border:1px solid var(--theme-line,#dce5ed);border-radius:50%;background:none;cursor:pointer}
+.app-quick-bar .app-quick-icon{width:34px;height:34px;min-height:34px;border-radius:9px}
+.app-quick-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.app-quick-note{font-size:11px;color:var(--theme-muted,#5b6b7a);margin-left:auto}.app-quick-note.is-error{color:var(--theme-danger-text,#a13323)}
+.app-quick-bar .app-quick-undo{border-color:var(--primary)!important;color:var(--theme-primary-text,var(--primary))!important}
+.app-edit-indicator .app-edit-indicator-changes{pointer-events:auto;min-height:30px;margin:0;padding:5px 12px;border:1px solid #ee8b3655;border-radius:999px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;font:600 12px Arial,Helvetica,sans-serif!important;cursor:pointer;text-transform:none;letter-spacing:0}
+.app-edit-changes{position:fixed;inset:auto;margin:0;width:min(360px,calc(100vw - 16px));max-height:min(60vh,460px);overflow:auto;padding:14px;border:1px solid var(--theme-line,#dce5ed);border-radius:14px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;box-shadow:0 14px 40px #182b3a2e;font:13px/1.4 Arial,Helvetica,sans-serif!important}
+.app-edit-changes ul{list-style:none;margin:10px 0;padding:0;display:grid;gap:6px}.app-edit-changes li{display:flex;align-items:center;justify-content:space-between;gap:10px}.app-edit-changes li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-edit-changes button{margin:0;min-height:28px;padding:4px 10px;border:1px solid var(--theme-line,#dce5ed);border-radius:999px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;font:600 12px Arial,sans-serif!important;cursor:pointer;text-transform:none}
+.app-edit-changes .app-edit-changes-all{width:100%;color:var(--theme-danger-text,#a13323)!important}
+.app-edit-changes p{margin:8px 0 0;color:var(--theme-muted,#5b6b7a)}
+.app-edit-mode [data-layout-movable] :is(h1,h2,h3,h4,header,[class*=heading]){cursor:grab}
+@media(prefers-reduced-motion:reduce){.app-quick-bar{animation:none}}

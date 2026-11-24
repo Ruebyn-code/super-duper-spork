@@ -158,14 +158,19 @@
   if(target&&!matchMedia('(prefers-reduced-motion:reduce)').matches){const from=current.ghost.style.transform,currentGhost=current.ghost;const animation=currentGhost.animate([{transform:from,opacity:1},{transform:'translate3d('+target.left+'px,'+target.top+'px,0) scale(1)',opacity:0}],{duration:160,easing:'ease-out'});animation.finished.then(()=>{land();if(!drag&&ghostLayer.contains(currentGhost))hide(ghostLayer);currentGhost.remove();},()=>{land();currentGhost.remove();});}else{land();hide(ghostLayer);current.ghost.remove();}
   if(moved)changed({...draft,[current.group.key]:model.mergeOrder(draft[current.group.key]||defaults.get(current.group.key),order)});else{collect();status(cancel?'Move cancelled.':'Hold a section or card, then drag it to move.');}if(!cancel)window.appSectionResize?.dropped(current.unit.element,current.x-current.offsetX);setHover(null);
  }
- function candidate(target){return target.closest('.app-layout-grip')?hovered:info(target);}
+ const headingSelector='h1,h2,h3,h4,header,legend,[class*=heading],[class*=-header]';
+ // Headings are text, so a pressed heading resolves to the section around it (drag by heading).
+ function candidate(target){if(target.closest('.app-layout-grip'))return hovered;const direct=info(target);if(direct)return direct;const heading=target.closest(headingSelector);return heading&&!heading.closest(uiSelector)?info(heading.parentElement):null;}
  function startPress(target,x,y,details){
   if(!drag&&!press)suppressUntil=0;
   if(!editing||drag||document.querySelector('dialog[open]')||target.closest(uiSelector)&&!target.closest('.app-layout-grip')||target.closest('input,textarea,select,[contenteditable=true]'))return false;
-  const selection=candidate(target);if(!selection)return false;clearPress();const pending={selection,x,y,startX:x,startY:y,...details};press=pending;selection.unit.element.classList.add('app-layout-pressing');
+  const selection=candidate(target);if(!selection)return false;clearPress();
+  // Pressing a section's heading starts a drag as soon as the pointer moves (no hold); a plain click still selects it.
+  const heading=target.closest(headingSelector),unitBox=selection.unit.element.getBoundingClientRect(),byHeader=Boolean(heading&&selection.unit.element.contains(heading)&&heading!==selection.unit.element&&heading.getBoundingClientRect().top-unitBox.top<64);
+  const pending={selection,x,y,startX:x,startY:y,byHeader,...details};press=pending;selection.unit.element.classList.add('app-layout-pressing');
   if(target.closest('.app-layout-grip'))beginDrag(pending);else pending.timer=setTimeout(()=>{if(press===pending)beginDrag(pending);},360);return true;
  }
- function movePointer(x,y){if(drag){drag.x=x;drag.y=y;return;}if(press&&Math.hypot(x-press.startX,y-press.startY)>9){clearPress();suppressUntil=performance.now()+500;}}
+ function movePointer(x,y){if(drag){drag.x=x;drag.y=y;return;}if(press?.byHeader&&!press.touch&&Math.hypot(x-press.startX,y-press.startY)>5){const pending=press;clearTimeout(pending.timer);beginDrag(pending);if(drag){drag.x=x;drag.y=y;}return;}if(press&&Math.hypot(x-press.startX,y-press.startY)>9){clearPress();suppressUntil=performance.now()+500;}}
  document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'||event.button!==0||!event.isPrimary)return;startPress(event.target,event.clientX,event.clientY,{pointerId:event.pointerId,touch:false});},true);
  document.addEventListener('pointermove',event=>{if(event.pointerType==='touch')return;if(drag||press)movePointer(event.clientX,event.clientY);else if(editing&&!event.target.closest('.app-layout-grip'))setHover(event.target.closest(uiSelector)||appEditParts.isTextPart(event.target)?null:info(event.target));},true);
  document.addEventListener('pointerup',event=>{if(event.pointerType==='touch')return;if(drag){event.preventDefault();endDrag();}else clearPress();},true);
