@@ -1,9 +1,9 @@
 // Category icons shared by the Knowledge centre and Prep & labels (browser and server). A fixed, allowlisted set of line
-// icons (24 × 24, stroke currentColor) grouped for the picker; categories save only an icon ID, never SVG. The server uses
+// icons (OpStack's own, then the larger Lucide set from category-icons-library.js, which pages load first) (24 × 24, stroke currentColor) grouped for the picker; categories save only an icon ID, never SVG. The server uses
 // `valid` to reject unknown IDs. `pick` (browser only) opens a searchable picker popup and never saves by itself.
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.categoryIcons=api;})(typeof globalThis==='object'?globalThis:this,function(){
  const groups=[
-  ['food','Food',[
+  ['food','Food & drink',[
    ['burger','Burger','food meal',`<path d="M4 10a8 5 0 0 1 16 0Z"/><path d="M3 14h18M5 18h14a1 1 0 0 0 1-1v-1H4v1a1 1 0 0 0 1 1Z"/>`],
    ['pizza','Pizza','slice',`<path d="M12 21 3 6a14 9 0 0 1 18 0Z"/><circle cx="10" cy="10" r="1"/><circle cx="14" cy="13" r="1"/>`],
    ['skewer','Skewer','souvlaki kebab grill meat',`<path d="M4 20 20 4"/><rect x="7.5" y="10.5" width="4" height="4" rx="1" transform="rotate(45 9.5 12.5)"/><rect x="12.5" y="5.5" width="4" height="4" rx="1" transform="rotate(45 14.5 7.5)"/>`],
@@ -40,7 +40,7 @@
    ['wine','Wine','glass alcohol',`<path d="M8 3h8v5a4 4 0 0 1-8 0Z"/><path d="M12 12v9M8 21h8"/>`],
    ['beer','Beer','pint alcohol',`<path d="M5 7h10v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1Z"/><path d="M15 10h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M5 7a3 3 0 0 1 5-3 3 3 0 0 1 5 3"/>`]
   ]],
-  ['kitchen','Kitchen & equipment',[
+  ['kitchen','Kitchen & home',[
    ['chef','Chef','hat cook kitchen',`<path d="M7 17v4h10v-4"/><path d="M7 17a4 4 0 0 1-1-8 5 5 0 0 1 9-3 4 4 0 0 1 3 7v4Z"/>`],
    ['utensils','Utensils','fork knife cutlery dining',`<path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11"/><path d="M17 3c-2 2-2 7 0 9v9"/>`],
    ['knife','Knife','cut prep',`<path d="M3 21 21 3c1 3-1 7-5 9l-9 9Z"/>`],
@@ -62,7 +62,7 @@
    ['plug','Electrical','power plug',`<path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0ZM12 18v4"/>`],
    ['bulb','Ideas','light bulb tips',`<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 13v1h8v-1a7 7 0 0 0-4-13Z"/>`]
   ]],
-  ['safety','Cleaning & safety',[
+  ['safety','Cleaning, safety & health',[
    ['spray','Spray','cleaning chemical sanitiser',`<path d="M9 9h6v12H9Z"/><path d="M9 9V6h4l3 2M13 6V4h-3M18 4l2-1M18 7h2"/>`],
    ['broom','Broom','sweep cleaning',`<path d="M20 3 11 12"/><path d="M11 12c-3 0-6 2-7 9 7-1 9-4 9-7Z"/><path d="M7 15l2 2"/>`],
    ['bucket','Bucket','mop cleaning',`<path d="M4 7h16l-2 14H6Z"/><path d="M4 7c0-3 4-5 8-5s8 2 8 5"/>`],
@@ -107,7 +107,7 @@
    ['megaphone','Announcements','news megaphone',`<path d="M3 10v4h4l9 5V5L7 10Z"/><path d="M19 9a4 4 0 0 1 0 6"/>`],
    ['bell','Alerts','notification bell',`<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4Z"/><path d="M10 20a2 2 0 0 0 4 0"/>`]
   ]],
-  ['business','Business & admin',[
+  ['business','Business & office',[
    ['document','Document','file page',`<path d="M14 3H6v18h12V7Z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>`],
    ['folder','Folder','files',`<path d="M3 7V5h7l2 2h9v13H3Z"/>`],
    ['policy','Policy','rules law justice',`<path d="M12 3v18M7 21h10M4 7h16"/><path d="M6 7l-3 7h6ZM18 7l-3 7h6Z"/>`],
@@ -133,7 +133,7 @@
    ['wifi','Wi-Fi','internet network',`<path d="M2 9a15 15 0 0 1 20 0M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20v.01"/>`],
    ['qr','QR code','scan qr',`<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3ZM20 14v.01M17 20h4v-3"/>`]
   ]],
-  ['places','Places & events',[
+  ['places','Places & travel',[
    ['store','Store','shop front counter',`<path d="M3 9 5 4h14l2 5"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M5 12v9h14v-9M10 21v-5h4v5"/>`],
    ['home','Home','house',`<path d="M3 11 12 3l9 8"/><path d="M5 9v12h14V9M10 21v-6h4v6"/>`],
    ['building','Head office','building office',`<rect x="5" y="3" width="14" height="18"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M11 21v-3h2v3"/>`],
@@ -168,7 +168,10 @@
    ['diamond','Quality','diamond premium',`<path d="M6 3h12l4 6-10 12L2 9Z"/><path d="M2 9h20"/>`]
   ]]
  ];
- const list=[],byId=new Map();for(const [groupId,groupName,icons] of groups)for(const [id,name,keywords,svg] of icons){const icon={id,name,keywords,svg,group:groupId,groupName};list.push(icon);byId.set(id,icon);}
+ // The larger Lucide set (category-icons-library.js) follows OpStack's own icons; an OpStack ID always wins a clash.
+ const library=typeof module==='object'&&module.exports&&typeof require==='function'?require('./category-icons-library'):(globalThis.categoryIconsLibrary||[]);
+ for(const entry of library){if(!Array.isArray(entry)||entry.length!==3)continue;const same=groups.find(group=>group[0]===entry[0]);if(same)same[2]=[...same[2],...entry[2]];else groups.push(entry);}
+ const list=[],byId=new Map();for(const [groupId,groupName,icons] of groups)for(const [id,name,keywords,svg] of icons){if(byId.has(id))continue;const icon={id,name,keywords,svg,group:groupId,groupName};list.push(icon);byId.set(id,icon);}
  const valid=id=>typeof id==='string'&&byId.has(id),svg=id=>byId.get(id)?.svg||'';
  // An <svg> element for an icon ID (or the fallback markup), sized by CSS.
  function element(id,fallback){if(typeof document==='undefined')return null;const node=document.createElementNS('http://www.w3.org/2000/svg','svg');node.setAttribute('viewBox','0 0 24 24');node.setAttribute('fill','none');node.setAttribute('stroke','currentColor');node.setAttribute('stroke-width','1.8');node.setAttribute('stroke-linecap','round');node.setAttribute('stroke-linejoin','round');node.setAttribute('aria-hidden','true');node.classList.add('category-icon');node.innerHTML=svg(id)||fallback||'';return node;}
@@ -179,16 +182,18 @@
   const head=document.createElement('div');head.className='category-icon-head';const title=document.createElement('h2');title.textContent=word(options.title||'Choose an icon');const close=document.createElement('button');close.type='button';close.className='category-icon-close';close.textContent='×';close.setAttribute('aria-label',word('Close'));head.append(title,close);
   const search=document.createElement('input');search.type='search';search.className='category-icon-search';search.placeholder=word('Search {count} icons',{count:list.length});search.setAttribute('aria-label',word('Search icons'));search.autocomplete='off';
   const body=document.createElement('div');body.className='category-icon-body';const foot=document.createElement('div');foot.className='category-icon-foot';const none=document.createElement('button');none.type='button';none.className='category-icon-none';none.textContent=word('No icon');const count=document.createElement('span');count.className='category-icon-count';count.setAttribute('aria-live','polite');foot.append(none,count);
-  dialog.append(head,search,body,foot);document.body.append(dialog);
+  const jump=document.createElement('div');jump.setAttribute('role','navigation');jump.className='category-icon-jump';jump.setAttribute('aria-label',word('Icon groups'));
+  dialog.append(head,search,jump,body,foot);document.body.append(dialog);
   const choose=id=>{dialog.close();options.onPick?.(id);};
-  function render(){const query=search.value.trim().toLowerCase();body.replaceChildren();let shown=0;
-   for(const [groupId,groupName] of groups){const icons=list.filter(icon=>icon.group===groupId&&(!query||(icon.name+' '+icon.keywords+' '+groupName).toLowerCase().includes(query)));if(!icons.length)continue;
+  function render(){const query=search.value.trim().toLowerCase(),terms=query.split(/\s+/).filter(Boolean);body.replaceChildren();jump.replaceChildren();let shown=0;
+   for(const [groupId,groupName] of groups){const icons=list.filter(icon=>icon.group===groupId&&(!terms.length||terms.every(term=>(icon.name+' '+icon.keywords+' '+groupName).toLowerCase().includes(term))));if(!icons.length)continue;
     const section=document.createElement('section');const label=document.createElement('h3');label.textContent=word(groupName);const grid=document.createElement('div');grid.className='category-icon-grid';
     for(const icon of icons){const button=document.createElement('button');button.type='button';button.className='category-icon-option';button.title=word(icon.name);button.setAttribute('aria-label',word(icon.name));button.setAttribute('aria-pressed',String(icon.id===options.current));button.append(element(icon.id));const name=document.createElement('span');name.textContent=word(icon.name);button.append(name);button.onclick=()=>choose(icon.id);grid.append(button);shown++;}
-    section.append(label,grid);body.append(section);}
+    section.append(label,grid);body.append(section);
+    const chip=document.createElement('button');chip.type='button';chip.className='category-icon-jump-chip';chip.textContent=word(groupName);chip.onclick=()=>{body.scrollTo({top:section.getBoundingClientRect().top-body.getBoundingClientRect().top+body.scrollTop});section.querySelector('.category-icon-option')?.focus({preventScroll:true});};jump.append(chip);}
    if(!shown){const empty=document.createElement('p');empty.className='category-icon-empty';empty.textContent=word('No icons match.');body.append(empty);}
    count.textContent=word(shown===1?'1 icon':'{count} icons',{count:shown});}
-  search.oninput=render;none.onclick=()=>choose(null);close.onclick=()=>dialog.close();
+  let timer;search.oninput=()=>{clearTimeout(timer);timer=setTimeout(render,120);};none.onclick=()=>choose(null);close.onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>{dialog.remove();opener?.focus?.();});dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();dialog.close();}});dialog.addEventListener('cancel',event=>{event.preventDefault();dialog.close();});dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
   render();dialog.showModal();search.focus();
   // Arrow keys move between icons in the grid.

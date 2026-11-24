@@ -130,7 +130,7 @@ test('shared designs link many label templates to one layout, update together an
  }finally{await app.close();}
 });
 test('category icons are manager-only, allowlisted, revision-checked and company-scoped',async()=>{const a=await fixture();try{
- const icons=require('./public/category-icons');assert.ok(icons.list.length>=100);assert.ok(icons.valid('fridge'));assert.equal(icons.valid('nope'),false);assert.equal(new Set(icons.list.map(icon=>icon.id)).size,icons.list.length);
+ const icons=require('./public/category-icons');assert.ok(icons.list.length>=1000);assert.ok(icons.valid('fridge'));assert.ok(icons.valid('dog'));assert.ok(icons.valid('forklift'));assert.ok(icons.list.every(icon=>!/<script|on[a-z]+=|javascript:/i.test(icon.svg)));assert.equal(icons.valid('nope'),false);assert.equal(new Set(icons.list.map(icon=>icon.id)).size,icons.list.length);
  await assert.rejects(a.store.saveCategoryIcon(a.member,{category:'Salad Bar',icon:'salad',revision:0}),e=>e.status===403);
  await assert.rejects(a.store.saveCategoryIcon(a.office,{category:'Salad Bar',icon:'<svg>',revision:0}),e=>e.status===400);
  await assert.rejects(a.store.saveCategoryIcon(a.office,{category:'  ',icon:'salad',revision:0}),e=>e.status===400);

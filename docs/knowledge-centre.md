@@ -69,8 +69,8 @@ The article reading view lines everything up in one dense 900 px column (content
 
 ## Category icons
 
-Categories may have an optional `icon` from the shared allowlist in `public/category-icons.js` (146 line icons in food,
-drinks, kitchen, safety, stock, people, business, places and general groups). Manage categories → Choose icon opens a
+Categories may have an optional `icon` from the shared allowlist in `public/category-icons.js` (1,030 line icons: OpStack's own plus
+the Lucide set in `public/category-icons-library.js`, in 19 groups with jump chips). Manage categories → Choose icon opens a
 searchable, keyboard-friendly picker (arrow keys move, × / Escape close, **No icon** clears). Category writes accept
 `icon` (an allowlisted ID), `null` to remove it, or omit it to keep the saved icon (older writers); anything else is 400.
 Article views add `categoryIcon`. The side bar shows each category's icon (a folder when none) and landing cards without

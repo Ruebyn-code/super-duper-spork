@@ -74,3 +74,12 @@ Choosing saves straight away through `PUT /api/prep-labels/category-icon` (`{cat
 Icons are stored per company in `prep-labels.json` under `categoryIcons[companyId] = {icons:{<lower-case name>:<id>},
 revision}` and returned by `GET /api/prep-labels` as `categoryIcons`/`categoryIconsRevision`. The category side bar and
 the category pill on each card show the icon; templates, layouts and batches are unchanged and icons are never printed.
+
+### Icon library
+
+The picker holds 1,030 icons: OpStack's own drawings plus a selection of Lucide icons (ISC licence, kept in the
+generated file's header) in `public/category-icons-library.js`, merged into shared groups and reachable through a row
+of group jump chips and multi-word search over names and Lucide tags. Saved IDs are only ever allowlisted names; an
+OpStack ID wins any clash. Regenerate the library with `node scripts/generate-category-icons.cjs <dir> public/category-icons-library.js`,
+where `<dir>` holds `lucide/package` (from `npm pack lucide-static`) and a sparse clone of the Lucide repository's
+`icons/*.json` metadata as `lucide-repo`. The script is a developer tool and is not loaded by the app.

@@ -24,3 +24,8 @@
 .library-category-icon-choice{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border-radius:10px;align-self:end}
 .library-category-icon-choice .category-icon{color:var(--primary,#008cff)}
 .library-category-row-icon{width:22px;height:22px;color:var(--primary,#008cff);margin-right:8px;flex:none}
+/* Group jump chips and a lighter long grid (display only). */
+.category-icon-jump{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;overflow-y:hidden;margin:0;padding:0 16px 8px;scrollbar-width:thin;flex:none}
+.category-icon-jump-chip{flex:none;min-height:30px;padding:4px 11px;border:1px solid var(--theme-border,#d8e3ed);border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-text,#203442);font:inherit;font-size:.78rem;white-space:nowrap;cursor:pointer;text-transform:none;letter-spacing:0}
+.category-icon-jump-chip:hover,.category-icon-jump-chip:focus-visible{border-color:var(--primary);color:var(--theme-primary-text,var(--primary))}
+@media(pointer:coarse){.category-icon-jump-chip{min-height:36px}}
