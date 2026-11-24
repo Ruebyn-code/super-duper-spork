@@ -24,7 +24,8 @@
   return element.matches('section,article,nav,aside,div,form,fieldset,details,label')||(element.tagName==='A'&&parent.matches('nav,.home-admin-links'))||element.matches('img.app-logo');
  }
  function units(parent){const result=[];for(const element of parent.children){if(!canMove(element,parent))continue;const nodes=[element];if(element.tagName==='TR'&&element.nextElementSibling?.matches('.user-editor-row'))nodes.push(element.nextElementSibling);result.push({key:identity(element),element,nodes});}return result;}
- function visible(unit){return !unit.element.closest('[hidden]')&&unit.element.getClientRects().length>0&&getComputedStyle(unit.element).visibility!=='hidden';}
+ // The main bar can't be rearranged in App edit; only its icons can be restyled (see app-editor.js).
+ function visible(unit){return !unit.element.closest('[hidden]')&&!unit.element.closest('#app-sidebar.top-navigation')&&unit.element.getClientRects().length>0&&getComputedStyle(unit.element).visibility!=='hidden';}
  function remember(groupKey,keys,parent){
   if(!defaults.has(groupKey)){let original;try{original=JSON.parse(decodeURIComponent(parent?.dataset.layoutDefault||''));}catch{}defaults.set(groupKey,Array.isArray(original)?original:keys);}
   const existing=defaults.get(groupKey),known=new Set(existing);for(const key of keys)if(!known.has(key)){existing.push(key);known.add(key);}

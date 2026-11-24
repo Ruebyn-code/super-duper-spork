@@ -24,7 +24,7 @@ function patch(dir,input){const task=pending.then(async()=>{
   if(key==='linked'&&input.styleOnly){if(typeof value!=='boolean'||targetId.startsWith('type:'))throw Error('Invalid link setting.');entry.wordingLinked??=entry.linked??true;if(input.surfaceOnly)entry.fontLinked??=entry.linked??true;else delete entry.fontLinked;}else if(key==='linked'){delete entry.wordingLinked;delete entry.fontLinked;}
   if(value===null){delete entry[key];continue;}
   if(key==='linked'&&(typeof value!=='boolean'||targetId.startsWith('type:')))throw Error('Invalid link setting.');
-  if(key==='icon'&&!Object.hasOwn(parts.icons,value))throw Error('Choose a supported icon.');
+  if(key==='icon'&&!parts.validIcon(value))throw Error('Choose a supported icon.');
   if(key==='iconSize'&&(!Number.isInteger(value)||value<8||value>96))throw Error('Choose an icon size from 8 to 96.');
   if(key==='iconStroke'&&(typeof value!=='number'||!Number.isFinite(value)||value<0.5||value>4))throw Error('Choose an icon line width from 0.5 to 4.');
   if(key==='font'&&!Object.hasOwn(fontOptions,value)&&!uploadedFonts.available(value,library))throw Error('Unsupported font.');

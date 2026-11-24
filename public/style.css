@@ -1293,3 +1293,27 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 :root{--brand-sheen:linear-gradient(135deg,#ffffff33 0%,#ffffff0a 40%,#0000000f 70%,#0000002e 100%)}
 :root[data-theme=dark]{--brand-sheen:linear-gradient(135deg,#ffffff26 0%,#ffffff05 40%,#00000014 70%,#00000038 100%)}
 @media(forced-colors:active){:root{--brand-sheen:none}}
+/* App edit polish (display only): the pill floats at the bottom so nothing moves when editing starts, a calmer frame,
+   section outlines/tools that appear on the section you're pointing at, and gentle motion (off for reduced motion). */
+.app-edit-indicator{inset:4px;border:1.5px solid color-mix(in srgb,#ee8b36 72%,transparent)!important;border-radius:16px;box-shadow:inset 0 0 0 1px #ffffff1a!important;animation:app-edit-frame-in .22s ease-out}
+.app-edit-indicator>span{top:auto!important;bottom:max(16px,calc(env(safe-area-inset-bottom,0px) + 12px));padding:6px 6px 6px 14px!important;border-color:#ee8b3640!important;background:color-mix(in srgb,var(--theme-surface,#fff) 94%,transparent)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 12px 32px #182b3a26,0 0 0 1px #ee8b361f!important;animation:app-edit-pill-in .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes app-edit-frame-in{from{opacity:0}to{opacity:1}}
+@keyframes app-edit-pill-in{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+.app-edit-mode .app-hovered-part{outline:2px solid color-mix(in srgb,var(--primary) 80%,transparent)!important;outline-offset:3px;border-radius:inherit;transition:outline-color .12s ease,outline-offset .12s ease}
+.app-edit-hover-tag:popover-open{animation:app-edit-tag-in .12s ease-out}
+@keyframes app-edit-tag-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.home-building .home-section{outline-color:transparent!important;transition:outline-color .15s ease}
+.home-building .home-section:hover,.home-building .home-section:focus-within{outline-color:color-mix(in srgb,var(--primary) 40%,transparent)!important}
+@media(hover:hover) and (pointer:fine){
+ .home-building .home-section-controls{opacity:0;transition:opacity .15s ease}
+ .home-building .home-section:hover .home-section-controls,.home-building .home-section:focus-within .home-section-controls{opacity:1}
+}
+.unified-app-editor[open]{animation:app-editor-in .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes app-editor-in{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+.unified-app-editor .editor-field-label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.unified-app-editor .editor-icon-choice{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.unified-app-editor .editor-icon-choice .category-icon-pick{width:44px;height:44px;min-width:44px;min-height:44px}
+.unified-app-editor .editor-icon-choice .category-icon-pick .category-icon{width:24px;height:24px}
+.unified-app-editor .editor-icon-choice-name{font-size:13px;font-weight:600;color:var(--theme-text,#182b3a)}
+.unified-app-editor .editor-icon-choice [hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.app-edit-indicator,.app-edit-indicator>span,.app-edit-hover-tag:popover-open,.unified-app-editor[open]{animation:none}.app-edit-mode .app-hovered-part,.home-building .home-section,.home-building .home-section-controls{transition:none}}

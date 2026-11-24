@@ -23,3 +23,13 @@ test('surface-only linking preserves inherited and individual text appearance an
   await store.patch(dir,{id:'inherited',styleOnly:true,surfaceOnly:true,changes:{linked:false,background:'primary'}});result=await store.read(dir);assert.equal(parts.effective(result,'inherited','container').font,'verdana');assert.equal(parts.effective(result,'inherited','container').fontColour,'secondary');for(const changes of [{font:'arial'},{fontColour:'primary'}])await assert.rejects(store.patch(dir,{id:'panel',styleOnly:true,surfaceOnly:true,changes}),/Text styling/);assert.deepEqual(await store.read(dir),result);
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
+test('App edit icons use the shared category icon list as well as the original shapes',async()=>{
+ assert.ok(parts.validIcon('check'),'original App edit shapes stay valid for saved choices');assert.ok(parts.validIcon('pizza'));assert.equal(parts.validIcon('not-an-icon'),false);assert.equal(parts.validIcon(''),false);
+ assert.equal(parts.iconFor('pizza').label,'Pizza');
+ const html=parts.renderIcons('<svg data-edit-id="nav-svg" data-app-part="icon" viewBox="0 0 10 10"><path d="M0 0"/></svg>',{'nav-svg':{icon:'pizza'}});assert.match(html,/M12 21 3 6/);assert.match(html,/data-app-icon-original=/);
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'shared-icons-'));try{
+  await store.patch(dir,{id:'nav-svg',changes:{icon:'pizza'}});assert.equal((await store.read(dir))['nav-svg'].icon,'pizza');
+  await assert.rejects(store.patch(dir,{id:'nav-svg',changes:{icon:'<script>'}}),/supported icon/);
+  await store.patch(dir,{id:'nav-svg',changes:{icon:null}});assert.equal(Object.hasOwn((await store.read(dir))['nav-svg']||{},'icon'),false,'null puts the original icon back');
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

@@ -25,6 +25,7 @@ Unless noted, an omitted `icon` keeps the saved one (older writers) and `null` r
 | Equipment | list/one-off item `icon`; ticked location copies show the list item's icon | equipment editor | equipment cards |
 | Promotions | promotion `icon` | promotion editor | promotion cards, Home Promotions panel |
 | Home quick links | quick-links section `linkIcons` `{linkId: icon}` (keys for removed links are dropped) | Edit Home → Quick links chips | Quick links (replacing the built-in icon) |
+| App edit icons | element override `icon` (validated by `appEditParts.validIcon`; App edit's original shapes stay valid) | App edit → Icon (main bar: icons only) | the edited icon |
 | Wastage reasons | fixed per reason in `public/wastage-model.js` (display only, not editable) | — | reason chips |
 
 Built-in stock count areas start with default icons (Cool Room → fridge, Freezer → snowflake, Packaging → package,

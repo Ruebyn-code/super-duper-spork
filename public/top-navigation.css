@@ -71,8 +71,7 @@
 @media(max-width:720px){#app-sidebar.top-navigation>.secondary-sidebar{gap:4px;padding:4px 8px}.top-navigation .secondary-sidebar .subsidebar-heading h2{display:none}#app-sidebar.top-navigation .secondary-sidebar a{min-height:40px;font-size:11px}}
 @media(prefers-reduced-motion:reduce){.top-navigation .top-navigation-tabs .sidebar-label{transition:none}}
 
-.app-edit-mode .app-shell>.top-navigation#app-sidebar{padding-top:calc(42px + env(safe-area-inset-top,0px))}
-@media(max-width:520px){.app-edit-mode .app-shell>.top-navigation#app-sidebar{padding-top:calc(82px + env(safe-area-inset-top,0px))}}
+/* App edit's pill floats at the bottom, so the bar keeps its place (no jump when editing starts). */
 
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){
  #app-sidebar:not(.top-navigation) #top-navigation-tabs{display:none}
