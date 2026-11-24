@@ -18,3 +18,8 @@ html.learning-course-open,html.learning-course-open body{overflow:hidden}.learni
 @media(max-width:720px){.learning-builder-open #learning-workspace>.page-sidebar{display:none}.learning-builder-open #learning-workspace{grid-template-columns:minmax(0,1fr);gap:0;padding-left:0}.learning-main.learning-builder-open{padding:8px}.learning-phone-builder .learning-phone-settings-fields input:not([type=checkbox]),.learning-phone-builder .learning-build-card-details input:not([type=checkbox]):not([type=radio]),.learning-phone-builder .learning-build-card-details textarea{font-size:16px}}
 .learning-phone-builder .learning-builder-preview{padding:0}
 .learning-main .learning-assignment-fields>.learning-automatic-assignment{grid-column:1/-1;flex-direction:row-reverse;justify-content:flex-end;align-items:flex-start;line-height:1.45}.learning-main .learning-automatic-assignment>input{flex:none;margin-top:1px}
+/* Course / training checklist icon fields (display + explicit save through the existing forms). */
+.learning-icon-field,.instore-icon-field{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.learning-icon-field>span,.instore-icon-field>span{font-size:.82rem;font-weight:600}
+.learning-icon-field .learning-note{flex-basis:100%}
+.learning-card h3 .feature-icon,.instore-library-card h4 .feature-icon{margin-right:.35em}

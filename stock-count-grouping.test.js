@@ -18,7 +18,10 @@ test('custom group lists resolve saved, deleted and automatic groups, and saved 
  assert.equal(model.resolve({stockCountGroup:'freezer'}),'freezer','companies without their own list keep the built-in areas');
  const saved=model.sections([{id:1,stockCountGroup:'freezer'},{id:2,stockCountGroup:'old',stockCountGroupName:'Old shelf'},{id:3,stockCountGroup:'front'}],'area',list,true).map(section=>[section.id,section.name,section.items.map(item=>item.id)]);
  assert.deepEqual(saved,[['front','Front fridge',[3]],['dry','Dry shelf',[]],['freezer','Freezer Stock',[1]],['old','Old shelf',[2]],['none','Not grouped',[]]]);
- assert.deepEqual(model.normalizeList([{name:' Front  fridge '},{id:'dry',name:'Dry'}]),[{id:'front-fridge',name:'Front fridge'},{id:'dry',name:'Dry'}]);
+ assert.deepEqual(model.normalizeList([{name:' Front  fridge '},{id:'dry',name:'Dry'}]),[{id:'front-fridge',name:'Front fridge'},{id:'dry',name:'Dry',icon:'wheat'}],'built-in areas keep their default icon');
+ assert.deepEqual(model.normalizeList([{id:'dry',name:'Dry',icon:null},{name:'Bar',icon:'beer'}]),[{id:'dry',name:'Dry',icon:null},{id:'bar',name:'Bar',icon:'beer'}],'null removes an icon (kept as null for built-in areas) and new groups may choose one');
+ assert.equal(model.list([{id:'dry',name:'Dry'}])[0].icon,'wheat','saved built-in areas without an icon setting show the default');assert.equal(model.list([{id:'dry',name:'Dry',icon:null}])[0].icon,null);
+ assert.throws(()=>model.normalizeList([{name:'Bar',icon:'<svg>'}]),error=>error.status===400);
  for(const bad of [[],[{name:''}],[{name:'A'},{name:'a'}],[{name:'x'.repeat(41)}],Array.from({length:41},(_,i)=>({name:'G'+i}))])assert.throws(()=>model.normalizeList(bad));
 });
 test('companies save their own count groups and item choices; counts snapshot the group name',async t=>{
@@ -27,7 +30,7 @@ test('companies save their own count groups and item choices; counts snapshot th
  const before=await f.api(f.office,'/api/catalogue');assert.equal(before.countGroups,undefined);assert.equal(model.resolve(before.products.find(p=>p.id===milk.id),before),'cool-room');
  assert.equal((await f.request(f.staff,'/api/products/count-groups','PUT',{groups:[{name:'Front'}]})).status,403,'stock management is required');
  const saved=await f.api(f.office,'/api/products/count-groups','PUT',{revision:0,groups:[{id:'front-x1',name:'Front fridge'},{id:'dry',name:'Back shelf'}],assignments:{[milk.id]:'front-x1'}});
- assert.deepEqual(saved.groups,[{id:'front-x1',name:'Front fridge'},{id:'dry',name:'Back shelf'}]);assert.equal(saved.revision,1);
+ assert.deepEqual(saved.groups,[{id:'front-x1',name:'Front fridge'},{id:'dry',name:'Back shelf',icon:'wheat'}]);assert.equal(saved.revision,1);
  assert.equal(saved.assignments[milk.id],'front-x1');assert.equal(saved.assignments[rice.id],'dry','items in a kept group stay there');
  const catalogue=await f.api(f.office,'/api/catalogue');assert.deepEqual(catalogue.countGroups,saved.groups);for(const product of catalogue.products)assert.ok(['front-x1','dry','none'].includes(product.stockCountGroup),product.name+' '+product.stockCountGroup);
  assert.equal((await f.request(f.office,'/api/products/count-groups','PUT',{revision:0,groups:[{name:'Stale'}]})).status,409);

@@ -3,6 +3,7 @@
 // details, service history and problems. One-off items can also be added to a single location.
 // Changing list items needs company/network authority. Costs are visible to equipment managers only.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const categoryIcons=require('./public/category-icons');
 const {can}=require('./permissions'),model=require('./public/equipment-model'),csv=require('./public/reporting-export').csv;
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
@@ -13,13 +14,15 @@ const optionalDate=(value,label)=>{if(value===null||value===undefined||value==='
 const allowed=(list,value,label)=>{if(!list.some(item=>item.id===value))fail('Choose a valid '+label+'.');return value;};
 const fingerprint=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const interval=value=>{if(value===null||value===undefined||value==='')return null;if(!Number.isSafeInteger(value)||value<1||value>1825)fail('Service every must be between 1 and 1,825 days, or blank.');return value;};
+// Optional allowlisted icon (omitted keeps the saved one, null removes it).
+const icon=value=>{if(value===null)return null;if(!categoryIcons.valid(value))fail('Choose an equipment icon from the list.');return value;};
 // Describes the equipment itself: kept on list items, or on one-off location items.
-const sharedFields=input=>({name:text(input.name,120,'Equipment name',true),category:allowed(model.categories,input.category,'category'),make:text(input.make,80,'Make'),model:text(input.model,80,'Model'),supplier:text(input.supplier,120,'Supplier'),serviceContact:text(input.serviceContact,240,'Service contact')});
+const sharedFields=input=>({name:text(input.name,120,'Equipment name',true),category:allowed(model.categories,input.category,'category'),make:text(input.make,80,'Make'),model:text(input.model,80,'Model'),supplier:text(input.supplier,120,'Supplier'),serviceContact:text(input.serviceContact,240,'Service contact'),...(input.icon!==undefined?{icon:icon(input.icon)}:{})});
 // Belongs to one location's own copy.
 const localFields=input=>({area:text(input.area,80,'Area'),assetTag:text(input.assetTag,60,'Asset tag'),serialNumber:text(input.serialNumber,80,'Serial number'),purchaseDate:optionalDate(input.purchaseDate,'Purchase date'),purchaseCostCents:cents(input.purchaseCostCents,'Purchase cost'),warrantyUntil:optionalDate(input.warrantyUntil,'Warranty end date'),serviceIntervalDays:interval(input.serviceIntervalDays),status:allowed(model.statuses,input.status||'operational','status'),notes:text(input.notes,2000,'Notes')});
 const itemDetails=(input,linked)=>{if(!input||typeof input!=='object')fail('Enter the equipment details.');return{...(linked?{}:sharedFields(input)),...localFields(input)};};
 const listDetails=input=>{if(!input||typeof input!=='object')fail('Enter the equipment details.');return{...sharedFields(input),serviceIntervalDays:interval(input.serviceIntervalDays),notes:text(input.notes,2000,'Notes')};};
-const SHARED=['name','category','make','model','supplier','serviceContact'];
+const SHARED=['name','category','make','model','supplier','serviceContact','icon'];
 // Stable list IDs for items saved by the short-lived shared-item version.
 const derivedId=id=>{const h=crypto.createHash('sha256').update('equipment-list:'+id).digest('hex');return[h.slice(0,8),h.slice(8,12),'5'+h.slice(13,16),'8'+h.slice(17,20),h.slice(20,32)].join('-');};
 function migrate(records){

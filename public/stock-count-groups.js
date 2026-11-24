@@ -4,16 +4,19 @@
 // ID and name, so saved reports keep the name the group had when they were counted. Grouping is a display choice only.
 (function(root){
  const groups=[
-  {id:'cool-room',name:'Cool Room Stock'},
-  {id:'freezer',name:'Freezer Stock'},
-  {id:'packaging',name:'Packaging'},
-  {id:'chemical',name:'Chemical'},
-  {id:'dry',name:'Dry Stock'}
+  {id:'cool-room',name:'Cool Room Stock',icon:'fridge'},
+  {id:'freezer',name:'Freezer Stock',icon:'snowflake'},
+  {id:'packaging',name:'Packaging',icon:'package'},
+  {id:'chemical',name:'Chemical',icon:'spray-can'},
+  {id:'dry',name:'Dry Stock',icon:'wheat'}
  ];
  const NONE='none',noneGroup={id:NONE,name:'Not grouped'},MAX=40;
+ // Optional group icons come from the shared category icon list (omitted means no icon).
+ const icons=()=>typeof module==='object'&&module.exports&&typeof require==='function'?require('./category-icons'):root.categoryIcons;
  const idPattern=/^[a-z0-9][a-z0-9-]{0,39}$/;
  // The group list for a catalogue (or a list), falling back to the built-in areas.
- function list(source){const saved=Array.isArray(source)?source:source?.countGroups;return Array.isArray(saved)&&saved.length?saved:groups;}
+ // Saved built-in areas without an icon setting show their default icon; an explicit null means it was removed.
+ function list(source){const saved=Array.isArray(source)?source:source?.countGroups;if(!Array.isArray(saved)||!saved.length)return groups;return saved.map(group=>group.icon===undefined&&groups.some(builtIn=>builtIn.id===group.id)?{...group,icon:groups.find(builtIn=>builtIn.id===group.id).icon}:group);}
  const valid=(value,source)=>typeof value==='string'&&list(source).some(group=>group.id===value);
  // The original automatic area for an item (used for new items and older data).
  function automatic(product={}){
@@ -52,7 +55,7 @@
   const suppliers=new Map();for(const item of items){const id=key(item,by);if(!suppliers.has(id))suppliers.set(id,{id,name:item.supplier|| (item.supplierId?'Supplier removed':'Unassigned supplier'),items:[]});suppliers.get(id).items.push(item);}
   return[...suppliers.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-AU')||a.id.localeCompare(b.id));
  }
- // Validates a submitted list: 1–40 groups, names 1–40 characters, unique (ignoring case). Valid unique IDs are kept;
+ // Validates a submitted list: 1–40 groups, names 1–40 characters, unique (ignoring case), optional allowlisted icon. Valid unique IDs are kept;
  // groups without one get a new ID from their name.
  function normalizeList(input,existing=[]){
   if(!Array.isArray(input)||!input.length||input.length>MAX)throw Object.assign(Error('Keep between 1 and '+MAX+' groups.'),{status:400});
@@ -63,7 +66,9 @@
    if(seenNames.has(groupName.toLowerCase()))throw Object.assign(Error('Two groups are called '+groupName+'. Use different names.'),{status:400});seenNames.add(groupName.toLowerCase());
    let id=typeof entry.id==='string'&&idPattern.test(entry.id)&&!seenIds.has(entry.id)?entry.id:null; // browsers propose IDs for new groups so item choices can refer to them
    if(!id){const base=groupName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,30)||'group',taken=candidate=>seenIds.has(candidate)||known.has(candidate)||input.some(other=>other!==entry&&other?.id===candidate);id=base;for(let n=2;taken(id);n++)id=base+'-'+n;}
-   seenIds.add(id);result.push({id,name:groupName});
+   if(entry.icon!==undefined&&entry.icon!==null&&!icons()?.valid(entry.icon))throw Object.assign(Error('Choose an icon from the list for '+groupName+'.'),{status:400});
+   const icon=entry.icon===undefined?list(existing).find(group=>group.id===id)?.icon:entry.icon; // omitted keeps the saved icon; null removes it
+   seenIds.add(id);result.push({id,name:groupName,...(icon?{icon}:groups.some(builtIn=>builtIn.id===id)?{icon:null}:{})});
   }
   return result;
  }

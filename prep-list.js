@@ -4,6 +4,7 @@
 // (Labels) and managing items `prep.manage`, always at the selected location.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {can}=require('./permissions');
+const categoryIcons=require('./public/category-icons');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 const validDate=value=>typeof value==='string'&&/^\d{4}-\d\d-\d\d$/.test(value)&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
@@ -69,7 +70,7 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   // Items ticked that day but since removed or rescheduled still show, from the tick's snapshot.
   for(const [itemId,tick] of Object.entries(ticks))if(tick.done&&!rows.some(row=>row.id===itemId))rows.push({id:itemId,...tick.snapshot,label:null,removed:true});
   rows.sort((a,b)=>(a.station||'~').localeCompare(b.station||'~')||a.name.localeCompare(b.name));
-  return{date:day,today:current,locationId:actor.locationId,canTick:day===current,canManage:manage,canPrint:can(actor,'prep.print'),
+  return{date:day,today:current,locationId:actor.locationId,canTick:day===current,canManage:manage,canPrint:can(actor,'prep.print'),stationIcons:state.stationIcons||{},stationIconsRevision:state.stationIconsRevision||0,
    rows:rows.map(row=>{const entry=stock[row.id],onHand=Number.isFinite(entry?.quantity)?entry.quantity:null,frozen=ticks[row.id]?.done&&ticks[row.id].snapshot&&Object.hasOwn(ticks[row.id].snapshot,'toPrep');
     const roundTo=live.find(item=>item.id===row.id)?.roundTo||null;
     return{...row,onHand,onHandRevision:entry?.revision||0,onHandBy:entry&&onHand!==null?entry.by:null,onHandAt:entry&&onHand!==null?entry.at:null,toPrep:frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo),done:Boolean(ticks[row.id]?.done),doneAt:ticks[row.id]?.done?ticks[row.id].doneAt:null,doneBy:ticks[row.id]?.done?ticks[row.id].doneBy:null,tickRevision:ticks[row.id]?.revision||0,...partsView(ticks[row.id],frozen?ticks[row.id].snapshot.toPrep:remaining(row.amount,onHand,roundTo))};}),
@@ -105,6 +106,13 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
   return{results};
  }
  const derivedId=(...parts)=>{const hex=crypto.createHash('sha256').update(parts.join('|')).digest('hex');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-4'+hex.slice(13,16)+'-8'+hex.slice(17,20)+'-'+hex.slice(20,32);};
+ // Station icons for this location: {<lower-case station name>: icon id}, chosen by prep managers (revision-checked).
+ async function setStationIcon(actor,input){
+  need(actor,'prep.manage');const key=typeof input?.station==='string'?input.station.trim().toLocaleLowerCase():'';if(!key||key.length>60)fail('Choose a station.');
+  if(input.icon!==null&&!categoryIcons.valid(input.icon))fail('Choose an icon from the list.');if(!Number.isInteger(input.revision))fail('Reload the prep list and try again.');
+  return mutate(itemsFile(actor),{items:[]},state=>{const revision=state.stationIconsRevision||0;if(input.revision!==revision)fail('Station icons changed. Reload and try again.',409);
+   const icons={...(state.stationIcons||{})};if(input.icon)icons[key]=input.icon;else delete icons[key];state.stationIcons=icons;state.stationIconsRevision=revision+1;
+   return{changed:true,value:{stationIcons:icons,stationIconsRevision:revision+1}};});}
  async function create(actor,input){
   need(actor,'prep.manage');if(!uuid(input?.requestId))fail('Refresh the page before adding a prep item.');
   const values=details(input,await companyTemplates(actor)),print=fingerprint(values);
@@ -228,14 +236,14 @@ function createStore(dir,{now=Date.now,templates=async()=>[],projection=async()=
  function reportRow(day,current,item,planned,onHand,toPrep,tick){const done=Boolean(tick?.done),at=done?tick.doneAt:null,when=at?melbourne(at):null;
   return{date:day,itemId:item.id,name:item.name,station:item.station||'',unit:item.unit||'',basis:item.basis,planned:typeof planned==='number'?planned:null,onHand:typeof onHand==='number'?onHand:null,toPrep:typeof toPrep==='number'?toPrep:null,status:done?'done':day<current?'skipped':'open',doneAt:at,doneTime:when?.time||null,doneBy:done?tick.doneBy?.name||null:null};}
  // Today's progress for Home: counts and the remaining items, read-only.
- async function summary(actor){const result=await list(actor);return{date:result.date,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis,parts})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(parts?{partsDone:parts.filter(part=>part.done).length,partCount:parts.length,parts:parts.map(({index,size,done})=>({index,size,done}))}:{}),...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
+ async function summary(actor){const result=await list(actor);return{date:result.date,stationIcons:result.stationIcons,total:result.rows.length,done:result.rows.filter(row=>row.done).length,rows:result.rows.map(({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,basis,parts})=>({id,name,amount,onHand,toPrep,unit,station,done,tickRevision,label,...(parts?{partsDone:parts.filter(part=>part.done).length,partCount:parts.length,parts:parts.map(({index,size,done})=>({index,size,done}))}:{}),...(basis==='sales'?{basis}:{})})),canPrint:result.canPrint};}
  // Staff activity: who finished which prep item, for recent days at this location.
  async function activity(actor,{start,end}){
   need(actor);const from=start&&validDate(start)?start:shift(today(),-31),to=end&&validDate(end)?end:today(),events=[];
   for(let date=from<shift(to,-92)?shift(to,-92):from;date<=to;date=shift(date,1)){const record=await readJson(dayFile(actor,date),null);for(const tick of Object.values(record?.ticks||{}))if(tick.done&&tick.doneAt)events.push({at:tick.doneAt,userId:tick.doneBy?.id||null,userName:tick.doneBy?.name||'',type:'prep-done',title:'Prepped '+tick.snapshot.name,detail:[tick.snapshot.amount===null||tick.snapshot.amount===undefined?'':tick.snapshot.amount+(tick.snapshot.unit?' '+tick.snapshot.unit:''),tick.snapshot.station].filter(Boolean).join(' · ')});}
   return events;
  }
- return{list,create,update,remove,copy,tick,tickPart,setOnHand,summary,activity,report};
+ return{list,create,update,remove,copy,tick,tickPart,setOnHand,setStationIcon,summary,activity,report};
 }
 async function route({req,url,params,session,store,body,json}){
  if(url!=='/api/prep-list'&&!url.startsWith('/api/prep-list/')&&url!=='/api/home-prep')return false;
@@ -246,6 +254,7 @@ async function route({req,url,params,session,store,body,json}){
  if(url==='/api/prep-list/tick'&&req.method==='POST'){json(200,await store.tick(session,await body(req,4000)));return true;}
  if(url==='/api/prep-list/copy'&&req.method==='POST'){json(200,await store.copy(session,await body(req,32000)));return true;}
  if(url==='/api/prep-list/part'&&req.method==='POST'){json(200,await store.tickPart(session,await body(req,4000)));return true;}
+ if(url==='/api/prep-list/station-icon'&&req.method==='PUT'){json(200,await store.setStationIcon(session,await body(req,2000)));return true;}
  if(url==='/api/prep-list/on-hand'&&req.method==='POST'){json(200,await store.setOnHand(session,await body(req,4000)));return true;}
  const match=url.match(/^\/api\/prep-list\/items\/([a-f0-9-]{36})$/i);
  if(match&&req.method==='PUT'){json(200,await store.update(session,match[1],await body(req,16000)));return true;}

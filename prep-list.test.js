@@ -152,3 +152,14 @@ test('the prep report lists each item per day with done, skipped and open work, 
  assert.equal((await f.request(f.staff,path)).status,403,'reporting permission is still required');
  assert.equal(f.calls(),0);
 });
+test('prep managers choose station icons for their store; staff see them and cannot change them',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ await f.api(f.office,'/api/prep-list/items','POST',item());
+ const first=await f.api(f.office,'/api/prep-list');assert.deepEqual(first.stationIcons,{});assert.equal(first.stationIconsRevision,0);
+ assert.equal((await f.request(f.staff,'/api/prep-list/station-icon','PUT',{station:'Cold prep',icon:'fridge',revision:0})).status,403);
+ assert.equal((await f.request(f.office,'/api/prep-list/station-icon','PUT',{station:'Cold prep',icon:'<svg>',revision:0})).status,400);
+ const saved=await f.api(f.office,'/api/prep-list/station-icon','PUT',{station:' Cold Prep ',icon:'fridge',revision:0});assert.deepEqual(saved,{stationIcons:{'cold prep':'fridge'},stationIconsRevision:1});
+ assert.equal((await f.request(f.office,'/api/prep-list/station-icon','PUT',{station:'Cold prep',icon:'salad',revision:0})).status,409);
+ assert.deepEqual((await f.api(f.staff,'/api/prep-list')).stationIcons,{'cold prep':'fridge'});assert.deepEqual((await f.api(f.staff,'/api/home-prep')).stationIcons,{'cold prep':'fridge'});
+ const removed=await f.api(f.office,'/api/prep-list/station-icon','PUT',{station:'Cold prep',icon:null,revision:1});assert.deepEqual(removed.stationIcons,{});
+});

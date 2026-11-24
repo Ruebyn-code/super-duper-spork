@@ -28,7 +28,7 @@
  function card(item){
   const article=node('article',undefined,'promo-card is-'+item.status),head=node('div',undefined,'promo-card-head'),badge=node('span',undefined,'promo-icon');badge.innerHTML=icon;
   if(item.image){const cover=node('img');cover.className='promo-card-cover';cover.src=item.image.url;cover.alt='';cover.loading='lazy';cover.decoding='async';article.append(cover);}
-  const titles=node('div',undefined,'promo-card-titles'),name=data('h3',item.name),meta=node('div',undefined,'promo-chips');
+  const titles=node('div',undefined,'promo-card-titles'),name=data('h3',item.name),meta=node('div',undefined,'promo-chips');{const icon=item.icon&&window.categoryIcons?.element(item.icon);if(icon){icon.classList.add('feature-icon');name.prepend(icon);}}
   const offer=data('span',model.offer(item),'promo-chip promo-chip-offer'),status=ui('span',statusText[item.status],'promo-chip promo-chip-'+item.status);meta.append(status,offer);titles.append(name,meta);head.append(badge,titles);
   if(item.canEdit){const edit=ui('button','Edit','promo-edit');edit.type='button';edit.onclick=()=>openEditor(item,edit);head.append(edit);}
   const facts=node('dl',undefined,'promo-facts');
@@ -131,7 +131,9 @@
  function fillKinds(){const select=$('promo-kind');if(select.options.length)return;for(const kind of model.kinds){const option=ui('option',kind.label);option.value=kind.id;select.append(option);}window.appSelects?.refresh?.(select);}
  function fillChoices(host,items,selected,name){host.replaceChildren();for(const item of items){const label=node('label','', 'promo-choice'),input=node('input');input.type='checkbox';input.name=name;input.value=item.id;input.checked=selected.includes(item.id);label.append(input,name==='promo-location'?data('span',item.name):ui('span',item.label));host.append(label);}}
  function syncKind(){const kind=model.kind($('promo-kind').value),field=$('promo-value-field'),input=$('promo-value'),label=$('promo-value-label');field.hidden=!kind?.value;input.disabled=!kind?.value;input.required=Boolean(kind?.value);if(kind?.value==='percent'){label.textContent='Discount (%)';input.min='1';input.max='100';input.step='1';}else if(kind?.value==='cents'){label.textContent=kind.id==='price'?'Special price ($)':'Amount off ($)';input.min='0.01';input.max='1000000';input.step='0.01';}}
- const values=()=>{const kind=model.kind($('promo-kind').value),raw=$('promo-value').value;return{name:$('promo-name').value,kind:$('promo-kind').value,value:!kind?.value||raw===''?null:kind.value==='percent'?Number(raw):Math.round(Number(raw)*100),channels:[...form.querySelectorAll('input[name=promo-channel]:checked')].map(input=>input.value),startDate:$('promo-start').value,endDate:$('promo-end').value,locationIds:[...form.querySelectorAll('input[name=promo-location]:checked')].map(input=>input.value),notes:$('promo-notes').value,
+ // Promotion icon (optional): picker beside the name, shown on promotion cards and Home.
+ const promoIcon=window.categoryIcons?.button({label:'Promotion icon'});if(promoIcon){const field=node('div',undefined,'promo-icon-field');field.append(ui('span','Icon'),promoIcon);$('promo-name')?.closest('label')?.before(field);}
+ const values=()=>{const kind=model.kind($('promo-kind').value),raw=$('promo-value').value;return{name:$('promo-name').value,...(promoIcon?{icon:promoIcon.value||null}:{}),kind:$('promo-kind').value,value:!kind?.value||raw===''?null:kind.value==='percent'?Number(raw):Math.round(Number(raw)*100),channels:[...form.querySelectorAll('input[name=promo-channel]:checked')].map(input=>input.value),startDate:$('promo-start').value,endDate:$('promo-end').value,locationIds:[...form.querySelectorAll('input[name=promo-location]:checked')].map(input=>input.value),notes:$('promo-notes').value,
   // Switched-off features are left out, so the saved values stay as they are.
   ...(on('repeat')?{weekdays:[...form.querySelectorAll('input[name=promo-weekday]:checked')].map(input=>Number(input.value))}:{}),
   ...(on('uplift')?{expectedUplift:$('promo-uplift').value===''?null:Number($('promo-uplift').value)}:{}),
@@ -161,7 +163,7 @@
  function openEditor(item,trigger){
   if(!state?.canEdit)return;editing=item||null;requestId=item?null:crypto.randomUUID();returnFocus=trigger||document.activeElement;fillKinds();
   $('promo-dialog-title').textContent=item?(window.interfaceLabel?interfaceLabel('Edit promotion'):'Edit promotion'):(window.interfaceLabel?interfaceLabel('Add promotion'):'Add promotion');
-  $('promo-name').value=item?.name||'';$('promo-kind').value=item?.kind||'percent';window.appSelects?.refresh?.($('promo-kind'));
+  $('promo-name').value=item?.name||'';promoIcon?.setIcon(item?.icon);$('promo-kind').value=item?.kind||'percent';window.appSelects?.refresh?.($('promo-kind'));
   const kind=model.kind(item?.kind||'percent');$('promo-value').value=item&&Number.isInteger(item.value)?(kind?.value==='percent'?String(item.value):(item.value/100).toFixed(2)):'';
   const today=state.today;$('promo-start').value=item?.startDate||today;$('promo-end').value=item?.endDate||today;$('promo-notes').value=item?.notes||'';
   fillChoices($('promo-channels'),model.channels,item?.channels||['in-store'],'promo-channel');

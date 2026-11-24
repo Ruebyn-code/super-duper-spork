@@ -29,3 +29,11 @@
 .category-icon-jump-chip{flex:none;min-height:30px;padding:4px 11px;border:1px solid var(--theme-border,#d8e3ed);border-radius:999px;background:var(--theme-surface,#fff);color:var(--theme-text,#203442);font:inherit;font-size:.78rem;white-space:nowrap;cursor:pointer;text-transform:none;letter-spacing:0}
 .category-icon-jump-chip:hover,.category-icon-jump-chip:focus-visible{border-color:var(--primary);color:var(--theme-primary-text,var(--primary))}
 @media(pointer:coarse){.category-icon-jump-chip{min-height:36px}}
+/* Shared "choose icon" button used by feature editors. */
+.category-icon-pick{display:inline-grid;place-items:center;flex:none;width:34px;height:34px;min-width:34px;min-height:34px;padding:0;border:1px solid var(--theme-border,#d8e3ed);border-radius:9px;background:var(--theme-surface,#fff);color:var(--primary);cursor:pointer;text-transform:none;letter-spacing:0}
+.category-icon-pick .category-icon{width:19px;height:19px}
+.category-icon-pick.is-empty{color:var(--theme-muted,#8a99a8)}
+.category-icon-pick:hover,.category-icon-pick:focus-visible{border-color:var(--primary)}
+@media(pointer:coarse){.category-icon-pick{width:40px;height:40px}}
+/* Icons placed in front of feature headings and card titles. */
+.feature-icon{width:1.1em;height:1.1em;flex:none;vertical-align:-.18em;margin-right:.4em;color:var(--primary)}

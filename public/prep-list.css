@@ -183,3 +183,7 @@ dialog.prep-dialog footer.prep-dialog-foot{box-sizing:border-box;width:100%;max-
 .prep-list .prep-onhand-note{flex-basis:100%}.prep-list .prep-onhand-note:empty{display:none}
 .prep-list .prep-item-basis,.prep-list .prep-parts{min-width:0;overflow-wrap:anywhere}
 .prep-list .prep-item-article,.prep-list .prep-item-article strong{font-size:.95rem;line-height:1.3}
+/* Station icons: picker button in each station heading for prep managers (display + explicit save). */
+.prep-group h3 .prep-station-icon-pick{width:28px;height:28px;min-width:28px;min-height:28px;margin-left:auto;order:3}
+.prep-group h3 .prep-station-icon-pick .category-icon{width:16px;height:16px}
+.prep-chip .feature-icon{margin-right:0}

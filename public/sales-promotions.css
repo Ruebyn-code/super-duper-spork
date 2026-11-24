@@ -143,3 +143,4 @@ dialog.promo-dialog footer.promo-dialog-foot{box-sizing:border-box;width:100%;ma
 @media (forced-colors:active){.promo-switch-track{border:1px solid CanvasText}.promo-switch input:checked~.promo-switch-track{background:Highlight}}
 @media (max-width:640px){.promo-head{flex-direction:column}.promo-head-actions{justify-content:flex-start}}
 @media (max-width:700px){.promo-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.promo-filters:has(>[data-promo-filter=leaderboard][hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}.promo-filters>button{min-width:0}}
+.promo-icon-field{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600}

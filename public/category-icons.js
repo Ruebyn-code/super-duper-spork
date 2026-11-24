@@ -199,5 +199,11 @@
   // Arrow keys move between icons in the grid.
   body.addEventListener('keydown',event=>{if(!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(event.key))return;const buttons=[...body.querySelectorAll('.category-icon-option')],index=buttons.indexOf(document.activeElement);if(index<0)return;const columns=Math.max(1,Math.round(body.querySelector('.category-icon-grid').clientWidth/(buttons[0].offsetWidth||1)));const step={ArrowRight:1,ArrowLeft:-1,ArrowDown:columns,ArrowUp:-columns}[event.key];const next=buttons[Math.min(buttons.length-1,Math.max(0,index+step))];next?.focus();event.preventDefault();});
  }
- return{groups:groups.map(([id,name])=>({id,name})),list,valid,svg,element,pick};
+ // A small button showing the current icon that opens the picker. options: {current, title, label, onPick(id|null)}.
+ // button.value holds the chosen ID (or ''); choosing only updates the button and calls onPick, never saves.
+ function button(options={}){
+  if(typeof document==='undefined')return null;const word=text=>typeof interfaceLabel==='function'?interfaceLabel(text):text;const node=document.createElement('button');node.type='button';node.className='category-icon-pick';
+  const draw=id=>{node.value=valid(id)?id:'';node.replaceChildren(element(node.value,'<rect x="4" y="4" width="16" height="16" rx="4" stroke-dasharray="3 3"/>'));const label=word(options.label||'Icon')+': '+(node.value?byId.get(node.value).name:word('none'));node.setAttribute('aria-label',label);node.title=label;node.classList.toggle('is-empty',!node.value);};
+  draw(options.current);node.setIcon=draw;node.onclick=()=>pick({current:node.value||null,title:options.title||options.label,onPick(id){draw(id);options.onPick?.(id);}});return node;}
+ return{groups:groups.map(([id,name])=>({id,name})),list,valid,svg,element,pick,button};
 });

@@ -630,3 +630,7 @@ body .conversation-message .formatted-text{--content-leading:1.38}
 :root[data-theme=dark] #conversation-messages .conversation-message .formatted-article-text strong{color:#f1f5f9!important}
 :root[data-theme=dark] #conversation-messages .conversation-message .formatted-article-text small{color:#93c5fd!important}
 @media (forced-colors:active){#conversation-messages .conversation-message .formatted-article-open{background:Canvas!important;color:CanvasText!important;border:1px solid CanvasText!important}#conversation-messages .conversation-message .formatted-article-text :is(small,strong){color:CanvasText!important}}
+/* Group icons (shown when a group has no photo). */
+.chat-icon-row{display:flex;align-items:center;gap:10px;font-size:.85rem}
+.conversation-photo.has-icon{display:inline-grid;place-items:center;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,var(--theme-surface,#fff))}
+.conversation-photo.has-icon .category-icon{width:60%;height:60%}

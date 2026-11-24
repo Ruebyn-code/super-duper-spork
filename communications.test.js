@@ -244,3 +244,12 @@ test('every active location has an automatic store group that follows location a
   assert.equal((await app.comm(app.outside,'threads/'+group.id+'/messages','POST',{body:'hi'})).status,404);
  }finally{await app.close();}
 });
+test('groups may choose an allowlisted icon; direct chats cannot',async()=>{const app=await fixture();try{
+  const group=(await app.comm(app.alice,'threads','POST',{kind:'group',name:'Grill team',members:[app.bobRecord.id]})).data,direct=(await app.comm(app.alice,'threads','POST',{kind:'direct',members:[app.bobRecord.id]})).data;
+  assert.equal((await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{icon:'not-an-icon'})).status,400);
+  assert.equal((await app.comm(app.bob,'threads/'+group.id+'/customise','PUT',{icon:'flame'})).status,403,'only the owner or Comms managers customise a group');
+  assert.equal((await app.comm(app.alice,'threads/'+direct.id+'/customise','PUT',{icon:'flame'})).status,400,'direct chats have no group icon');
+  const saved=await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{icon:'flame'});assert.equal(saved.status,200);assert.equal(saved.data.custom.icon,'flame');
+  const seen=(await app.comm(app.bob,'threads')).data.threads.find(thread=>thread.id===group.id);assert.equal(seen.custom.icon,'flame');
+  const cleared=await app.comm(app.alice,'threads/'+group.id+'/customise','PUT',{icon:null});assert.equal(Object.hasOwn(cleared.data.custom,'icon'),false);
+}finally{await app.close();}});

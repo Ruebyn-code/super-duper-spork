@@ -3,6 +3,7 @@
 // access to every location the promotion lists. Performance compares saved weekly-report-first sales on each
 // promotion day with that day's normal projection; it is read-only and never changes sales or forecasts.
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
+const categoryIcons=require('./public/category-icons');
 const {can,canAccessLocation}=require('./permissions'),model=require('./public/promotions-model');
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
@@ -42,11 +43,13 @@ function details(input,previous=null,{features=model.featureState(),products=nul
    items=input.itemIds.map(id=>{const item=known.get(id);if(item)return{id,name:String(item.name||'').slice(0,120)};if(saved.has(id))return saved.get(id);fail('Choose stock items from this company’s catalogue.');});
   }
  }
+ // Optional icon from the shared category icon list (omitted keeps the saved one; null removes it).
+ let icon=previous?.icon||null;if(input.icon!==undefined){if(input.icon!==null&&!categoryIcons.valid(input.icon))fail('Choose a promotion icon from the list.');icon=input.icon;}
  let redemptionCostCents=previous?.redemptionCostCents??null;
  if(features.redemptions&&input.redemptionCostCents!==undefined){if(input.redemptionCostCents!==null&&(!Number.isSafeInteger(input.redemptionCostCents)||input.redemptionCostCents<1||input.redemptionCostCents>100000000))fail('Enter the cost per redemption, or leave it blank.');redemptionCostCents=input.redemptionCostCents;}
- return{name,kind:type.id,value,channels,startDate:input.startDate,endDate:input.endDate,locationIds:[...input.locationIds],notes:text(input.notes,500,'Notes'),weekdays,expectedUplift,items,redemptionCostCents};
+ return{name,kind:type.id,value,channels,startDate:input.startDate,endDate:input.endDate,locationIds:[...input.locationIds],notes:text(input.notes,500,'Notes'),weekdays,expectedUplift,items,redemptionCostCents,icon};
 }
-const optional=['weekdays','expectedUplift','items','redemptionCostCents'];
+const optional=['weekdays','expectedUplift','items','redemptionCostCents','icon'];
 // Copy saved details onto a record, leaving out empty optional fields.
 function assign(record,values){Object.assign(record,values);for(const key of optional)if(record[key]===null||record[key]===undefined)delete record[key];return record;}
 // The cost of one redemption: the saved amount, or the $ off itself.
@@ -301,7 +304,7 @@ function createStore(dir,{locations,now=Date.now,actuals,projection,salesOn=asyn
   const current=today(),horizon=shift(current,upcomingDays),state=await read(place);
   return state.promotions.filter(item=>!item.deleted&&item.companyId===place.companyId&&item.locationIds.includes(place.locationId)&&item.endDate>=current&&item.startDate<=horizon)
    .sort((a,b)=>(a.startDate<=current?0:1)-(b.startDate<=current?0:1)||a.startDate.localeCompare(b.startDate)||a.name.localeCompare(b.name)).slice(0,12)
-   .map(item=>({id:item.id,name:item.name,offer:model.offer(item),channels:item.channels,startDate:item.startDate,endDate:item.endDate,status:model.status(item,current),image:item.image?{id:item.image.id,url:imageBase+item.id+'/image?v='+item.image.id}:null}));
+   .map(item=>({id:item.id,name:item.name,...(item.icon?{icon:item.icon}:{}),offer:model.offer(item),channels:item.channels,startDate:item.startDate,endDate:item.endDate,status:model.status(item,current),image:item.image?{id:item.image.id,url:imageBase+item.id+'/image?v='+item.image.id}:null}));
  }
  // The stored cover image for a promotion that includes this location (and is still running or upcoming when `current` is set).
  async function imageFile(place,id,{current=false}={}){

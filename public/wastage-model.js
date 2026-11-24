@@ -1,5 +1,6 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.wastageModel=api;})(globalThis,()=>{
- const reasons=[['expired','Expired / out of date'],['spoiled','Spoiled / quality issue'],['preparation','Preparation waste'],['overproduction','Overproduction'],['damaged','Damaged / spilled'],['returned','Returned / incorrect item'],['other','Other']].map(([id,name])=>({id,name}));
+ // Each reason has a fixed icon from the shared category icon list (display only).
+ const reasons=[['expired','Expired / out of date','hourglass'],['spoiled','Spoiled / quality issue','biohazard'],['preparation','Preparation waste','knife'],['overproduction','Overproduction','copy-x'],['damaged','Damaged / spilled','droplet'],['returned','Returned / incorrect item','rotate-ccw'],['other','Other','question-mark']].map(([id,name,icon])=>({id,name,icon}));
  const reasonName=id=>reasons.find(r=>r.id===id)?.name||id;
  function summarize(records){
   const active=records.filter(r=>r.status==='recorded'),reasonsMap=new Map(),itemsMap=new Map();let knownCostCents=0,unpricedItems=0,lineCount=0;

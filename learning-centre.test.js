@@ -147,3 +147,12 @@ test('course settings: completion expiry and default due date are validated, kep
   const plain=await publish(app,{lessons:[lesson('Plain')],quiz:[]}),b=await assigned(app,plain);assert.equal(Object.hasOwn((await app.training(app.member,'/assignments/'+b.id)).data.progress,'validUntil'),false);
  }finally{await app.close();}
 });
+test('courses keep an optional allowlisted icon through older writers and show it to learners',async()=>{
+ assert.throws(()=>learning.normalize(courseInput({icon:'not-an-icon'})));assert.equal(learning.normalize(courseInput({icon:'chef'})).icon,'chef');assert.equal(Object.hasOwn(learning.normalize(courseInput({icon:null})),'icon'),false);
+ const app=await fixture();try{
+  const course=await publish(app,{lessons:[lesson('Only')],quiz:[],icon:'chef'});assert.equal((await app.training(app.office,'')).data.courses.find(c=>c.id===course.id).icon,'chef');
+  const saved=(await app.training(app.office,'/courses/'+course.id)).data;await app.training(app.office,'/courses/'+course.id,'PUT',{requestId:crypto.randomUUID(),revision:saved.revision,title:'Food safety',description:'',category:'',minutes:10,passPercent:80,lessons:saved.draft.lessons,quiz:[]});
+  assert.equal((await app.training(app.office,'/courses/'+course.id)).data.draft.icon,'chef','older writers that omit icon keep it');
+  const a=await assigned(app,course);assert.equal((await app.training(app.member,'')).data.myLearning.find(item=>item.id===a.id).icon,'chef');
+ }finally{await app.close();}
+});

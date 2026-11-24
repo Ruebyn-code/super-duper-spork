@@ -20,7 +20,7 @@
   q('.count-groups-cancel').textContent=word('Cancel');q('.count-groups-save').textContent=word('Save groups');
   q('.count-groups-close').onclick=q('.count-groups-cancel').onclick=()=>close();
   dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
-  q('.count-groups-add').onclick=()=>{const name=uniqueName(word('New group'));state.groups.push({id:newId(name),name});render();const inputs=dialog.querySelectorAll('.count-groups-name');inputs[inputs.length-1]?.select();inputs[inputs.length-1]?.focus();};
+  q('.count-groups-add').onclick=()=>{const name=uniqueName(word('New group'));state.groups.push({id:newId(name),name,icon:null});render();const inputs=dialog.querySelectorAll('.count-groups-name');inputs[inputs.length-1]?.select();inputs[inputs.length-1]?.focus();};
   q('.count-groups-search').oninput=q('.count-groups-filter').onchange=()=>renderItems();
   q('.count-groups-move-button').onclick=()=>{const target=q('.count-groups-move-to').value;if(!target)return;for(const product of shown())state.assign[product.id]=target;renderItems();renderGroups();status(word('Moved {count} items. Save groups to keep the change.',{count:shown().length}));};
   q('.count-groups-form').onsubmit=event=>{event.preventDefault();save();};
@@ -35,6 +35,7 @@
   state.groups.forEach((group,index)=>{
    const row=el('li',undefined,'count-groups-row');row.dataset.id=group.id;
    const name=el('input',undefined,'count-groups-name');name.value=group.name;name.maxLength=40;name.required=true;name.setAttribute('aria-label',word('Group name'));name.dataset.userText='';name.oninput=()=>{group.name=name.value;groupOptions(q('.count-groups-filter'),[['all',word('All items')]]);groupOptions(q('.count-groups-move-to'));for(const select of dialog.querySelectorAll('.count-groups-item-select'))refreshSelect(select);};
+   const icon=window.categoryIcons?.button({current:group.icon,label:word('Icon for {name}',{name:group.name||word('group')}),onPick(id){group.icon=id;}});
    const count=el('span',String(totals.get(group.id)||0),'count-groups-count');count.title=word('Items in this group');
    const up=el('button','↑','count-groups-icon'),down=el('button','↓','count-groups-icon'),remove=el('button','×','count-groups-icon count-groups-remove');for(const button of [up,down,remove])button.type='button';
    up.setAttribute('aria-label',word('Move {name} up',{name:group.name}));down.setAttribute('aria-label',word('Move {name} down',{name:group.name}));remove.setAttribute('aria-label',word('Delete {name}',{name:group.name}));
@@ -42,7 +43,7 @@
    up.onclick=()=>{state.groups.splice(index-1,0,...state.groups.splice(index,1));render();dialog.querySelector('.count-groups-row[data-id="'+group.id+'"] .count-groups-icon')?.focus();};
    down.onclick=()=>{state.groups.splice(index+1,0,...state.groups.splice(index,1));render();dialog.querySelectorAll('.count-groups-row[data-id="'+group.id+'"] .count-groups-icon')[1]?.focus();};
    remove.onclick=()=>{const items=totals.get(group.id)||0;if(items&&!confirm(word('Delete {name}? Its {count} items move to Not grouped.',{name:group.name,count:items})))return;state.groups.splice(index,1);for(const [id,value] of Object.entries(state.assign))if(value===group.id)state.assign[id]=NONE;render();q('.count-groups-add').focus();};
-   row.append(name,count,up,down,remove);list.append(row);
+   row.append(...[icon].filter(Boolean),name,count,up,down,remove);list.append(row);
   });
   if(focus){const target=list.querySelector('.count-groups-row[data-id="'+focus+'"] .'+(field||'').split(' ')[0]);target?.focus();}
  }
@@ -62,7 +63,7 @@
   if(!dialog)build();onSaved=options.onSaved||null;opener=document.activeElement;status(word('Loading…'));q('.count-groups-save').disabled=true;dialog.showModal();
   try{const response=await fetch('/api/catalogue',{cache:'no-store',headers:window.appLocationId?{'X-Location-Id':window.appLocationId}:{}});const catalogue=await response.json();if(!response.ok)throw Error(catalogue.error||word('Unable to load stock.'));
    const list=stockCountGroups.list(catalogue);
-   state={revision:catalogue.countGroupsRevision||0,groups:list.map(group=>({id:group.id,name:group.name})),products:[...catalogue.products].sort((a,b)=>a.name.localeCompare(b.name,'en-AU')),assign:Object.fromEntries(catalogue.products.map(product=>[product.id,stockCountGroups.resolve(product,catalogue)]))};
+   state={revision:catalogue.countGroupsRevision||0,groups:list.map(group=>({id:group.id,name:group.name,icon:group.icon||null})),products:[...catalogue.products].sort((a,b)=>a.name.localeCompare(b.name,'en-AU')),assign:Object.fromEntries(catalogue.products.map(product=>[product.id,stockCountGroups.resolve(product,catalogue)]))};
    state.original=JSON.stringify({g:state.groups,a:state.assign});q('.count-groups-search').value='';q('.count-groups-filter').value='all';render();status('');q('.count-groups-save').disabled=false;q('.count-groups-add').focus();
   }catch(error){status(error.message,true);}
  }
@@ -72,7 +73,7 @@
   if(names.some(name=>!name)){status(word('Give every group a name.'),true);dialog.querySelectorAll('.count-groups-name')[names.findIndex(name=>!name)]?.focus();return;}
   const seen=new Set();for(const name of names){if(seen.has(name.toLowerCase())){status(word('Two groups are called {name}. Use different names.',{name}),true);return;}seen.add(name.toLowerCase());}
   saving=true;q('.count-groups-save').disabled=true;status(word('Saving groups…'));
-  try{const session=await window.appAccess?.initialSession?.();const response=await fetch('/api/products/count-groups',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||'',...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:JSON.stringify({revision:state.revision,groups:state.groups.map(group=>({id:group.id,name:group.name.trim()})),assignments:state.assign})});const result=await response.json();
+  try{const session=await window.appAccess?.initialSession?.();const response=await fetch('/api/products/count-groups',{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':session?.csrf||'',...(window.appLocationId?{'X-Location-Id':window.appLocationId}:{})},body:JSON.stringify({revision:state.revision,groups:state.groups.map(group=>({id:group.id,name:group.name.trim(),icon:group.icon||null})),assignments:state.assign})});const result=await response.json();
    if(!response.ok)throw Object.assign(Error(result.error||word('Unable to save groups.')),{status:response.status});
    saving=false;dialog.close();state=null;onSaved?.(result);opener?.focus?.();
   }catch(error){saving=false;q('.count-groups-save').disabled=false;status(error.status===409?word('Someone else changed the groups. Close and open Edit groups again to see the latest.'):error.message,true);}

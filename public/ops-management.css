@@ -929,3 +929,6 @@ html.ops-settings-open,html.ops-settings-open body{overflow:hidden}
 /* Switch/tick labels are only as wide as their text and box, so clicking empty space beside them never toggles them. */
 .ops-page .ops-step-editor .ops-toggle,.ops-page .ops-config .ops-toggle,.ops-page .ops-trading-follow{width:fit-content;max-width:100%;justify-self:start;align-self:flex-start}
 .ops-page .ops-config.ops-builder-config>label.ops-toggle{width:fit-content}
+/* Checklist icon picker beside the checklist name (builder) — display only. */
+.ops-title-row{display:flex;align-items:center;gap:6px}.ops-title-row>input{flex:1;min-width:0}
+.ops-card > h3 .feature-icon{margin-right:.35em}

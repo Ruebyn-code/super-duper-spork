@@ -111,3 +111,10 @@ test('trainer-only steps and their answers are never sent to the trainee',async 
  await a.api(a.trainer,url,'POST',{revision:1,requestId:id(),answers:{[open.id]:true,[secret.id]:'competent'},notes:''});
  mine=await a.api(a.staff,base+'/'+session.id);assert.deepEqual(mine.steps.map(s=>s.id),[open.id],'the follow-up stays hidden once the hidden rating passes');assert.ok(mine.participants[0].progress.completedAt,'trainer-only steps still count toward sign-off');
 });
+test('training checklists keep an optional allowlisted icon through older writers',async t=>{
+ const a=await setup(t),open={id:id(),type:'check',title:'Wash hands',required:true};
+ assert.equal((await a.request(a.office,base+'/templates','POST',{requestId:id(),title:'Bad',description:'',steps:[open],icon:'not-an-icon'})).status,400);
+ const created=await a.api(a.office,base+'/templates','POST',{requestId:id(),title:'Grill',description:'',steps:[open],icon:'flame'});assert.equal(created.icon,'flame');
+ const kept=await a.api(a.office,base+'/templates/'+created.id,'PUT',{requestId:id(),revision:1,title:'Grill v2',description:'',steps:[open]});assert.equal(kept.icon,'flame','omitted icon is kept');
+ const removed=await a.api(a.office,base+'/templates/'+created.id,'PUT',{requestId:id(),revision:2,title:'Grill v2',description:'',steps:[open],icon:null});assert.equal(removed.icon,null);
+});

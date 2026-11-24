@@ -489,3 +489,12 @@ test('timed sections can follow each store’s trading hours, frozen into runs w
  assert.equal((await app.request(app.office,'/api/locations/'+app.first,'PUT',{name:'Office',tradingHours:Array.from({length:7},()=>({open:'10:00',close:'18:00'}))})).status,200);
  assert.equal((await app.api(app.office,'/runs/'+first.id)).data.snapshot.steps[0].startTime,'21:00');
  }finally{await app.close();}});
+test('checklists keep an optional allowlisted icon, frozen into runs, tasks and History',async()=>{const app=await fixture();try{
+ assert.equal((await app.template({icon:'not-an-icon'})).status,400);
+ const created=await app.template({icon:'broom'});assert.equal(created.status,201);const template=created.data;assert.equal(template.icon,'broom');
+ const kept=await app.api(app.office,'/templates/'+template.id,'PUT',(({icon,...rest})=>({...rest,title:'Renamed'}))(template));assert.equal(kept.status,200);assert.equal(kept.data.icon,'broom','older writers that omit icon keep it');
+ const run=(await app.start(template.id)).data;assert.equal(run.snapshot.icon,'broom');
+ const tasks=(await app.api(app.member,'?date=2026-10-19&whole=1&location='+app.first)).data.tasks;assert.equal(tasks.find(task=>task.templateId===template.id)?.icon,'broom');
+ const removed=await app.api(app.office,'/templates/'+template.id,'PUT',{...kept.data,icon:null});assert.equal(removed.status,200);assert.equal(removed.data.icon??null,null);
+ assert.equal((await app.api(app.member,'/runs/'+run.id)).data.snapshot.icon,'broom','started runs keep the icon they began with');
+}finally{await app.close();}});

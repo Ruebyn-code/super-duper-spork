@@ -101,3 +101,4 @@
 .waste-item-menu .location-picker-option>span{flex:1;text-align:left}
 @media(max-width:700px){.waste-line-top .waste-line-item{flex:1 1 calc(100% - 44px);order:0}.waste-line-top .waste-line-remove{order:1}.waste-line-top .waste-stepper{order:2}.waste-line-top .waste-pills{order:3}.waste-line-top .waste-line-cost{order:4;flex-basis:auto;margin-left:auto}}
 @media(max-width:700px){.waste-dialog .waste-stepper .waste-step{width:34px;min-height:38px}.waste-dialog .waste-stepper input{width:46px;min-height:38px}.waste-dialog .waste-pill{padding:4px 9px}.waste-line-top{gap:6px}}
+.waste-chip-button .waste-chip-icon{width:14px;height:14px;flex:none;margin-right:4px;vertical-align:-2px}

@@ -86,3 +86,14 @@ test('items saved as shared by the previous version become list items plus a cop
  const {migrate}=require('./equipment'),old={id:'11111111-1111-4111-8111-111111111111',scope:'company',companyId:'c',locationId:'l',name:'Van',category:'other',make:'',model:'',supplier:'',serviceContact:'',serviceIntervalDays:180,area:'Yard',status:'operational',services:[{date:'2026-01-01'}],faults:[],revision:3};
  const out=migrate([old]),list=out.find(r=>r.type==='list'),copy=out.find(r=>r.type!=='list');assert.equal(list.scope,'company');assert.equal(list.name,'Van');assert.equal(copy.id,old.id);assert.equal(copy.catalogId,list.id);assert.equal(copy.services.length,1);assert(!('scope' in copy));assert.deepEqual(migrate([old]),out,'migration is deterministic');
 });
+test('equipment list and one-off items keep an optional allowlisted icon; ticked copies show the list icon',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ const entry={requestId:crypto.randomUUID(),scope:'company',name:'Fryer',category:'cooking',make:'',model:'',supplier:'',serviceContact:'',serviceIntervalDays:null,notes:'',icon:'not-an-icon'};
+ assert.equal((await f.request(f.office,'/api/equipment/list','POST',entry)).status,400);
+ const fryer=await f.api(f.office,'/api/equipment/list','POST',{...entry,icon:'flame'});
+ await f.api(f.office,'/api/equipment/list/'+fryer.id+'/location','PUT',{present:true});
+ const page=await f.api(f.office,'/api/equipment');assert.equal(page.items.find(item=>item.name==='Fryer').icon,'flame','the location copy shows the list icon');
+ const oneOff=await f.api(f.office,'/api/equipment','POST',item({icon:'fridge'}));assert.equal(oneOff.icon,'fridge');
+ const {requestId,icon,...rest}=item();const edited=await f.api(f.office,'/api/equipment/'+oneOff.id,'PUT',{...rest,name:'Cool room',revision:1});assert.equal(edited.icon,'fridge','older writers that omit icon keep it');
+ const cleared=await f.api(f.office,'/api/equipment/'+oneOff.id,'PUT',{...rest,icon:null,revision:2});assert.equal(cleared.icon??null,null);
+});

@@ -81,3 +81,11 @@ test('showcase and kiosk images follow location, running dates and the Sales fea
  await assert.rejects(store.imageFile({companyId:'co',locationId:'loc-b'},running.id),{status:404});
  salesOn=false;assert.equal((await store.showcase({companyId:'co',locationId:'loc-a'})).length,0,'switching Sales off hides promotions');await assert.rejects(store.imageFile({companyId:'co',locationId:'loc-a'},running.id),{status:404});
 });
+test('promotions keep an optional allowlisted icon through older writers and show it on Home',async t=>{
+ const f=await fixture({seed:false});t.after(()=>f.close());
+ assert.equal((await f.request(f.office,'/api/promotions','POST',promo([f.location],{icon:'not-an-icon'}))).status,400);
+ const payload=promo([f.location],{icon:'pizza'}),saved=await f.api(f.office,'/api/promotions','POST',payload);assert.equal(saved.icon,'pizza');
+ assert.equal((await f.api(f.office,'/api/home-promotions')).promotions[0].icon,'pizza');
+ const {icon,...older}=payload;const kept=await f.api(f.office,'/api/promotions/'+saved.id,'PUT',{...older,name:'Renamed',revision:1});assert.equal(kept.icon,'pizza','older writers that omit icon keep it');
+ const cleared=await f.api(f.office,'/api/promotions/'+saved.id,'PUT',{...older,icon:null,revision:2});assert.equal(Object.hasOwn(cleared,'icon'),false);
+});

@@ -15,7 +15,7 @@
  function card(item){
   const article=el('article',undefined,'home-promotion'+(item.status==='running'?' is-running':'')),media=el('div',undefined,'home-promotion-media');article.setAttribute('role','listitem');
   if(item.image){const image=el('img');image.src=item.image.url;image.alt='';image.loading='lazy';image.decoding='async';media.append(image);}else{media.classList.add('is-empty');media.innerHTML=tag;}
-  const body=el('div',undefined,'home-promotion-body'),name=data('h3',item.name),meta=el('p',undefined,'home-promotion-meta');
+  const body=el('div',undefined,'home-promotion-body'),name=data('h3',item.name),meta=el('p',undefined,'home-promotion-meta');{const icon=item.icon&&window.categoryIcons?.element(item.icon);if(icon){icon.classList.add('feature-icon');name.prepend(icon);}}
   const offer=data('span',item.offer,'home-promotion-offer'),when=data('span',item.status==='running'?(item.endDate===item.startDate?word('Today only'):word('Until')+' '+day(item.endDate)):word('Starts')+' '+day(item.startDate),'home-promotion-when');
   meta.append(offer,when);body.append(name,meta);article.append(media,body);return article;
  }

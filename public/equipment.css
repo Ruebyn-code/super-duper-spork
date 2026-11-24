@@ -79,3 +79,6 @@
 .equip-catalog-tools .equip-catalog-search{margin:0}
 @media(max-width:600px){.equip-dialog.equip-catalog{width:100vw;max-width:100vw}}
 .equip-dialog-body{align-content:start}
+/* Equipment icon picker (beside the name) and chosen icons on cards. */
+.equip-icon-field{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600}
+.equip-card-icon .category-icon{width:20px;height:20px}
