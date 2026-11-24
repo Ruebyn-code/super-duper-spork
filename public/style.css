@@ -1168,8 +1168,8 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 #app-controls-menu #app-edit-toggle:hover,#app-controls-menu #app-edit-toggle[aria-checked=true]{background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,white))}
 #app-controls-menu .sidebar-edit-label{display:block;font:inherit;letter-spacing:normal}
 /* Hold a card directly; the small grip is also available for keyboard users. */
-.app-edit-mode [data-layout-movable]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.app-edit-mode [data-layout-movable] input,.app-edit-mode [data-layout-movable] textarea,.app-edit-mode [data-layout-movable] [contenteditable=true]{-webkit-user-select:text;user-select:text}
+.home-edit-mode [data-layout-movable]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.home-edit-mode [data-layout-movable] input,.home-edit-mode [data-layout-movable] textarea,.home-edit-mode [data-layout-movable] [contenteditable=true]{-webkit-user-select:text;user-select:text}
 .app-layout-hover,.app-layout-pressing{outline:1px dashed var(--secondary)!important;outline-offset:3px}
 .app-layout-pressing{cursor:grab!important}
 .app-layout-lifted{opacity:.24!important;outline:2px dashed var(--secondary)!important;outline-offset:2px}
@@ -1208,7 +1208,7 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 .app-section-flow{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-auto-rows:1px!important;row-gap:0!important;align-items:start!important;align-content:start!important}
 .app-section-flow>*{min-width:0;max-width:100%;box-sizing:border-box}
 .app-section-resizable{position:relative}.app-section-resize{display:none;position:absolute;right:2px;bottom:2px;width:27px;height:27px;min-height:27px!important;padding:4px!important;margin:0!important;border:1px solid color-mix(in srgb,var(--primary) 35%,transparent)!important;border-radius:8px 2px 8px 2px!important;background:color-mix(in srgb,var(--primary) 10%,var(--theme-surface,#fff))!important;color:var(--theme-primary-text,var(--primary))!important;cursor:nwse-resize!important;touch-action:none;z-index:5;opacity:.65}
-.app-edit-mode .app-section-resize:not([hidden]){display:grid;place-items:center}.app-section-resizable:hover>.app-section-resize,.app-section-resize:focus-visible{opacity:1}.app-section-resize:focus-visible{outline:2px solid var(--primary);outline-offset:3px}.app-section-resizing,.app-section-resizing *{cursor:nwse-resize!important;user-select:none!important}.app-section-sizing{outline:2px solid var(--primary)!important;outline-offset:2px;transition:none!important}
+.home-edit-mode .app-section-resize:not([hidden]){display:grid;place-items:center}.app-section-resizable:hover>.app-section-resize,.app-section-resize:focus-visible{opacity:1}.app-section-resize:focus-visible{outline:2px solid var(--primary);outline-offset:3px}.app-section-resizing,.app-section-resizing *{cursor:nwse-resize!important;user-select:none!important}.app-section-sizing{outline:2px solid var(--primary)!important;outline-offset:2px;transition:none!important}
 .home-section-controls button{width:27px;min-width:27px;min-height:27px!important;padding:3px!important;font:600 17px Arial,sans-serif!important;border-radius:7px}.home-section-controls{flex-wrap:nowrap}.home-section-heading{gap:6px}
 @media(max-width:720px),(max-width:1100px) and (max-height:500px) and (pointer:coarse){.app-section-resize{display:none!important}}
 .unified-app-editor .editor-scope-buttons button[aria-pressed=false]{border-color:var(--theme-line,#dce5ed)!important;background:var(--theme-surface,#fff)!important;color:var(--theme-muted,#617484)!important}
@@ -1343,5 +1343,5 @@ input[type=file]::file-selector-button{font:inherit;color:var(--theme-primary-te
 .app-edit-changes button{margin:0;min-height:28px;padding:4px 10px;border:1px solid var(--theme-line,#dce5ed);border-radius:999px;background:var(--theme-surface,#fff)!important;color:var(--theme-text,#182b3a)!important;font:600 12px Arial,sans-serif!important;cursor:pointer;text-transform:none}
 .app-edit-changes .app-edit-changes-all{width:100%;color:var(--theme-danger-text,#a13323)!important}
 .app-edit-changes p{margin:8px 0 0;color:var(--theme-muted,#5b6b7a)}
-.app-edit-mode [data-layout-movable] :is(h1,h2,h3,h4,header,[class*=heading]){cursor:grab}
+.home-edit-mode [data-layout-movable] :is(h1,h2,h3,h4,header,[class*=heading]){cursor:grab}
 @media(prefers-reduced-motion:reduce){.app-quick-bar{animation:none}}

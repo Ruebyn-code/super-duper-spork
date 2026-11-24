@@ -24,8 +24,8 @@
   return element.matches('section,article,nav,aside,div,form,fieldset,details,label')||(element.tagName==='A'&&parent.matches('nav,.home-admin-links'))||element.matches('img.app-logo');
  }
  function units(parent){const result=[];for(const element of parent.children){if(!canMove(element,parent))continue;const nodes=[element];if(element.tagName==='TR'&&element.nextElementSibling?.matches('.user-editor-row'))nodes.push(element.nextElementSibling);result.push({key:identity(element),element,nodes});}return result;}
- // The main bar can't be rearranged in App edit; only its icons can be restyled (see app-editor.js).
- function visible(unit){return !unit.element.closest('[hidden]')&&!unit.element.closest('#app-sidebar.top-navigation')&&unit.element.getClientRects().length>0&&getComputedStyle(unit.element).visibility!=='hidden';}
+ // Only Home sections move, and only in Edit Home; saved orders elsewhere still apply.
+ function visible(unit){return unit.element.parentElement?.id==='home-board'&&!unit.element.closest('[hidden]')&&!unit.element.closest('#app-sidebar.top-navigation')&&unit.element.getClientRects().length>0&&getComputedStyle(unit.element).visibility!=='hidden';}
  function remember(groupKey,keys,parent){
   if(!defaults.has(groupKey)){let original;try{original=JSON.parse(decodeURIComponent(parent?.dataset.layoutDefault||''));}catch{}defaults.set(groupKey,Array.isArray(original)?original:keys);}
   const existing=defaults.get(groupKey),known=new Set(existing);for(const key of keys)if(!known.has(key)){existing.push(key);known.add(key);}
@@ -190,7 +190,8 @@
   if((event.altKey||event.target===grip)&&['ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(event.key)){event.preventDefault();event.stopImmediatePropagation();keyboardMove(event.target===grip?hovered:info(event.target),event.key==='ArrowUp'||event.key==='ArrowLeft'?-1:1);}
  },true);
  grip.onclick=()=>hovered?.unit.element.focus({preventScroll:true});document.addEventListener('focusin',event=>{if(editing&&!drag&&!event.target.closest(uiSelector))setHover(info(event.target));});
- window.addEventListener('app-edit-mode-changed',event=>{
+ // Moving sections belongs to Edit Home only (App edit changes icons only).
+ window.addEventListener('home-edit-mode-changed',event=>{
   editing=event.detail.enabled;csrf=event.detail.csrf;if(!editing){endDrag(true);clearPress();setHover(null);hide(toast);}collect();
   for(const [type,listener] of [['touchstart',touchStart],['touchmove',touchMove],['touchend',touchEnd],['touchcancel',touchCancel]]){if(editing)document.addEventListener(type,listener,{capture:true,passive:false});else document.removeEventListener(type,listener,true);}
  });
@@ -198,6 +199,6 @@
  window.addEventListener('before-location-switch',event=>{if(drag||busy||dirty()){event.preventDefault();status('Wait for the layout to save before switching locations or companies.',saveError?'error':'saving');}});
  window.addEventListener('blur',()=>{if(drag)endDrag(true);clearPress();});window.addEventListener('resize',()=>{if(drag)endDrag(true);schedule();});
  document.addEventListener('scroll',()=>{if(!drag&&hovered)setHover(hovered);},true);window.addEventListener('hashchange',()=>{if(drag)endDrag(true);clearPress();setHover(null);schedule();});
- window.appLayout={info,save,dirty,size(id){return sizeDraft[id];},resize(id,value){if(!editing||saveError?.conflict)return false;undo.push(snapshot());const next={...sizeDraft};if(value===null)delete next[id];else next[id]=model.validateSize(value);sizeDraft=model.validateSizes(next);window.dispatchEvent(new CustomEvent('app-layout-changed'));saveError=null;save();return true;},placeAfter(parent,key,after){collect();const group=groups.get(groupKey(parent));if(!group)return;const order=(draft[group.key]||group.units.map(unit=>unit.key)).filter(id=>id!==key),index=after===null?order.length:order.indexOf(after)+1;order.splice(index,0,key);changed({...draft,[group.key]:order});},isSaving:()=>busy,isArranging:()=>Boolean(drag)||performance.now()<suppressUntil,preventExit(){if(drag)endDrag(true);clearPress();if(busy||dirty()){status(saveError?'Retry or restore the saved layout before finishing App edit.':'Wait for your layout to finish saving.',saveError?'error':'saving');return true;}return false;},orderData(parent,data,kind='product'){const key=groupKey(parent),keys=data.map(item=>kind+':'+item.id);remember(key,keys,parent);return model.ordered(data,draft[key],item=>kind+':'+item.id);}};
+ window.appLayout={info,save,dirty,size(id){return sizeDraft[id];},resize(id,value){if(!editing||saveError?.conflict)return false;undo.push(snapshot());const next={...sizeDraft};if(value===null)delete next[id];else next[id]=model.validateSize(value);sizeDraft=model.validateSizes(next);window.dispatchEvent(new CustomEvent('app-layout-changed'));saveError=null;save();return true;},placeAfter(parent,key,after){collect();const group=groups.get(groupKey(parent));if(!group)return;const order=(draft[group.key]||group.units.map(unit=>unit.key)).filter(id=>id!==key),index=after===null?order.length:order.indexOf(after)+1;order.splice(index,0,key);changed({...draft,[group.key]:order});},isSaving:()=>busy,isArranging:()=>Boolean(drag)||performance.now()<suppressUntil,preventExit(){if(drag)endDrag(true);clearPress();if(busy||dirty()){status(saveError?'Retry or restore the saved layout before finishing Edit Home.':'Wait for your layout to finish saving.',saveError?'error':'saving');return true;}return false;},orderData(parent,data,kind='product'){const key=groupKey(parent),keys=data.map(item=>kind+':'+item.id);remember(key,keys,parent);return model.ordered(data,draft[key],item=>kind+':'+item.id);}};
  collect();document.addEventListener('DOMContentLoaded',schedule);
 })();
