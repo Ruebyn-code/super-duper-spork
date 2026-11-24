@@ -626,7 +626,7 @@
   'Set its name, state and Target level system for all stock items. Use Employer setup for legal employer and pay settings, then Save settings.',
   'Use the archive action for an inactive location when permitted.',
   'Open the separate Archived locations menu to find or restore archived stores.'
- ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Head Office can be created or opened from the location selector without setup. Its administrative location has no store-settings tabs. Active locations remain one list with state sections. Archiving keeps saved settings and history; native restrictions may prevent archiving a location still in use.'],related:['location-setup','trading-hours','location-managers','delivery-dates']});
+ ],{route:'/admin/accounts#locations',permissions:['locations.manage'],notes:['Each network has one Head Office, shared by all its companies: choose it from the location selector in any company. Its dashboard covers the stores you can access across the network.','Head Office can be created or opened from the location selector without setup. Its administrative location has no store-settings tabs. Active locations remain one list with state sections. Archiving keeps saved settings and history; native restrictions may prevent archiving a location still in use.'],related:['location-setup','trading-hours','location-managers','delivery-dates']});
  add(c,'location-setup','Complete a new location’s setup checklist','Finish the setup tasks inside the popup.',[
   'Create a location and open its highlighted setup entry or reminder.',
   'Complete name, state, trading hours, location manager, first user, employer setup, ordering email, Target level system and a new kiosk.',
